@@ -1,4 +1,5 @@
-import express from 'express'
+import express, { Request, Response } from 'express'
+
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 import cors from 'cors'
@@ -22,7 +23,7 @@ app.use(cors())
 app.use(express.json())
 
 app.use('/api/game', gameRouter)
-app.get('/health', (_, res) => res.json({ status: 'ok' }))
+app.get('/health', (_req: Request, res: Response) => res.json({ status: 'ok' }))
 
 setupGameSockets(io)
 
