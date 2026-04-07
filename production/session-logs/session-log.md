@@ -483,3 +483,34 @@ f855ae1 Merge pull request #1 from cristianFleita/feat-socketio-integration
 cb26ba6 chore: integrate rooms with unity
 ---
 
+## Session End: 20260407_192318
+### Commits
+d363cd9 fix: responsive on huge screens
+89501c6 chore: responsive
+09209de chore: wip start screeen ui
+f855ae1 Merge pull request #1 from cristianFleita/feat-socketio-integration
+4f71fdd chore: redirect to game
+cb26ba6 chore: integrate rooms with unity
+### Uncommitted Changes
+production/session-logs/agent-audit.log
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260407_192320
+### Commits
+d363cd9 fix: responsive on huge screens
+89501c6 chore: responsive
+09209de chore: wip start screeen ui
+f855ae1 Merge pull request #1 from cristianFleita/feat-socketio-integration
+4f71fdd chore: redirect to game
+cb26ba6 chore: integrate rooms with unity
+### Uncommitted Changes
+production/session-logs/agent-audit.log
+production/session-logs/session-log.md
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
