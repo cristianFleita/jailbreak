@@ -16,7 +16,7 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    max-width: 800px;    /* Prevents stretching too wide on 4K/Ultrawide */
+    max-width: 1200px;   /* Increased to allow more growth on 4K/Ultrawide */
     height: 100%;
     flex-direction: column;
 }
@@ -24,9 +24,10 @@
 /* --- LOGO --- */
 .game-logo {
     width: 100%;
-    max-width: 600px;
-    height: 200px;       /* Fixed bounding box, scale-to-fit handles the responsiveness naturally */
-    margin-bottom: 20px;
+    max-width: 800px;    /* Increased max width */
+    height: 25%;         /* Scales proportionally with screen height */
+    min-height: 200px;   /* Prevents it from getting too small on tiny screens */
+    margin-bottom: 3%;
     -unity-background-scale-mode: scale-to-fit; /* NEVER stretches the sprite */
     background-color: transparent;
 }
@@ -34,9 +35,10 @@
 /* --- METAL PANEL (Player Identity Box) --- */
 .metal-panel {
     width: 100%;
-    max-width: 500px;
-    height: 150px;
-    margin-bottom: 30px;
+    max-width: 650px;    /* Increased max width */
+    height: 18%;         /* Scales proportionally with screen height */
+    min-height: 150px;
+    margin-bottom: 4%;
     justify-content: center; 
     align-items: center;     
     -unity-background-scale-mode: scale-to-fit; 
@@ -48,7 +50,7 @@
 .input-field {
     width: 80%; 
     height: 45px;
-    margin-top: 30px; /* Tweaks text vertical alignment to match your metal plate sprite slot */
+    margin-top: 35px; /* Tweaks text vertical alignment to match your metal plate sprite slot */
 }
 
 .input-field > .unity-text-field__input {
@@ -56,7 +58,7 @@
     border-color: transparent;
     border-width: 0;
     color: rgb(200, 200, 200);
-    font-size: 22px;
+    font-size: 26px; /* Slightly larger text for bigger displays */
     -unity-text-align: middle-center;
     -unity-font-style: bold;
 }
@@ -68,8 +70,9 @@
 /* --- START BUTTON --- */
 .primary-btn {
     width: 100%;
-    max-width: 380px;
-    height: 110px;
+    max-width: 500px;    /* Increased max width */
+    height: 15%;         /* Scales proportionally with screen height */
+    min-height: 110px;
     -unity-background-scale-mode: scale-to-fit;
     background-color: transparent;
     border-width: 0;
@@ -86,7 +89,7 @@
 
 /* --- STATUS TEXT --- */
 .status-text {
-    font-size: 16px;
+    font-size: 18px;
     color: rgb(200, 50, 50);
     margin-top: 15px;
     -unity-text-align: middle-center;
