@@ -1,147 +1,94 @@
+/* --- ROOT & BACKGROUND --- */
 .screen-root {
-    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+    position: absolute; /* Forces it to pin to the edges of the screen */
+    left: 0;
+    top: 0;
     align-items: center;
     justify-content: center;
+    -unity-background-scale-mode: scale-and-crop; /* Crops background to cover screen perfectly */
     background-color: rgb(15, 18, 20);
 }
 
-.main-background {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    -unity-background-scale-mode: scale-and-crop;
-    opacity: 0.8;
-}
-
+/* --- CENTER LAYOUT --- */
 .center-panel {
     align-items: center;
     justify-content: center;
-    width: 600px;
-    padding-top: 50px;
-}
-
-.game-logo {
-    width: 500px;
-    height: 200px;
-    margin-bottom: 20px;
-    -unity-background-scale-mode: scale-to-fit;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 10px;
-}
-
-.metal-panel {
-    width: 480px;
-    background-color: rgb(55, 60, 65);
-    background-image: linear-gradient(to bottom, rgb(80, 85, 90), rgb(40, 45, 50));
-    border-radius: 2px;
-    border-width: 4px;
-    border-color: rgb(30, 32, 35);
-    padding: 15px 30px;
-    margin-bottom: 30px;
-    align-items: center;
-}
-
-.identity-title {
-    font-size: 18px;
-    color: rgb(210, 210, 210);
-    -unity-font-style: bold;
-    letter-spacing: 2px;
-    margin-bottom: 2px;
-    -unity-text-align: middle-center;
-}
-
-.identity-subtitle {
-    font-size: 14px;
-    color: rgb(150, 160, 150);
-    margin-bottom: 15px;
-    letter-spacing: 1px;
-    -unity-text-align: middle-center;
-}
-
-.input-field {
     width: 100%;
+    max-width: 800px;    /* Prevents stretching too wide on 4K/Ultrawide */
+    height: 100%;
+    flex-direction: column;
+}
+
+/* --- LOGO --- */
+.game-logo {
+    width: 100%;
+    max-width: 600px;
+    height: 200px;       /* Fixed bounding box, scale-to-fit handles the responsiveness naturally */
+    margin-bottom: 20px;
+    -unity-background-scale-mode: scale-to-fit; /* NEVER stretches the sprite */
+    background-color: transparent;
+}
+
+/* --- METAL PANEL (Player Identity Box) --- */
+.metal-panel {
+    width: 100%;
+    max-width: 500px;
+    height: 150px;
+    margin-bottom: 30px;
+    justify-content: center; 
+    align-items: center;     
+    -unity-background-scale-mode: scale-to-fit; 
+    background-color: transparent;
+    border-width: 0;         
+}
+
+/* --- INPUT FIELD --- */
+.input-field {
+    width: 80%; 
     height: 45px;
+    margin-top: 30px; /* Tweaks text vertical alignment to match your metal plate sprite slot */
 }
 
 .input-field > .unity-text-field__input {
-    background-color: rgba(15, 18, 15, 0);
-    border-color: rgb(20, 20, 20);
-    border-width: 2px;
-    border-radius: 0;
-    color: rgb(180, 180, 180);
-    padding: 10px 15px;
-    font-size: 18px;
-    -unity-text-align: middle-left;
-    border-top-color: rgb(5, 5, 5);
-    border-left-color: rgb(5, 5, 5);
-    background-image: none;
-    -unity-background-scale-mode: stretch-to-fill;
-    border-top-width: 0;
-    border-right-width: 0;
-    border-bottom-width: 0;
-    border-left-width: 0;
+    background-color: transparent; 
+    border-color: transparent;
+    border-width: 0;
+    color: rgb(200, 200, 200);
+    font-size: 22px;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
 }
 
 .input-field > .unity-text-field__input:focus {
     color: rgb(255, 255, 255);
-    border-color: rgb(225, 183, 88);
 }
 
+/* --- START BUTTON --- */
 .primary-btn {
-    width: 350px;
-    height: 80px;
-    background-color: rgb(180, 70, 20);
-    background-image: linear-gradient(to bottom, rgb(220, 100, 30), rgb(120, 30, 10));
-    color: rgb(255, 220, 150);
-    border-radius: 8px;
-    font-size: 36px;
-    -unity-font-style: bold;
-    letter-spacing: 2px;
-    border-width: 3px;
-    border-color: rgb(80, 30, 15);
+    width: 100%;
+    max-width: 380px;
+    height: 110px;
+    -unity-background-scale-mode: scale-to-fit;
+    background-color: transparent;
+    border-width: 0;
+    transition-duration: 0.1s; 
 }
 
 .primary-btn:hover {
-    background-image: linear-gradient(to bottom, rgb(240, 120, 40), rgb(140, 40, 15));
     scale: 1.05;
-    transition-duration: 0.1s;
 }
 
 .primary-btn:active {
-    background-image: linear-gradient(to bottom, rgb(100, 20, 5), rgb(180, 60, 15));
     scale: 0.95;
 }
 
-.corner-btn {
-    position: absolute;
-    bottom: 20px;
-    width: 50px;
-    height: 50px;
-    background-color: rgba(30, 35, 30, 0.8);
-    border-radius: 25px;
-    border-width: 2px;
-    border-color: rgb(100, 100, 100);
-}
-
-.settings-btn {
-    left: 20px;
-}
-
-.extras-btn {
-    right: 20px;
-    border-radius: 0;
-}
-
-.corner-btn:hover {
-    background-color: rgba(60, 65, 60, 0.9);
-    scale: 1.1;
-}
-
+/* --- STATUS TEXT --- */
 .status-text {
-    font-size: 14px;
+    font-size: 16px;
     color: rgb(200, 50, 50);
-    margin-top: 20px;
+    margin-top: 15px;
     -unity-text-align: middle-center;
+    -unity-font-style: bold;
 }

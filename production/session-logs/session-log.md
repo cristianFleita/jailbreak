@@ -475,3 +475,11 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260407_184121
+### Commits
+09209de chore: wip start screeen ui
+f855ae1 Merge pull request #1 from cristianFleita/feat-socketio-integration
+4f71fdd chore: redirect to game
+cb26ba6 chore: integrate rooms with unity
+---
+

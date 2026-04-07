@@ -1,13 +1,24 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/UI/Screens/JailbreakUI.uss?fileID=7433441132597879392&amp;guid=917b6d9387b6e4dafacef498fcff3448&amp;type=3#JailbreakUI"/>
-    <ui:VisualElement name="root" class="screen-root" style="background-image: url(&quot;project://database/Assets/UI/Sprites/bg_prison.png?fileID=2800000&amp;guid=7cd6f491cab5e47a5b308c36f9b564e2&amp;type=3#bg_prison&quot;); height: 100%;">
-        <ui:VisualElement name="center-panel" class="center-panel" style="height: 100%; width: 100%; padding-bottom: 0; padding-left: 50px; padding-right: 50px;">
-            <ui:VisualElement name="game-logo" class="game-logo" style="background-image: url(&quot;project://database/Assets/UI/Sprites/start-screen-spreadsheet.png?fileID=-1678316579&amp;guid=423672918e02349638eadb2ca1b99f3f&amp;type=3#start-screen-spreadsheet_0&quot;); background-color: rgba(255, 255, 255, 0); -unity-background-scale-mode: scale-to-fit; height: 40%; width: 100%;"/>
-            <ui:VisualElement name="identity-panel" class="metal-panel" style="background-image: url(&quot;project://database/Assets/UI/Sprites/start-screen-spreadsheet.png?fileID=370931329&amp;guid=423672918e02349638eadb2ca1b99f3f&amp;type=3#start-screen-spreadsheet_2&quot;); background-color: rgba(55, 60, 65, 0); border-left-color: rgba(76, 80, 87, 0); border-right-color: rgba(76, 80, 87, 0); border-top-color: rgba(76, 80, 87, 0); border-bottom-color: rgba(76, 80, 87, 0); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; border-top-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-bottom-left-radius: 0; width: 100%;">
-                <ui:TextField name="display-name-field" value="Enter  Name..." class="input-field" style="background-image: none; background-color: rgba(0, 0, 0, 0);"/>
+    
+    <!-- Root Container: Forced to absolute 100% to fill screen, background crops to fit -->
+    <ui:VisualElement name="root" class="screen-root" style="background-image: url(&quot;project://database/Assets/UI/Sprites/bg_prison.png?fileID=2800000&amp;guid=7cd6f491cab5e47a5b308c36f9b564e2&amp;type=3#bg_prison&quot;);">
+        
+        <ui:VisualElement name="center-panel" class="center-panel">
+            
+            <!-- Game Logo -->
+            <ui:VisualElement name="game-logo" class="game-logo" style="background-image: url(&quot;project://database/Assets/UI/Sprites/start-screen-spreadsheet.png?fileID=-1678316579&amp;guid=423672918e02349638eadb2ca1b99f3f&amp;type=3#start-screen-spreadsheet_0&quot;);" />
+            
+            <!-- Metal Identity Panel -->
+            <ui:VisualElement name="identity-panel" class="metal-panel" style="background-image: url(&quot;project://database/Assets/UI/Sprites/start-screen-spreadsheet.png?fileID=370931329&amp;guid=423672918e02349638eadb2ca1b99f3f&amp;type=3#start-screen-spreadsheet_2&quot;);">
+                <ui:TextField name="display-name-field" value="Enter Prisoner Name..." class="input-field" />
             </ui:VisualElement>
-            <ui:Button name="start-btn" text="" class="primary-btn" style="background-image: url(&quot;project://database/Assets/UI/Sprites/start-screen-spreadsheet.png?fileID=-944953441&amp;guid=423672918e02349638eadb2ca1b99f3f&amp;type=3#start-screen-spreadsheet_1&quot;); -unity-background-scale-mode: scale-to-fit; background-color: rgba(76, 76, 76, 0.09); border-left-color: rgba(149, 149, 149, 0); border-right-color: rgba(149, 149, 149, 0); border-top-color: rgba(149, 149, 149, 0); border-bottom-color: rgba(149, 149, 149, 0); height: 10%;"/>
+            
+            <!-- Start Game Button -->
+            <ui:Button name="start-btn" text="" class="primary-btn" style="background-image: url(&quot;project://database/Assets/UI/Sprites/start-screen-spreadsheet.png?fileID=-944953441&amp;guid=423672918e02349638eadb2ca1b99f3f&amp;type=3#start-screen-spreadsheet_1&quot;);" />
+            
             <ui:Label name="status-label" text="" class="status-text"/>
+        
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
