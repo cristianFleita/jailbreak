@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="root" class="screen-root">
+        <ui:VisualElement name="center-panel" class="center-panel">
+            <ui:Label name="title" text="LOBBY" class="title-text" />
+            <ui:Label name="welcome-label" text="Welcome, Player" class="subtitle-text" />
+
+            <ui:VisualElement name="spacer" style="height: 30px;" />
+
+            <!-- Create Room Section -->
+            <ui:VisualElement name="create-section" class="section-panel">
+                <ui:Label text="HOST A GAME" class="section-title" />
+                <ui:TextField name="room-name-field" label="Room Name" value="" class="input-field" />
+                <ui:Button name="create-room-btn" text="CREATE ROOM" class="primary-btn" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="divider" style="height: 2px; background-color: rgba(255,255,255,0.15); margin-top: 20px; margin-bottom: 20px;" />
+
+            <!-- Join Room Section -->
+            <ui:VisualElement name="join-section" class="section-panel">
+                <ui:Label text="JOIN A GAME" class="section-title" />
+                <ui:TextField name="room-id-field" label="Room ID" value="" class="input-field" />
+                <ui:Button name="join-room-btn" text="JOIN ROOM" class="primary-btn" />
+            </ui:VisualElement>
+
+            <ui:Label name="status-label" text="" class="status-text" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

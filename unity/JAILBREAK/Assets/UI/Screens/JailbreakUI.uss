@@ -1,0 +1,153 @@
+.screen-root {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(26, 30, 26);
+}
+
+.center-panel {
+    background-color: rgb(35, 40, 35);
+    border-radius: 12px;
+    padding: 40px;
+    min-width: 380px;
+    align-items: center;
+    border-width: 2px;
+    border-color: rgb(60, 70, 55);
+}
+
+.title-text {
+    font-size: 48px;
+    color: rgb(225, 183, 88);
+    -unity-font-style: bold;
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+    -unity-text-align: middle-center;
+}
+
+.subtitle-text {
+    font-size: 16px;
+    color: rgb(180, 180, 170);
+    margin-bottom: 10px;
+    -unity-text-align: middle-center;
+}
+
+.section-panel {
+    width: 100%;
+    padding: 16px;
+    background-color: rgb(30, 35, 30);
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: rgb(50, 58, 48);
+}
+
+.section-title {
+    font-size: 14px;
+    color: rgb(225, 183, 88);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+}
+
+.input-field {
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+.input-field > Label {
+    color: rgb(170, 170, 160);
+    min-width: 80px;
+}
+
+.input-field > .unity-text-field__input {
+    background-color: rgb(20, 24, 20);
+    border-color: rgb(60, 70, 55);
+    border-radius: 4px;
+    color: rgb(230, 230, 220);
+    padding: 6px 10px;
+}
+
+.primary-btn {
+    background-color: rgb(225, 183, 88);
+    color: rgb(20, 20, 18);
+    border-radius: 6px;
+    padding: 10px 30px;
+    font-size: 16px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    border-width: 0;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.primary-btn:hover {
+    background-color: rgb(245, 203, 108);
+}
+
+.primary-btn:active {
+    background-color: rgb(195, 153, 58);
+}
+
+.primary-btn:disabled {
+    background-color: rgb(100, 95, 70);
+    color: rgb(60, 60, 55);
+}
+
+.secondary-btn {
+    background-color: rgb(60, 55, 50);
+    color: rgb(200, 190, 170);
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-size: 14px;
+    border-width: 1px;
+    border-color: rgb(80, 75, 65);
+    width: 100%;
+}
+
+.secondary-btn:hover {
+    background-color: rgb(80, 70, 60);
+}
+
+.status-text {
+    font-size: 13px;
+    color: rgb(150, 150, 140);
+    margin-top: 12px;
+    -unity-text-align: middle-center;
+}
+
+/* Player list item */
+.player-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    background-color: rgb(38, 44, 38);
+    border-radius: 4px;
+}
+
+.player-name {
+    font-size: 15px;
+    color: rgb(220, 220, 210);
+    flex-grow: 1;
+}
+
+.player-host-badge {
+    font-size: 11px;
+    color: rgb(225, 183, 88);
+    -unity-font-style: bold;
+    margin-left: 8px;
+}
+
+.kick-btn {
+    background-color: rgb(140, 50, 50);
+    color: rgb(240, 230, 220);
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 12px;
+    border-width: 0;
+    margin-left: 8px;
+}
+
+.kick-btn:hover {
+    background-color: rgb(170, 60, 60);
+}

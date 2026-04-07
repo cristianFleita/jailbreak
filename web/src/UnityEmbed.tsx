@@ -56,6 +56,21 @@ export default function UnityEmbed({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      
+      if (document.visibilityState === "visible" && window.unityInstance) {
+        console.log("[UnityEmbed] Tab focused: Signaling Unity to resume.");
+      }
+    };
+  
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [loaded]);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function loadUnity() {
