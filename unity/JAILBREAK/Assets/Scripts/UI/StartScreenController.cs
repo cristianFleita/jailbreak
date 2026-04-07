@@ -1,3 +1,4 @@
+using System.Collections;
 using Jailbreak.Network;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -20,42 +21,50 @@ namespace Jailbreak.UI
         private TextField _nameField;
         private Label _statusLabel;
         private bool _connecting;
+        private Coroutine _pendingTransition;
 
         private void OnEnable()
         {
             var root = uiDocument.rootVisualElement;
 
-            _startBtn   = root.Q<Button>("start-btn");
-            _nameField  = root.Q<TextField>("display-name-field");
+            _startBtn    = root.Q<Button>("start-btn");
+            _nameField   = root.Q<TextField>("display-name-field");
             _statusLabel = root.Q<Label>("status-label");
 
-            // Ensure NetworkManager exists
             if (NetworkManager.Instance == null)
             {
                 var go = new GameObject("NetworkManager");
                 go.AddComponent<NetworkManager>();
             }
 
-            // Check for returning player using NetworkManager (works for WebGL + Editor)
             var net = NetworkManager.Instance;
-            var savedName = net.GetSavedDisplayName();
-            var savedId   = net.GetSavedUserId();
 
-            bool isReturning = !string.IsNullOrEmpty(savedId);
-            _startBtn.text = isReturning ? "CONTINUE" : "START GAME";
+            // Subscribe to network events
+            net.OnAuthRegisteredEvent += OnAuthenticated;
+            net.OnNetworkErrorEvent   += OnNetworkError;
+            net.OnGameReconnectEvent  += OnGameReconnect;
+            _startBtn.clicked         += OnStartClicked;
 
-            if (!string.IsNullOrEmpty(savedName))
-                _nameField.value = savedName;
-
-            _startBtn.clicked += OnStartClicked;
-
-            // Subscribe to reconnect event *before* connecting so we catch it
-            // if auth:registered is immediately followed by game:reconnect
-            net.OnGameReconnectEvent += OnGameReconnect;
-
-            // If already authenticated (e.g. back from lobby), go straight through
-            if (net.IsAuthenticated)
-                GoToLobby();
+            // FLOW STEP 1: Do I have a saved user ID?
+            var savedId = net.GetSavedUserId();
+            
+            if (!string.IsNullOrEmpty(savedId))
+            {
+                // Yes -> Hide the UI and check the backend automatically
+                Debug.Log("[StartScreen] Found saved ID. Auto-authenticating...");
+                _nameField.style.display = DisplayStyle.None;
+                _startBtn.style.display = DisplayStyle.None;
+                _statusLabel.text = "Restoring session...";
+                
+                _connecting = true;
+                net.Connect(); // NetworkManager will use the saved ID and Name automatically
+            }
+            else
+            {
+                // No -> Show the normal login UI
+                _statusLabel.text = "Enter your alias";
+                _startBtn.text = "START GAME";
+            }
         }
 
         private void OnDisable()
@@ -87,33 +96,52 @@ namespace Jailbreak.UI
             _startBtn.SetEnabled(false);
             _statusLabel.text = "Connecting...";
 
-            var net = NetworkManager.Instance;
-            net.OnAuthRegisteredEvent += OnAuthenticated;
-            net.OnNetworkErrorEvent   += OnNetworkError;
-
-            // Connect(displayName) handles connect + auth in one call
-            net.Connect(displayName);
+            NetworkManager.Instance.Connect(displayName);
         }
 
         private void OnAuthenticated(AuthRegisteredPayload payload)
         {
             Debug.Log($"[StartScreen] Authenticated as {payload.userId}");
-            // NOTE: if the server also fires game:reconnect immediately after
-            // auth:registered, OnGameReconnect will fire and override this.
+            _statusLabel.text = "Authenticated! Checking game state...";
+            
+            // FLOW STEP 2 & 3: Wait a split second to see if the backend sends `game:reconnect`
+            _pendingTransition = StartCoroutine(DeferredGoToLobby());
+        }
+
+        private IEnumerator DeferredGoToLobby()
+        {
+            // If the server doesn't interrupt us within 0.2s with a game:reconnect,
+            // we assume there is no active game and go to the Lobby.
+            yield return new WaitForSeconds(0.5f);
+            
+            Debug.Log("[StartScreen] No active game found. Going to Lobby.");
             GoToLobby();
         }
 
         private void OnGameReconnect(GameReconnectPayload payload)
         {
-            Debug.Log("[StartScreen] Active game detected — redirecting to GameScene");
+            // FLOW STEP 4: Active game found!
+            Debug.Log("[StartScreen] Active game detected! Redirecting to GameScene");
+
+            // Cancel the trip to the lobby
+            if (_pendingTransition != null)
+            {
+                StopCoroutine(_pendingTransition);
+                _pendingTransition = null;
+            }
+
             GoToGame();
         }
 
         private void OnNetworkError(ErrorPayload error)
         {
             _statusLabel.text = $"Error: {error.message}";
-            _startBtn.SetEnabled(true);
             _connecting = false;
+            
+            // If auto-login failed, restore the UI so they can try manually
+            _nameField.style.display = DisplayStyle.Flex;
+            _startBtn.style.display = DisplayStyle.Flex;
+            _startBtn.SetEnabled(true);
         }
 
         private void GoToLobby()

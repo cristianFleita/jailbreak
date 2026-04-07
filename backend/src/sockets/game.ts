@@ -609,7 +609,7 @@ function handleLeaveRoom(
     if (gameIsActive) {
       markPlayerDisconnected(roomId, player, room.config.reconnectTimeout)
       socket.leave(roomId)
-      setUserStatus(userId, 'idle')
+      // setUserStatus(userId, 'idle')
 
       // Notify remaining players that this player temporarily disconnected
       io.to(roomId).emit('room:player-left', {
