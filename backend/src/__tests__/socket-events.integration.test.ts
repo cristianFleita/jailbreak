@@ -8,8 +8,18 @@ import {
   checkGameEndCondition,
 } from '../game/event-handlers.js'
 import { addPlayer, spawnNPCs } from '../game/state.js'
+import { GameRoomState, Vector3 } from '../game/types.js'
 import { Server } from 'socket.io'
 import { createServer } from 'http'
+
+const HOST = 'host-user-1'
+
+/** Test helper: adds a player and explicitly sets their role */
+function addTestPlayer(state: GameRoomState, socketId: string, userId: string, pos: Vector3, role: 'guard' | 'prisoner') {
+  const p = addPlayer(state, socketId, userId, pos)
+  p.role = role
+  return p
+}
 
 describe('Socket Events Integration', () => {
   let io: Server
@@ -19,7 +29,7 @@ describe('Socket Events Integration', () => {
   beforeEach(() => {
     httpServer = createServer()
     io = new Server(httpServer)
-    room = createRoom('event-test-room')
+    room = createRoom('event-test-room', HOST)
     room.state.status = 'active'
   })
 
@@ -35,7 +45,7 @@ describe('Socket Events Integration', () => {
 
   describe('player:move Validation', () => {
     it('should accept valid player movement', () => {
-      const guard = addPlayer(room.state, 'socket_guard', { x: 0, y: 1.5, z: 0 })
+      const guard = addTestPlayer(room.state, 'socket_guard', HOST, { x: 0, y: 1.5, z: 0 }, 'guard')
 
       const payload = {
         playerId: 'socket_guard',
@@ -63,7 +73,7 @@ describe('Socket Events Integration', () => {
     })
 
     it('should reject out-of-bounds movement', () => {
-      const guard = addPlayer(room.state, 'socket_guard', { x: 0, y: 1.5, z: 0 })
+      const guard = addTestPlayer(room.state, 'socket_guard', HOST, { x: 0, y: 1.5, z: 0 }, 'guard')
       const originalPos = { ...guard.position }
 
       const payload = {
@@ -90,8 +100,8 @@ describe('Socket Events Integration', () => {
 
   describe('player:interact Race Condition', () => {
     it('should give item to first player who picks it up', () => {
-      const prisoner1 = addPlayer(room.state, 'socket_p1', { x: 0, y: 1.5, z: 0 })
-      const prisoner2 = addPlayer(room.state, 'socket_p2', { x: 0.1, y: 1.5, z: 0 })
+      const prisoner1 = addPlayer(room.state, 'socket_p1', 'user_p1', { x: 0, y: 1.5, z: 0 })
+      const prisoner2 = addPlayer(room.state, 'socket_p2', 'user_p2', { x: 0.1, y: 1.5, z: 0 })
 
       // Create an item at origin
       const item = {
@@ -156,12 +166,12 @@ describe('Socket Events Integration', () => {
 
   describe('guard:mark Chase Initiation', () => {
     it('should broadcast chase:start on guard mark', () => {
-      const guard = addPlayer(room.state, 'socket_guard', {
+      const guard = addTestPlayer(room.state, 'socket_guard', HOST, {
         x: 0,
         y: 1.5,
         z: 0,
-      })
-      const prisoner = addPlayer(room.state, 'socket_p1', {
+      }, 'guard')
+      const prisoner = addPlayer(room.state, 'socket_p1', 'user_p1', {
         x: 5,
         y: 1.5,
         z: 5,
@@ -195,12 +205,12 @@ describe('Socket Events Integration', () => {
 
   describe('guard:catch Validation', () => {
     it('should catch prisoner within 1.5m', () => {
-      const guard = addPlayer(room.state, 'socket_guard', {
+      const guard = addTestPlayer(room.state, 'socket_guard', HOST, {
         x: 0,
         y: 1.5,
         z: 0,
-      })
-      const prisoner = addPlayer(room.state, 'socket_p1', {
+      }, 'guard')
+      const prisoner = addPlayer(room.state, 'socket_p1', 'user_p1', {
         x: 1,
         y: 1.5,
         z: 0,
@@ -234,12 +244,12 @@ describe('Socket Events Integration', () => {
     })
 
     it('should reject catch beyond 1.5m', () => {
-      const guard = addPlayer(room.state, 'socket_guard', {
+      const guard = addTestPlayer(room.state, 'socket_guard', HOST, {
         x: 0,
         y: 1.5,
         z: 0,
-      })
-      const prisoner = addPlayer(room.state, 'socket_p1', {
+      }, 'guard')
+      const prisoner = addPlayer(room.state, 'socket_p1', 'user_p1', {
         x: 10,
         y: 1.5,
         z: 0,
@@ -270,12 +280,12 @@ describe('Socket Events Integration', () => {
     })
 
     it('should not catch camuflaged prisoner', () => {
-      const guard = addPlayer(room.state, 'socket_guard', {
+      const guard = addTestPlayer(room.state, 'socket_guard', HOST, {
         x: 0,
         y: 1.5,
         z: 0,
-      })
-      const prisoner = addPlayer(room.state, 'socket_p1', {
+      }, 'guard')
+      const prisoner = addPlayer(room.state, 'socket_p1', 'user_p1', {
         x: 1,
         y: 1.5,
         z: 0,
@@ -309,14 +319,14 @@ describe('Socket Events Integration', () => {
 
   describe('Victory Conditions', () => {
     it('should detect guards win when all prisoners caught', () => {
-      const guard = addPlayer(room.state, 'socket_guard', {
+      const guard = addTestPlayer(room.state, 'socket_guard', HOST, {
         x: 0,
         y: 1.5,
         z: 0,
-      })
-      const p1 = addPlayer(room.state, 'socket_p1', { x: 5, y: 1.5, z: 5 })
-      const p2 = addPlayer(room.state, 'socket_p2', { x: -5, y: 1.5, z: -5 })
-      const p3 = addPlayer(room.state, 'socket_p3', { x: 10, y: 1.5, z: 10 })
+      }, 'guard')
+      const p1 = addPlayer(room.state, 'socket_p1', 'user_p1', { x: 5, y: 1.5, z: 5 })
+      const p2 = addPlayer(room.state, 'socket_p2', 'user_p2', { x: -5, y: 1.5, z: -5 })
+      const p3 = addPlayer(room.state, 'socket_p3', 'user_p3', { x: 10, y: 1.5, z: 10 })
 
       expect(checkGameEndCondition(room).winner).toBeNull()
 
@@ -330,12 +340,12 @@ describe('Socket Events Integration', () => {
     })
 
     it('should not end game if prisoners still alive', () => {
-      const guard = addPlayer(room.state, 'socket_guard', {
+      const guard = addTestPlayer(room.state, 'socket_guard', HOST, {
         x: 0,
         y: 1.5,
         z: 0,
-      })
-      const p1 = addPlayer(room.state, 'socket_p1', { x: 5, y: 1.5, z: 5 })
+      }, 'guard')
+      const p1 = addPlayer(room.state, 'socket_p1', 'user_p1', { x: 5, y: 1.5, z: 5 })
 
       const result = checkGameEndCondition(room)
       expect(result.winner).toBeNull()

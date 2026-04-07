@@ -128,7 +128,7 @@ function createClient(index) {
     log(role, `   Reason: ${data.reason}`)
   })
 
-  socket.on('error', (err) => {
+  socket.on('game:error', (err) => {
     log(role, `❌ Error: ${err.message}`)
   })
 

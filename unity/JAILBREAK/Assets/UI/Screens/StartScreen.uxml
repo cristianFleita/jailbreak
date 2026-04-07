@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="root" class="screen-root">
+        <ui:VisualElement name="center-panel" class="center-panel">
+            <ui:Label name="title" text="JAILBREAK" class="title-text" />
+            <ui:Label name="subtitle" text="Escape or Enforce" class="subtitle-text" />
+
+            <ui:VisualElement name="spacer" style="height: 40px;" />
+
+            <ui:TextField name="display-name-field" label="Your Name" value="Player" class="input-field" />
+
+            <ui:VisualElement name="spacer2" style="height: 20px;" />
+
+            <ui:Button name="start-btn" text="START GAME" class="primary-btn" />
+
+            <ui:Label name="status-label" text="" class="status-text" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

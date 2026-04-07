@@ -8,11 +8,13 @@ import { GameRoomState, GameConfig, PlayerState, NPCState, ItemState, Vector3 } 
 /**
  * Creates an empty game room state ready for players to join.
  */
-export function createGameRoomState(roomId: string, config: GameConfig): GameRoomState {
+export function createGameRoomState(roomId: string, hostUserId: string, config: GameConfig): GameRoomState {
   return {
     id: roomId,
+    hostUserId,
     status: 'lobby',
     players: new Map(),
+    playersByUserId: new Map(),
     npcs: new Map(),
     items: new Map(),
     phase: {
@@ -28,24 +30,23 @@ export function createGameRoomState(roomId: string, config: GameConfig): GameRoo
 
 /**
  * Adds a player to the game state.
- * Assigns role based on current player count:
- * - First player (index 0) = guard
- * - Players 1-3 = prisoners
+ * Role defaults to 'prisoner' in lobby — roles are reassigned randomly
+ * when the host starts the game via assignRandomRoles().
  */
 export function addPlayer(
   state: GameRoomState,
   playerId: string,
+  userId: string,
   initialPosition: Vector3
 ): PlayerState {
   if (state.players.size >= 4) {
     throw new Error('Room is full (max 4 players)')
   }
 
-  const role = state.players.size === 0 ? 'guard' : 'prisoner'
-
   const player: PlayerState = {
     id: playerId,
-    role,
+    userId,
+    role: 'prisoner', // placeholder — reassigned on game start
     position: { ...initialPosition },
     rotation: { x: 0, y: 0, z: 0, w: 1 },
     velocity: { x: 0, y: 0, z: 0 },
@@ -54,13 +55,34 @@ export function addPlayer(
   }
 
   state.players.set(playerId, player)
+  state.playersByUserId.set(userId, player)
   return player
+}
+
+/**
+ * Randomly assigns roles: exactly 1 guard, rest are prisoners.
+ * Called when the host starts the game.
+ */
+export function assignRandomRoles(state: GameRoomState): void {
+  const players = Array.from(state.players.values())
+  if (players.length === 0) return
+
+  // Pick a random player to be the guard
+  const guardIndex = Math.floor(Math.random() * players.length)
+
+  for (let i = 0; i < players.length; i++) {
+    players[i].role = i === guardIndex ? 'guard' : 'prisoner'
+  }
 }
 
 /**
  * Removes a player from the game state (disconnect or timeout).
  */
 export function removePlayer(state: GameRoomState, playerId: string): void {
+  const player = state.players.get(playerId)
+  if (player) {
+    state.playersByUserId.delete(player.userId)
+  }
   state.players.delete(playerId)
 }
 

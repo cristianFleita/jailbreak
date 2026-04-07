@@ -21,6 +21,22 @@ export interface Rotation {
 }
 
 // ============================================================================
+// User Identity (persistent across sessions)
+// ============================================================================
+
+export type UserStatus = 'idle' | 'in-lobby' | 'in-game' | 'won' | 'lost' | 'spectating'
+
+export interface UserProfile {
+  userId: string // persistent UUID (stored in browser localStorage)
+  displayName: string
+  status: UserStatus
+  currentRoomId?: string
+  socketId?: string // current socket connection (changes on reconnect)
+  createdAt: number
+  lastSeenAt: number
+}
+
+// ============================================================================
 // Player / Client State
 // ============================================================================
 
@@ -28,7 +44,8 @@ export type MovementState = 'idle' | 'walking' | 'sprinting' | 'camuflaged'
 export type PlayerRole = 'prisoner' | 'guard'
 
 export interface PlayerState {
-  id: string // socket ID
+  id: string // socket ID (runtime identifier)
+  userId: string // persistent user ID
   role: PlayerRole
   position: Vector3
   rotation: Rotation
@@ -82,9 +99,11 @@ export interface ItemState {
 // ============================================================================
 
 export interface GameRoomState {
-  id: string
+  id: string // room name given by host
+  hostUserId: string // persistent userId of the host
   status: 'lobby' | 'loading' | 'active' | 'finished'
   players: Map<string, PlayerState> // socket ID → PlayerState
+  playersByUserId: Map<string, PlayerState> // userId → PlayerState (reverse lookup)
   npcs: Map<string, NPCState> // npc ID → NPCState
   items: Map<string, ItemState>
   phase: PhaseData
@@ -172,6 +191,66 @@ export interface GameEndPayload {
 
 export interface RiotAvailablePayload {
   errorsCount: number
+}
+
+// ============================================================================
+// Auth & Room Lobby Payloads (Client → Server)
+// ============================================================================
+
+export interface AuthRegisterPayload {
+  userId?: string // existing userId from localStorage (omit for new user)
+  displayName: string
+}
+
+export interface RoomCreatePayload {
+  roomName: string // human-readable name = roomId
+}
+
+export interface RoomJoinPayload {
+  roomId: string
+}
+
+export interface RoomKickPayload {
+  targetUserId: string // userId of the player to kick
+}
+
+// ============================================================================
+// Auth & Room Lobby Payloads (Server → Client)
+// ============================================================================
+
+export interface AuthRegisteredPayload {
+  userId: string
+  displayName: string
+}
+
+export interface RoomCreatedPayload {
+  roomId: string
+  hostUserId: string
+}
+
+export interface RoomStatePayload {
+  roomId: string
+  hostUserId: string
+  status: GameRoomState['status']
+  players: Array<{ userId: string; displayName: string; role: PlayerRole; isHost: boolean }>
+}
+
+export interface RoomPlayerJoinedPayload {
+  userId: string
+  displayName: string
+  role: PlayerRole
+  players: RoomStatePayload['players']
+}
+
+export interface RoomPlayerLeftPayload {
+  userId: string
+  reason: 'left' | 'kicked' | 'disconnected'
+  players: RoomStatePayload['players']
+}
+
+export interface RoomDestroyedPayload {
+  roomId: string
+  reason: 'host-left' | 'empty' | 'game-ended'
 }
 
 // ============================================================================

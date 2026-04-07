@@ -4,6 +4,8 @@ import { addPlayer, spawnNPCs } from '../game/state.js'
 import { Server } from 'socket.io'
 import { createServer } from 'http'
 
+const HOST = 'host-user-1'
+
 describe('Performance Tests', () => {
   let io: Server
   let httpServer: any
@@ -12,7 +14,7 @@ describe('Performance Tests', () => {
   beforeEach(() => {
     httpServer = createServer()
     io = new Server(httpServer)
-    room = createRoom('perf-test-room')
+    room = createRoom('perf-test-room', HOST)
   })
 
   afterEach(() => {
@@ -28,10 +30,10 @@ describe('Performance Tests', () => {
   describe('Bandwidth Estimation', () => {
     it('should keep bandwidth under 5 KB/s with 4 players and 20 NPCs', (done) => {
       // Set up 4 players and 20 NPCs
-      addPlayer(room.state, 'socket_guard', { x: 0, y: 1.5, z: 0 })
-      addPlayer(room.state, 'socket_p1', { x: 5, y: 1.5, z: 5 })
-      addPlayer(room.state, 'socket_p2', { x: -5, y: 1.5, z: -5 })
-      addPlayer(room.state, 'socket_p3', { x: 10, y: 1.5, z: 10 })
+      addPlayer(room.state, 'socket_guard', HOST, { x: 0, y: 1.5, z: 0 })
+      addPlayer(room.state, 'socket_p1', 'user_p1', { x: 5, y: 1.5, z: 5 })
+      addPlayer(room.state, 'socket_p2', 'user_p2', { x: -5, y: 1.5, z: -5 })
+      addPlayer(room.state, 'socket_p3', 'user_p3', { x: 10, y: 1.5, z: 10 })
 
       spawnNPCs(room.state, room.config, 20)
       room.state.status = 'active'
@@ -124,8 +126,8 @@ describe('Performance Tests', () => {
 
   describe('Memory Stability', () => {
     it('should not have runaway memory growth over 100 ticks', (done) => {
-      addPlayer(room.state, 'socket_guard', { x: 0, y: 1.5, z: 0 })
-      addPlayer(room.state, 'socket_p1', { x: 5, y: 1.5, z: 5 })
+      addPlayer(room.state, 'socket_guard', HOST, { x: 0, y: 1.5, z: 0 })
+      addPlayer(room.state, 'socket_p1', 'user_p1', { x: 5, y: 1.5, z: 5 })
       spawnNPCs(room.state, room.config, 20)
       room.state.status = 'active'
 
@@ -216,10 +218,10 @@ describe('Performance Tests', () => {
 
   describe('CPU Load Estimation', () => {
     it('should complete 100 ticks in reasonable time', (done) => {
-      addPlayer(room.state, 'socket_guard', { x: 0, y: 1.5, z: 0 })
-      addPlayer(room.state, 'socket_p1', { x: 5, y: 1.5, z: 5 })
-      addPlayer(room.state, 'socket_p2', { x: -5, y: 1.5, z: -5 })
-      addPlayer(room.state, 'socket_p3', { x: 10, y: 1.5, z: 10 })
+      addPlayer(room.state, 'socket_guard', HOST, { x: 0, y: 1.5, z: 0 })
+      addPlayer(room.state, 'socket_p1', 'user_p1', { x: 5, y: 1.5, z: 5 })
+      addPlayer(room.state, 'socket_p2', 'user_p2', { x: -5, y: 1.5, z: -5 })
+      addPlayer(room.state, 'socket_p3', 'user_p3', { x: 10, y: 1.5, z: 10 })
       spawnNPCs(room.state, room.config, 20)
       room.state.status = 'active'
 

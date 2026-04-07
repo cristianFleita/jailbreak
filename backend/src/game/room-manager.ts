@@ -1,12 +1,20 @@
 /**
  * Room manager: manages game rooms, tick loop, and state broadcasts.
  * Handles the core game loop that synchronizes state to all clients.
+ *
+ * Room lifecycle:
+ *   host creates room → players join → host starts → game active → game ends
+ *   host disconnects → room destroyed (all players kicked)
  */
 
 import { Server } from 'socket.io'
-import { GameRoom, GameRoomState, GameConfig, NPCPositionUpdate, PlayerStateUpdate } from './types.js'
+import {
+  GameRoom, GameRoomState, GameConfig, NPCPositionUpdate, PlayerStateUpdate,
+  RoomStatePayload, PlayerRole,
+} from './types.js'
 import { createGameRoomState, advanceTick, computeNPCDelta, spawnNPCs, startGame, endGame } from './state.js'
 import { GameManager } from './systems/game-manager.js'
+import { getUser } from './user-identity.js'
 
 /**
  * Default game configuration (tuning knobs from design doc).
@@ -37,12 +45,25 @@ export const defaultGameConfig: GameConfig = {
  */
 const activeRooms = new Map<string, GameRoom>()
 
+// ============================================================================
+// Room CRUD
+// ============================================================================
+
 /**
- * Creates a new game room (called when first player joins a room ID).
+ * Creates a new room. The host's userId becomes the room owner.
+ * Returns null if a room with that name already exists.
  */
-export function createRoom(roomId: string, config: Partial<GameConfig> = {}): GameRoom {
+export function createRoom(
+  roomId: string,
+  hostUserId: string,
+  config: Partial<GameConfig> = {}
+): GameRoom | null {
+  if (activeRooms.has(roomId)) {
+    return null // room name taken
+  }
+
   const finalConfig = { ...defaultGameConfig, ...config }
-  const state = createGameRoomState(roomId, finalConfig)
+  const state = createGameRoomState(roomId, hostUserId, finalConfig)
 
   const room: GameRoom = {
     state,
@@ -50,17 +71,8 @@ export function createRoom(roomId: string, config: Partial<GameConfig> = {}): Ga
   }
 
   activeRooms.set(roomId, room)
+  console.log(`[ROOM] Created room "${roomId}" (host: ${hostUserId})`)
   return room
-}
-
-/**
- * Gets an existing room or creates it if it doesn't exist.
- */
-export function getOrCreateRoom(roomId: string, config?: Partial<GameConfig>): GameRoom {
-  if (activeRooms.has(roomId)) {
-    return activeRooms.get(roomId)!
-  }
-  return createRoom(roomId, config)
 }
 
 /**
@@ -71,7 +83,14 @@ export function getRoom(roomId: string): GameRoom | undefined {
 }
 
 /**
- * Destroys a room (called when last player leaves or game ends).
+ * Checks if a room exists.
+ */
+export function roomExists(roomId: string): boolean {
+  return activeRooms.has(roomId)
+}
+
+/**
+ * Destroys a room (called when host leaves, game ends, or room is empty).
  */
 export function destroyRoom(roomId: string): void {
   const room = activeRooms.get(roomId)
@@ -82,8 +101,55 @@ export function destroyRoom(roomId: string): void {
   if (room.phaseLoopInterval) clearInterval(room.phaseLoopInterval)
 
   activeRooms.delete(roomId)
-  console.log(`Room ${roomId} destroyed`)
+  console.log(`[ROOM] Destroyed room "${roomId}"`)
 }
+
+// ============================================================================
+// Room player list helpers
+// ============================================================================
+
+/**
+ * Builds the player list payload for room state broadcasts.
+ */
+export function buildRoomPlayersPayload(room: GameRoom): RoomStatePayload['players'] {
+  const players: RoomStatePayload['players'] = []
+
+  for (const [_socketId, player] of room.state.players) {
+    const userProfile = getUser(player.userId)
+    players.push({
+      userId: player.userId,
+      displayName: userProfile?.displayName || `Player_${player.userId.slice(0, 6)}`,
+      role: player.role,
+      isHost: player.userId === room.state.hostUserId,
+    })
+  }
+
+  return players
+}
+
+/**
+ * Builds the full room state payload.
+ */
+export function buildRoomStatePayload(room: GameRoom): RoomStatePayload {
+  return {
+    roomId: room.state.id,
+    hostUserId: room.state.hostUserId,
+    status: room.state.status,
+    players: buildRoomPlayersPayload(room),
+  }
+}
+
+/**
+ * Finds a player's socketId by their userId within a room.
+ */
+export function findSocketByUserId(room: GameRoom, userId: string): string | undefined {
+  const player = room.state.playersByUserId.get(userId)
+  return player?.id // player.id is the socketId
+}
+
+// ============================================================================
+// Game loop (unchanged from before — drives tick, broadcast, win checks)
+// ============================================================================
 
 /**
  * Starts the game loop for a room.
@@ -106,7 +172,6 @@ export function startGameLoop(io: Server, room: GameRoom): void {
   room.tickLoopInterval = setInterval(() => {
     try {
       // ========== Game Logic Tick ==========
-      // Updates: NPC behavior, pursuits, victory conditions, etc.
       const tickResult = gameManager.tick()
 
       // Check if game should end
@@ -114,13 +179,11 @@ export function startGameLoop(io: Server, room: GameRoom): void {
         console.log(`[TICK] Game ending: winner=${tickResult.winner}, reason=${tickResult.reason}`)
         endGame(state, tickResult.winner as 'prisoners' | 'guards', tickResult.reason || 'unknown')
 
-        // Broadcast game end to all
         io.to(state.id).emit('game:end', {
           winner: tickResult.winner,
           reason: tickResult.reason,
         })
 
-        // Stop loop
         stopGameLoop(room)
         return
       }
@@ -151,7 +214,7 @@ export function startGameLoop(io: Server, room: GameRoom): void {
     }
   }, tickInterval)
 
-  console.log(`Game loop started for room ${state.id} at ${config.tickRate} ticks/sec`)
+  console.log(`[ROOM] Game loop started for "${state.id}" at ${config.tickRate} ticks/sec`)
 }
 
 /**
@@ -169,16 +232,16 @@ export function stopGameLoop(room: GameRoom): void {
  */
 export function initializeNPCs(room: GameRoom, count: number = 20): void {
   spawnNPCs(room.state, room.config, count)
-  console.log(`Spawned ${count} NPCs in room ${room.state.id}`)
+  console.log(`[ROOM] Spawned ${count} NPCs in "${room.state.id}"`)
 }
 
 /**
  * Transitions a room from lobby to active game.
- * Spawns NPCs and starts tick loop.
+ * Only the host can trigger this.
  */
 export function transitionToActive(io: Server, room: GameRoom): void {
   if (room.state.status !== 'lobby') {
-    console.warn(`Cannot transition room ${room.state.id} from ${room.state.status} to active`)
+    console.warn(`Cannot transition room "${room.state.id}" from ${room.state.status} to active`)
     return
   }
 
@@ -193,14 +256,31 @@ export function transitionToActive(io: Server, room: GameRoom): void {
     phase: room.state.phase,
   })
 
-  console.log(`Room ${room.state.id} transitioned to ACTIVE`)
+  console.log(`[ROOM] "${room.state.id}" transitioned to ACTIVE`)
 }
+
+// ============================================================================
+// Monitoring
+// ============================================================================
 
 /**
  * Gets the count of active rooms (for monitoring).
  */
 export function getActiveRoomCount(): number {
   return activeRooms.size
+}
+
+/**
+ * Lists all active rooms (for room browser).
+ */
+export function listRooms(): RoomStatePayload[] {
+  const result: RoomStatePayload[] = []
+  for (const [_id, room] of activeRooms) {
+    if (room.state.status === 'lobby') {
+      result.push(buildRoomStatePayload(room))
+    }
+  }
+  return result
 }
 
 /**

@@ -70,7 +70,7 @@ socket.on('game:start', (data) => {
   console.log(`  NPCs spawned: ${data.npcs.length}\n`)
 })
 
-socket.on('error', (err) => {
+socket.on('game:error', (err) => {
   console.error(`✗ Socket Error: ${err.message}`)
 })
 

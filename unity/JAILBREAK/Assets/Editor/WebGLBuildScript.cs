@@ -10,7 +10,11 @@ public class WebGLBuildScript
         
         BuildPlayerOptions opts = new BuildPlayerOptions
         {
-            scenes = new[] { "Assets/Scenes/SampleScene.unity" },
+            scenes = new[]
+            {
+                "Assets/Scenes/StartScene.unity", "Assets/Scenes/LobbyScene.unity", "Assets/Scenes/RoomScene.unity"
+                , "Assets/Scenes/GameScene.unity"
+            },
             locationPathName = outputPath,
             target = BuildTarget.WebGL,
             options = BuildOptions.None

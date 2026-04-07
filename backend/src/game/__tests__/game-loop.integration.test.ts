@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { createRoom, getRoom, startGameLoop, stopGameLoop } from '../room-manager.js'
+import { createRoom, getRoom, destroyRoom, startGameLoop, stopGameLoop } from '../room-manager.js'
 import { addPlayer, spawnNPCs, updateNPCPosition } from '../state.js'
 import { Server } from 'socket.io'
 import { createServer } from 'http'
+
+const HOST = 'host-user-1'
 
 describe('Game Loop Integration', () => {
   let io: Server
@@ -12,11 +14,12 @@ describe('Game Loop Integration', () => {
   beforeEach(() => {
     httpServer = createServer()
     io = new Server(httpServer)
-    room = createRoom('loop-test-room')
+    room = createRoom('loop-test-room', HOST)!
   })
 
   afterEach(() => {
-    stopGameLoop(room)
+    if (room) stopGameLoop(room)
+    destroyRoom('loop-test-room')
     io.close()
     httpServer.close()
   })
@@ -43,11 +46,11 @@ describe('Game Loop Integration', () => {
 
   describe('Player State Broadcasting', () => {
     it('should emit player:state with all players', (done) => {
-      // Set up 4 players
-      addPlayer(room.state, 'socket_guard', { x: 0, y: 1.5, z: 0 })
-      addPlayer(room.state, 'socket_p1', { x: 5, y: 1.5, z: 5 })
-      addPlayer(room.state, 'socket_p2', { x: -5, y: 1.5, z: -5 })
-      addPlayer(room.state, 'socket_p3', { x: 10, y: 1.5, z: 10 })
+      // Set up 4 players (host = guard, rest = prisoners)
+      addPlayer(room.state, 'socket_guard', HOST, { x: 0, y: 1.5, z: 0 })
+      addPlayer(room.state, 'socket_p1', 'user_p1', { x: 5, y: 1.5, z: 5 })
+      addPlayer(room.state, 'socket_p2', 'user_p2', { x: -5, y: 1.5, z: -5 })
+      addPlayer(room.state, 'socket_p3', 'user_p3', { x: 10, y: 1.5, z: 10 })
 
       room.state.status = 'active'
 

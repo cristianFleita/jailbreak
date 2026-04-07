@@ -1,0 +1,33 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="root" class="screen-root">
+        <ui:VisualElement name="room-panel" class="center-panel" style="min-width: 450px;">
+            <!-- Room Header -->
+            <ui:Label name="room-name-label" text="Room: ???" class="title-text" style="font-size: 32px;" />
+            <ui:Label name="room-status-label" text="Waiting for players..." class="subtitle-text" />
+
+            <ui:VisualElement name="spacer" style="height: 20px;" />
+
+            <!-- Players List -->
+            <ui:VisualElement name="players-panel" class="section-panel" style="min-height: 160px;">
+                <ui:Label text="PLAYERS" class="section-title" />
+                <ui:ScrollView name="players-list" style="flex-grow: 1;" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="spacer2" style="height: 20px;" />
+
+            <!-- Host Controls -->
+            <ui:VisualElement name="host-controls" style="display: flex;">
+                <ui:Button name="start-game-btn" text="START GAME" class="primary-btn" />
+            </ui:VisualElement>
+
+            <!-- Non-host waiting label -->
+            <ui:Label name="waiting-label" text="Waiting for host to start..." class="status-text" style="display: none;" />
+
+            <!-- Leave Button (always visible) -->
+            <ui:VisualElement name="spacer3" style="height: 10px;" />
+            <ui:Button name="leave-btn" text="LEAVE ROOM" class="secondary-btn" />
+
+            <ui:Label name="status-label" text="" class="status-text" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

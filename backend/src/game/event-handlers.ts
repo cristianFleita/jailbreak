@@ -123,7 +123,7 @@ export function handlePlayerInteract(context: PlayerInteractContext): void {
   const item = room.state.items.get(objectId)
   if (!item) {
     console.warn(`[INTERACT] Item ${objectId} not found`)
-    io.to(socketId).emit('error', { message: 'Item not found' })
+    io.to(socketId).emit('game:error', { message: 'Item not found' })
     return
   }
 
@@ -131,7 +131,7 @@ export function handlePlayerInteract(context: PlayerInteractContext): void {
   const distCheck = validateInteractionDistance(player.position, item.position)
   if (!distCheck.valid) {
     console.warn(`[INTERACT] ${socketId} rejected: ${distCheck.reason}`)
-    io.to(socketId).emit('error', { message: distCheck.reason })
+    io.to(socketId).emit('game:error', { message: distCheck.reason })
     return
   }
 
@@ -152,7 +152,7 @@ export function handlePlayerInteract(context: PlayerInteractContext): void {
 function handleItemPickup(io: Server, roomId: string, room: GameRoom, playerId: string, itemId: string, item: any): void {
   if (item.isPickedUp) {
     console.log(`[PICKUP] Item ${itemId} already picked up by ${item.pickedUpBy}`)
-    io.to(playerId).emit('error', { message: 'Item already picked up' })
+    io.to(playerId).emit('game:error', { message: 'Item already picked up' })
     return
   }
 
@@ -367,7 +367,7 @@ export function handleRiotActivate(context: RiotActivateContext): void {
   const riotAvailable = true
 
   if (!riotAvailable) {
-    io.to(socketId).emit('error', { message: 'Riot not available yet' })
+    io.to(socketId).emit('game:error', { message: 'Riot not available yet' })
     return
   }
 

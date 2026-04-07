@@ -4,12 +4,14 @@ import { createGameRoomState } from '../../state.js'
 import { defaultGameConfig } from '../../room-manager.js'
 import { GameRoom } from '../../types.js'
 
+const HOST = 'host-user-1'
+
 describe('GameManager', () => {
   let gameManager: GameManager
   let room: GameRoom
 
   beforeEach(() => {
-    const state = createGameRoomState('test-room', defaultGameConfig)
+    const state = createGameRoomState('test-room', HOST, defaultGameConfig)
     room = { state, config: defaultGameConfig }
     gameManager = new GameManager(room)
   })
@@ -69,8 +71,9 @@ describe('GameManager', () => {
       // Must spawn NPCs for pursuit system to work
       spawnNPCs(room.state, room.config, 20)
 
-      const guard = addPlayer(room.state, 'guard_1', { x: 0, y: 1.5, z: 0 })
-      const prisoner = addPlayer(room.state, 'prisoner_1', {
+      const guard = addPlayer(room.state, 'guard_1', HOST, { x: 0, y: 1.5, z: 0 })
+      guard.role = 'guard'
+      const prisoner = addPlayer(room.state, 'prisoner_1', 'prisoner-user-1', {
         x: 10,
         y: 1.5,
         z: 10,
@@ -91,8 +94,9 @@ describe('GameManager', () => {
       // Spawn NPCs for pursuit system
       spawnNPCs(room.state, room.config, 20)
 
-      addPlayer(room.state, 'guard_1', { x: 0, y: 1.5, z: 0 })
-      const prisoner = addPlayer(room.state, 'prisoner_1', {
+      const guard = addPlayer(room.state, 'guard_1', HOST, { x: 0, y: 1.5, z: 0 })
+      guard.role = 'guard'
+      const prisoner = addPlayer(room.state, 'prisoner_1', 'prisoner-user-1', {
         x: 10,
         y: 1.5,
         z: 10,
@@ -108,7 +112,7 @@ describe('GameManager', () => {
     it('should handle item pickup', async () => {
       const { addPlayer } = await import('../../state.js')
 
-      const prisoner = addPlayer(room.state, 'prisoner_1', { x: 0, y: 1.5, z: 0 })
+      const prisoner = addPlayer(room.state, 'prisoner_1', 'prisoner-user-1', { x: 0, y: 1.5, z: 0 })
 
       // Add prisoner to escape routes (since they were added after gameManager init)
       gameManager.escapeRoutes.addPrisoner('prisoner_1')
@@ -151,9 +155,10 @@ describe('GameManager', () => {
     it('should return correct prisoner counts', async () => {
       const { addPlayer } = await import('../../state.js')
 
-      addPlayer(room.state, 'guard_1', { x: 0, y: 1.5, z: 0 })
-      const p1 = addPlayer(room.state, 'prisoner_1', { x: 5, y: 1.5, z: 5 })
-      const p2 = addPlayer(room.state, 'prisoner_2', { x: -5, y: 1.5, z: -5 })
+      const g = addPlayer(room.state, 'guard_1', HOST, { x: 0, y: 1.5, z: 0 })
+      g.role = 'guard'
+      const p1 = addPlayer(room.state, 'prisoner_1', 'prisoner-user-1', { x: 5, y: 1.5, z: 5 })
+      const p2 = addPlayer(room.state, 'prisoner_2', 'prisoner-user-2', { x: -5, y: 1.5, z: -5 })
 
       // Add prisoners to escape routes
       gameManager.escapeRoutes.addPrisoner('prisoner_1')

@@ -10,17 +10,22 @@ import {
   endGame,
   advanceTick,
   distance,
+  assignRandomRoles,
 } from '../state.js'
 import { defaultGameConfig } from '../room-manager.js'
+
+const HOST_USER_ID = 'host-user-1'
 
 describe('State Management', () => {
   describe('createGameRoomState', () => {
     it('should create empty game room state', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
 
       expect(state.id).toBe('test-room')
+      expect(state.hostUserId).toBe(HOST_USER_ID)
       expect(state.status).toBe('lobby')
       expect(state.players.size).toBe(0)
+      expect(state.playersByUserId.size).toBe(0)
       expect(state.npcs.size).toBe(0)
       expect(state.items.size).toBe(0)
       expect(state.phase.current).toBe('setup')
@@ -33,45 +38,47 @@ describe('State Management', () => {
     let state: any
 
     beforeEach(() => {
-      state = createGameRoomState('test-room', defaultGameConfig)
+      state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
     })
 
-    it('should add first player as guard', () => {
-      const player = addPlayer(state, 'socket_1', { x: 0, y: 1.5, z: 0 })
+    it('should add player with default prisoner role', () => {
+      const player = addPlayer(state, 'socket_1', HOST_USER_ID, { x: 0, y: 1.5, z: 0 })
 
       expect(player.id).toBe('socket_1')
-      expect(player.role).toBe('guard')
+      expect(player.userId).toBe(HOST_USER_ID)
+      expect(player.role).toBe('prisoner') // default — reassigned on game start
       expect(state.players.size).toBe(1)
+      expect(state.playersByUserId.size).toBe(1)
     })
 
-    it('should add subsequent players as prisoners', () => {
-      addPlayer(state, 'socket_1', { x: 0, y: 1.5, z: 0 })
-      const p2 = addPlayer(state, 'socket_2', { x: 5, y: 1.5, z: 5 })
+    it('should track players in both maps', () => {
+      addPlayer(state, 'socket_1', HOST_USER_ID, { x: 0, y: 1.5, z: 0 })
+      addPlayer(state, 'socket_2', 'user_2', { x: 5, y: 1.5, z: 5 })
 
-      expect(p2.role).toBe('prisoner')
       expect(state.players.size).toBe(2)
+      expect(state.playersByUserId.size).toBe(2)
     })
 
     it('should reject 5th player (max 4)', () => {
-      addPlayer(state, 'socket_1', { x: 0, y: 1.5, z: 0 })
-      addPlayer(state, 'socket_2', { x: 0, y: 1.5, z: 0 })
-      addPlayer(state, 'socket_3', { x: 0, y: 1.5, z: 0 })
-      addPlayer(state, 'socket_4', { x: 0, y: 1.5, z: 0 })
+      addPlayer(state, 'socket_1', HOST_USER_ID, { x: 0, y: 1.5, z: 0 })
+      addPlayer(state, 'socket_2', 'user_2', { x: 0, y: 1.5, z: 0 })
+      addPlayer(state, 'socket_3', 'user_3', { x: 0, y: 1.5, z: 0 })
+      addPlayer(state, 'socket_4', 'user_4', { x: 0, y: 1.5, z: 0 })
 
       expect(() => {
-        addPlayer(state, 'socket_5', { x: 0, y: 1.5, z: 0 })
+        addPlayer(state, 'socket_5', 'user_5', { x: 0, y: 1.5, z: 0 })
       }).toThrow('Room is full')
     })
 
     it('should spawn player at given position', () => {
       const spawnPos = { x: 10, y: 2.0, z: -5 }
-      const player = addPlayer(state, 'socket_1', spawnPos)
+      const player = addPlayer(state, 'socket_1', HOST_USER_ID, spawnPos)
 
       expect(player.position).toEqual(spawnPos)
     })
 
     it('should initialize player with idle state', () => {
-      const player = addPlayer(state, 'socket_1', { x: 0, y: 1.5, z: 0 })
+      const player = addPlayer(state, 'socket_1', HOST_USER_ID, { x: 0, y: 1.5, z: 0 })
 
       expect(player.movementState).toBe('idle')
       expect(player.isAlive).toBe(true)
@@ -79,18 +86,48 @@ describe('State Management', () => {
     })
   })
 
+  describe('assignRandomRoles', () => {
+    it('should assign exactly 1 guard and rest prisoners', () => {
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
+      addPlayer(state, 's1', 'u1', { x: 0, y: 1.5, z: 0 })
+      addPlayer(state, 's2', 'u2', { x: 5, y: 1.5, z: 5 })
+      addPlayer(state, 's3', 'u3', { x: -5, y: 1.5, z: -5 })
+      addPlayer(state, 's4', 'u4', { x: 10, y: 1.5, z: 10 })
+
+      assignRandomRoles(state)
+
+      const players = Array.from(state.players.values())
+      const guards = players.filter(p => p.role === 'guard')
+      const prisoners = players.filter(p => p.role === 'prisoner')
+
+      expect(guards.length).toBe(1)
+      expect(prisoners.length).toBe(3)
+    })
+
+    it('should assign guard to single player', () => {
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
+      addPlayer(state, 's1', 'u1', { x: 0, y: 1.5, z: 0 })
+
+      assignRandomRoles(state)
+
+      const player = state.players.get('s1')!
+      expect(player.role).toBe('guard')
+    })
+  })
+
   describe('removePlayer', () => {
     it('should remove player from state', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
-      addPlayer(state, 'socket_1', { x: 0, y: 1.5, z: 0 })
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
+      addPlayer(state, 'socket_1', HOST_USER_ID, { x: 0, y: 1.5, z: 0 })
 
       expect(state.players.size).toBe(1)
       removePlayer(state, 'socket_1')
       expect(state.players.size).toBe(0)
+      expect(state.playersByUserId.size).toBe(0)
     })
 
     it('should handle removing non-existent player gracefully', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
 
       expect(() => {
         removePlayer(state, 'nonexistent')
@@ -100,8 +137,8 @@ describe('State Management', () => {
 
   describe('updatePlayerMovement', () => {
     it('should update player position and movement state', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
-      addPlayer(state, 'socket_1', { x: 0, y: 1.5, z: 0 })
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
+      addPlayer(state, 'socket_1', HOST_USER_ID, { x: 0, y: 1.5, z: 0 })
 
       const newPos = { x: 5, y: 1.5, z: 5 }
       updatePlayerMovement(
@@ -120,7 +157,7 @@ describe('State Management', () => {
     })
 
     it('should not update non-existent player', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
 
       expect(() => {
         updatePlayerMovement(
@@ -137,14 +174,14 @@ describe('State Management', () => {
 
   describe('spawnNPCs', () => {
     it('should spawn 20 NPCs by default', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
       spawnNPCs(state, defaultGameConfig)
 
       expect(state.npcs.size).toBe(20)
     })
 
     it('should spawn NPCs within map bounds', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
       spawnNPCs(state, defaultGameConfig)
 
       state.npcs.forEach((npc) => {
@@ -160,7 +197,7 @@ describe('State Management', () => {
     })
 
     it('should set first NPC as guard type', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
       spawnNPCs(state, defaultGameConfig)
 
       const npcs = Array.from(state.npcs.values())
@@ -168,7 +205,7 @@ describe('State Management', () => {
     })
 
     it('should initialize NPC last broadcast position', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
       spawnNPCs(state, defaultGameConfig)
 
       state.npcs.forEach((npc) => {
@@ -179,7 +216,7 @@ describe('State Management', () => {
 
   describe('computeNPCDelta', () => {
     it('should return empty delta when no NPCs moved', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
       spawnNPCs(state, defaultGameConfig)
 
       const delta = computeNPCDelta(state, 0.1)
@@ -188,7 +225,7 @@ describe('State Management', () => {
     })
 
     it('should return only NPCs that moved >threshold', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
       spawnNPCs(state, defaultGameConfig)
 
       // Move first NPC by 0.15m (exceeds 0.1m threshold)
@@ -202,7 +239,7 @@ describe('State Management', () => {
     })
 
     it('should update lastBroadcastPosition after delta', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
       spawnNPCs(state, defaultGameConfig)
 
       const firstNpc = Array.from(state.npcs.values())[0]
@@ -218,7 +255,7 @@ describe('State Management', () => {
 
   describe('startGame', () => {
     it('should transition to active status', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
 
       startGame(state)
 
@@ -227,7 +264,7 @@ describe('State Management', () => {
     })
 
     it('should set startedAt timestamp', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
       const beforeStart = Date.now()
 
       startGame(state)
@@ -239,7 +276,7 @@ describe('State Management', () => {
 
   describe('endGame', () => {
     it('should set finished status and winner', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
 
       endGame(state, 'guards', 'all_prisoners_caught')
 
@@ -249,7 +286,7 @@ describe('State Management', () => {
     })
 
     it('should record end timestamp', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
       const beforeEnd = Date.now()
 
       endGame(state, 'prisoners', 'escape')
@@ -260,7 +297,7 @@ describe('State Management', () => {
 
   describe('advanceTick', () => {
     it('should increment tick counter', () => {
-      const state = createGameRoomState('test-room', defaultGameConfig)
+      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
 
       expect(state.tick).toBe(0)
       advanceTick(state)
