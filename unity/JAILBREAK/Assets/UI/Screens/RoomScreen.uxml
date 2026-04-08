@@ -1,33 +1,24 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
-    <ui:VisualElement name="root" class="screen-root">
-        <ui:VisualElement name="room-panel" class="center-panel" style="min-width: 450px;">
-            <!-- Room Header -->
-            <ui:Label name="room-name-label" text="Room: ???" class="title-text" style="font-size: 32px;" />
-            <ui:Label name="room-status-label" text="Waiting for players..." class="subtitle-text" />
-
-            <ui:VisualElement name="spacer" style="height: 20px;" />
-
-            <!-- Players List -->
-            <ui:VisualElement name="players-panel" class="section-panel" style="min-height: 160px;">
-                <ui:Label text="PLAYERS" class="section-title" />
-                <ui:ScrollView name="players-list" style="flex-grow: 1;" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Screens/RoomUI.uss?fileID=7433441132597879392&amp;guid=264fbc8620cae49c4ae1e228cc921ffe&amp;type=3#RoomUI"/>
+    <ui:VisualElement name="root" class="screen-root" style="background-image: url(&quot;project://database/Assets/UI/Sprites/bg_lobby.png?fileID=2800000&amp;guid=e546b364807cd4565b4eefd1ba1bec2f&amp;type=3#bg_lobby&quot;);">
+        <ui:VisualElement name="room-panel" class="center-layout">
+            <ui:VisualElement class="room-header-plate" style="background-image: url(&quot;project://database/Assets/UI/Sprites/room-screen-spreadsheet.png?fileID=151541509&amp;guid=19920e34ac2a1471f9a687ec84c80c61&amp;type=3#room-screen-spreadsheet_0&quot;);">
+                <ui:Label name="room-name-label" text="" class="room-name-text"/>
             </ui:VisualElement>
-
-            <ui:VisualElement name="spacer2" style="height: 20px;" />
-
-            <!-- Host Controls -->
-            <ui:VisualElement name="host-controls" style="display: flex;">
-                <ui:Button name="start-game-btn" text="START GAME" class="primary-btn" />
+            <ui:VisualElement name="players-panel" class="monitor-plate" style="background-image: url(&quot;project://database/Assets/UI/Sprites/room-screen-spreadsheet.png?fileID=138396742&amp;guid=19920e34ac2a1471f9a687ec84c80c61&amp;type=3#room-screen-spreadsheet_1&quot;); width: 783px;">
+                <ui:VisualElement class="monitor-screen-area" style="left: 0; right: 0; position: relative; top: 0%; bottom: 0%; width: 80%; height: 75%; margin-top: 6%;">
+                    <ui:ScrollView name="players-list" class="players-scroll" style="margin-top: 0%; margin-right: 0%; margin-bottom: 0%; margin-left: 0%; padding-top: 0%; padding-right: 0%; padding-bottom: 0%; padding-left: 0%;"/>
+                    <ui:VisualElement class="monitor-bottom-bar" style="height: 20%;">
+                        <ui:Label name="room-status-label" text="PLAYERS (4/8)" class="players-count-text"/>
+                        <ui:Button name="leave-btn" text="" class="leave-btn" style="background-image: url(&quot;project://database/Assets/UI/Sprites/room-screen-spreadsheet.png?fileID=1052819597&amp;guid=19920e34ac2a1471f9a687ec84c80c61&amp;type=3#room-screen-spreadsheet_3&quot;);"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="host-controls" class="start-container">
+                    <ui:Button name="start-game-btn" text="" class="start-game-btn" style="background-image: url(&quot;project://database/Assets/UI/Sprites/room-screen-spreadsheet.png?fileID=-2071075763&amp;guid=19920e34ac2a1471f9a687ec84c80c61&amp;type=3#room-screen-spreadsheet_2&quot;);"/>
+                </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- Non-host waiting label -->
-            <ui:Label name="waiting-label" text="Waiting for host to start..." class="status-text" style="display: none;" />
-
-            <!-- Leave Button (always visible) -->
-            <ui:VisualElement name="spacer3" style="height: 10px;" />
-            <ui:Button name="leave-btn" text="LEAVE ROOM" class="secondary-btn" />
-
-            <ui:Label name="status-label" text="" class="status-text" />
+            <ui:Label name="waiting-label" text="Waiting for host to start..." class="status-text waiting-text" style="display: none;"/>
+            <ui:Label name="status-label" text="" class="status-text"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
