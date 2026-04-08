@@ -36,8 +36,15 @@ export interface PlayerMoveContext {
  * - State is broadcast to all clients via tick loop
  * - Clients apply rubber-band correction when they receive `player:state`
  */
+let moveLogCounter = 0
+
 export function handlePlayerMove(context: PlayerMoveContext): void {
   const { io, roomId, room, socketId, payload } = context
+
+  moveLogCounter++
+  if (moveLogCounter % 20 === 1) {
+    console.log(`[MOVE] RECV #${moveLogCounter} from=${socketId} payloadId=${payload.playerId} pos=(${payload.position?.x?.toFixed(2)}, ${payload.position?.y?.toFixed(2)}, ${payload.position?.z?.toFixed(2)}) state=${payload.movementState}`)
+  }
 
   const player = room.state.players.get(socketId)
   if (!player) {
@@ -48,7 +55,7 @@ export function handlePlayerMove(context: PlayerMoveContext): void {
   // Ownership check
   const ownerCheck = validatePayloadOwnership(payload.playerId, socketId)
   if (!ownerCheck.valid) {
-    console.warn(`[MOVE] Ownership mismatch for ${socketId}: ${ownerCheck.reason}`)
+    console.warn(`[MOVE] Ownership mismatch for ${socketId}: payload.playerId=${payload.playerId} socket.id=${socketId}`)
     return
   }
 
@@ -61,7 +68,7 @@ export function handlePlayerMove(context: PlayerMoveContext): void {
   )
 
   if (!moveCheck.valid) {
-    console.warn(`[MOVE] ${socketId} rejected: ${moveCheck.reason}`)
+    console.warn(`[MOVE] ${socketId} rejected: ${moveCheck.reason} | new=(${payload.position?.x?.toFixed(2)},${payload.position?.y?.toFixed(2)},${payload.position?.z?.toFixed(2)}) old=(${player.position.x.toFixed(2)},${player.position.y.toFixed(2)},${player.position.z.toFixed(2)})`)
     // Client will be corrected via next player:state broadcast
     return
   }

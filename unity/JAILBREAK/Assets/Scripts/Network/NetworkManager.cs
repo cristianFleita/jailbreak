@@ -28,8 +28,8 @@ namespace Jailbreak.Network
         public const float TickInterval            = 0.05f;
         public const float NpcSendInterval         = 0.2f;
         public const float InterpolationBuffer     = 0.1f;
-        public const float ReconciliationThreshold = 1.0f;
-        public const float ReconciliationLerpSpeed = 0.3f;
+        public const float ReconciliationThreshold = 5.0f;
+        public const float ReconciliationLerpSpeed = 0.15f;
         public const float ReconnectTimeout        = 30f;
 
         // ─── State ───────────────────────────────────────────────────────────
@@ -263,7 +263,7 @@ namespace Jailbreak.Network
 #if UNITY_WEBGL && !UNITY_EDITOR
             SocketSendPlayerMove(JsonUtility.ToJson(payload));
 #else
-            try { _socket.Emit("player:move", payload); }
+            try { _socket.EmitStringAsJSON("player:move", JsonUtility.ToJson(payload)); }
             catch (Exception ex) { Debug.LogError($"[NET] SendPlayerMove: {ex}"); }
 #endif
         }
@@ -308,8 +308,6 @@ namespace Jailbreak.Network
 #endif
         }
 
-        // ─── localStorage helpers (platform-agnostic) ────────────────────────
-
         public string GetSavedUserId()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -353,9 +351,13 @@ namespace Jailbreak.Network
                 if (data == null) return;
                 LocalUserId = data.userId;
                 LocalDisplayName = data.displayName;
+                
+                // FIXED: Actually assign the socket ID as the LocalPlayerId
+                LocalPlayerId = data.socketId; 
+                
                 IsAuthenticated = true;
                 SetState(ConnectionState.Connected);
-                OnConnectedEvent?.Invoke();         // signal "ready" to UI
+                OnConnectedEvent?.Invoke();
                 OnAuthRegisteredEvent?.Invoke(data);
             });
         }
@@ -432,7 +434,7 @@ namespace Jailbreak.Network
                 var data = JsonUtility.FromJson<GameStartPayload>(json);
                 if (data != null)
                 {
-                    CachedGameStart = data; // cache for late-loading scenes
+                    CachedGameStart = data;
                     OnGameStartEvent?.Invoke(data);
                 }
             });
@@ -593,6 +595,10 @@ namespace Jailbreak.Network
                 {
                     LocalUserId = data.userId;
                     LocalDisplayName = data.displayName;
+                    
+                    // FIXED: Actually assign the socket ID as the LocalPlayerId
+                    LocalPlayerId = data.socketId; 
+
                     IsAuthenticated = true;
                     PlayerPrefs.SetString("jailbreak_user_id",    data.userId);
                     PlayerPrefs.SetString("jailbreak_display_name", data.displayName);
@@ -736,7 +742,6 @@ namespace Jailbreak.Network
         {
             try
             {
-                // Socket.IO delivers event args as array; index 0 is the payload object.
                 var raw = response.GetValue(0).GetRawText();
                 return JsonUtility.FromJson<T>(raw);
             }
@@ -754,8 +759,6 @@ namespace Jailbreak.Network
             Connect(LocalDisplayName);
         }
 #endif
-
-        // ─── Helpers ─────────────────────────────────────────────────────────
 
         private void SetState(ConnectionState s)
         {

@@ -93,14 +93,10 @@ namespace Jailbreak.Network
 
         // ─── Handlers ────────────────────────────────────────────────────────
 
-        // Handles the initial game:start event which carries the full player+NPC list.
-        // This fires before the scene fully loads in WebGL, so we also handle
-        // player-joined for redundancy — whichever arrives with players wins.
         private void HandleGameStart(GameStartPayload data)
         {
             if (data.players == null) return;
 
-            // Find local player's role and log full roster
             var localId = LocalPlayerId;
             Debug.Log($"[GSM] game:start — {data.players.Length} players, localId={localId}");
             foreach (var p in data.players)
@@ -122,14 +118,12 @@ namespace Jailbreak.Network
         {
             Debug.Log($"[GSM] HandlePlayerJoined: playerId={data?.playerId}, role={data?.role}, players.Length={data?.players?.Length ?? 0}");
 
-            // Assign local role when we join
             if (data.playerId == LocalPlayerId)
             {
                 LocalRole = data.role;
                 Debug.Log($"[GSM] Assigned local role: {LocalRole}");
             }
 
-            // Update full player list
             SyncPlayerList(data.players);
             SpawnRemotePlayers();
 
@@ -163,15 +157,18 @@ namespace Jailbreak.Network
             Debug.Log($"[GSM] Reconnected — tick {data.tick}, phase {CurrentPhase}");
         }
 
+        private int _stateRecvCount;
+
         private void HandlePlayerState(PlayerStateUpdate data)
         {
             if (data.players == null) return;
+
+            _stateRecvCount++;
 
             foreach (var p in data.players)
             {
                 Players[p.id] = p;
 
-                // Discover our own role from the tick data if not yet known
                 if (p.id == LocalPlayerId)
                 {
                     if (string.IsNullOrEmpty(LocalRole) && !string.IsNullOrEmpty(p.role))
@@ -182,7 +179,10 @@ namespace Jailbreak.Network
                     continue;
                 }
 
-                // Auto-spawn remote player if we haven't seen them before
+                // Log remote player position every ~1s
+                if (_stateRecvCount % 20 == 1)
+                    Debug.Log($"[GSM] RECV remote player:state #{_stateRecvCount} id={p.id} pos={p.position} state={p.movementState}");
+
                 if (!RemotePlayerGameObjects.ContainsKey(p.id))
                 {
                     SpawnRemotePlayer(p.id, p);
@@ -194,7 +194,6 @@ namespace Jailbreak.Network
                 }
             }
 
-            // Mark game as active on first tick received
             if (!GameActive)
             {
                 GameActive = true;
@@ -205,7 +204,6 @@ namespace Jailbreak.Network
         private void HandleNPCPositions(NPCPositionUpdate data)
         {
             if (data.npcs == null) return;
-            // Update only the NPCs in the delta array
             foreach (var npc in data.npcs)
             {
                 var idx = NPCs.FindIndex(n => n.id == npc.id);
@@ -230,7 +228,6 @@ namespace Jailbreak.Network
                 Debug.Log($"[GSM] Player caught: {data.targetId}");
                 onPlayerCaught?.Invoke(data.targetId);
 
-                // Mark player as dead
                 if (Players.TryGetValue(data.targetId, out var p))
                 {
                     p.isAlive = false;
@@ -276,19 +273,63 @@ namespace Jailbreak.Network
             if (remotePlayerPrefab != null)
             {
                 go = Instantiate(remotePlayerPrefab, player.position.ToUnity(), player.rotation.ToUnity());
+
+                // --- NEW CODE: Strip local components comprehensively ---
+                // We use GetComponentsInChildren to catch components even if they are nested on child GameObjects
+                foreach (var input in go.GetComponentsInChildren<PlayerInputController>(true)) 
+                {
+                    input.enabled = false; 
+                    Destroy(input);
+                }
+                
+                foreach (var netSync in go.GetComponentsInChildren<PlayerNetworkSync>(true)) 
+                {
+                    netSync.enabled = false; 
+                    Destroy(netSync);
+                }
+                
+                foreach (var cc in go.GetComponentsInChildren<CharacterController>(true)) 
+                {
+                    cc.enabled = false; 
+                    Destroy(cc);
+                }
+                
+                foreach (var fpsCam in go.GetComponentsInChildren<FPSCameraController>(true)) 
+                {
+                    fpsCam.enabled = false; 
+                    Destroy(fpsCam);
+                }
+                
+                foreach (var visual in go.GetComponentsInChildren<LocalPlayerRoleVisual>(true)) 
+                {
+                    visual.enabled = false;
+                    Destroy(visual);
+                }
+
+                // Destroy any cameras attached to the remote player to prevent view hijacking
+                foreach (var cam in go.GetComponentsInChildren<Camera>(true)) 
+                {
+                    Destroy(cam.gameObject); 
+                }
+                
+                // Destroy AudioListeners to prevent hearing from the remote player's ears
+                foreach (var listener in go.GetComponentsInChildren<AudioListener>(true)) 
+                {
+                    Destroy(listener); 
+                }
+                // --------------------------------------------------------------------
             }
             else
             {
-                // Default placeholder: capsule with different color
                 go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
                 go.transform.position = player.position.ToUnity();
                 go.transform.localScale = new Vector3(0.6f, 1.2f, 0.6f);
 
-                // Color by role using MaterialPropertyBlock — no material instancing,
-                // avoids URP shader breakage in WebGL (pink capsules).
+                // FIXED: Changed Colors to Green and Black
                 var color = player.role == "guard"
-                    ? new Color(0.9f, 0.15f, 0.15f, 1f)  // red  = guard
-                    : new Color(0.25f, 0.55f, 0.85f, 1f); // blue = prisoner
+                    ? new Color(0.15f, 0.8f, 0.15f, 1f)  // Green = Guard
+                    : new Color(0.1f, 0.1f, 0.1f, 1f);   // Black/Dark grey = Prisoner
+                
                 var rend = go.GetComponent<Renderer>();
                 if (rend != null)
                 {
@@ -298,14 +339,12 @@ namespace Jailbreak.Network
                     rend.SetPropertyBlock(mpb);
                 }
 
-                // Remove collider (optional)
                 var col = go.GetComponent<Collider>();
                 if (col != null) Destroy(col);
             }
 
             go.name = $"Player_{playerId}_{player.role}";
 
-            // Add RemotePlayerSync component
             var sync = go.AddComponent<RemotePlayerSync>();
             sync.PlayerId = playerId;
             sync.Role = player.role;

@@ -38,6 +38,13 @@ namespace Jailbreak.Player
             net.OnPlayerStateEvent += HandlePlayerState;
             net.OnConnectedEvent += OnConnected;
             net.OnDisconnectedEvent += OnDisconnected;
+
+            // If already connected/in-game (scene loaded after connection), start immediately
+            if (net.State == ConnectionState.InGame || net.State == ConnectionState.Connected)
+            {
+                Debug.Log("[PNS] Already connected — starting movement send loop");
+                OnConnected();
+            }
         }
 
         private void OnDestroy()
@@ -74,6 +81,8 @@ namespace Jailbreak.Player
             }
         }
 
+        private int _sendCount;
+
         private void SendMove()
         {
             var net = NetworkManager.Instance;
@@ -87,6 +96,10 @@ namespace Jailbreak.Player
                 velocity = SVector3.FromUnity(_cc.velocity),
                 movementState = GetMovementState()
             };
+
+            _sendCount++;
+            if (_sendCount % 20 == 1) // Log every ~1s (every 20th send at 50ms interval)
+                Debug.Log($"[PNS] SEND player:move #{_sendCount} id={payload.playerId} pos={payload.position} state={payload.movementState}");
 
             net.SendPlayerMove(payload);
         }
@@ -104,6 +117,10 @@ namespace Jailbreak.Player
         }
 
         // ─── Server Reconciliation (Rubber-Band) ─────────────────────────────
+        // The local player trusts its own client-side prediction.
+        // Only hard-teleport on major desync (>5m), which indicates cheating
+        // or a genuine disconnect/reconnect. Normal latency (~1-2m at sprint)
+        // is expected and should NOT trigger corrections.
 
         private void HandlePlayerState(PlayerStateUpdate data)
         {
@@ -127,7 +144,7 @@ namespace Jailbreak.Player
 
             if (diff >= NetworkManager.ReconciliationThreshold)
             {
-                // Large divergence (>1m) — teleport immediately
+                // Major desync (>5m) — hard teleport (cheat detection / reconnect)
                 if (_cc.enabled)
                 {
                     _cc.enabled = false;
@@ -139,33 +156,10 @@ namespace Jailbreak.Player
                     transform.position = serverPos;
                 }
 
-                Debug.Log($"[PNS] Rubber-band teleport (diff={diff:F2}m)");
+                transform.rotation = serverRot;
+                Debug.LogWarning($"[PNS] Hard teleport — major desync (diff={diff:F2}m)");
             }
-            else if (diff > 0.05f)
-            {
-                // Small divergence (5cm-1m) — smooth lerp
-                var oldPos = transform.position;
-                var newPos = Vector3.Lerp(
-                    oldPos,
-                    serverPos,
-                    NetworkManager.ReconciliationLerpSpeed * Time.deltaTime / NetworkManager.TickInterval
-                );
-
-                if (_cc.enabled)
-                {
-                    _cc.enabled = false;
-                    transform.position = newPos;
-                    _cc.enabled = true;
-                }
-                else
-                {
-                    transform.position = newPos;
-                }
-            }
-            // <5cm: ignore (normal floating point noise)
-
-            // Rotation
-            transform.rotation = Quaternion.Slerp(transform.rotation, serverRot, 0.5f);
+            // Below threshold: trust client-side prediction, don't fight the input controller
         }
     }
 }
