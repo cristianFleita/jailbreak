@@ -19,151 +19,107 @@
     margin-bottom: 20px;
 }
 
-/* Flex 1 on these three elements forces the header-container dead center */
 .top-bar-spacer { flex: 1; }
 .header-container { flex: 1; align-items: center; justify-content: flex-start; }
-.profile-container { flex: 1; align-items: flex-end; padding-right: 30px; }
+.profile-container { flex: 1; align-items: flex-end; padding-right: 40px; }
 
 /* --- HEADER LOGO --- */
 .logo-icon {
-    width: 100%;
-    max-width: 250px;
-    height: 120px;
+    width: 400px;
+    height: 150px;
     -unity-background-scale-mode: scale-to-fit;
     background-color: transparent;
 }
 
-.lobby-title {
-    font-size: 42px;
-    color: rgb(170, 175, 180);
-    -unity-font-style: bold;
-    letter-spacing: 2px;
-    margin-top: 5px;
-}
-
 /* --- PLAYER PROFILE PANEL --- */
 .profile-panel {
-    width: 100%;
-    max-width: 320px;
-    background-color: rgb(55, 60, 65); /* Fallback */
-    background-image: linear-gradient(to bottom, rgb(70, 75, 80), rgb(40, 45, 50));
-    border-radius: 8px;
-    border-width: 4px;
-    border-color: rgb(30, 32, 35);
-    padding: 15px;
+    width: 350px;
+    height: 130px;
+    background-color: transparent;
+    border-width: 0;
+    align-items: center;
+    justify-content: flex-start;
     -unity-background-scale-mode: scale-to-fit;
 }
 
-.profile-header {
-    font-size: 16px;
-    color: rgb(210, 210, 210);
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
-    margin-bottom: 8px;
-}
-
+/* Only the text remains, pushed perfectly into the dark slot */
 .profile-text {
-    font-size: 12px;
-    color: rgb(225, 150, 50); /* Gold/Orange text */
-    margin-bottom: 5px;
+    font-size: 18px;
+    color: rgb(225, 150, 50);
+    margin-top: 55px; 
+    -unity-font-style: bold;
 }
 
-.profile-input {
-    height: 30px;
-    font-size: 14px;
-}
-
-/* --- MAIN CONTENT (RESPONSIVE SIDE-BY-SIDE) --- */
+/* --- MAIN CONTENT (RESPONSIVE SCROLLING & SIDE-BY-SIDE) --- */
 .content-area {
+    flex-grow: 1;
+    width: 100%;
+}
+
+/* CRITICAL: Target the ScrollView's internal content container for wrapping */
+.content-area .unity-scroll-view__content-container {
     flex-direction: row;
-    flex-wrap: wrap; /* Allows panels to stack on narrow screens */
+    flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    flex-grow: 1; /* Takes up remaining vertical space */
-    width: 100%;
+    min-height: 100%; /* Ensures vertical centering when no scrolling is needed */
+    padding-bottom: 40px; /* Padding for when users scroll down */
 }
 
 /* --- LARGE METAL PANELS --- */
 .main-panel {
-    width: 45%;          /* Takes up 45% of width, leaving gap space */
-    max-width: 550px;    /* Stops from getting too massive */
-    min-width: 350px;    /* Forces them to wrap if screen is narrower than ~750px */
-    margin: 15px;        /* Spacing between panels */
-    padding: 40px;
-    background-color: rgb(60, 65, 70);
-    background-image: linear-gradient(to bottom, rgb(75, 80, 85), rgb(45, 50, 55));
-    border-radius: 12px;
-    border-width: 6px;
-    border-color: rgb(35, 38, 42);
+    width: 500px;
+    height: 350px; 
+    margin: 20px;
+    background-color: transparent;
+    border-width: 0;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start; 
     -unity-background-scale-mode: scale-to-fit;
 }
 
-.panel-title {
-    font-size: 38px;
-    color: rgb(180, 180, 180);
-    -unity-font-style: bold;
-    letter-spacing: 2px;
-    margin-bottom: 30px;
-}
-
+/* --- INPUT FIELDS --- */
 .input-container {
-    width: 100%;
+    width: 380px;
+    height: 50px;
+    margin-top: 185px; /* Pushes into the dark slot below the baked label */
     align-items: center;
-    margin-bottom: 40px;
+    justify-content: center;
 }
 
-.panel-subtitle {
-    font-size: 18px;
-    color: rgb(210, 160, 90);
-    margin-bottom: 10px;
-    -unity-font-style: bold;
-}
-
-/* --- INPUT FIELDS (Inset Dark Slots) --- */
 .input-field {
     width: 100%;
+    height: 100%;
 }
 
-.input-field > .unity-text-field__input {
-    background-color: rgb(25, 28, 30); /* Dark hole look */
-    border-color: rgb(15, 18, 20);
-    border-width: 3px;
-    border-radius: 4px;
-    color: rgb(160, 160, 160);
-    padding: 12px 15px;
-    font-size: 18px;
+/* High specificity to override Unity's default white input boxes */
+.input-field .unity-text-field__input {
+    background-color: transparent;
+    background-image: none;
+    border-color: transparent;
+    border-width: 0;
+    color: rgb(200, 200, 200);
+    font-size: 24px;
     -unity-text-align: middle-center;
-    border-top-color: rgb(5, 5, 5);
-    border-left-color: rgb(5, 5, 5);
-}
-
-.input-field > .unity-text-field__input:focus {
-    color: rgb(255, 255, 255);
-    border-color: rgb(225, 140, 50);
-}
-
-/* --- ACTION BUTTONS (Fiery Outline) --- */
-.action-btn {
-    width: 80%;
-    height: 65px;
-    background-color: rgb(40, 45, 50);
-    color: rgb(220, 140, 60); /* Orange text */
-    border-radius: 8px;
-    font-size: 26px;
     -unity-font-style: bold;
-    letter-spacing: 1px;
-    border-width: 3px;
-    border-color: rgb(180, 80, 30); /* Fiery border */
+}
+
+.input-field .unity-text-field__input:focus {
+    color: rgb(255, 255, 255);
+}
+
+/* --- ACTION BUTTONS --- */
+.action-btn {
+    width: 280px;
+    height: 70px;
+    margin-top: 35px; /* Positions the button directly into the button slot cutout */
+    background-color: transparent;
+    border-width: 0;
     transition-duration: 0.1s;
     -unity-background-scale-mode: scale-to-fit;
 }
 
 .action-btn:hover {
-    background-color: rgb(50, 55, 60);
-    color: rgb(255, 180, 80);
-    border-color: rgb(220, 120, 40);
     scale: 1.05;
 }
 
