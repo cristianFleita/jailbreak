@@ -75,6 +75,12 @@ namespace Jailbreak.Network
         public event Action<GameEndPayload>           OnGameEndEvent;
         public event Action<ErrorPayload>             OnNetworkErrorEvent;
 
+        // ─── Events: Jail Routine / NPC Phase System ────────────────────────
+        public event Action<PhaseJailStartPayload>    OnPhaseJailStartEvent;
+        public event Action<PhaseWarningPayload>      OnPhaseWarningEvent;
+        public event Action<NPCReassignPayload>       OnNPCReassignEvent;
+        public event Action<PhaseZoneCheckPayload>    OnPhaseZoneCheckEvent;
+
         // ─── Private ─────────────────────────────────────────────────────────
         private string _currentRoomId;
         private readonly ConcurrentQueue<Action> _mainThreadQueue = new();
@@ -514,6 +520,44 @@ namespace Jailbreak.Network
             });
         }
 
+        // ─── Jail Routine callbacks (WebGL SendMessage) ──────────────────────
+
+        public void OnPhaseJailStart(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<PhaseJailStartPayload>(json);
+                if (data != null) OnPhaseJailStartEvent?.Invoke(data);
+            });
+        }
+
+        public void OnPhaseWarning(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<PhaseWarningPayload>(json);
+                if (data != null) OnPhaseWarningEvent?.Invoke(data);
+            });
+        }
+
+        public void OnNPCReassign(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<NPCReassignPayload>(json);
+                if (data != null) OnNPCReassignEvent?.Invoke(data);
+            });
+        }
+
+        public void OnPhaseZoneCheck(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<PhaseZoneCheckPayload>(json);
+                if (data != null) OnPhaseZoneCheckEvent?.Invoke(data);
+            });
+        }
+
         public void OnNetworkError(string json)
         {
             _mainThreadQueue.Enqueue(() =>
@@ -719,6 +763,12 @@ namespace Jailbreak.Network
             SafeOn("guard:catch",     r => { var d = DeserializePayload<GuardCatchPayload>(r);   if (d != null) _mainThreadQueue.Enqueue(() => OnGuardCatchResultEvent?.Invoke(d)); });
             SafeOn("item:pickup",     r => { var d = DeserializePayload<ItemPickupPayload>(r);   if (d != null) _mainThreadQueue.Enqueue(() => OnItemPickupEvent?.Invoke(d)); });
             SafeOn("riot:available",  r => { var d = DeserializePayload<RiotAvailablePayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnRiotAvailableEvent?.Invoke(d)); });
+
+            // ── Jail Routine ────────────────────────────────────────────────
+            SafeOn("phase:start",     r => { var d = DeserializePayload<PhaseJailStartPayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnPhaseJailStartEvent?.Invoke(d)); });
+            SafeOn("phase:warning",   r => { var d = DeserializePayload<PhaseWarningPayload>(r);   if (d != null) _mainThreadQueue.Enqueue(() => OnPhaseWarningEvent?.Invoke(d)); });
+            SafeOn("npc:reassign",    r => { var d = DeserializePayload<NPCReassignPayload>(r);    if (d != null) _mainThreadQueue.Enqueue(() => OnNPCReassignEvent?.Invoke(d)); });
+            SafeOn("phase:zone_check",r => { var d = DeserializePayload<PhaseZoneCheckPayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnPhaseZoneCheckEvent?.Invoke(d)); });
 
             SafeOn("game:error", r =>
             {

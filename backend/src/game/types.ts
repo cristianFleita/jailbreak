@@ -254,6 +254,57 @@ export interface RoomDestroyedPayload {
 }
 
 // ============================================================================
+// Jail Routine / NPC Phase System (Sistema Rutina/Fases)
+// See design/gdd/rutina-fases-npc.md for full specification.
+// ============================================================================
+
+export type JailPhaseNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+/** A single NPC's action assignment for a phase or reassign event. */
+export interface NPCAssignment {
+  npcId: string
+  actionId: string
+  animTrigger: string
+  waypointId?: string           // single waypoint (most actions)
+  waypointChain?: string[]      // LOOPING chain (e.g. yard_perimeter)
+  duration: number              // seconds before action expires
+  loop?: boolean                // true for LOOPING actions
+  socialPartnerId?: string      // set for SOCIAL actions
+  subZone?: string              // set for Phase 6 (taller/lavanderia/piso)
+}
+
+/** Emitted to all clients when a jail phase starts. */
+export interface PhaseJailStartPayload {
+  phase: JailPhaseNumber
+  phaseName: string
+  duration: number
+  zone: string
+  npcAssignments: NPCAssignment[]
+}
+
+/** Emitted 10 seconds before a phase transition. */
+export interface PhaseWarningPayload {
+  nextPhase: JailPhaseNumber
+  nextPhaseName: string
+  warningInSeconds: number
+}
+
+/** Emitted every ~25s with partial NPC reassignments (libre albedrío). */
+export interface NPCReassignPayload {
+  timestamp: number
+  assignments: NPCAssignment[]
+}
+
+/** Emitted to a specific player who is in the wrong zone. */
+export interface PhaseZoneCheckPayload {
+  playerId: string
+  currentZone: string
+  expectedZone: string
+  phase: JailPhaseNumber
+  graceSeconds: number
+}
+
+// ============================================================================
 // Map Configuration
 // ============================================================================
 

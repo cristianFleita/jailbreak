@@ -116,13 +116,21 @@ export function setupGameSockets(io: Server) {
             currentRoomId = profile.currentRoomId
             setUserStatus(profile.userId, 'in-game', profile.currentRoomId)
 
-            socket.emit('game:reconnect', {
-              players: Array.from(roomForReconnect.state.players.values()),
-              npcs: Array.from(roomForReconnect.state.npcs.values()),
-              items: Array.from(roomForReconnect.state.items.values()),
-              phase: roomForReconnect.state.phase,
-              tick: roomForReconnect.state.tick,
-            })
+            {
+              const gm = (roomForReconnect as any).gameManager
+              socket.emit('game:reconnect', {
+                players: Array.from(roomForReconnect.state.players.values()),
+                npcs: Array.from(roomForReconnect.state.npcs.values()),
+                items: Array.from(roomForReconnect.state.items.values()),
+                phase: roomForReconnect.state.phase,
+                tick: roomForReconnect.state.tick,
+                jailPhase: gm?.jailRoutine ? {
+                  phase:          gm.jailRoutine.getCurrentJailPhase(),
+                  zone:           gm.jailRoutine.getCurrentZone(),
+                  npcAssignments: gm.jailRoutine.buildReconnectAssignments(),
+                } : undefined,
+              })
+            }
 
             io.to(profile.currentRoomId).emit('player-reconnected', {
               userId: profile.userId,
@@ -266,13 +274,21 @@ export function setupGameSockets(io: Server) {
             currentRoomId = payload.roomId
             setUserStatus(user.userId, 'in-game', payload.roomId)
 
-            socket.emit('game:reconnect', {
-              players: Array.from(room.state.players.values()),
-              npcs: Array.from(room.state.npcs.values()),
-              items: Array.from(room.state.items.values()),
-              phase: room.state.phase,
-              tick: room.state.tick,
-            })
+            {
+              const gm2 = (room as any).gameManager
+              socket.emit('game:reconnect', {
+                players: Array.from(room.state.players.values()),
+                npcs: Array.from(room.state.npcs.values()),
+                items: Array.from(room.state.items.values()),
+                phase: room.state.phase,
+                tick: room.state.tick,
+                jailPhase: gm2?.jailRoutine ? {
+                  phase:          gm2.jailRoutine.getCurrentJailPhase(),
+                  zone:           gm2.jailRoutine.getCurrentZone(),
+                  npcAssignments: gm2.jailRoutine.buildReconnectAssignments(),
+                } : undefined,
+              })
+            }
 
             io.to(payload.roomId).emit('player-reconnected', {
               userId: user.userId,

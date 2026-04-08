@@ -278,4 +278,65 @@ namespace Jailbreak.Network
         public SVector3 velocity;
         public string movementState;
     }
+
+    // ─── Jail Routine / NPC Phase System ─────────────────────────────────────
+    // Mirrors backend types.ts: NPCAssignment, PhaseJailStartPayload, etc.
+
+    [Serializable]
+    public class NPCAssignmentData
+    {
+        public string   npcId;
+        public string   actionId;
+        public string   animTrigger;
+        public string   waypointId;           // null if using chain
+        public string[] waypointChain;        // non-null for LOOPING chains
+        public float    duration;
+        public bool     loop;
+        public string   socialPartnerId;      // null for solo/idle
+        public string   subZone;              // null unless Phase 6
+    }
+
+    [Serializable]
+    public class PhaseJailStartPayload
+    {
+        public int                  phase;
+        public string               phaseName;
+        public float                duration;
+        public string               zone;
+        public NPCAssignmentData[]  npcAssignments;
+    }
+
+    [Serializable]
+    public class PhaseWarningPayload
+    {
+        public int    nextPhase;
+        public string nextPhaseName;
+        public float  warningInSeconds;
+    }
+
+    [Serializable]
+    public class NPCReassignPayload
+    {
+        public long                 timestamp;
+        public NPCAssignmentData[]  assignments;
+    }
+
+    [Serializable]
+    public class PhaseZoneCheckPayload
+    {
+        public string playerId;
+        public string currentZone;
+        public string expectedZone;
+        public int    phase;
+        public float  graceSeconds;
+    }
+
+    /// <summary>Included in game:reconnect when jail routine is active.</summary>
+    [Serializable]
+    public class JailPhaseSnapshot
+    {
+        public int                  phase;
+        public string               zone;
+        public NPCAssignmentData[]  npcAssignments;
+    }
 }

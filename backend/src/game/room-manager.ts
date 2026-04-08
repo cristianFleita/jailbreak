@@ -166,6 +166,25 @@ export function startGameLoop(io: Server, room: GameRoom): void {
   const gameManager = new GameManager(room)
   ;(room as any).gameManager = gameManager
 
+  // ── Wire jail routine callbacks ──
+  gameManager.jailRoutine.onPhaseWarning = (payload) => {
+    io.to(state.id).emit('phase:warning', payload)
+    console.log(`[JAIL] Emitted phase:warning → Phase ${payload.nextPhase}`)
+  }
+  gameManager.jailRoutine.onPhaseStart = (payload) => {
+    io.to(state.id).emit('phase:start', payload)
+    console.log(`[JAIL] Emitted phase:start → Phase ${payload.phase} (${payload.phaseName})`)
+  }
+  gameManager.jailRoutine.onNPCReassign = (payload) => {
+    io.to(state.id).emit('npc:reassign', payload)
+  }
+  gameManager.jailRoutine.onZoneCheck = (playerId, payload) => {
+    io.to(playerId).emit('phase:zone_check', payload)
+  }
+
+  // Start jail routine
+  gameManager.jailRoutine.start()
+
   let npcBroadcastCounter = 0
   const npcBroadcastThreshold = config.tickRate / npcSendRate // emit NPC every N ticks
 

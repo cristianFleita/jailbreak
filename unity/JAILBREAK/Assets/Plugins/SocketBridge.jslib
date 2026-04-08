@@ -161,6 +161,23 @@ mergeInto(LibraryManager.library, {
       window._jbSocket.on('game:error', function (data) {
         window.unityInstance.SendMessage(window._jbGoName, 'OnNetworkError', JSON.stringify(data));
       });
+
+      window._jbSocket.on('phase:start', function (data) {                                                                                                     
+        window.unityInstance.SendMessage(window._jbGoName, 'OnPhaseJailStart', JSON.stringify(data));                                                            
+      });                                                                                                                                                        
+      
+      window._jbSocket.on('phase:warning', function (data) {                                                                                                     
+        window.unityInstance.SendMessage(window._jbGoName, 'OnPhaseWarning', JSON.stringify(data));
+      });                                                                                                                                                        
+      
+      window._jbSocket.on('npc:reassign', function (data) {                                                                                                      
+        window.unityInstance.SendMessage(window._jbGoName, 'OnNPCReassign', JSON.stringify(data));
+      });                                                                                                                                                        
+      
+      window._jbSocket.on('phase:zone_check', function (data) {                                                                                                  
+        window.unityInstance.SendMessage(window._jbGoName, 'OnPhaseZoneCheck', JSON.stringify(data));
+      });
+
     } // end doConnect
 
     // Load socket.io from CDN if the global `io` isn't available yet
