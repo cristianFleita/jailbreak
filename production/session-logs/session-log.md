@@ -475,7 +475,6 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
-<<<<<<< HEAD
 ## Session End: 20260407_184121
 ### Commits
 09209de chore: wip start screeen ui
@@ -495,7 +494,6 @@ cb26ba6 chore: integrate rooms with unity
 ### Uncommitted Changes
 production/session-logs/agent-audit.log
 web/public/unity-build/Build/unity-build.data
-=======
 ## Session End: 20260407_202132
 ### Commits
 f855ae1 Merge pull request #1 from cristianFleita/feat-socketio-integration
@@ -506,12 +504,10 @@ backend/src/game/systems/npc-behavior.ts
 unity/JAILBREAK/Assets/Scenes/GameScene.unity
 web/public/unity-build/Build/unity-build.data
 web/public/unity-build/Build/unity-build.framework.js
->>>>>>> main
 web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
-<<<<<<< HEAD
 ## Session End: 20260407_192320
 ### Commits
 d363cd9 fix: responsive on huge screens
@@ -524,7 +520,6 @@ cb26ba6 chore: integrate rooms with unity
 production/session-logs/agent-audit.log
 production/session-logs/session-log.md
 web/public/unity-build/Build/unity-build.data
-=======
 ## Session End: 20260407_235616
 ### Commits
 58541ff feat: wip spawn npc + players on game start
@@ -566,7 +561,6 @@ unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
 unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
 web/public/unity-build/Build/unity-build.data
 web/public/unity-build/Build/unity-build.framework.js
->>>>>>> main
 web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
