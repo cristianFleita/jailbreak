@@ -66,9 +66,6 @@ namespace Jailbreak.UI
             net.OnDisconnectedEvent += OnDisconnected;
 
             // Request a fresh room:state from the server.
-            // The previous room:state was consumed by LobbyScreen before this
-            // scene loaded — no buffering means we never get it here.
-            // Emitting room:get-state asks the server to resend it to us only.
             net.RequestRoomState();
         }
 
@@ -192,25 +189,26 @@ namespace Jailbreak.UI
             var net = NetworkManager.Instance;
             bool iAmHost = net != null && net.IsHost;
 
-            _roomStatusLabel.text = $"{players.Length}/4 players";
+            _roomStatusLabel.text = $"PLAYERS ({players.Length}/8)";
 
             // Enable start button only if 2+ players
             if (_startGameBtn != null)
                 _startGameBtn.SetEnabled(players.Length >= 2);
 
-            foreach (var p in players)
+            for (int i = 0; i < players.Length; i++)
             {
+                var p = players[i];
                 var row = new VisualElement();
-                row.AddToClassList("player-row");
+                row.AddToClassList("player-row"); // Updated class to match the USS
 
-                var nameLabel = new Label(p.displayName);
-                nameLabel.AddToClassList("player-name");
+                var nameLabel = new Label($"{i + 1}. {p.displayName}");
+                nameLabel.AddToClassList("player-name-text");
                 row.Add(nameLabel);
 
                 if (p.isHost)
                 {
                     var hostBadge = new Label("HOST");
-                    hostBadge.AddToClassList("player-host-badge");
+                    hostBadge.AddToClassList("player-host-badge"); // Fixed class name for styling
                     row.Add(hostBadge);
                 }
 

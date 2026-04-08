@@ -1,0 +1,137 @@
+/* --- ROOT & BACKGROUND --- */
+.screen-root {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    -unity-background-scale-mode: scale-and-crop;
+    background-color: rgb(20, 22, 25);
+    flex-direction: column;
+}
+
+/* --- TOP BAR LAYOUT --- */
+.top-bar {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 20px;
+    margin-bottom: 20px;
+}
+
+.top-bar-spacer { flex: 1; }
+.header-container { flex: 1; align-items: center; justify-content: flex-start; }
+.profile-container { flex: 1; align-items: flex-end; padding-right: 40px; }
+
+/* --- HEADER LOGO --- */
+.logo-icon {
+    width: 400px;
+    height: 150px;
+    -unity-background-scale-mode: scale-to-fit;
+    background-color: transparent;
+}
+
+/* --- PLAYER PROFILE PANEL --- */
+.profile-panel {
+    width: 350px;
+    height: 130px;
+    background-color: transparent;
+    border-width: 0;
+    align-items: center;
+    justify-content: flex-start;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* Only the text remains, pushed perfectly into the dark slot */
+.profile-text {
+    font-size: 18px;
+    color: rgb(225, 150, 50);
+    margin-top: 55px; 
+    -unity-font-style: bold;
+}
+
+/* --- MAIN CONTENT (RESPONSIVE SCROLLING & SIDE-BY-SIDE) --- */
+.content-area {
+    flex-grow: 1;
+    width: 100%;
+}
+
+/* CRITICAL: Target the ScrollView's internal content container for wrapping */
+.content-area .unity-scroll-view__content-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    min-height: 100%; /* Ensures vertical centering when no scrolling is needed */
+    padding-bottom: 40px; /* Padding for when users scroll down */
+}
+
+/* --- LARGE METAL PANELS --- */
+.main-panel {
+    width: 500px;
+    height: 350px; 
+    margin: 20px;
+    background-color: transparent;
+    border-width: 0;
+    align-items: center;
+    justify-content: flex-start; 
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* --- INPUT FIELDS --- */
+.input-container {
+    width: 380px;
+    height: 50px;
+    margin-top: 185px; /* Pushes into the dark slot below the baked label */
+    align-items: center;
+    justify-content: center;
+}
+
+.input-field {
+    width: 100%;
+    height: 100%;
+}
+
+/* High specificity to override Unity's default white input boxes */
+.input-field .unity-text-field__input {
+    background-color: transparent;
+    background-image: none;
+    border-color: transparent;
+    border-width: 0;
+    color: rgb(200, 200, 200);
+    font-size: 24px;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+}
+
+.input-field .unity-text-field__input:focus {
+    color: rgb(255, 255, 255);
+}
+
+/* --- ACTION BUTTONS --- */
+.action-btn {
+    width: 280px;
+    height: 70px;
+    margin-top: 35px; /* Positions the button directly into the button slot cutout */
+    background-color: transparent;
+    border-width: 0;
+    transition-duration: 0.1s;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.action-btn:hover {
+    scale: 1.05;
+}
+
+.action-btn:active {
+    scale: 0.95;
+}
+
+/* --- GLOBAL STATUS --- */
+.status-text {
+    font-size: 16px;
+    color: rgb(200, 50, 50);
+    margin-bottom: 20px;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+}

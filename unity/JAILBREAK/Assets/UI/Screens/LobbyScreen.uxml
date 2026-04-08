@@ -1,28 +1,44 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
-    <ui:VisualElement name="root" class="screen-root">
-        <ui:VisualElement name="center-panel" class="center-panel">
-            <ui:Label name="title" text="LOBBY" class="title-text" />
-            <ui:Label name="welcome-label" text="Welcome, Player" class="subtitle-text" />
-
-            <ui:VisualElement name="spacer" style="height: 30px;" />
-
-            <!-- Create Room Section -->
-            <ui:VisualElement name="create-section" class="section-panel">
-                <ui:Label text="HOST A GAME" class="section-title" />
-                <ui:TextField name="room-name-field" label="Room Name" value="" class="input-field" />
-                <ui:Button name="create-room-btn" text="CREATE ROOM" class="primary-btn" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Screens/LobbyUI.uss?fileID=7433441132597879392&amp;guid=02e1c9c1efafe4986b4182633f99d7c0&amp;type=3#LobbyUI"/>
+    
+    <ui:VisualElement name="root" class="screen-root" style="background-image: url(&quot;project://database/Assets/UI/Sprites/bg_lobby.png?fileID=2800000&amp;guid=e546b364807cd4565b4eefd1ba1bec2f&amp;type=3#bg_lobby&quot;);">
+        
+        <ui:VisualElement name="top-bar" class="top-bar">
+            <ui:VisualElement class="top-bar-spacer"/>
+            
+            <ui:VisualElement class="header-container">
+                <ui:VisualElement name="logo-icon" class="logo-icon" style="background-image: url(&quot;project://database/Assets/UI/Sprites/lobby-screen-spreadsheet.png?fileID=1596809197&amp;guid=06274fbf9d35d42d693f35b3152f8cf8&amp;type=3#lobby-screen-spreadsheet_0&quot;);"/>
             </ui:VisualElement>
-
-            <ui:VisualElement name="divider" style="height: 2px; background-color: rgba(255,255,255,0.15); margin-top: 20px; margin-bottom: 20px;" />
-
-            <!-- Join Room Section -->
-            <ui:VisualElement name="join-section" class="section-panel">
-                <ui:Label text="JOIN A GAME" class="section-title" />
-                <ui:TextField name="room-id-field" label="Room ID" value="" class="input-field" />
-                <ui:Button name="join-room-btn" text="JOIN ROOM" class="primary-btn" />
+            
+            <ui:VisualElement class="profile-container">
+                <ui:VisualElement class="profile-panel" style="background-image: url(&quot;project://database/Assets/UI/Sprites/lobby-screen-spreadsheet.png?fileID=-288986545&amp;guid=06274fbf9d35d42d693f35b3152f8cf8&amp;type=3#lobby-screen-spreadsheet_1&quot;);">
+                    <!-- We removed the textfield here and just kept the label -->
+                    <ui:Label name="welcome-label" text="Player Name" class="profile-text"/>
+                </ui:VisualElement>
             </ui:VisualElement>
-
-            <ui:Label name="status-label" text="" class="status-text" />
         </ui:VisualElement>
+
+        <!-- Changed from VisualElement to ScrollView so it can handle vertical scrolling! -->
+        <ui:ScrollView name="content-area" class="content-area">
+            
+            <!-- CREATE ROOM PANEL -->
+            <ui:VisualElement name="create-section" class="main-panel" style="background-image: url(&quot;project://database/Assets/UI/Sprites/lobby-screen-spreadsheet.png?fileID=1553152341&amp;guid=06274fbf9d35d42d693f35b3152f8cf8&amp;type=3#lobby-screen-spreadsheet_2&quot;);">
+                <ui:VisualElement class="input-container">
+                    <ui:TextField name="room-name-field" value="[Type Room Name...]" class="input-field"/>
+                </ui:VisualElement>
+                <ui:Button name="create-room-btn" text="" class="action-btn" style="background-image: url(&quot;project://database/Assets/UI/Sprites/lobby-screen-spreadsheet.png?fileID=-1439668066&amp;guid=06274fbf9d35d42d693f35b3152f8cf8&amp;type=3#lobby-screen-spreadsheet_4&quot;);"/>
+            </ui:VisualElement>
+
+            <!-- JOIN ROOM PANEL -->
+            <ui:VisualElement name="join-section" class="main-panel" style="background-image: url(&quot;project://database/Assets/UI/Sprites/lobby-screen-spreadsheet.png?fileID=655580970&amp;guid=06274fbf9d35d42d693f35b3152f8cf8&amp;type=3#lobby-screen-spreadsheet_3&quot;);">
+                <ui:VisualElement class="input-container">
+                    <ui:TextField name="room-id-field" value="[Type Room Name to Join...]" class="input-field"/>
+                </ui:VisualElement>
+                <ui:Button name="join-room-btn" text="" class="action-btn" style="background-image: url(&quot;project://database/Assets/UI/Sprites/lobby-screen-spreadsheet.png?fileID=-1054804021&amp;guid=06274fbf9d35d42d693f35b3152f8cf8&amp;type=3#lobby-screen-spreadsheet_5&quot;);"/>
+            </ui:VisualElement>
+            
+        </ui:ScrollView>
+        
+        <ui:Label name="status-label" text="" class="status-text"/>
     </ui:VisualElement>
 </ui:UXML>

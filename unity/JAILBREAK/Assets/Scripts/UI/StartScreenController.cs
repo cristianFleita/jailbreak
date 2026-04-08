@@ -59,12 +59,6 @@ namespace Jailbreak.UI
                 _connecting = true;
                 net.Connect(); // NetworkManager will use the saved ID and Name automatically
             }
-            else
-            {
-                // No -> Show the normal login UI
-                _statusLabel.text = "Enter your alias";
-                _startBtn.text = "START GAME";
-            }
         }
 
         private void OnDisable()

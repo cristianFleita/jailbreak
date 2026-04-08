@@ -1,18 +1,24 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
-    <ui:VisualElement name="root" class="screen-root">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Screens/JailbreakUI.uss?fileID=7433441132597879392&amp;guid=917b6d9387b6e4dafacef498fcff3448&amp;type=3#JailbreakUI"/>
+    
+    <!-- Root Container: Forced to absolute 100% to fill screen, background crops to fit -->
+    <ui:VisualElement name="root" class="screen-root" style="background-image: url(&quot;project://database/Assets/UI/Sprites/bg_prison.png?fileID=2800000&amp;guid=7cd6f491cab5e47a5b308c36f9b564e2&amp;type=3#bg_prison&quot;);">
+        
         <ui:VisualElement name="center-panel" class="center-panel">
-            <ui:Label name="title" text="JAILBREAK" class="title-text" />
-            <ui:Label name="subtitle" text="Escape or Enforce" class="subtitle-text" />
-
-            <ui:VisualElement name="spacer" style="height: 40px;" />
-
-            <ui:TextField name="display-name-field" label="Your Name" value="Player" class="input-field" />
-
-            <ui:VisualElement name="spacer2" style="height: 20px;" />
-
-            <ui:Button name="start-btn" text="START GAME" class="primary-btn" />
-
-            <ui:Label name="status-label" text="" class="status-text" />
+            
+            <!-- Game Logo -->
+            <ui:VisualElement name="game-logo" class="game-logo" style="background-image: url(&quot;project://database/Assets/UI/Sprites/start-screen-spreadsheet.png?fileID=-1678316579&amp;guid=423672918e02349638eadb2ca1b99f3f&amp;type=3#start-screen-spreadsheet_0&quot;);" />
+            
+            <!-- Metal Identity Panel -->
+            <ui:VisualElement name="identity-panel" class="metal-panel" style="background-image: url(&quot;project://database/Assets/UI/Sprites/start-screen-spreadsheet.png?fileID=370931329&amp;guid=423672918e02349638eadb2ca1b99f3f&amp;type=3#start-screen-spreadsheet_2&quot;);">
+                <ui:TextField name="display-name-field" value="Enter Prisoner Name..." class="input-field" />
+            </ui:VisualElement>
+            
+            <!-- Start Game Button -->
+            <ui:Button name="start-btn" text="" class="primary-btn" style="background-image: url(&quot;project://database/Assets/UI/Sprites/start-screen-spreadsheet.png?fileID=-944953441&amp;guid=423672918e02349638eadb2ca1b99f3f&amp;type=3#start-screen-spreadsheet_1&quot;);" />
+            
+            <ui:Label name="status-label" text="" class="status-text"/>
+        
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

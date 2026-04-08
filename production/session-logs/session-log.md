@@ -475,6 +475,25 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260407_184121
+### Commits
+09209de chore: wip start screeen ui
+f855ae1 Merge pull request #1 from cristianFleita/feat-socketio-integration
+4f71fdd chore: redirect to game
+cb26ba6 chore: integrate rooms with unity
+---
+
+## Session End: 20260407_192318
+### Commits
+d363cd9 fix: responsive on huge screens
+89501c6 chore: responsive
+09209de chore: wip start screeen ui
+f855ae1 Merge pull request #1 from cristianFleita/feat-socketio-integration
+4f71fdd chore: redirect to game
+cb26ba6 chore: integrate rooms with unity
+### Uncommitted Changes
+production/session-logs/agent-audit.log
+web/public/unity-build/Build/unity-build.data
 ## Session End: 20260407_202132
 ### Commits
 f855ae1 Merge pull request #1 from cristianFleita/feat-socketio-integration
@@ -489,6 +508,18 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260407_192320
+### Commits
+d363cd9 fix: responsive on huge screens
+89501c6 chore: responsive
+09209de chore: wip start screeen ui
+f855ae1 Merge pull request #1 from cristianFleita/feat-socketio-integration
+4f71fdd chore: redirect to game
+cb26ba6 chore: integrate rooms with unity
+### Uncommitted Changes
+production/session-logs/agent-audit.log
+production/session-logs/session-log.md
+web/public/unity-build/Build/unity-build.data
 ## Session End: 20260407_235616
 ### Commits
 58541ff feat: wip spawn npc + players on game start
@@ -530,6 +561,64 @@ unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
 unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
 web/public/unity-build/Build/unity-build.data
 web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260408_015452
+### Commits
+a93f05f Merge branch 'main' into feat-rooms-ui
+4369d27 Merge branch 'main' into feat-rooms-ui
+892e820 Merge pull request #2 from cristianFleita/feat-game-integration
+6b3f16b chore: broadcast other player movement on game
+58541ff feat: wip spawn npc + players on game start
+f81e301 logs
+d363cd9 fix: responsive on huge screens
+89501c6 chore: responsive
+### Uncommitted Changes
+production/session-logs/compaction-log.txt
+unity/JAILBREAK/Assets/UI/Screens/LobbyScreen.uxml
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260408_021222
+### Commits
+10a43ba chore: wip lobby screen
+a93f05f Merge branch 'main' into feat-rooms-ui
+4369d27 Merge branch 'main' into feat-rooms-ui
+892e820 Merge pull request #2 from cristianFleita/feat-game-integration
+6b3f16b chore: broadcast other player movement on game
+58541ff feat: wip spawn npc + players on game start
+f81e301 logs
+d363cd9 fix: responsive on huge screens
+89501c6 chore: responsive
+### Uncommitted Changes
+unity/JAILBREAK/Assets/UI/Screens/LobbyScreen.uxml
+unity/JAILBREAK/Assets/UI/Screens/LobbyUI.uss
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260408_022843
+### Commits
+10a43ba chore: wip lobby screen
+a93f05f Merge branch 'main' into feat-rooms-ui
+4369d27 Merge branch 'main' into feat-rooms-ui
+892e820 Merge pull request #2 from cristianFleita/feat-game-integration
+6b3f16b chore: broadcast other player movement on game
+58541ff feat: wip spawn npc + players on game start
+f81e301 logs
+d363cd9 fix: responsive on huge screens
+89501c6 chore: responsive
+### Uncommitted Changes
+design/gdd/systems-index.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/UI/Screens/LobbyScreen.uxml
+unity/JAILBREAK/Assets/UI/Screens/LobbyUI.uss
+web/public/unity-build/Build/unity-build.data
 web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
