@@ -475,3 +475,62 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260407_202132
+### Commits
+f855ae1 Merge pull request #1 from cristianFleita/feat-socketio-integration
+4f71fdd chore: redirect to game
+### Uncommitted Changes
+backend/src/game/systems/game-manager.ts
+backend/src/game/systems/npc-behavior.ts
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260407_235616
+### Commits
+58541ff feat: wip spawn npc + players on game start
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260408_000653
+### Commits
+58541ff feat: wip spawn npc + players on game start
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260408_001557
+### Commits
+58541ff feat: wip spawn npc + players on game start
+### Uncommitted Changes
+backend/src/game/event-handlers.ts
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+

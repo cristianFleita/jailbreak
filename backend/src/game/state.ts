@@ -73,6 +73,12 @@ export function assignRandomRoles(state: GameRoomState): void {
   for (let i = 0; i < players.length; i++) {
     players[i].role = i === guardIndex ? 'guard' : 'prisoner'
   }
+
+  // Log role assignments
+  console.log('[ROLES] Assigned roles:')
+  for (const p of players) {
+    console.log(`  → ${p.userId} (socket ${p.id}): ${p.role.toUpperCase()}`)
+  }
 }
 
 /**
@@ -115,7 +121,7 @@ export function spawnNPCs(state: GameRoomState, config: GameConfig, npcCount: nu
   const { mapBounds } = config
 
   for (let i = 0; i < npcCount; i++) {
-    const npcId = `npc_guard_${String(i).padStart(3, '0')}`
+    const npcId = `npc_prisoner_${String(i).padStart(3, '0')}`
 
     const randomPosition: Vector3 = {
       x: Math.random() * (mapBounds.maxX - mapBounds.minX) + mapBounds.minX,
@@ -125,7 +131,7 @@ export function spawnNPCs(state: GameRoomState, config: GameConfig, npcCount: nu
 
     const npc: NPCState = {
       id: npcId,
-      type: i === 0 ? 'guard' : 'helper', // first NPC is the main guard
+      type: 'helper', // all NPCs are prisoners blending with real players
       position: { ...randomPosition },
       rotation: { x: 0, y: Math.random() * Math.PI * 2, z: 0, w: 1 },
       animState: 'idle',

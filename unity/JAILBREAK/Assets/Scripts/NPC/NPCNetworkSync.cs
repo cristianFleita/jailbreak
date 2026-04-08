@@ -32,9 +32,16 @@ namespace Jailbreak.NPC
                 return;
             }
 
-            net.OnNPCPositionsEvent += HandleNPCPositions;
+            net.OnGameStartEvent     += HandleGameStart;
+            net.OnNPCPositionsEvent  += HandleNPCPositions;
             net.OnGameReconnectEvent += HandleGameReconnect;
-            net.OnPlayerJoinedEvent += HandlePlayerJoined;
+
+            // If game:start already fired before this scene loaded, spawn NPCs now
+            if (net.State == ConnectionState.InGame && net.CachedGameStart?.npcs != null)
+            {
+                Debug.Log("[NPC] Processing cached game:start NPCs");
+                HandleGameStart(net.CachedGameStart);
+            }
 
             Debug.Log("[NPC] Initialized");
         }
@@ -44,9 +51,9 @@ namespace Jailbreak.NPC
             var net = NetworkManager.Instance;
             if (net == null) return;
 
-            net.OnNPCPositionsEvent -= HandleNPCPositions;
+            net.OnGameStartEvent     -= HandleGameStart;
+            net.OnNPCPositionsEvent  -= HandleNPCPositions;
             net.OnGameReconnectEvent -= HandleGameReconnect;
-            net.OnPlayerJoinedEvent -= HandlePlayerJoined;
         }
 
         private void Update()
@@ -62,30 +69,29 @@ namespace Jailbreak.NPC
 
         // ─── Event Handlers ──────────────────────────────────────────────────
 
+        // Spawn all NPCs immediately from game:start payload so they appear
+        // before the first npc:positions tick (200ms later).
+        private void HandleGameStart(GameStartPayload data)
+        {
+            if (data.npcs == null) return;
+            DespawnAll();
+            foreach (var npc in data.npcs)
+                EnsureNPC(npc);
+            Debug.Log($"[NPC] Spawned {data.npcs.Length} NPCs from game:start");
+        }
+
         private void HandleGameReconnect(GameReconnectPayload data)
         {
             if (data.npcs == null) return;
-
             DespawnAll();
-
             foreach (var npc in data.npcs)
-            {
                 EnsureNPC(npc);
-            }
-
             Debug.Log($"[NPC] Reconnected with {data.npcs.Length} NPCs");
-        }
-
-        private void HandlePlayerJoined(PlayerJoinedPayload data)
-        {
-            // NPC positions come in the first npc:positions after game starts
-            // No action needed here — HandleNPCPositions will spawn them
         }
 
         private void HandleNPCPositions(NPCPositionUpdate data)
         {
             if (data.npcs == null) return;
-
             foreach (var npc in data.npcs)
             {
                 EnsureNPC(npc);
@@ -114,18 +120,21 @@ namespace Jailbreak.NPC
                 go.transform.rotation = data.rotation.ToUnity();
                 go.transform.localScale = new Vector3(0.5f, 1f, 0.5f);
 
-                // Remove collider (optional)
+                // Remove collider — use Destroy (not DestroyImmediate) in builds
                 var col = go.GetComponent<Collider>();
-                if (col != null) DestroyImmediate(col);
+                if (col != null) Destroy(col);
 
-                // Color code by type
+                // All NPCs are prisoners — same blue color.
+                // Use MaterialPropertyBlock to override color WITHOUT creating a new
+                // material instance — avoids URP shader breakage in WebGL (pink capsules).
                 var renderer = go.GetComponent<Renderer>();
                 if (renderer != null)
                 {
-                    var mat = renderer.material;
-                    mat.color = data.type == "guard"
-                        ? new Color(0.8f, 0.2f, 0.2f, 1f)  // Red for guards
-                        : new Color(0.2f, 0.5f, 0.8f, 1f); // Blue for helpers
+                    var color = new Color(0.25f, 0.55f, 0.85f, 1f); // prisoner blue
+                    var mpb = new MaterialPropertyBlock();
+                    mpb.SetColor("_BaseColor", color); // URP Lit
+                    mpb.SetColor("_Color",     color); // Built-in RP fallback
+                    renderer.SetPropertyBlock(mpb);
                 }
             }
 

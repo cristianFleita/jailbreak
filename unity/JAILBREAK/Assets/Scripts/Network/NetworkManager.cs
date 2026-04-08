@@ -28,8 +28,8 @@ namespace Jailbreak.Network
         public const float TickInterval            = 0.05f;
         public const float NpcSendInterval         = 0.2f;
         public const float InterpolationBuffer     = 0.1f;
-        public const float ReconciliationThreshold = 1.0f;
-        public const float ReconciliationLerpSpeed = 0.3f;
+        public const float ReconciliationThreshold = 5.0f;
+        public const float ReconciliationLerpSpeed = 0.15f;
         public const float ReconnectTimeout        = 30f;
 
         // ─── State ───────────────────────────────────────────────────────────
@@ -40,6 +40,12 @@ namespace Jailbreak.Network
         public string          CurrentRoomId  => _currentRoomId;
         public bool            IsHost         { get; private set; }
         public bool            IsAuthenticated { get; private set; }
+
+        /// <summary>
+        /// Cached game:start payload so late-loading scenes (GameScene) can
+        /// read it even after the event has already fired.
+        /// </summary>
+        public GameStartPayload CachedGameStart { get; private set; }
 
         // ─── Events: Auth & Room Lobby ───────────────────────────────────────
         public event Action<AuthRegisteredPayload>    OnAuthRegisteredEvent;
@@ -134,6 +140,12 @@ namespace Jailbreak.Network
 
         private void OnDestroy()
         {
+            // Only the real singleton should disconnect.
+            // When a duplicate NM is Destroy'd in Awake (because Instance already
+            // exists), this fires — calling SocketDisconnect here would kill the
+            // live socket of the REAL instance, breaking WebGL connectivity.
+            if (Instance != this) return;
+
 #if UNITY_WEBGL && !UNITY_EDITOR
             SocketDisconnect();
 #else
@@ -251,7 +263,7 @@ namespace Jailbreak.Network
 #if UNITY_WEBGL && !UNITY_EDITOR
             SocketSendPlayerMove(JsonUtility.ToJson(payload));
 #else
-            try { _socket.Emit("player:move", payload); }
+            try { _socket.EmitStringAsJSON("player:move", JsonUtility.ToJson(payload)); }
             catch (Exception ex) { Debug.LogError($"[NET] SendPlayerMove: {ex}"); }
 #endif
         }
@@ -296,8 +308,6 @@ namespace Jailbreak.Network
 #endif
         }
 
-        // ─── localStorage helpers (platform-agnostic) ────────────────────────
-
         public string GetSavedUserId()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -341,9 +351,13 @@ namespace Jailbreak.Network
                 if (data == null) return;
                 LocalUserId = data.userId;
                 LocalDisplayName = data.displayName;
+                
+                // FIXED: Actually assign the socket ID as the LocalPlayerId
+                LocalPlayerId = data.socketId; 
+                
                 IsAuthenticated = true;
                 SetState(ConnectionState.Connected);
-                OnConnectedEvent?.Invoke();         // signal "ready" to UI
+                OnConnectedEvent?.Invoke();
                 OnAuthRegisteredEvent?.Invoke(data);
             });
         }
@@ -418,7 +432,11 @@ namespace Jailbreak.Network
             {
                 SetState(ConnectionState.InGame);
                 var data = JsonUtility.FromJson<GameStartPayload>(json);
-                if (data != null) OnGameStartEvent?.Invoke(data);
+                if (data != null)
+                {
+                    CachedGameStart = data;
+                    OnGameStartEvent?.Invoke(data);
+                }
             });
         }
 
@@ -577,6 +595,10 @@ namespace Jailbreak.Network
                 {
                     LocalUserId = data.userId;
                     LocalDisplayName = data.displayName;
+                    
+                    // FIXED: Actually assign the socket ID as the LocalPlayerId
+                    LocalPlayerId = data.socketId; 
+
                     IsAuthenticated = true;
                     PlayerPrefs.SetString("jailbreak_user_id",    data.userId);
                     PlayerPrefs.SetString("jailbreak_display_name", data.displayName);
@@ -651,7 +673,11 @@ namespace Jailbreak.Network
                 _mainThreadQueue.Enqueue(() =>
                 {
                     SetState(ConnectionState.InGame);
-                    if (data != null) OnGameStartEvent?.Invoke(data);
+                    if (data != null)
+                    {
+                        CachedGameStart = data;
+                        OnGameStartEvent?.Invoke(data);
+                    }
                 });
             });
 
@@ -716,7 +742,6 @@ namespace Jailbreak.Network
         {
             try
             {
-                // Socket.IO delivers event args as array; index 0 is the payload object.
                 var raw = response.GetValue(0).GetRawText();
                 return JsonUtility.FromJson<T>(raw);
             }
@@ -734,8 +759,6 @@ namespace Jailbreak.Network
             Connect(LocalDisplayName);
         }
 #endif
-
-        // ─── Helpers ─────────────────────────────────────────────────────────
 
         private void SetState(ConnectionState s)
         {

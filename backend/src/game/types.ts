@@ -60,8 +60,8 @@ export interface PlayerState {
 // ============================================================================
 
 export interface NPCState {
-  id: string // unique NPC ID (e.g., "npc_guard_001")
-  type: 'guard' | 'helper' // guard = chases prisoners, helper = neutral
+  id: string // unique NPC ID (e.g., "npc_prisoner_001")
+  type: 'guard' | 'helper' // kept for backend AI zone routing; all NPCs look like prisoners
   position: Vector3
   rotation: Rotation
   animState: 'idle' | 'walking' | 'chasing' | 'searching'

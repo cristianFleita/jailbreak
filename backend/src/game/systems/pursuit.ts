@@ -25,36 +25,42 @@ export class PursuitSystem {
 
   /**
    * Guard marks prisoner: initiate chase.
-   * Find the main guard NPC and have it chase the prisoner.
+   * The human guard player does the actual chasing. Optionally, the nearest
+   * idle NPC can also assist the chase (if one is available).
    */
   startPursuit(guardPlayerId: string, prisonerPlayerId: string): void {
-    // Find the main guard NPC (first one spawned, type='guard')
-    const mainGuardNpc = Array.from(this.state.npcs.values()).find(
-      (npc) => npc.type === 'guard'
-    )
-
-    if (!mainGuardNpc) {
-      console.warn('[PURSUIT] No guard NPC found')
-      return
-    }
-
     const prisoner = this.state.players.get(prisonerPlayerId)
     if (!prisoner) return
 
-    // Start NPC chase
-    this.npcBehavior.startChase(mainGuardNpc.id, prisonerPlayerId, prisoner.position)
+    // Optionally find the nearest idle NPC to assist the chase
+    let assistNpcId = ''
+    const npcs = Array.from(this.state.npcs.values())
+    let closestDist = Infinity
+    for (const npc of npcs) {
+      if (this.npcBehavior.isChasing(npc.id)) continue
+      const dx = npc.position.x - prisoner.position.x
+      const dz = npc.position.z - prisoner.position.z
+      const d  = Math.sqrt(dx * dx + dz * dz)
+      if (d < closestDist) {
+        closestDist = d
+        assistNpcId = npc.id
+      }
+    }
 
-    // Track pursuit
-    const pursuitKey = prisonerPlayerId
-    this.pursuits.set(pursuitKey, {
+    if (assistNpcId) {
+      this.npcBehavior.startChase(assistNpcId, prisonerPlayerId, prisoner.position)
+    }
+
+    this.pursuits.set(prisonerPlayerId, {
       guardPlayerId,
       prisonerPlayerId,
-      npcChasingId: mainGuardNpc.id,
+      npcChasingId: assistNpcId,
       startTime: Date.now(),
       isActive: true,
     })
 
-    console.log(`[PURSUIT] Guard ${guardPlayerId} started chasing prisoner ${prisonerPlayerId}`)
+    console.log(`[PURSUIT] Guard player ${guardPlayerId} chasing prisoner ${prisonerPlayerId}` +
+      (assistNpcId ? ` (NPC ${assistNpcId} assisting)` : ' (no NPC assist)'))
   }
 
   /**
