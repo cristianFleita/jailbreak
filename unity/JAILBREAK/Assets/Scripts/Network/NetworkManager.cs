@@ -41,6 +41,12 @@ namespace Jailbreak.Network
         public bool            IsHost         { get; private set; }
         public bool            IsAuthenticated { get; private set; }
 
+        /// <summary>
+        /// Cached game:start payload so late-loading scenes (GameScene) can
+        /// read it even after the event has already fired.
+        /// </summary>
+        public GameStartPayload CachedGameStart { get; private set; }
+
         // ─── Events: Auth & Room Lobby ───────────────────────────────────────
         public event Action<AuthRegisteredPayload>    OnAuthRegisteredEvent;
         public event Action<RoomCreatedPayload>       OnRoomCreatedEvent;
@@ -134,6 +140,12 @@ namespace Jailbreak.Network
 
         private void OnDestroy()
         {
+            // Only the real singleton should disconnect.
+            // When a duplicate NM is Destroy'd in Awake (because Instance already
+            // exists), this fires — calling SocketDisconnect here would kill the
+            // live socket of the REAL instance, breaking WebGL connectivity.
+            if (Instance != this) return;
+
 #if UNITY_WEBGL && !UNITY_EDITOR
             SocketDisconnect();
 #else
@@ -418,7 +430,11 @@ namespace Jailbreak.Network
             {
                 SetState(ConnectionState.InGame);
                 var data = JsonUtility.FromJson<GameStartPayload>(json);
-                if (data != null) OnGameStartEvent?.Invoke(data);
+                if (data != null)
+                {
+                    CachedGameStart = data; // cache for late-loading scenes
+                    OnGameStartEvent?.Invoke(data);
+                }
             });
         }
 
@@ -651,7 +667,11 @@ namespace Jailbreak.Network
                 _mainThreadQueue.Enqueue(() =>
                 {
                     SetState(ConnectionState.InGame);
-                    if (data != null) OnGameStartEvent?.Invoke(data);
+                    if (data != null)
+                    {
+                        CachedGameStart = data;
+                        OnGameStartEvent?.Invoke(data);
+                    }
                 });
             });
 

@@ -54,15 +54,24 @@ namespace Jailbreak.Network
                 return;
             }
 
-            net.OnPlayerJoinedEvent += HandlePlayerJoined;
-            net.OnPlayerLeftEvent += HandlePlayerLeft;
+            net.OnGameStartEvent         += HandleGameStart;
+            net.OnPlayerJoinedEvent      += HandlePlayerJoined;
+            net.OnPlayerLeftEvent        += HandlePlayerLeft;
             net.OnPlayerReconnectedEvent += HandlePlayerReconnected;
-            net.OnGameReconnectEvent += HandleGameReconnect;
-            net.OnPlayerStateEvent += HandlePlayerState;
-            net.OnNPCPositionsEvent += HandleNPCPositions;
-            net.OnPhaseChangeEvent += HandlePhaseChange;
-            net.OnGuardCatchResultEvent += HandleGuardCatch;
-            net.OnGameEndEvent += HandleGameEnd;
+            net.OnGameReconnectEvent     += HandleGameReconnect;
+            net.OnPlayerStateEvent       += HandlePlayerState;
+            net.OnNPCPositionsEvent      += HandleNPCPositions;
+            net.OnPhaseChangeEvent       += HandlePhaseChange;
+            net.OnGuardCatchResultEvent  += HandleGuardCatch;
+            net.OnGameEndEvent           += HandleGameEnd;
+
+            // If game:start already fired before this scene loaded (normal flow),
+            // process the cached payload now.
+            if (net.State == ConnectionState.InGame && net.CachedGameStart != null)
+            {
+                Debug.Log("[GSM] Processing cached game:start payload");
+                HandleGameStart(net.CachedGameStart);
+            }
         }
 
         private void OnDestroy()
@@ -70,18 +79,44 @@ namespace Jailbreak.Network
             var net = NetworkManager.Instance;
             if (net == null) return;
 
-            net.OnPlayerJoinedEvent -= HandlePlayerJoined;
-            net.OnPlayerLeftEvent -= HandlePlayerLeft;
+            net.OnGameStartEvent        -= HandleGameStart;
+            net.OnPlayerJoinedEvent     -= HandlePlayerJoined;
+            net.OnPlayerLeftEvent       -= HandlePlayerLeft;
             net.OnPlayerReconnectedEvent -= HandlePlayerReconnected;
-            net.OnGameReconnectEvent -= HandleGameReconnect;
-            net.OnPlayerStateEvent -= HandlePlayerState;
-            net.OnNPCPositionsEvent -= HandleNPCPositions;
-            net.OnPhaseChangeEvent -= HandlePhaseChange;
+            net.OnGameReconnectEvent    -= HandleGameReconnect;
+            net.OnPlayerStateEvent      -= HandlePlayerState;
+            net.OnNPCPositionsEvent     -= HandleNPCPositions;
+            net.OnPhaseChangeEvent      -= HandlePhaseChange;
             net.OnGuardCatchResultEvent -= HandleGuardCatch;
-            net.OnGameEndEvent -= HandleGameEnd;
+            net.OnGameEndEvent          -= HandleGameEnd;
         }
 
         // ─── Handlers ────────────────────────────────────────────────────────
+
+        // Handles the initial game:start event which carries the full player+NPC list.
+        // This fires before the scene fully loads in WebGL, so we also handle
+        // player-joined for redundancy — whichever arrives with players wins.
+        private void HandleGameStart(GameStartPayload data)
+        {
+            if (data.players == null) return;
+
+            // Find local player's role and log full roster
+            var localId = LocalPlayerId;
+            Debug.Log($"[GSM] game:start — {data.players.Length} players, localId={localId}");
+            foreach (var p in data.players)
+            {
+                var tag = p.id == localId ? " ← YOU" : "";
+                Debug.Log($"  → {p.id}: {p.role.ToUpper()}{tag}");
+                if (p.id == localId)
+                    LocalRole = p.role;
+            }
+            Debug.Log($"[GSM] Local role = {LocalRole}");
+
+            SyncPlayerList(data.players);
+            SpawnRemotePlayers();
+            GameActive = true;
+            onGameStarted?.Invoke();
+        }
 
         private void HandlePlayerJoined(PlayerJoinedPayload data)
         {
@@ -131,16 +166,39 @@ namespace Jailbreak.Network
         private void HandlePlayerState(PlayerStateUpdate data)
         {
             if (data.players == null) return;
+
             foreach (var p in data.players)
             {
                 Players[p.id] = p;
 
-                // Update remote player GameObject position
-                if (p.id != LocalPlayerId && RemotePlayerGameObjects.TryGetValue(p.id, out var go))
+                // Discover our own role from the tick data if not yet known
+                if (p.id == LocalPlayerId)
+                {
+                    if (string.IsNullOrEmpty(LocalRole) && !string.IsNullOrEmpty(p.role))
+                    {
+                        LocalRole = p.role;
+                        Debug.Log($"[GSM] Role discovered from player:state → {LocalRole.ToUpper()}");
+                    }
+                    continue;
+                }
+
+                // Auto-spawn remote player if we haven't seen them before
+                if (!RemotePlayerGameObjects.ContainsKey(p.id))
+                {
+                    SpawnRemotePlayer(p.id, p);
+                }
+                else if (RemotePlayerGameObjects.TryGetValue(p.id, out var go))
                 {
                     var sync = go.GetComponent<RemotePlayerSync>();
                     if (sync != null) sync.PushState(p);
                 }
+            }
+
+            // Mark game as active on first tick received
+            if (!GameActive)
+            {
+                GameActive = true;
+                onGameStarted?.Invoke();
             }
         }
 
@@ -226,9 +284,19 @@ namespace Jailbreak.Network
                 go.transform.position = player.position.ToUnity();
                 go.transform.localScale = new Vector3(0.6f, 1.2f, 0.6f);
 
-                // Color by role
-                var mat = go.GetComponent<Renderer>().material;
-                mat.color = player.role == "guard" ? new Color(0.9f, 0.1f, 0.1f) : new Color(0.1f, 0.5f, 0.9f);
+                // Color by role using MaterialPropertyBlock — no material instancing,
+                // avoids URP shader breakage in WebGL (pink capsules).
+                var color = player.role == "guard"
+                    ? new Color(0.9f, 0.15f, 0.15f, 1f)  // red  = guard
+                    : new Color(0.25f, 0.55f, 0.85f, 1f); // blue = prisoner
+                var rend = go.GetComponent<Renderer>();
+                if (rend != null)
+                {
+                    var mpb = new MaterialPropertyBlock();
+                    mpb.SetColor("_BaseColor", color); // URP Lit
+                    mpb.SetColor("_Color",     color); // Built-in RP fallback
+                    rend.SetPropertyBlock(mpb);
+                }
 
                 // Remove collider (optional)
                 var col = go.GetComponent<Collider>();

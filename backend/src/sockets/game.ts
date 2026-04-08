@@ -98,6 +98,7 @@ export function setupGameSockets(io: Server) {
         socket.emit('auth:registered', {
           userId: profile.userId,
           displayName: profile.displayName,
+          socketId: socket.id, // client needs this to identify itself in player:state broadcasts
         })
 
         // If user was mid-game in an active room, emit game:reconnect immediately
