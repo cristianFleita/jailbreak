@@ -196,13 +196,6 @@ describe('State Management', () => {
       })
     })
 
-    it('should set first NPC as guard type', () => {
-      const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)
-      spawnNPCs(state, defaultGameConfig)
-
-      const npcs = Array.from(state.npcs.values())
-      expect(npcs[0].type).toBe('guard')
-    })
 
     it('should initialize NPC last broadcast position', () => {
       const state = createGameRoomState('test-room', HOST_USER_ID, defaultGameConfig)

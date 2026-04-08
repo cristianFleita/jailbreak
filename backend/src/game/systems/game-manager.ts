@@ -54,6 +54,9 @@ export class GameManager {
       const currentPhase = this.phases.getCurrentPhase()
       console.log(`[TICK] Phase changed to: ${currentPhase}`)
 
+      // Redirect NPCs to the zone appropriate for the new phase
+      this.npcBehavior.onPhaseChanged(currentPhase)
+
       // Handle phase-specific logic
       if (currentPhase === 'riot') {
         // Riot mode: prisoners win

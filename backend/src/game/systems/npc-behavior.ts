@@ -1,11 +1,23 @@
 /**
  * Sistema 13: NPC Behavior
- * Controls NPC movement: patrolling, chasing prisoners, searching.
+ * Controls NPC movement: phase-aware wandering and chasing prisoners.
  * Called every tick to update NPC positions.
+ *
+ * Wander behavior (replaces fixed 4-point patrol):
+ *   - NPCs pick a random target inside the zone for the current game phase.
+ *   - When they arrive, they pause 2–5 seconds, then pick a new target.
+ *   - Phase transitions immediately redirect all non-chasing NPCs.
+ *
+ * Phase → Zone mapping:
+ *   setup / active  → yard    (morning mingle)
+ *   lockdown        → cells   (everyone back inside)
+ *   escape          → guard NPCs → yard, helper NPCs → kitchen
+ *   riot            → yard    (chaos)
  */
 
-import { GameRoomState, NPCState, Vector3 } from '../types.js'
+import { GameRoomState, GamePhase, NPCState, Vector3 } from '../types.js'
 import { updateNPCPosition, distance } from '../state.js'
+import { ZONES, Zone, randomPointInZone } from '../prison-layout.js'
 
 export interface ChaseState {
   npcId: string
@@ -14,35 +26,45 @@ export interface ChaseState {
   lastSeenPosition: Vector3
 }
 
+interface NPCWander {
+  npcId: string
+  currentTarget: Vector3
+  pauseUntil: number // Date.now() ms — NPC idles until this timestamp
+}
+
 export class NPCBehaviorSystem {
   private activeChases: Map<string, ChaseState> = new Map()
-  private npcPatrols: Map<string, NPCPatrol> = new Map()
+  private npcWanders:   Map<string, NPCWander>  = new Map()
 
   constructor(private state: GameRoomState) {
-    this.initializePatrols()
+    this.initializeWanders()
   }
 
   /**
-   * Initialize patrol routes for NPCs.
-   * In a real game, these would come from level design.
-   * For now, simple circular patrol around spawn point.
+   * Initialize wander state for all NPCs.
+   * Initial target: random point in yard (phase starts as 'setup'/'active').
    */
-  private initializePatrols(): void {
+  private initializeWanders(): void {
     this.state.npcs.forEach((npc) => {
-      const spawnX = npc.position.x
-      const spawnZ = npc.position.z
-
-      this.npcPatrols.set(npc.id, {
+      this.npcWanders.set(npc.id, {
         npcId: npc.id,
-        patrolPoints: [
-          { x: spawnX + 5, y: npc.position.y, z: spawnZ + 5 },
-          { x: spawnX - 5, y: npc.position.y, z: spawnZ + 5 },
-          { x: spawnX - 5, y: npc.position.y, z: spawnZ - 5 },
-          { x: spawnX + 5, y: npc.position.y, z: spawnZ - 5 },
-        ],
-        currentPointIndex: 0,
-        progress: 0, // 0–1, progress to next waypoint
+        currentTarget: randomPointInZone(ZONES.yard),
+        pauseUntil: 0,
       })
+    })
+  }
+
+  /**
+   * Called by GameManager whenever the phase transitions.
+   * Forces all non-chasing NPCs to pick a new target in the appropriate zone.
+   */
+  onPhaseChanged(newPhase: GamePhase): void {
+    this.state.npcs.forEach((npc) => {
+      if (this.activeChases.has(npc.id)) return // chasing NPCs are unaffected
+      const wander = this.npcWanders.get(npc.id)
+      if (!wander) return
+      wander.pauseUntil = 0
+      wander.currentTarget = randomPointInZone(this.getZoneForNPC(npc, newPhase))
     })
   }
 
@@ -60,40 +82,44 @@ export class NPCBehaviorSystem {
       lastSeenPosition: { ...targetPosition },
     })
 
-    // Change animation state
     updateNPCPosition(this.state, npcId, npc.position, 'chasing')
   }
 
   /**
-   * End chase: NPC will return to patrol.
+   * End chase: NPC returns to wandering.
    */
   endChase(npcId: string, reason: 'caught' | 'lost' | 'timeout'): void {
     this.activeChases.delete(npcId)
     const npc = this.state.npcs.get(npcId)
     if (npc) {
       updateNPCPosition(this.state, npcId, npc.position, 'idle')
+      // Pick new wander target immediately after chase ends
+      const wander = this.npcWanders.get(npcId)
+      if (wander) {
+        wander.pauseUntil = 0
+        wander.currentTarget = randomPointInZone(
+          this.getZoneForNPC(npc, this.state.phase.current)
+        )
+      }
     }
   }
 
   /**
    * Main update: called every tick.
-   * Updates all NPC positions based on behavior (chase or patrol).
    */
   updateNPCPositions(tickDelta: number = 0.05): void {
     this.state.npcs.forEach((npc) => {
       if (this.activeChases.has(npc.id)) {
-        // Chase behavior
         this.updateChaseNPC(npc, tickDelta)
       } else {
-        // Patrol behavior
-        this.updatePatrolNPC(npc, tickDelta)
+        this.updateWanderNPC(npc, tickDelta)
       }
     })
   }
 
   /**
    * Chase: move NPC toward last known target position.
-   * Speed: 6 units/sec (faster than prisoner walk speed 5, slower than sprint).
+   * Speed: 6 units/sec.
    */
   private updateChaseNPC(npc: NPCState, tickDelta: number): void {
     const chase = this.activeChases.get(npc.id)
@@ -101,23 +127,18 @@ export class NPCBehaviorSystem {
 
     const target = this.state.players.get(chase.targetId)
     if (!target) {
-      // Target disconnected, end chase
       this.endChase(npc.id, 'lost')
       return
     }
 
-    const chaseSpeed = 6.0 // units/sec
-    const direction = this.normalize(
-      this.subtract(target.position, npc.position)
-    )
-
-    const movement = this.scale(direction, chaseSpeed * tickDelta)
-    const newPos = this.add(npc.position, movement)
+    const chaseSpeed = 6.0
+    const direction  = this.normalize(this.subtract(target.position, npc.position))
+    const movement   = this.scale(direction, chaseSpeed * tickDelta)
+    const newPos     = this.add(npc.position, movement)
 
     updateNPCPosition(this.state, npc.id, newPos, 'chasing')
     chase.lastSeenPosition = { ...target.position }
 
-    // Check timeout: if chasing for >15 seconds, end chase
     const chaseDuration = (Date.now() - chase.startTime) / 1000
     if (chaseDuration > 15) {
       this.endChase(npc.id, 'timeout')
@@ -125,48 +146,66 @@ export class NPCBehaviorSystem {
   }
 
   /**
-   * Patrol: move NPC along patrol route waypoints.
-   * Speed: 3 units/sec (slow, wandering pace).
+   * Wander: move toward current zone target, pause on arrival, then pick new target.
+   * Speed: 3 units/sec.
    */
-  private updatePatrolNPC(npc: NPCState, tickDelta: number): void {
-    const patrol = this.npcPatrols.get(npc.id)
-    if (!patrol) return
+  private updateWanderNPC(npc: NPCState, tickDelta: number): void {
+    const wander = this.npcWanders.get(npc.id)
+    if (!wander) return
 
-    const patrolSpeed = 3.0 // units/sec
-    const currentPoint = patrol.patrolPoints[patrol.currentPointIndex]
-
-    const direction = this.normalize(this.subtract(currentPoint, npc.position))
-    const movement = this.scale(direction, patrolSpeed * tickDelta)
-    const newPos = this.add(npc.position, movement)
-
-    // Check if reached waypoint
-    const distToWaypoint = distance(newPos, currentPoint)
-    if (distToWaypoint < 0.5) {
-      // Move to next waypoint
-      patrol.currentPointIndex = (patrol.currentPointIndex + 1) % patrol.patrolPoints.length
-      patrol.progress = 0
-    } else {
-      patrol.progress += patrolSpeed * tickDelta / distance(npc.position, currentPoint)
+    // Paused at destination
+    if (Date.now() < wander.pauseUntil) {
+      updateNPCPosition(this.state, npc.id, npc.position, 'idle')
+      return
     }
 
-    updateNPCPosition(this.state, npc.id, newPos, 'walking')
+    const wanderSpeed  = 3.0
+    const direction    = this.normalize(this.subtract(wander.currentTarget, npc.position))
+    const movement     = this.scale(direction, wanderSpeed * tickDelta)
+    const newPos       = this.add(npc.position, movement)
+
+    const distToTarget = distance(newPos, wander.currentTarget)
+    if (distToTarget < 0.5) {
+      // Arrived — pause 2–5 seconds, then pick new target in current zone
+      wander.pauseUntil    = Date.now() + 2000 + Math.random() * 3000
+      wander.currentTarget = randomPointInZone(
+        this.getZoneForNPC(npc, this.state.phase.current)
+      )
+      updateNPCPosition(this.state, npc.id, wander.currentTarget, 'idle')
+    } else {
+      updateNPCPosition(this.state, npc.id, newPos, 'walking')
+    }
   }
 
   /**
-   * Query: is this NPC chasing anyone?
+   * Returns the appropriate zone for an NPC given the current game phase.
    */
+  private getZoneForNPC(npc: NPCState, phase: GamePhase): Zone {
+    switch (phase) {
+      case 'lockdown':
+        return ZONES.cells
+      case 'escape':
+        // Guard-type NPCs patrol the yard; helper NPCs head to kitchen exit
+        return npc.type === 'guard' ? ZONES.yard : ZONES.kitchen
+      case 'setup':
+      case 'active':
+      case 'riot':
+      default:
+        return ZONES.yard
+    }
+  }
+
+  // ──────────── Query helpers ────────────
+
   isChasing(npcId: string): boolean {
     return this.activeChases.has(npcId)
   }
 
-  /**
-   * Query: who is this NPC chasing?
-   */
   getChaseTarget(npcId: string): string | null {
     return this.activeChases.get(npcId)?.targetId ?? null
   }
 
-  // ========== Vector utilities ==========
+  // ──────────── Vector utilities ────────────
 
   private normalize(v: Vector3): Vector3 {
     const len = Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
@@ -185,11 +224,4 @@ export class NPCBehaviorSystem {
   private scale(v: Vector3, s: number): Vector3 {
     return { x: v.x * s, y: v.y * s, z: v.z * s }
   }
-}
-
-interface NPCPatrol {
-  npcId: string
-  patrolPoints: Vector3[]
-  currentPointIndex: number
-  progress: number // 0–1
 }

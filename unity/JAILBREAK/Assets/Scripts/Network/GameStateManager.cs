@@ -54,15 +54,24 @@ namespace Jailbreak.Network
                 return;
             }
 
-            net.OnPlayerJoinedEvent += HandlePlayerJoined;
-            net.OnPlayerLeftEvent += HandlePlayerLeft;
+            net.OnGameStartEvent         += HandleGameStart;
+            net.OnPlayerJoinedEvent      += HandlePlayerJoined;
+            net.OnPlayerLeftEvent        += HandlePlayerLeft;
             net.OnPlayerReconnectedEvent += HandlePlayerReconnected;
-            net.OnGameReconnectEvent += HandleGameReconnect;
-            net.OnPlayerStateEvent += HandlePlayerState;
-            net.OnNPCPositionsEvent += HandleNPCPositions;
-            net.OnPhaseChangeEvent += HandlePhaseChange;
-            net.OnGuardCatchResultEvent += HandleGuardCatch;
-            net.OnGameEndEvent += HandleGameEnd;
+            net.OnGameReconnectEvent     += HandleGameReconnect;
+            net.OnPlayerStateEvent       += HandlePlayerState;
+            net.OnNPCPositionsEvent      += HandleNPCPositions;
+            net.OnPhaseChangeEvent       += HandlePhaseChange;
+            net.OnGuardCatchResultEvent  += HandleGuardCatch;
+            net.OnGameEndEvent           += HandleGameEnd;
+
+            // If game:start already fired before this scene loaded (normal flow),
+            // process the cached payload now.
+            if (net.State == ConnectionState.InGame && net.CachedGameStart != null)
+            {
+                Debug.Log("[GSM] Processing cached game:start payload");
+                HandleGameStart(net.CachedGameStart);
+            }
         }
 
         private void OnDestroy()
@@ -70,31 +79,51 @@ namespace Jailbreak.Network
             var net = NetworkManager.Instance;
             if (net == null) return;
 
-            net.OnPlayerJoinedEvent -= HandlePlayerJoined;
-            net.OnPlayerLeftEvent -= HandlePlayerLeft;
+            net.OnGameStartEvent        -= HandleGameStart;
+            net.OnPlayerJoinedEvent     -= HandlePlayerJoined;
+            net.OnPlayerLeftEvent       -= HandlePlayerLeft;
             net.OnPlayerReconnectedEvent -= HandlePlayerReconnected;
-            net.OnGameReconnectEvent -= HandleGameReconnect;
-            net.OnPlayerStateEvent -= HandlePlayerState;
-            net.OnNPCPositionsEvent -= HandleNPCPositions;
-            net.OnPhaseChangeEvent -= HandlePhaseChange;
+            net.OnGameReconnectEvent    -= HandleGameReconnect;
+            net.OnPlayerStateEvent      -= HandlePlayerState;
+            net.OnNPCPositionsEvent     -= HandleNPCPositions;
+            net.OnPhaseChangeEvent      -= HandlePhaseChange;
             net.OnGuardCatchResultEvent -= HandleGuardCatch;
-            net.OnGameEndEvent -= HandleGameEnd;
+            net.OnGameEndEvent          -= HandleGameEnd;
         }
 
         // ─── Handlers ────────────────────────────────────────────────────────
+
+        private void HandleGameStart(GameStartPayload data)
+        {
+            if (data.players == null) return;
+
+            var localId = LocalPlayerId;
+            Debug.Log($"[GSM] game:start — {data.players.Length} players, localId={localId}");
+            foreach (var p in data.players)
+            {
+                var tag = p.id == localId ? " ← YOU" : "";
+                Debug.Log($"  → {p.id}: {p.role.ToUpper()}{tag}");
+                if (p.id == localId)
+                    LocalRole = p.role;
+            }
+            Debug.Log($"[GSM] Local role = {LocalRole}");
+
+            SyncPlayerList(data.players);
+            SpawnRemotePlayers();
+            GameActive = true;
+            onGameStarted?.Invoke();
+        }
 
         private void HandlePlayerJoined(PlayerJoinedPayload data)
         {
             Debug.Log($"[GSM] HandlePlayerJoined: playerId={data?.playerId}, role={data?.role}, players.Length={data?.players?.Length ?? 0}");
 
-            // Assign local role when we join
             if (data.playerId == LocalPlayerId)
             {
                 LocalRole = data.role;
                 Debug.Log($"[GSM] Assigned local role: {LocalRole}");
             }
 
-            // Update full player list
             SyncPlayerList(data.players);
             SpawnRemotePlayers();
 
@@ -128,26 +157,53 @@ namespace Jailbreak.Network
             Debug.Log($"[GSM] Reconnected — tick {data.tick}, phase {CurrentPhase}");
         }
 
+        private int _stateRecvCount;
+
         private void HandlePlayerState(PlayerStateUpdate data)
         {
             if (data.players == null) return;
+
+            _stateRecvCount++;
+
             foreach (var p in data.players)
             {
                 Players[p.id] = p;
 
-                // Update remote player GameObject position
-                if (p.id != LocalPlayerId && RemotePlayerGameObjects.TryGetValue(p.id, out var go))
+                if (p.id == LocalPlayerId)
+                {
+                    if (string.IsNullOrEmpty(LocalRole) && !string.IsNullOrEmpty(p.role))
+                    {
+                        LocalRole = p.role;
+                        Debug.Log($"[GSM] Role discovered from player:state → {LocalRole.ToUpper()}");
+                    }
+                    continue;
+                }
+
+                // Log remote player position every ~1s
+                if (_stateRecvCount % 20 == 1)
+                    Debug.Log($"[GSM] RECV remote player:state #{_stateRecvCount} id={p.id} pos={p.position} state={p.movementState}");
+
+                if (!RemotePlayerGameObjects.ContainsKey(p.id))
+                {
+                    SpawnRemotePlayer(p.id, p);
+                }
+                else if (RemotePlayerGameObjects.TryGetValue(p.id, out var go))
                 {
                     var sync = go.GetComponent<RemotePlayerSync>();
                     if (sync != null) sync.PushState(p);
                 }
+            }
+
+            if (!GameActive)
+            {
+                GameActive = true;
+                onGameStarted?.Invoke();
             }
         }
 
         private void HandleNPCPositions(NPCPositionUpdate data)
         {
             if (data.npcs == null) return;
-            // Update only the NPCs in the delta array
             foreach (var npc in data.npcs)
             {
                 var idx = NPCs.FindIndex(n => n.id == npc.id);
@@ -172,7 +228,6 @@ namespace Jailbreak.Network
                 Debug.Log($"[GSM] Player caught: {data.targetId}");
                 onPlayerCaught?.Invoke(data.targetId);
 
-                // Mark player as dead
                 if (Players.TryGetValue(data.targetId, out var p))
                 {
                     p.isAlive = false;
@@ -218,26 +273,78 @@ namespace Jailbreak.Network
             if (remotePlayerPrefab != null)
             {
                 go = Instantiate(remotePlayerPrefab, player.position.ToUnity(), player.rotation.ToUnity());
+
+                // --- NEW CODE: Strip local components comprehensively ---
+                // We use GetComponentsInChildren to catch components even if they are nested on child GameObjects
+                foreach (var input in go.GetComponentsInChildren<PlayerInputController>(true)) 
+                {
+                    input.enabled = false; 
+                    Destroy(input);
+                }
+                
+                foreach (var netSync in go.GetComponentsInChildren<PlayerNetworkSync>(true)) 
+                {
+                    netSync.enabled = false; 
+                    Destroy(netSync);
+                }
+                
+                foreach (var cc in go.GetComponentsInChildren<CharacterController>(true)) 
+                {
+                    cc.enabled = false; 
+                    Destroy(cc);
+                }
+                
+                foreach (var fpsCam in go.GetComponentsInChildren<FPSCameraController>(true)) 
+                {
+                    fpsCam.enabled = false; 
+                    Destroy(fpsCam);
+                }
+                
+                foreach (var visual in go.GetComponentsInChildren<LocalPlayerRoleVisual>(true)) 
+                {
+                    visual.enabled = false;
+                    Destroy(visual);
+                }
+
+                // Destroy any cameras attached to the remote player to prevent view hijacking
+                foreach (var cam in go.GetComponentsInChildren<Camera>(true)) 
+                {
+                    Destroy(cam.gameObject); 
+                }
+                
+                // Destroy AudioListeners to prevent hearing from the remote player's ears
+                foreach (var listener in go.GetComponentsInChildren<AudioListener>(true)) 
+                {
+                    Destroy(listener); 
+                }
+                // --------------------------------------------------------------------
             }
             else
             {
-                // Default placeholder: capsule with different color
                 go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
                 go.transform.position = player.position.ToUnity();
                 go.transform.localScale = new Vector3(0.6f, 1.2f, 0.6f);
 
-                // Color by role
-                var mat = go.GetComponent<Renderer>().material;
-                mat.color = player.role == "guard" ? new Color(0.9f, 0.1f, 0.1f) : new Color(0.1f, 0.5f, 0.9f);
+                // FIXED: Changed Colors to Green and Black
+                var color = player.role == "guard"
+                    ? new Color(0.15f, 0.8f, 0.15f, 1f)  // Green = Guard
+                    : new Color(0.1f, 0.1f, 0.1f, 1f);   // Black/Dark grey = Prisoner
+                
+                var rend = go.GetComponent<Renderer>();
+                if (rend != null)
+                {
+                    var mpb = new MaterialPropertyBlock();
+                    mpb.SetColor("_BaseColor", color); // URP Lit
+                    mpb.SetColor("_Color",     color); // Built-in RP fallback
+                    rend.SetPropertyBlock(mpb);
+                }
 
-                // Remove collider (optional)
                 var col = go.GetComponent<Collider>();
                 if (col != null) Destroy(col);
             }
 
             go.name = $"Player_{playerId}_{player.role}";
 
-            // Add RemotePlayerSync component
             var sync = go.AddComponent<RemotePlayerSync>();
             sync.PlayerId = playerId;
             sync.Role = player.role;

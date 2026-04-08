@@ -200,6 +200,7 @@ namespace Jailbreak.Network
     {
         public string userId;
         public string displayName;
+        public string socketId;
     }
 
     [Serializable]
