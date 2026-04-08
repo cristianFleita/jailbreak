@@ -1,0 +1,181 @@
+/* --- ROOT & BACKGROUND --- */
+.screen-root {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    -unity-background-scale-mode: scale-and-crop;
+    background-color: rgb(20, 22, 25);
+    flex-direction: column;
+}
+
+/* --- TOP BAR LAYOUT --- */
+.top-bar {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* Flex 1 on these three elements forces the header-container dead center */
+.top-bar-spacer { flex: 1; }
+.header-container { flex: 1; align-items: center; justify-content: flex-start; }
+.profile-container { flex: 1; align-items: flex-end; padding-right: 30px; }
+
+/* --- HEADER LOGO --- */
+.logo-icon {
+    width: 100%;
+    max-width: 250px;
+    height: 120px;
+    -unity-background-scale-mode: scale-to-fit;
+    background-color: transparent;
+}
+
+.lobby-title {
+    font-size: 42px;
+    color: rgb(170, 175, 180);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-top: 5px;
+}
+
+/* --- PLAYER PROFILE PANEL --- */
+.profile-panel {
+    width: 100%;
+    max-width: 320px;
+    background-color: rgb(55, 60, 65); /* Fallback */
+    background-image: linear-gradient(to bottom, rgb(70, 75, 80), rgb(40, 45, 50));
+    border-radius: 8px;
+    border-width: 4px;
+    border-color: rgb(30, 32, 35);
+    padding: 15px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.profile-header {
+    font-size: 16px;
+    color: rgb(210, 210, 210);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 8px;
+}
+
+.profile-text {
+    font-size: 12px;
+    color: rgb(225, 150, 50); /* Gold/Orange text */
+    margin-bottom: 5px;
+}
+
+.profile-input {
+    height: 30px;
+    font-size: 14px;
+}
+
+/* --- MAIN CONTENT (RESPONSIVE SIDE-BY-SIDE) --- */
+.content-area {
+    flex-direction: row;
+    flex-wrap: wrap; /* Allows panels to stack on narrow screens */
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1; /* Takes up remaining vertical space */
+    width: 100%;
+}
+
+/* --- LARGE METAL PANELS --- */
+.main-panel {
+    width: 45%;          /* Takes up 45% of width, leaving gap space */
+    max-width: 550px;    /* Stops from getting too massive */
+    min-width: 350px;    /* Forces them to wrap if screen is narrower than ~750px */
+    margin: 15px;        /* Spacing between panels */
+    padding: 40px;
+    background-color: rgb(60, 65, 70);
+    background-image: linear-gradient(to bottom, rgb(75, 80, 85), rgb(45, 50, 55));
+    border-radius: 12px;
+    border-width: 6px;
+    border-color: rgb(35, 38, 42);
+    align-items: center;
+    justify-content: space-between;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.panel-title {
+    font-size: 38px;
+    color: rgb(180, 180, 180);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+}
+
+.input-container {
+    width: 100%;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.panel-subtitle {
+    font-size: 18px;
+    color: rgb(210, 160, 90);
+    margin-bottom: 10px;
+    -unity-font-style: bold;
+}
+
+/* --- INPUT FIELDS (Inset Dark Slots) --- */
+.input-field {
+    width: 100%;
+}
+
+.input-field > .unity-text-field__input {
+    background-color: rgb(25, 28, 30); /* Dark hole look */
+    border-color: rgb(15, 18, 20);
+    border-width: 3px;
+    border-radius: 4px;
+    color: rgb(160, 160, 160);
+    padding: 12px 15px;
+    font-size: 18px;
+    -unity-text-align: middle-center;
+    border-top-color: rgb(5, 5, 5);
+    border-left-color: rgb(5, 5, 5);
+}
+
+.input-field > .unity-text-field__input:focus {
+    color: rgb(255, 255, 255);
+    border-color: rgb(225, 140, 50);
+}
+
+/* --- ACTION BUTTONS (Fiery Outline) --- */
+.action-btn {
+    width: 80%;
+    height: 65px;
+    background-color: rgb(40, 45, 50);
+    color: rgb(220, 140, 60); /* Orange text */
+    border-radius: 8px;
+    font-size: 26px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    border-width: 3px;
+    border-color: rgb(180, 80, 30); /* Fiery border */
+    transition-duration: 0.1s;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.action-btn:hover {
+    background-color: rgb(50, 55, 60);
+    color: rgb(255, 180, 80);
+    border-color: rgb(220, 120, 40);
+    scale: 1.05;
+}
+
+.action-btn:active {
+    scale: 0.95;
+}
+
+/* --- GLOBAL STATUS --- */
+.status-text {
+    font-size: 16px;
+    color: rgb(200, 50, 50);
+    margin-bottom: 20px;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+}

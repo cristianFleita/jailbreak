@@ -565,3 +565,21 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260408_015452
+### Commits
+a93f05f Merge branch 'main' into feat-rooms-ui
+4369d27 Merge branch 'main' into feat-rooms-ui
+892e820 Merge pull request #2 from cristianFleita/feat-game-integration
+6b3f16b chore: broadcast other player movement on game
+58541ff feat: wip spawn npc + players on game start
+f81e301 logs
+d363cd9 fix: responsive on huge screens
+89501c6 chore: responsive
+### Uncommitted Changes
+production/session-logs/compaction-log.txt
+unity/JAILBREAK/Assets/UI/Screens/LobbyScreen.uxml
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
