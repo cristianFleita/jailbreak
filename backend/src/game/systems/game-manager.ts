@@ -75,8 +75,9 @@ export class GameManager {
     this.jailRoutine.update(tickDelta)
 
     // ========== NPC Behavior ==========
-    // Update all NPC positions (patrol or chase)
-    this.npcBehavior.updateNPCPositions(tickDelta)
+    // Only update positions for NPCs actively chasing a prisoner.
+    // Routine movement/animations are driven by jail-routine assignments → Unity clients.
+    this.npcBehavior.updateChasingNPCsOnly(tickDelta)
 
     // ========== Pursuit Management ==========
     // Check active chases, end chases if prisoner escaped far enough

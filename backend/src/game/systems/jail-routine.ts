@@ -356,6 +356,11 @@ export class JailRoutineSystem {
       zone:           def.zone,
       npcAssignments: assignments,
     })
+
+    console.log(`[NPC-ACTIONS] Phase ${this.currentPhase} (${def.name}) — assignments:`)
+    assignments.forEach(a => {
+      console.log(`  npc=${a.npcId}  action=${a.actionId}  anim=${a.animTrigger}  dur=${a.duration}s${a.waypointId ? `  wp=${a.waypointId}` : ''}${a.socialPartnerId ? `  partner=${a.socialPartnerId}` : ''}`)
+    })
   }
 
   /** Builds assignments for ALL NPCs for the given phase. */
@@ -493,7 +498,10 @@ export class JailRoutineSystem {
 
     if (changed.length > 0) {
       this.onNPCReassign?.({ timestamp: Date.now(), assignments: changed })
-      console.log(`[JAIL] Reassigned ${changed.length} NPCs (libre albedrío)`)
+      console.log(`[NPC-ACTIONS] Reassigned ${changed.length} NPCs (libre albedrío):`)
+      changed.forEach(a => {
+        console.log(`  npc=${a.npcId}  action=${a.actionId}  anim=${a.animTrigger}  dur=${a.duration}s${a.waypointId ? `  wp=${a.waypointId}` : ''}`)
+      })
     }
   }
 

@@ -105,7 +105,8 @@ export class NPCBehaviorSystem {
   }
 
   /**
-   * Main update: called every tick.
+   * Main update: called every tick (full wander + chase).
+   * @deprecated Prefer updateChasingNPCsOnly — wander/movement is Unity's responsibility.
    */
   updateNPCPositions(tickDelta: number = 0.05): void {
     this.state.npcs.forEach((npc) => {
@@ -114,6 +115,17 @@ export class NPCBehaviorSystem {
       } else {
         this.updateWanderNPC(npc, tickDelta)
       }
+    })
+  }
+
+  /**
+   * Chase-only update: only moves NPCs that are actively chasing a prisoner.
+   * Wander positions are handled by Unity clients based on jail-routine assignments.
+   */
+  updateChasingNPCsOnly(tickDelta: number = 0.05): void {
+    this.activeChases.forEach((_chase, npcId) => {
+      const npc = this.state.npcs.get(npcId)
+      if (npc) this.updateChaseNPC(npc, tickDelta)
     })
   }
 
