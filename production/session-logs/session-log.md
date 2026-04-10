@@ -792,3 +792,17 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260410_190828
+### Commits
+0a82a1c chore: wip map + spawn
+### Uncommitted Changes
+.DS_Store
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Player/FPSCameraController.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+

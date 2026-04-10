@@ -16,8 +16,9 @@ namespace Jailbreak.Network
     /// </summary>
     public class GameStateManager : MonoBehaviour
     {
-        [Header("Remote Player Prefab")]
-        [SerializeField] private GameObject remotePlayerPrefab;
+        [Header("Remote Player Prefabs (by role)")]
+        [SerializeField] private GameObject remoteGuardPrefab;
+        [SerializeField] private GameObject remotePrisonerPrefab;
 
         // ─── State ──────────────────────────────────────────────────────────
         public Dictionary<string, PlayerStateData> Players { get; } = new();
@@ -301,74 +302,83 @@ namespace Jailbreak.Network
                 return;
             }
 
+            // Pick the correct prefab based on role
+            var prefab = player.role == "guard" ? remoteGuardPrefab : remotePrisonerPrefab;
+
             GameObject go;
 
-            if (remotePlayerPrefab != null)
+            if (prefab != null)
             {
-                go = Instantiate(remotePlayerPrefab, player.position.ToUnity(), player.rotation.ToUnity());
+                go = Instantiate(prefab, player.position.ToUnity(), player.rotation.ToUnity());
 
-                // --- NEW CODE: Strip local components comprehensively ---
-                // We use GetComponentsInChildren to catch components even if they are nested on child GameObjects
-                foreach (var input in go.GetComponentsInChildren<PlayerInputController>(true)) 
+                // Strip local-only components — remote players are driven by interpolation only
+                foreach (var input in go.GetComponentsInChildren<PlayerInputController>(true))
                 {
-                    input.enabled = false; 
+                    input.enabled = false;
                     Destroy(input);
                 }
-                
-                foreach (var netSync in go.GetComponentsInChildren<PlayerNetworkSync>(true)) 
+
+                foreach (var netSync in go.GetComponentsInChildren<PlayerNetworkSync>(true))
                 {
-                    netSync.enabled = false; 
+                    netSync.enabled = false;
                     Destroy(netSync);
                 }
-                
-                foreach (var cc in go.GetComponentsInChildren<CharacterController>(true)) 
+
+                foreach (var cc in go.GetComponentsInChildren<CharacterController>(true))
                 {
-                    cc.enabled = false; 
+                    cc.enabled = false;
                     Destroy(cc);
                 }
-                
-                foreach (var fpsCam in go.GetComponentsInChildren<FPSCameraController>(true)) 
+
+                foreach (var fpsCam in go.GetComponentsInChildren<FPSCameraController>(true))
                 {
-                    fpsCam.enabled = false; 
+                    fpsCam.enabled = false;
                     Destroy(fpsCam);
                 }
-                
-                foreach (var visual in go.GetComponentsInChildren<LocalPlayerRoleVisual>(true)) 
+
+                foreach (var visual in go.GetComponentsInChildren<LocalPlayerRoleVisual>(true))
                 {
                     visual.enabled = false;
                     Destroy(visual);
                 }
 
-                // Destroy any cameras attached to the remote player to prevent view hijacking
-                foreach (var cam in go.GetComponentsInChildren<Camera>(true)) 
+                // Destroy Rigidbody — remote players use interpolation, not physics.
+                // A Rigidbody here causes the same erratic movement as on local players.
+                foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true))
                 {
-                    Destroy(cam.gameObject); 
+                    Destroy(rb);
                 }
-                
-                // Destroy AudioListeners to prevent hearing from the remote player's ears
-                foreach (var listener in go.GetComponentsInChildren<AudioListener>(true)) 
+
+                // Destroy cameras to prevent view hijacking
+                foreach (var cam in go.GetComponentsInChildren<Camera>(true))
                 {
-                    Destroy(listener); 
+                    Destroy(cam.gameObject);
                 }
-                // --------------------------------------------------------------------
+
+                // Destroy AudioListeners to prevent hearing from the remote player's position
+                foreach (var listener in go.GetComponentsInChildren<AudioListener>(true))
+                {
+                    Destroy(listener);
+                }
             }
             else
             {
+                // Fallback capsule — only if prefab is not assigned in Inspector
+                Debug.LogWarning($"[GSM] No prefab assigned for role '{player.role}' — using fallback capsule");
                 go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
                 go.transform.position = player.position.ToUnity();
                 go.transform.localScale = new Vector3(0.6f, 1.2f, 0.6f);
 
-                // FIXED: Changed Colors to Green and Black
                 var color = player.role == "guard"
-                    ? new Color(0.15f, 0.8f, 0.15f, 1f)  // Green = Guard
-                    : new Color(0.1f, 0.1f, 0.1f, 1f);   // Black/Dark grey = Prisoner
-                
+                    ? new Color(0.15f, 0.8f, 0.15f, 1f)
+                    : new Color(0.1f, 0.1f, 0.1f, 1f);
+
                 var rend = go.GetComponent<Renderer>();
                 if (rend != null)
                 {
                     var mpb = new MaterialPropertyBlock();
-                    mpb.SetColor("_BaseColor", color); // URP Lit
-                    mpb.SetColor("_Color",     color); // Built-in RP fallback
+                    mpb.SetColor("_BaseColor", color);
+                    mpb.SetColor("_Color",     color);
                     rend.SetPropertyBlock(mpb);
                 }
 

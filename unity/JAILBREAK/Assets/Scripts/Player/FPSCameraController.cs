@@ -27,6 +27,7 @@ namespace Jailbreak.Player
         public float prisonerFOV = 70f;
 
         [Header("Head Bob")]
+        public bool  headBobEnabled         = false; // off by default — caused unwanted Y-axis bouncing
         public float bobFrequency           = Mathf.PI * 2f;
         public float walkBobAmplitude       = 0.02f;
         public float sprintBobAmplitude     = 0.04f;
@@ -66,7 +67,7 @@ namespace Jailbreak.Player
 
             ApplyMouseLook();
             ApplyEyeHeight();
-            ApplyHeadBob();
+            if (headBobEnabled) ApplyHeadBob();
         }
 
         private void SetFOVForRole()

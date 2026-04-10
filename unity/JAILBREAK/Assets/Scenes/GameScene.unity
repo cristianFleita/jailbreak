@@ -8152,7 +8152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d16264f99fea445cafd6269ffbc3cfb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.NPC.NPCNetworkSync
-  npcPrefab: {fileID: 0}
+  npcPrefab: {fileID: 4896770664015057812, guid: 30e76095ebce34c719e6ec58fa373394, type: 3}
 --- !u!1001 &440500677
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10407,7 +10407,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5029f3f423f8041bfbf4f610e98cc01d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Network.GameStateManager
-  remotePlayerPrefab: {fileID: 0}
+  remoteGuardPrefab: {fileID: 1044365033193046433, guid: 08b554ae5aee54848a20b9c8e517fb82, type: 3}
+  remotePrisonerPrefab: {fileID: 4896770664015057812, guid: d1fbb20efa3224dfcb5a21c07738346a, type: 3}
   onPhaseChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -33965,7 +33966,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba43ad374cdba42f3b6bea85d0fff12e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.NPC.JailRoutineManager
-  waypointRegistry: {fileID: 0}
+  waypointRegistry: {fileID: 963347359}
   npcNetworkSync: {fileID: 433721670}
   npcPrefab: {fileID: 0}
 --- !u!1001 &1750714431
