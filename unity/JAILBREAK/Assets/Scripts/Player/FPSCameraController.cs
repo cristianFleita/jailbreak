@@ -43,8 +43,8 @@ namespace Jailbreak.Player
             _cam   = GetComponent<Camera>();
             _input = GetComponentInParent<PlayerInputController>();
 
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible   = false;
+            // Do NOT lock cursor yet — wait until InputEnabled is true
+            // (prevents mouse delta spinning the camera before the player is positioned)
         }
 
         private void Start()
@@ -54,6 +54,16 @@ namespace Jailbreak.Player
 
         private void LateUpdate()
         {
+            // Don't process mouse/camera until input is enabled (player is positioned)
+            if (_input != null && !_input.InputEnabled) return;
+
+            // Lock cursor on first active frame
+            if (Cursor.lockState != CursorLockMode.Locked)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible   = false;
+            }
+
             ApplyMouseLook();
             ApplyEyeHeight();
             ApplyHeadBob();

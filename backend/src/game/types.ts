@@ -53,6 +53,7 @@ export interface PlayerState {
   movementState: MovementState
   isAlive: boolean
   health?: number
+  spawnWaypointId?: string // e.g. "cell_door_exit_03" — Unity resolves to world position
 }
 
 // ============================================================================
@@ -66,6 +67,7 @@ export interface NPCState {
   rotation: Rotation
   animState: 'idle' | 'walking' | 'chasing' | 'searching'
   lastBroadcastPosition: Vector3 // for delta compression
+  spawnWaypointId?: string // e.g. "cell_door_exit_07" — Unity resolves to world position
 }
 
 // ============================================================================

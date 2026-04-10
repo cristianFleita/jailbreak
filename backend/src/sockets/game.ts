@@ -18,6 +18,7 @@ import {
 import { addPlayer, removePlayer, assignRandomRoles } from '../game/state.js'
 import {
   handlePlayerMove,
+  clearPlayerMoveTracking,
   handlePlayerInteract,
   handleGuardCatch,
   handleGuardMark,
@@ -641,6 +642,7 @@ function handleLeaveRoom(
 
     // Lobby: remove the player from state immediately
     removePlayer(room.state, socket.id)
+    clearPlayerMoveTracking(socket.id)
     socket.leave(roomId)
     setUserStatus(userId, 'idle')
 

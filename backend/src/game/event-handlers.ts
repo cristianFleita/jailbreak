@@ -38,6 +38,13 @@ export interface PlayerMoveContext {
  */
 let moveLogCounter = 0
 
+// Track last move timestamp and move count per player
+const lastMoveTimestamp = new Map<string, number>()
+const playerMoveCount = new Map<string, number>()
+
+// How many moves to skip speed validation for after spawn (grace period)
+const SPAWN_GRACE_MOVES = 5
+
 export function handlePlayerMove(context: PlayerMoveContext): void {
   const { io, roomId, room, socketId, payload } = context
 
@@ -59,18 +66,31 @@ export function handlePlayerMove(context: PlayerMoveContext): void {
     return
   }
 
-  // Movement validation
-  const moveCheck = validatePlayerMovement(
-    payload.position,
-    player.position,
-    room.config.tickInterval / 1000,
-    room.config
-  )
+  const moveNum = (playerMoveCount.get(socketId) ?? 0) + 1
+  playerMoveCount.set(socketId, moveNum)
 
-  if (!moveCheck.valid) {
-    console.warn(`[MOVE] ${socketId} rejected: ${moveCheck.reason} | new=(${payload.position?.x?.toFixed(2)},${payload.position?.y?.toFixed(2)},${payload.position?.z?.toFixed(2)}) old=(${player.position.x.toFixed(2)},${player.position.y.toFixed(2)},${player.position.z.toFixed(2)})`)
-    // Client will be corrected via next player:state broadcast
-    return
+  const now = Date.now()
+  const lastTime = lastMoveTimestamp.get(socketId) ?? now
+  const realDelta = Math.max((now - lastTime) / 1000, room.config.tickInterval / 1000)
+  lastMoveTimestamp.set(socketId, now)
+
+  // Skip speed validation for the first N moves (spawn grace period)
+  // Client may need a few frames to stabilize after teleport
+  if (moveNum <= SPAWN_GRACE_MOVES) {
+    console.log(`[MOVE] ${socketId} spawn grace move #${moveNum} accepted pos=(${payload.position?.x?.toFixed(2)},${payload.position?.y?.toFixed(2)},${payload.position?.z?.toFixed(2)})`)
+  } else {
+    // Movement validation with real time delta
+    const moveCheck = validatePlayerMovement(
+      payload.position,
+      player.position,
+      realDelta,
+      room.config
+    )
+
+    if (!moveCheck.valid) {
+      console.warn(`[MOVE] ${socketId} rejected: ${moveCheck.reason} | new=(${payload.position?.x?.toFixed(2)},${payload.position?.y?.toFixed(2)},${payload.position?.z?.toFixed(2)}) old=(${player.position.x.toFixed(2)},${player.position.y.toFixed(2)},${player.position.z.toFixed(2)}) dt=${realDelta.toFixed(2)}s`)
+      return
+    }
   }
 
   // Update state
@@ -91,6 +111,12 @@ export function handlePlayerMove(context: PlayerMoveContext): void {
   if (gameManager) {
     gameManager.onPlayerMove(socketId)
   }
+}
+
+/** Clean up tracking when a player leaves */
+export function clearPlayerMoveTracking(socketId: string): void {
+  lastMoveTimestamp.delete(socketId)
+  playerMoveCount.delete(socketId)
 }
 
 // ============================================================================

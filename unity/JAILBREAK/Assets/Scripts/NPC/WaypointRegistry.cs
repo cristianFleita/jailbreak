@@ -4,17 +4,16 @@ using UnityEngine;
 namespace Jailbreak.NPC
 {
     /// <summary>
-    /// ScriptableObject registry mapping waypoint ID strings to scene Transforms.
+    /// MonoBehaviour registry mapping waypoint ID strings to scene GameObjects.
     /// Backend only knows waypoint ID strings — this resolves them to Vector3 positions
     /// for NavMeshAgent destinations.
     ///
     /// Usage:
-    ///   1. Create asset via right-click → Create → Jailbreak → WaypointRegistry
-    ///   2. In the Inspector, add entries: waypointId string + Transform reference
-    ///   3. Assign the asset to JailRoutineManager.waypointRegistry
+    ///   1. Run menu: Jailbreak → Setup WaypointRegistry in Scene
+    ///   2. In the Inspector, drag each scene GameObject onto its "Waypoint Object" slot
+    ///   3. Assign this component to JailRoutineManager.waypointRegistry
     /// </summary>
-    [CreateAssetMenu(menuName = "Jailbreak/WaypointRegistry", fileName = "WaypointRegistry")]
-    public class WaypointRegistry : ScriptableObject
+    public class WaypointRegistry : MonoBehaviour
     {
         [SerializeField] private List<WaypointEntry> waypoints = new();
 
@@ -25,18 +24,20 @@ namespace Jailbreak.NPC
         [System.Serializable]
         public class WaypointEntry
         {
-            public string    waypointId;        // "yard_bench_03"
-            public Transform transform;         // drag from Scene in Editor
-            public string    zone;              // "patio_exterior"
-            public string    subZone;           // "taller", "lavanderia", etc.
-            public bool      isExclusive;       // only 1 occupant at a time
-            public int       maxOccupants = 1;  // card tables = 4
-            public string[]  validPhases;       // phases where this WP is usable ("1","4"…)
+            public string     waypointId;           // "yard_bench_03"
+            public GameObject waypointObject;        // drag the GameObject from the Scene here
+            public string     zone;                 // "patio_exterior"
+            public string     subZone;              // "taller", "lavanderia", etc.
+            public bool       isExclusive;          // only 1 occupant at a time
+            public int        maxOccupants = 1;     // card tables = 4
+            public string[]   validPhases;          // phases where this WP is usable ("1","4"…)
 
             [HideInInspector] public int currentOccupants;
 
-            public bool IsFull => currentOccupants >= maxOccupants;
-            public bool IsAvailable => !IsFull;
+            public bool      IsFull     => currentOccupants >= maxOccupants;
+            public bool      IsAvailable => !IsFull;
+            public Transform Transform  => waypointObject != null ? waypointObject.transform : null;
+            public Vector3   Position   => waypointObject != null ? waypointObject.transform.position : Vector3.zero;
         }
 
         // ─── Public API ───────────────────────────────────────────────────────
@@ -63,7 +64,7 @@ namespace Jailbreak.NPC
         public Vector3? GetPosition(string id)
         {
             var entry = Get(id);
-            return entry?.transform != null ? entry.transform.position : (Vector3?)null;
+            return entry?.waypointObject != null ? entry.waypointObject.transform.position : (Vector3?)null;
         }
 
         /// <summary>Returns all entries for the given zone.</summary>
@@ -126,9 +127,9 @@ namespace Jailbreak.NPC
             if (_lookup == null) Init();
         }
 
-        private void OnEnable()
+        private void Awake()
         {
-            _lookup = null; // force re-init after domain reload
+            Init();
         }
     }
 }

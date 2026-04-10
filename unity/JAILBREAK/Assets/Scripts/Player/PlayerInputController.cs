@@ -28,6 +28,12 @@ namespace Jailbreak.Player
         public MovementState CurrentState { get; private set; }
         public bool IsCrouching          { get; private set; }
 
+        /// <summary>
+        /// Set to true by PlayerNetworkSync.TeleportToSpawn() once the character
+        /// is properly positioned. Until then, NO movement or gravity runs.
+        /// </summary>
+        public bool InputEnabled { get; set; }
+
         // ──────────────────────────── Private ───────────────────────────
         private CharacterController _cc;
         private float _verticalVelocity;
@@ -40,6 +46,7 @@ namespace Jailbreak.Player
 
         private void Update()
         {
+            if (!InputEnabled) return;
             HandleCrouchInput();
             ApplyMovement();
         }
@@ -89,7 +96,6 @@ namespace Jailbreak.Player
             }
             else if (IsCrouching)
             {
-                // Shift+C → CrouchWalk (not sprint)
                 CurrentState = MovementState.CrouchWalk;
                 speed = crouchWalkSpeed;
             }
@@ -102,6 +108,15 @@ namespace Jailbreak.Player
             {
                 CurrentState = MovementState.Walk;
                 speed = walkSpeed;
+            }
+
+            // No input → freeze completely. No gravity, no cc.Move(), nothing.
+            // This prevents sliding on sloped geometry and falling through floors.
+            // Gravity resumes the moment the player presses a movement key.
+            if (!hasInput)
+            {
+                _verticalVelocity = 0f;
+                return;
             }
 
             // Movement direction: body yaw handled by FPSCameraController

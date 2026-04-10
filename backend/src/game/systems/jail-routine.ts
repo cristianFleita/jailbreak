@@ -59,13 +59,18 @@ interface JailPhaseDef {
 
 const JAIL_PHASES: JailPhaseDef[] = [
   {
+    // Transición al desayuno. Spawn en puerta de celda → charla informal → comedor.
     phase: 1, name: 'Inicio', duration: 30, zone: 'celda',
     actions: [
-      { actionId: 'exit_cell',    type: 'ONESHOT', animTrigger: 'walk',      waypointTag: 'cell_door_exit', weight: 100, minDuration: 2,  maxDuration: 3  },
-      { actionId: 'idle_stretch', type: 'ONESHOT', animTrigger: 'stretch',   waypointTag: 'hallway_slot_',  weight: 60,  minDuration: 2,  maxDuration: 4  },
-      { actionId: 'idle_yawn',    type: 'ONESHOT', animTrigger: 'yawn',      waypointTag: 'hallway_slot_',  weight: 40,  minDuration: 1,  maxDuration: 3  },
-      { actionId: 'queue_walk',   type: 'LOOPING', animTrigger: 'walk_slow', waypointTag: 'cafeteria_path_', weight: 100, minDuration: 15, maxDuration: 30, loop: true, chainLength: 3 },
-      { actionId: 'queue_mumble', type: 'SOCIAL',  animTrigger: 'talk_low',  waypointTag: 'hallway_slot_',  weight: 25,  minDuration: 2,  maxDuration: 4  },
+      // Spawn: cada NPC arranca parado en la puerta de su celda (20 WPs únicos)
+      { actionId: 'spawn_at_door',     type: 'IDLE',    animTrigger: 'idle',          waypointTag: 'cell_door_exit',  weight: 100, minDuration: 3,  maxDuration: 8  },
+      // Social sin waypoint: el NPC camina hacia la posición de su pareja (Unity navega al Transform del partner)
+      { actionId: 'greet_neighbor',    type: 'SOCIAL',  animTrigger: 'talk_standing', waypointTag: '',                weight: 30,  minDuration: 5,  maxDuration: 12 },
+      // Idle en el lugar (sin waypoint: el NPC se queda donde está)
+      { actionId: 'idle_stretch',      type: 'IDLE',    animTrigger: 'stretch',       waypointTag: '',                weight: 20,  minDuration: 2,  maxDuration: 4  },
+      { actionId: 'idle_yawn',         type: 'IDLE',    animTrigger: 'yawn',          waypointTag: '',                weight: 15,  minDuration: 1,  maxDuration: 3  },
+      // Transición al comedor: NPC navega al entry point del comedor
+      { actionId: 'walk_to_cafeteria', type: 'ONESHOT', animTrigger: 'walk_slow',     waypointTag: 'cafeteria_path_', weight: 35,  minDuration: 10, maxDuration: 20 },
     ],
   },
   {
@@ -79,27 +84,45 @@ const JAIL_PHASES: JailPhaseDef[] = [
     ],
   },
   {
-    phase: 3, name: 'Limpieza', duration: 90, zone: 'pasillos',
+    // Primer turno de trabajo: NPCs divididos entre taller y lavandería
+    phase: 3, name: 'Trabajo', duration: 90, zone: 'trabajo',
+    subZones: ['taller', 'lavanderia'],
     actions: [
-      { actionId: 'clean_mop_corridor',   type: 'LOOPING', animTrigger: 'mop_walk',      waypointTag: 'corridor_start_',      weight: 35, minDuration: 20, maxDuration: 40, loop: true, chainLength: 2 },
-      { actionId: 'clean_sweep_area',     type: 'LOOPING', animTrigger: 'sweep_walk',    waypointTag: 'clean_zone_',           weight: 20, minDuration: 15, maxDuration: 30, loop: true, chainLength: 2 },
-      { actionId: 'clean_enter_cell',     type: 'LOOPING', animTrigger: 'mop_walk',      waypointTag: 'cell_door_clean_',      weight: 20, minDuration: 15, maxDuration: 25, loop: true, chainLength: 2 },
-      { actionId: 'clean_carry_supplies', type: 'LOOPING', animTrigger: 'carry_box',     waypointTag: 'supply_closet_',        weight: 15, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
-      { actionId: 'clean_idle_mop',       type: 'IDLE',    animTrigger: 'idle_mop',      waypointTag: 'corridor_idle_',        weight: 5,  minDuration: 5,  maxDuration: 10 },
-      { actionId: 'clean_chat_coworker',  type: 'SOCIAL',  animTrigger: 'talk_standing', waypointTag: 'corridor_chat_spot_',   weight: 5,  minDuration: 8,  maxDuration: 15 },
+      // Taller
+      { actionId: 'work_use_workbench',     type: 'IDLE',    animTrigger: 'work_bench',    waypointTag: 'workshop_bench_',     weight: 40, minDuration: 20, maxDuration: 50 },
+      { actionId: 'work_carry_box',         type: 'LOOPING', animTrigger: 'carry_box',     waypointTag: 'workshop_shelf_',     weight: 30, minDuration: 12, maxDuration: 20, loop: true, chainLength: 2 },
+      { actionId: 'work_inspect_equipment', type: 'IDLE',    animTrigger: 'inspect',       waypointTag: 'workshop_machine_',   weight: 20, minDuration: 10, maxDuration: 20 },
+      { actionId: 'work_talk_coworker',     type: 'SOCIAL',  animTrigger: 'talk_standing', waypointTag: 'workshop_chat_spot_', weight: 10, minDuration: 8,  maxDuration: 15 },
+      // Lavandería
+      { actionId: 'laundry_load_washer',    type: 'IDLE',    animTrigger: 'load_machine',  waypointTag: 'laundry_washer_',     weight: 30, minDuration: 15, maxDuration: 30 },
+      { actionId: 'laundry_fold_clothes',   type: 'IDLE',    animTrigger: 'fold_clothes',  waypointTag: 'laundry_fold_',       weight: 35, minDuration: 20, maxDuration: 40 },
+      { actionId: 'laundry_carry_basket',   type: 'LOOPING', animTrigger: 'carry_basket',  waypointTag: 'laundry_washer_',     weight: 25, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
+      { actionId: 'laundry_idle_check',     type: 'IDLE',    animTrigger: 'idle_check',    waypointTag: 'laundry_washer_',     weight: 10, minDuration: 5,  maxDuration: 12 },
     ],
   },
   {
-    phase: 4, name: 'Patio libre', duration: 120, zone: 'patio_exterior',
+    // Hora libre: NPCs eligen entre patio, comedor (charlar) o lavandería (ropa personal)
+    phase: 4, name: 'Hora libre', duration: 120, zone: 'libre',
+    subZones: ['patio', 'comedor', 'lavanderia'],
     actions: [
-      { actionId: 'yard_walk_perimeter',     type: 'LOOPING', animTrigger: 'walk',          waypointTag: 'yard_perimeter_',        weight: 20, minDuration: 30, maxDuration: 60,  loop: true, chainLength: 4 },
-      { actionId: 'yard_sit_bench',          type: 'IDLE',    animTrigger: 'sit_bench',     waypointTag: 'yard_bench_',            weight: 20, minDuration: 20, maxDuration: 60 },
-      { actionId: 'yard_exercise',           type: 'IDLE',    animTrigger: 'exercise',      waypointTag: 'yard_exercise_area_',    weight: 15, minDuration: 15, maxDuration: 40 },
+      // Patio
+      { actionId: 'yard_walk_perimeter',     type: 'LOOPING', animTrigger: 'walk',          waypointTag: 'yard_perimeter_',         weight: 20, minDuration: 30, maxDuration: 60, loop: true, chainLength: 4 },
+      { actionId: 'yard_sit_bench',          type: 'IDLE',    animTrigger: 'sit_bench',     waypointTag: 'yard_bench_',             weight: 20, minDuration: 20, maxDuration: 60 },
+      { actionId: 'yard_exercise',           type: 'IDLE',    animTrigger: 'exercise',      waypointTag: 'yard_exercise_area_',     weight: 15, minDuration: 15, maxDuration: 40 },
       { actionId: 'yard_conversation_group', type: 'SOCIAL',  animTrigger: 'talk_standing', waypointTag: 'yard_conversation_spot_', weight: 20, minDuration: 15, maxDuration: 35 },
-      { actionId: 'yard_play_cards',         type: 'SOCIAL',  animTrigger: 'sit_cards',     waypointTag: 'yard_card_table_',       weight: 10, minDuration: 30, maxDuration: 90, socialGroupSize: 4 },
-      { actionId: 'yard_lean_wall',          type: 'IDLE',    animTrigger: 'lean_wall',     waypointTag: 'yard_wall_lean_',        weight: 8,  minDuration: 15, maxDuration: 40 },
-      { actionId: 'yard_shadow_boxing',      type: 'IDLE',    animTrigger: 'shadowbox',     waypointTag: 'yard_exercise_area_',    weight: 5,  minDuration: 10, maxDuration: 20 },
-      { actionId: 'yard_kick_ball',          type: 'SOCIAL',  animTrigger: 'kick',          waypointTag: 'yard_ball_spot',         weight: 2,  minDuration: 20, maxDuration: 40 },
+      { actionId: 'yard_play_cards',         type: 'SOCIAL',  animTrigger: 'sit_cards',     waypointTag: 'yard_card_table_',        weight: 10, minDuration: 30, maxDuration: 90, socialGroupSize: 4 },
+      { actionId: 'yard_lean_wall',          type: 'IDLE',    animTrigger: 'lean_wall',     waypointTag: 'yard_wall_lean_',         weight: 8,  minDuration: 15, maxDuration: 40 },
+      { actionId: 'yard_shadow_boxing',      type: 'IDLE',    animTrigger: 'shadowbox',     waypointTag: 'yard_exercise_area_',     weight: 5,  minDuration: 10, maxDuration: 20 },
+      { actionId: 'yard_kick_ball',          type: 'SOCIAL',  animTrigger: 'kick',          waypointTag: 'yard_ball_spot',          weight: 2,  minDuration: 20, maxDuration: 40 },
+      // Comedor (charlar, no comer)
+      { actionId: 'free_cafe_sit_talk',      type: 'SOCIAL',  animTrigger: 'talk_seated',   waypointTag: 'cafeteria_seat_',         weight: 40, minDuration: 15, maxDuration: 40 },
+      { actionId: 'free_cafe_sit_idle',      type: 'IDLE',    animTrigger: 'sit_idle',      waypointTag: 'cafeteria_seat_',         weight: 35, minDuration: 10, maxDuration: 30 },
+      { actionId: 'free_cafe_stand_chat',    type: 'SOCIAL',  animTrigger: 'talk_standing', waypointTag: 'cafeteria_line_',         weight: 25, minDuration: 10, maxDuration: 25 },
+      // Lavandería personal (mismas acciones que turno de trabajo)
+      { actionId: 'laundry_load_washer',     type: 'IDLE',    animTrigger: 'load_machine',  waypointTag: 'laundry_washer_',         weight: 30, minDuration: 15, maxDuration: 30 },
+      { actionId: 'laundry_fold_clothes',    type: 'IDLE',    animTrigger: 'fold_clothes',  waypointTag: 'laundry_fold_',           weight: 35, minDuration: 20, maxDuration: 40 },
+      { actionId: 'laundry_carry_basket',    type: 'LOOPING', animTrigger: 'carry_basket',  waypointTag: 'laundry_washer_',         weight: 25, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
+      { actionId: 'laundry_idle_check',      type: 'IDLE',    animTrigger: 'idle_check',    waypointTag: 'laundry_washer_',         weight: 10, minDuration: 5,  maxDuration: 12 },
     ],
   },
   {
@@ -113,8 +136,9 @@ const JAIL_PHASES: JailPhaseDef[] = [
     ],
   },
   {
+    // Segundo turno de trabajo: misma distribución taller/lavandería
     phase: 6, name: 'Trabajo', duration: 120, zone: 'trabajo',
-    subZones: ['taller', 'lavanderia', 'piso'],
+    subZones: ['taller', 'lavanderia'],
     actions: [
       // Taller
       { actionId: 'work_use_workbench',     type: 'IDLE',    animTrigger: 'work_bench',    waypointTag: 'workshop_bench_',     weight: 40, minDuration: 20, maxDuration: 50 },
@@ -126,15 +150,10 @@ const JAIL_PHASES: JailPhaseDef[] = [
       { actionId: 'laundry_fold_clothes',   type: 'IDLE',    animTrigger: 'fold_clothes',  waypointTag: 'laundry_fold_',       weight: 35, minDuration: 20, maxDuration: 40 },
       { actionId: 'laundry_carry_basket',   type: 'LOOPING', animTrigger: 'carry_basket',  waypointTag: 'laundry_washer_',     weight: 25, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
       { actionId: 'laundry_idle_check',     type: 'IDLE',    animTrigger: 'idle_check',    waypointTag: 'laundry_washer_',     weight: 10, minDuration: 5,  maxDuration: 12 },
-      // Piso
-      { actionId: 'floor_mop_zone',         type: 'LOOPING', animTrigger: 'mop_walk',      waypointTag: 'floor_start_',        weight: 40, minDuration: 20, maxDuration: 40, loop: true, chainLength: 2 },
-      { actionId: 'floor_sweep_area',       type: 'LOOPING', animTrigger: 'sweep_walk',    waypointTag: 'floor_zone_',         weight: 30, minDuration: 15, maxDuration: 30, loop: true, chainLength: 2 },
-      { actionId: 'floor_carry_bucket',     type: 'LOOPING', animTrigger: 'carry_box',     waypointTag: 'floor_bucket_start',  weight: 20, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
-      { actionId: 'floor_idle_rest',        type: 'IDLE',    animTrigger: 'idle_mop',      waypointTag: 'floor_rest_spot_',    weight: 10, minDuration: 5,  maxDuration: 10 },
     ],
   },
   {
-    phase: 7, name: 'Celda', duration: 90, zone: 'celdas',
+    phase: 7, name: 'Siesta', duration: 90, zone: 'celdas',
     actions: [
       { actionId: 'cell_lie_bed',          type: 'IDLE',   animTrigger: 'lie_down',       waypointTag: 'cell_bed_',    weight: 50, minDuration: 30, maxDuration: 90 },
       { actionId: 'cell_sit_bed',          type: 'IDLE',   animTrigger: 'sit_bed_edge',   waypointTag: 'cell_bed_',    weight: 20, minDuration: 15, maxDuration: 40 },
@@ -215,11 +234,14 @@ const WAYPOINT_POOL: Record<string, WaypointSlot[]> = {
   'cell_window_': [],
 }
 
-// Sub-zone → valid action IDs for phase 6 filtering
+// Sub-zone → valid action IDs (used by phases 3, 4, 6)
 const SUBZONE_ACTIONS: Record<string, string[]> = {
+  // Fases 3 y 6 — Trabajo
   taller:     ['work_use_workbench', 'work_carry_box', 'work_inspect_equipment', 'work_talk_coworker'],
   lavanderia: ['laundry_load_washer', 'laundry_fold_clothes', 'laundry_carry_basket', 'laundry_idle_check'],
-  piso:       ['floor_mop_zone', 'floor_sweep_area', 'floor_carry_bucket', 'floor_idle_rest'],
+  // Fase 4 — Hora libre
+  patio:      ['yard_walk_perimeter', 'yard_sit_bench', 'yard_exercise', 'yard_conversation_group', 'yard_play_cards', 'yard_lean_wall', 'yard_shadow_boxing', 'yard_kick_ball'],
+  comedor:    ['free_cafe_sit_talk', 'free_cafe_sit_idle', 'free_cafe_stand_chat'],
 }
 
 // ─── Zone Map (for player zone validation) ────────────────────────────────────
@@ -643,7 +665,8 @@ export class JailRoutineSystem {
    * For phase 6, filters by the NPC's sub-zone.
    */
   private getActionPool(def: JailPhaseDef, subZone?: string): ActionDef[] {
-    if (def.phase === 6 && subZone) {
+    // Phases with sub-zones (3 Trabajo, 4 Hora libre, 6 Trabajo): filter by assigned sub-zone
+    if (def.subZones && def.subZones.length > 0 && subZone) {
       const allowed = SUBZONE_ACTIONS[subZone] ?? []
       return def.actions.filter(a => allowed.includes(a.actionId))
     }

@@ -56,6 +56,7 @@ namespace Jailbreak.Network
         public string movementState;
         public bool isAlive;
         public float health;
+        public string spawnWaypointId; // e.g. "cell_door_exit_17" — resolve via WaypointRegistry
     }
 
     [Serializable]
@@ -66,6 +67,7 @@ namespace Jailbreak.Network
         public SVector3 position;
         public SQuaternion rotation;
         public string animState;
+        public string spawnWaypointId; // e.g. "cell_door_exit_03"
     }
 
     [Serializable]

@@ -30,12 +30,12 @@ export const defaultGameConfig: GameConfig = {
   anticheatSpeedMultiplier: 1.5, // speed multiplier for anti-cheat
   reconnectTimeout: 30, // 30 seconds to reconnect
   mapBounds: {
-    minX: -50,
-    maxX: 50,
-    minY: 0,
-    maxY: 20,
-    minZ: -50,
-    maxZ: 50,
+    minX: -300,
+    maxX: 300,
+    minY: -10,   // buffer for floating-point ground level
+    maxY: 100,
+    minZ: -300,
+    maxZ: 300,
   },
   maxPlayers: 4,
 }

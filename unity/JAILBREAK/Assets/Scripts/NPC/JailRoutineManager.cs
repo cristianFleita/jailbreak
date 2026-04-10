@@ -10,7 +10,7 @@ namespace Jailbreak.NPC
     ///
     /// Setup:
     ///   1. Attach to a "JailRoutineManager" GameObject in the GameScene.
-    ///   2. Assign waypointRegistry (ScriptableObject asset).
+    ///   2. Assign waypointRegistry (drag the WaypointRegistry scene GameObject).
     ///   3. This component listens to NetworkManager events automatically.
     ///
     /// How it works:
