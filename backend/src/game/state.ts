@@ -41,11 +41,11 @@ export function createGameRoomState(roomId: string, hostUserId: string, config: 
 // Row B (right side, facing -X): Z from ~2 to ~38, X = +5
 const CELL_DOOR_SPAWNS: { id: string; position: Vector3 }[] = [
   // Row A — cells 1-10 (NPCs)
-  { id: 'cell_door_exit_01', position: { x: -5, y: 0, z:  2 } },
-  { id: 'cell_door_exit_02', position: { x: -5, y: 0, z:  6 } },
-  { id: 'cell_door_exit_03', position: { x: -5, y: 0, z: 10 } },
-  { id: 'cell_door_exit_04', position: { x: -5, y: 0, z: 14 } },
-  { id: 'cell_door_exit_05', position: { x: -5, y: 0, z: 18 } },
+  { id: 'cell_door_exit_01', position: { x: 1.78, y: 0, z:  7.96 } },
+  { id: 'cell_door_exit_02', position: { x: 1.78, y: 0, z:  3.597 } },
+  { id: 'cell_door_exit_03', position: { x: 1.78, y: 0, z: -0.26 } },
+  { id: 'cell_door_exit_04', position: { x: 1.78, y: 0, z: -4.1 } },
+  { id: 'cell_door_exit_05', position: { x: 1.78, y: 0, z: -8.48 } },
   { id: 'cell_door_exit_06', position: { x: -5, y: 0, z: 22 } },
   { id: 'cell_door_exit_07', position: { x: -5, y: 0, z: 26 } },
   { id: 'cell_door_exit_08', position: { x: -5, y: 0, z: 30 } },
@@ -57,12 +57,12 @@ const CELL_DOOR_SPAWNS: { id: string; position: Vector3 }[] = [
   { id: 'cell_door_exit_13', position: { x:  5, y: 0, z: 10 } },
   { id: 'cell_door_exit_14', position: { x:  5, y: 0, z: 14 } },
   { id: 'cell_door_exit_15', position: { x:  5, y: 0, z: 18 } },
-  { id: 'cell_door_exit_16', position: { x:  5, y: 0, z: 22 } },
+  { id: 'cell_door_exit_16', position: { x:  -6.065, y: 0, z: 8.237 } },
   // Row B — cells 17-20 (Players)
-  { id: 'cell_door_exit_17', position: { x:  5, y: 0, z: 26 } },
-  { id: 'cell_door_exit_18', position: { x:  5, y: 0, z: 30 } },
-  { id: 'cell_door_exit_19', position: { x:  5, y: 0, z: 34 } },
-  { id: 'cell_door_exit_20', position: { x:  5, y: 0, z: 38 } },
+  { id: 'cell_door_exit_17', position: { x:  -6.065, y: 0, z: 4.166 } },
+  { id: 'cell_door_exit_18', position: { x:  -6.065, y: 0, z: -0.15 } },
+  { id: 'cell_door_exit_19', position: { x:  -6.065, y: 0, z: -3.837 } },
+  { id: 'cell_door_exit_20', position: { x:  -6.065, y: 0, z: -8.054 } },
 ]
 
 // Players take the last 4 slots (17-20)
@@ -96,7 +96,7 @@ export function addPlayer(
 
   state.players.set(playerId, player)
   state.playersByUserId.set(userId, player)
-  console.log("Player initL:" , player.position);
+
   return player
 }
 
@@ -172,7 +172,7 @@ export function updatePlayerMovement(
  * Spawns NPCs for the room (called when game starts).
  * Creates 20 NPCs with random positions within map bounds.
  */
-export function spawnNPCs(state: GameRoomState, _config: GameConfig, npcCount: number = 20): void {
+export function spawnNPCs(state: GameRoomState, _config: GameConfig, npcCount: number = 2): void {
   for (let i = 0; i < npcCount; i++) {
     const npcId     = `npc_prisoner_${String(i).padStart(3, '0')}`
     const spawnSlot = NPC_SPAWN_SLOTS[i % NPC_SPAWN_SLOTS.length]

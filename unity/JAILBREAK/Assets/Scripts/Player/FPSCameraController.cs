@@ -5,12 +5,10 @@ namespace Jailbreak.Player
 {
     /// <summary>
     /// First-person camera controller (New Input System).
-    /// - Mouse X yaws the player body (parent).
+    /// - Mouse X yaws the player body (capsule).
     /// - Mouse Y pitches only this camera (clamped ±80°).
     /// - Eye height interpolates between stand (1.6m) and crouch (0.8m).
-    /// - Head bob responds to PlayerInputController.CurrentState.
-    /// - FOV set per role: guard = 80°, prisoner = 70°.
-    /// Attach to a Camera GO that is a direct child of the player capsule.
+    /// - Forces local X and Z to 0 so the camera never orbits/swings.
     /// </summary>
     public class FPSCameraController : MonoBehaviour
     {
@@ -27,7 +25,7 @@ namespace Jailbreak.Player
         public float prisonerFOV = 70f;
 
         [Header("Head Bob")]
-        public bool  headBobEnabled         = false; // off by default — caused unwanted Y-axis bouncing
+        public bool  headBobEnabled         = false; 
         public float bobFrequency           = Mathf.PI * 2f;
         public float walkBobAmplitude       = 0.02f;
         public float sprintBobAmplitude     = 0.04f;
@@ -43,9 +41,9 @@ namespace Jailbreak.Player
         {
             _cam   = GetComponent<Camera>();
             _input = GetComponentInParent<PlayerInputController>();
-
-            // Do NOT lock cursor yet — wait until InputEnabled is true
-            // (prevents mouse delta spinning the camera before the player is positioned)
+            
+            // Ensure the camera starts centered so it doesn't orbit
+            transform.localPosition = new Vector3(0f, standEyeHeight, 0f);
         }
 
         private void Start()
@@ -86,10 +84,13 @@ namespace Jailbreak.Player
             float mouseX =  delta.x * sensitivity;
             float mouseY =  delta.y * sensitivity;
 
-            // Yaw: rotate player body
-            transform.parent.Rotate(0f, mouseX, 0f, Space.World);
+            // Yaw: Rotate the entire player body (capsule) left and right
+            if (_input != null)
+            {
+                _input.transform.Rotate(0f, mouseX, 0f, Space.World);
+            }
 
-            // Pitch: rotate camera only, clamped
+            // Pitch: Rotate ONLY the camera up and down (the neck)
             _pitch -= mouseY;
             _pitch  = Mathf.Clamp(_pitch, -80f, 80f);
             transform.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
@@ -98,10 +99,14 @@ namespace Jailbreak.Player
         private void ApplyEyeHeight()
         {
             if (_input == null) return;
+            
             float targetY = _input.IsCrouching ? crouchEyeHeight : standEyeHeight;
-            Vector3 lp = transform.localPosition;
-            lp.y = Mathf.Lerp(lp.y, targetY, 10f * Time.deltaTime);
-            transform.localPosition = lp;
+            
+            // We lock X and Z strictly to 0f. 
+            // This guarantees the camera sits exactly in the center of the capsule
+            // like human eyes, completely eliminating the "orbiting" feeling.
+            float currentY = Mathf.Lerp(transform.localPosition.y, targetY, 10f * Time.deltaTime);
+            transform.localPosition = new Vector3(0f, currentY, 0f);
         }
 
         private void ApplyHeadBob()

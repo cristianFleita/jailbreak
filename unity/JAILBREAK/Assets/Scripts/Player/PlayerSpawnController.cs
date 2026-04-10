@@ -102,11 +102,27 @@ namespace Jailbreak.Player
             _localPlayerInstance.name = $"LocalPlayer_{data.role}";
             _spawned = true;
 
+            var cc = _localPlayerInstance.GetComponent<CharacterController>();
+            if (cc != null)
+            {
+                // FIX: If the CharacterController's center is 0, it means the GameObject pivot is 
+                // in the middle of the capsule. Humanoid models have their pivot at their feet.
+                // We correct the CC to standard Unity humanoid specs to stop the visual model from floating.
+                if (Mathf.Abs(cc.center.y) < 0.01f && cc.height > 0f)
+                {
+                    cc.center = new Vector3(cc.center.x, cc.height * 0.5f, cc.center.z);
+                    Debug.Log($"[SPAWN] Corrected CharacterController center to {cc.center} to prevent floating.");
+                }
+            }
+
             // Initialize PlayerNetworkSync with the spawn position so it starts sending moves
             var pns = _localPlayerInstance.GetComponent<PlayerNetworkSync>();
             if (pns != null)
             {
                 pns.TeleportToSpawn(spawnPos);
+                
+                // FAILSAFE: Ensure the CC is re-enabled immediately so gravity takes over
+                if (cc != null) cc.enabled = true;
             }
             else
             {
@@ -120,6 +136,7 @@ namespace Jailbreak.Player
         {
             // Always trust the server-assigned position (even (0,0,0) is valid for guard)
             var serverPos = data.position.ToUnity();
+            
             Debug.Log($"[SPAWN] Using server position: {serverPos}");
             return serverPos;
         }
