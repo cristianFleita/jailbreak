@@ -12,18 +12,17 @@ namespace Jailbreak.Player
         private Animator _animator;
         private PlayerInputController _input;
         private RemotePlayerSync _remote;
-        private CharacterController _cc;
         
         private string _currentAnimState = "";
-        private Vector3 _lastPos;
 
         private void Awake()
         {
             // Try to find animator on the child model
             _animator = GetComponentInChildren<Animator>();
             _input = GetComponent<PlayerInputController>();
-            _remote = GetComponent<RemotePlayerSync>();
-            _cc = GetComponent<CharacterController>(); // Local player uses CC for velocity
+            
+            // We DO NOT get RemotePlayerSync here because GameStateManager adds it 
+            // dynamically AFTER the prefab is instantiated and Awake has already run.
 
             if (_animator == null)
             {
@@ -39,28 +38,27 @@ namespace Jailbreak.Player
         {
             if (_animator == null) return;
 
-            string moveState = "idle";
-            Vector3 worldVelocity = Vector3.zero;
-            bool isLocal = _input != null;
+            // Dynamically grab the remote sync component if we haven't found it yet
+            if (_remote == null)
+            {
+                _remote = GetComponent<RemotePlayerSync>();
+            }
 
-            // 1. Determine state and calculate velocity
+            string moveState = "idle";
+            
+            // Unity overloads '!= null'. If GameStateManager destroyed _input, this evaluates to false.
+            bool isLocal = _input != null; 
+
+            // 1. Determine state
             // Local player dictates its own state via Keyboard
             if (isLocal)
             {
                 moveState = _input.CurrentState.ToString().ToLower();
-                if (_cc != null) worldVelocity = _cc.velocity;
             }
             // Remote player receives its state from the server payload
             else if (_remote != null)
             {
                 moveState = _remote.MovementState?.ToLower() ?? "idle";
-                
-                // Calculate manual velocity for remote players by tracking their positional changes
-                if (Time.deltaTime > 0)
-                {
-                    worldVelocity = (transform.position - _lastPos) / Time.deltaTime;
-                }
-                _lastPos = transform.position;
             }
 
             // Map movement state to actual Animator state names found in Character.controller
@@ -74,16 +72,17 @@ namespace Jailbreak.Player
                 _ => "Idle"
             };
 
-            // CrossFade smoothly to the new animation if it changed
+            // 2. Handle Animation CrossFading
             if (_currentAnimState != targetAnimState)
             {
                 string playerType = isLocal ? "LOCAL" : "REMOTE";
                 Debug.Log($"[AnimController] {playerType} ({gameObject.name}) animating: {_currentAnimState} -> {targetAnimState} (Raw Input: {moveState})");
 
-
-                // Safely crossfade. The '0' specifically targets the Base Layer, which prevents Unity from ignoring it
+                // Use CrossFadeInFixedTime! 
+                // Standard CrossFade uses a percentage of the animation length. If an Idle animation is long,
+                // the transition takes forever. FixedTime ensures it always takes exactly 0.15 seconds,
+                // which fixes the bug where tapping 'W' very quickly didn't play the animation.
                 _animator.CrossFadeInFixedTime(targetAnimState, 0.15f, 0);
-
                 
                 _currentAnimState = targetAnimState;
             }
