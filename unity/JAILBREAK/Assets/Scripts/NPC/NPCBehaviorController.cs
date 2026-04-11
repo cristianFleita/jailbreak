@@ -47,7 +47,7 @@ namespace Jailbreak.NPC
         private void Awake()
         {
             if (agent    == null) agent    = GetComponent<NavMeshAgent>();
-            if (animator == null) animator = GetComponent<Animator>();
+            if (animator == null) animator = GetComponentInChildren<Animator>();
         }
 
         private void Update()
@@ -106,7 +106,6 @@ namespace Jailbreak.NPC
 
         private void ApplyAssignment(NPCAssignmentData data)
         {
-            // Release previous waypoint reservation
             if (_current != null)
             {
                 if (!string.IsNullOrEmpty(_current.waypointId))
@@ -143,6 +142,7 @@ namespace Jailbreak.NPC
                 }
 
                 agent.SetDestination(destination.Value);
+                PlayAnimation("walk"); // Move to waypoint!
             }
             else
             {
@@ -175,8 +175,8 @@ namespace Jailbreak.NPC
                     waypointRegistry?.Reserve(nextId);
                     agent.SetDestination(nextPos.Value);
                     _hasArrived = false;
+                    PlayAnimation("walk");
                 }
-                // No reset of _actionTimer for LOOPING — server drives overall duration
             }
         }
 
@@ -184,34 +184,73 @@ namespace Jailbreak.NPC
         {
             _isLooping = false;
             _current   = null;
-
-            // Play idle and wait — server will send npc:reassign within ~25s
             PlayAnimation("idle");
-
-            // Fallback: if no reassign arrives in idleFallbackDelay, stay idle
         }
-
-        // ─── Private: Helpers ─────────────────────────────────────────────────
 
         private Vector3? ResolveFirstDestination(NPCAssignmentData data)
         {
             if (waypointRegistry == null) return null;
-
-            // Chain takes precedence
             if (data.waypointChain != null && data.waypointChain.Length > 0)
                 return waypointRegistry.GetPosition(data.waypointChain[0]);
-
             if (!string.IsNullOrEmpty(data.waypointId))
                 return waypointRegistry.GetPosition(data.waypointId);
-
             return null;
         }
 
-        private void PlayAnimation(string trigger)
+        // ─── Animator Map ───────────────────────────────────────────────────────
+
+        private void PlayAnimation(string backendTrigger)
         {
-            if (animator == null || string.IsNullOrEmpty(trigger)) return;
-            try { animator.SetTrigger(trigger); }
-            catch { /* Animator may not have this trigger — silently ignore */ }
+            if (animator == null || string.IsNullOrEmpty(backendTrigger)) return;
+            
+            // Map the Node.js trigger string directly to the Unity State Name
+            string stateName = MapTriggerToStateName(backendTrigger);
+            
+            try 
+            { 
+                // Safely crossfade into the raw state name without needing parameters
+                animator.CrossFade(stateName, 0.25f); 
+            }
+            catch { /* Ignore if animator state is missing */ }
+        }
+
+        private string MapTriggerToStateName(string trigger)
+        {
+            return trigger switch
+            {
+                "idle" => "Idle",
+                "talk_standing" => "Talking",
+                "stretch" => "Idle",
+                "yawn" => "Idle",
+                "walk_slow" => "Walking",
+                "sit_eat" => "Sitting",
+                "walk" => "Walking",
+                "idle_queue" => "Idle",
+                "talk_seated" => "SittingTalking",
+                "carry_tray" => "Walking",
+                "work_bench" => "ButtonPushing",
+                "carry_box" => "Walking",
+                "inspect" => "Rummaging",
+                "load_machine" => "Opening",
+                "fold_clothes" => "Idle",
+                "carry_basket" => "Walking",
+                "idle_check" => "Idle",
+                "sit_bench" => "SeatedIdle",
+                "exercise" => "PushUp",
+                "sit_cards" => "Sitting",
+                "lean_wall" => "Idle",
+                "shadowbox" => "Punching",
+                "kick" => "Attack",
+                "sit_idle" => "Sitting",
+                "lie_down" => "LyingDown",
+                "sit_bed_edge" => "Sitting",
+                "read_book" => "SeatedIdle",
+                "idle_window" => "Idle",
+                "whisper_seated" => "TellingSecret",
+                "sleep" => "LayingPose",
+                "toss_turn" => "LyingDown",
+                _ => "Idle"
+            };
         }
     }
 }
