@@ -29,6 +29,13 @@ namespace Jailbreak.Player
         public bool IsCrouching          { get; private set; }
 
         /// <summary>
+        /// Raw movement input in local space this frame.
+        /// x = horizontal strafe (-1 left … +1 right), y = forward/back (-1 … +1).
+        /// Read by PlayerAnimationController to drive the Strafe blend parameter.
+        /// </summary>
+        public Vector2 MoveInput { get; private set; }
+
+        /// <summary>
         /// Set to true by PlayerNetworkSync.TeleportToSpawn() once the character
         /// is properly positioned. Until then, NO movement or gravity runs.
         /// </summary>
@@ -81,6 +88,9 @@ namespace Jailbreak.Player
             }
 
             bool hasInput = Mathf.Abs(h) > 0.01f || Mathf.Abs(v) > 0.01f;
+
+            // Expose raw input so PlayerAnimationController can read strafe direction
+            MoveInput = hasInput ? new Vector2(h, v).normalized : Vector2.zero;
 
             // Determine state and speed
             float speed;
