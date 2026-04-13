@@ -806,3 +806,15 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260413_191955
+### Commits
+09d78d4 chore: update guard spawn position
+8277bbb chore: wip movement adjust
+68a0890 chore: adjust npc spawn
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+

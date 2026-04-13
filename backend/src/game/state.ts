@@ -40,25 +40,25 @@ export function createGameRoomState(roomId: string, hostUserId: string, config: 
 // Row A (left side, facing +X):  Z from ~2 to ~38, X = -5
 // Row B (right side, facing -X): Z from ~2 to ~38, X = +5
 const CELL_DOOR_SPAWNS: { id: string; position: Vector3 }[] = [
-  // Row A — cells 1-10 (NPCs)
+  // Row A — 
   { id: 'cell_door_exit_01', position: { x: 1.78, y: 0, z:  7.96 } },
   { id: 'cell_door_exit_02', position: { x: 1.78, y: 0, z:  3.597 } },
   { id: 'cell_door_exit_03', position: { x: 1.78, y: 0, z: -0.26 } },
   { id: 'cell_door_exit_04', position: { x: 1.78, y: 0, z: -4.1 } },
   { id: 'cell_door_exit_05', position: { x: 1.78, y: 0, z: -8.48 } },
-  { id: 'cell_door_exit_06', position: { x: -5, y: 0, z: 22 } },
-  { id: 'cell_door_exit_07', position: { x: -5, y: 0, z: 26 } },
-  { id: 'cell_door_exit_08', position: { x: -5, y: 0, z: 30 } },
-  { id: 'cell_door_exit_09', position: { x: -5, y: 0, z: 34 } },
-  { id: 'cell_door_exit_10', position: { x: -5, y: 0, z: 38 } },
-  // Row B — cells 11-16 (NPCs)
-  { id: 'cell_door_exit_11', position: { x:  5, y: 0, z:  2 } },
-  { id: 'cell_door_exit_12', position: { x:  5, y: 0, z:  6 } },
-  { id: 'cell_door_exit_13', position: { x:  5, y: 0, z: 10 } },
-  { id: 'cell_door_exit_14', position: { x:  5, y: 0, z: 14 } },
-  { id: 'cell_door_exit_15', position: { x:  5, y: 0, z: 18 } },
+  // Row B — 1st floor
+  { id: 'cell_door_exit_06', position: { x: -5.974, y: 3.193, z: -6.155 } },
+  { id: 'cell_door_exit_07', position: { x: -5.974, y: 3.193, z: -1.826 } },
+  { id: 'cell_door_exit_08', position: { x: -5.974, y: 3.193, z: 2.276 } },
+  { id: 'cell_door_exit_09', position: { x: -6.832, y: 3.193, z: 6.718 } },
+  { id: 'cell_door_exit_10', position: { x: -3.499, y: 3.193, z: 6.718 } },
+  { id: 'cell_door_exit_11', position: { x:  -0.264, y: 3.193, z:  6.718 } },
+  { id: 'cell_door_exit_12', position: { x:  2.986, y: 3.193, z:  6.718 } },
+  { id: 'cell_door_exit_13', position: { x:  2.236, y: 3.193, z: 1.973 } },
+  { id: 'cell_door_exit_14', position: { x:  2.236, y: 3.193, z: -2.031 } },
+  { id: 'cell_door_exit_15', position: { x:  2.236, y: 3.193, z: -6.395 } },
+  // Row A — 
   { id: 'cell_door_exit_16', position: { x:  -6.065, y: 0, z: 8.237 } },
-  // Row B — cells 17-20 (Players)
   { id: 'cell_door_exit_17', position: { x:  -6.065, y: 0, z: 4.166 } },
   { id: 'cell_door_exit_18', position: { x:  -6.065, y: 0, z: -0.15 } },
   { id: 'cell_door_exit_19', position: { x:  -6.065, y: 0, z: -3.837 } },
