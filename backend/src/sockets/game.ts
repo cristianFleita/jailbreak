@@ -84,7 +84,7 @@ export function setupGameSockets(io: Server) {
     // ==================================================================
     socket.on('auth:register', (payload: AuthRegisterPayload) => {
       try {
-        const profile = registerUser(socket.id, payload.userId, payload.displayName)
+        const profile = registerUser(socket.id, payload.userId)
 
         // If user was in a room, restore context
         if (profile.currentRoomId) {

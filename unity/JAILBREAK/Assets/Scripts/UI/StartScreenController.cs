@@ -46,13 +46,13 @@ namespace Jailbreak.UI
             _startBtn.clicked         += OnStartClicked;
 
             // FLOW STEP 1: Do I have a saved user ID?
-            var savedId = net.GetSavedUserId();
-            
+            // var savedId = net.GetSavedUserId();
+
+            var savedId = "";
             if (!string.IsNullOrEmpty(savedId))
             {
                 // Yes -> Hide the UI and check the backend automatically
                 Debug.Log("[StartScreen] Found saved ID. Auto-authenticating...");
-                _nameField.style.display = DisplayStyle.None;
                 _startBtn.style.display = DisplayStyle.None;
                 _statusLabel.text = "Restoring session...";
                 
@@ -77,20 +77,20 @@ namespace Jailbreak.UI
 
         private void OnStartClicked()
         {
-            if (_connecting) return;
+            // if (_connecting) return;
+            //
+            // var displayName = _nameField.value?.Trim();
+            // if (string.IsNullOrEmpty(displayName))
+            // {
+            //     _statusLabel.text = "Please enter your name";
+            //     return;
+            // }
+            //
+            // _connecting = true;
+            // _startBtn.SetEnabled(false);
+            // _statusLabel.text = "Connecting...";
 
-            var displayName = _nameField.value?.Trim();
-            if (string.IsNullOrEmpty(displayName))
-            {
-                _statusLabel.text = "Please enter your name";
-                return;
-            }
-
-            _connecting = true;
-            _startBtn.SetEnabled(false);
-            _statusLabel.text = "Connecting...";
-
-            NetworkManager.Instance.Connect(displayName);
+            NetworkManager.Instance.Connect();
         }
 
         private void OnAuthenticated(AuthRegisteredPayload payload)

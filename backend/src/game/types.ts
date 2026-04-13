@@ -201,7 +201,7 @@ export interface RiotAvailablePayload {
 
 export interface AuthRegisterPayload {
   userId?: string // existing userId from localStorage (omit for new user)
-  displayName: string
+  displayName?: string // ignored — display name is generated server-side
 }
 
 export interface RoomCreatePayload {
