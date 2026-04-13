@@ -107,7 +107,7 @@ export function setupGameSockets(io: Server) {
         if (profile.currentRoomId) {
           const roomForReconnect = getRoom(profile.currentRoomId)
           if (roomForReconnect && roomForReconnect.state.status === 'active') {
-            const reconnectResult = restorePlayerConnection(profile.currentRoomId, socket.id)
+            const reconnectResult = restorePlayerConnection(profile.currentRoomId, profile.userId)
             if (reconnectResult.success && reconnectResult.playerState) {
               roomForReconnect.state.players.set(socket.id, reconnectResult.playerState)
               roomForReconnect.state.playersByUserId.set(profile.userId, reconnectResult.playerState)
@@ -268,7 +268,7 @@ export function setupGameSockets(io: Server) {
           }
 
           // Check if this user is reconnecting to this room
-          const reconnectResult = restorePlayerConnection(payload.roomId, socket.id)
+          const reconnectResult = restorePlayerConnection(payload.roomId, user.userId)
           if (reconnectResult.success && reconnectResult.playerState) {
             room.state.players.set(socket.id, reconnectResult.playerState)
             room.state.playersByUserId.set(user.userId, reconnectResult.playerState)
@@ -516,12 +516,13 @@ export function setupGameSockets(io: Server) {
         const room = getRoom(currentRoomId)
         if (!room || room.state.status !== 'active') return
 
+        const interactUser = getUserBySocket(socket.id)
         handlePlayerInteract({
           io,
           roomId: currentRoomId,
           room,
           socketId: socket.id,
-          playerId: socket.id,
+          playerId: interactUser?.userId ?? socket.id,
           objectId,
           action,
           timestamp: Date.now(),
@@ -625,11 +626,12 @@ function handleLeaveRoom(
     const isHost = userId === room.state.hostUserId
     const gameIsActive = room.state.status === 'active'
 
-    // During an active game: always save a reconnection slot (host included)
+    // During an active game: save reconnection slot then remove the stale socket entry
     if (gameIsActive) {
       markPlayerDisconnected(roomId, player, room.config.reconnectTimeout)
+      removePlayer(room.state, socket.id)
+      clearPlayerMoveTracking(socket.id)
       socket.leave(roomId)
-      // setUserStatus(userId, 'idle')
 
       // Notify remaining players that this player temporarily disconnected
       io.to(roomId).emit('room:player-left', {

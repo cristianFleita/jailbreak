@@ -83,7 +83,7 @@ export function addPlayer(
   const spawnSlot = PLAYER_SPAWN_SLOTS[state.players.size] ?? PLAYER_SPAWN_SLOTS[0]
 
   const player: PlayerState = {
-    id: playerId,
+    id: userId,
     userId,
     role: 'prisoner', // placeholder — reassigned on game start
     position: { x:  0, y: 0, z: 0 },
@@ -132,7 +132,7 @@ export function assignRandomRoles(state: GameRoomState): void {
   // Log role assignments
   console.log('[ROLES] Assigned roles + spawn positions:')
   for (const p of players) {
-    console.log(`  → ${p.userId} (socket ${p.id}): ${p.role.toUpperCase()} @ (${p.position.x}, ${p.position.y}, ${p.position.z})`)
+    console.log(`  → ${p.userId}: ${p.role.toUpperCase()} @ (${p.position.x}, ${p.position.y}, ${p.position.z})`)
   }
 }
 

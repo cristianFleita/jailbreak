@@ -141,14 +141,17 @@ namespace Jailbreak.UI
         private void GoToLobby()
         {
             UnsubscribeAll();
+            if (uiDocument != null) uiDocument.rootVisualElement.style.display = DisplayStyle.None;
             SceneManager.LoadScene(lobbySceneName);
         }
 
         private void GoToGame()
         {
             UnsubscribeAll();
+            if (uiDocument != null) uiDocument.rootVisualElement.style.display = DisplayStyle.None;
             SceneManager.LoadScene(gameSceneName);
         }
+
 
         private void UnsubscribeAll()
         {

@@ -11,7 +11,6 @@ import {
   validatePlayerMovement,
   validateGuardCatch,
   validateInteractionDistance,
-  validatePayloadOwnership,
 } from './validation.js'
 import { getRoom } from './room-manager.js'
 import { GameManager } from './systems/game-manager.js'
@@ -59,10 +58,9 @@ export function handlePlayerMove(context: PlayerMoveContext): void {
     return
   }
 
-  // Ownership check
-  const ownerCheck = validatePayloadOwnership(payload.playerId, socketId)
-  if (!ownerCheck.valid) {
-    console.warn(`[MOVE] Ownership mismatch for ${socketId}: payload.playerId=${payload.playerId} socket.id=${socketId}`)
+  // Ownership check — payload.playerId must match the stable userId for this socket
+  if (payload.playerId !== player.userId) {
+    console.warn(`[MOVE] Ownership mismatch for ${socketId}: payload.playerId=${payload.playerId} player.userId=${player.userId}`)
     return
   }
 
@@ -147,9 +145,9 @@ export function handlePlayerInteract(context: PlayerInteractContext): void {
     return
   }
 
-  // Ownership
-  if (playerId !== socketId) {
-    console.warn(`[INTERACT] Ownership mismatch for ${socketId}`)
+  // Ownership — playerId must match the stable userId for this socket
+  if (playerId !== player.userId) {
+    console.warn(`[INTERACT] Ownership mismatch for ${socketId}: playerId=${playerId} player.userId=${player.userId}`)
     return
   }
 
@@ -168,16 +166,16 @@ export function handlePlayerInteract(context: PlayerInteractContext): void {
     return
   }
 
-  // Dispatch by action type
+  // Dispatch by action type — use stable playerId (userId) not socketId
   switch (action) {
     case 'pickup':
-      handleItemPickup(io, roomId, room, socketId, objectId, item)
+      handleItemPickup(io, roomId, room, playerId, objectId, item)
       break
     case 'use':
-      handleItemUse(io, roomId, room, socketId, objectId, item)
+      handleItemUse(io, roomId, room, playerId, objectId, item)
       break
     case 'drop':
-      handleItemDrop(io, roomId, room, socketId, objectId, item)
+      handleItemDrop(io, roomId, room, playerId, objectId, item)
       break
   }
 }
@@ -264,7 +262,7 @@ export function handleGuardCatch(context: GuardCatchContext): void {
   const { io, roomId, room, socketId, guardId, targetId, timestamp } = context
 
   const guard = room.state.players.get(socketId)
-  const target = room.state.players.get(targetId)
+  const target = room.state.playersByUserId.get(targetId)
 
   if (!guard || !target) {
     console.warn(`[CATCH] Player not found (guard=${socketId}, target=${targetId})`)
@@ -337,7 +335,7 @@ export function handleGuardMark(context: GuardMarkContext): void {
   const { io, roomId, room, socketId, guardId, targetId } = context
 
   const guard = room.state.players.get(socketId)
-  const target = room.state.players.get(targetId)
+  const target = room.state.playersByUserId.get(targetId)
 
   if (!guard || !target) {
     console.warn(`[MARK] Player not found`)
