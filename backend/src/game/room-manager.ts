@@ -141,10 +141,13 @@ export function buildRoomStatePayload(room: GameRoom): RoomStatePayload {
 
 /**
  * Finds a player's socketId by their userId within a room.
+ * Iterates the socket-keyed players map to return the actual socket ID.
  */
 export function findSocketByUserId(room: GameRoom, userId: string): string | undefined {
-  const player = room.state.playersByUserId.get(userId)
-  return player?.id // player.id is the socketId
+  for (const [socketId, player] of room.state.players) {
+    if (player.userId === userId) return socketId
+  }
+  return undefined
 }
 
 // ============================================================================

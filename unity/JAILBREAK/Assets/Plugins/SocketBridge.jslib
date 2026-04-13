@@ -34,11 +34,10 @@ mergeInto(LibraryManager.library, {
    * goName = Unity GameObject that will receive SendMessage callbacks.
    */
   SocketConnect: function(goNamePtr, displayNamePtr) {
-    var goName      = UTF8ToString(goNamePtr);
-    var displayName = UTF8ToString(displayNamePtr);
+    var goName = UTF8ToString(goNamePtr);
+    // displayNamePtr kept for ABI compatibility but name is now generated server-side
 
-    window._jbGoName      = goName;
-    window._jbDisplayName = displayName;
+    window._jbGoName = goName;
 
     function doConnect() {
       if (window._jbSocket) {
@@ -62,10 +61,9 @@ mergeInto(LibraryManager.library, {
 
       window._jbSocket.on('connect', function () {
         console.log('[SocketBridge] Connected:', window._jbSocket.id);
-        // Authenticate immediately
+        // Authenticate — display name is generated server-side
         window._jbSocket.emit('auth:register', {
           userId: savedUserId,
-          displayName: displayName,
         });
       });
 

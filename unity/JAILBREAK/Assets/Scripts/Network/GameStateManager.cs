@@ -73,6 +73,12 @@ namespace Jailbreak.Network
                 Debug.Log("[GSM] Processing cached game:start payload");
                 HandleGameStart(net.CachedGameStart);
             }
+            // F5 reload path: no game:start in this session, but reconnect data exists
+            else if (net.State == ConnectionState.InGame && net.CachedGameReconnect != null)
+            {
+                Debug.Log("[GSM] Processing cached game:reconnect payload (F5 reload)");
+                HandleGameReconnect(net.CachedGameReconnect);
+            }
         }
 
         private void OnDestroy()
@@ -98,13 +104,13 @@ namespace Jailbreak.Network
         {
             if (data.players == null) return;
 
-            var localId = LocalPlayerId;
+            var localId = LocalPlayerId; // stable userId
             Debug.Log($"[GSM] game:start — {data.players.Length} players, localId={localId}");
             foreach (var p in data.players)
             {
-                var tag = p.id == localId ? " ← YOU" : "";
+                var tag = p.userId == localId ? " ← YOU" : "";
                 Debug.Log($"  → {p.id}: {p.role.ToUpper()} spawn=({p.position.x:F1},{p.position.y:F1},{p.position.z:F1}){tag}");
-                if (p.id == localId)
+                if (p.userId == localId)
                     LocalRole = p.role;
             }
             Debug.Log($"[GSM] Local role = {LocalRole}");
@@ -148,12 +154,12 @@ namespace Jailbreak.Network
         private void HandleGameReconnect(GameReconnectPayload data)
         {
             // Teleport local player to their last known server position (if already spawned)
-            var localId = LocalPlayerId;
+            var localId = LocalPlayerId; // stable userId
             if (data.players != null && !string.IsNullOrEmpty(localId))
             {
                 foreach (var p in data.players)
                 {
-                    if (p.id == localId)
+                    if (p.userId == localId)
                     {
                         LocalRole = p.role;
                         // Only teleport if the local player prefab already exists
@@ -193,7 +199,7 @@ namespace Jailbreak.Network
                 Players[p.id] = p;
 
                 // NEVER spawn or move the local player — they own their own position
-                if (p.id == localId)
+                if (p.userId == localId)
                 {
                     if (string.IsNullOrEmpty(LocalRole) && !string.IsNullOrEmpty(p.role))
                     {
@@ -286,7 +292,7 @@ namespace Jailbreak.Network
 
             foreach (var (id, player) in Players)
             {
-                if (id == localId) continue;  // Don't spawn self
+                if (player.userId == localId) continue;  // Don't spawn self
                 if (RemotePlayerGameObjects.ContainsKey(id)) continue;  // Already spawned
 
                 SpawnRemotePlayer(id, player);
@@ -296,7 +302,7 @@ namespace Jailbreak.Network
         private void SpawnRemotePlayer(string playerId, PlayerStateData player)
         {
             // Hard guard: NEVER spawn the local player as remote
-            if (playerId == LocalPlayerId)
+            if (player.userId == LocalPlayerId)
             {
                 Debug.LogWarning($"[GSM] Blocked attempt to spawn LOCAL player {playerId} as remote!");
                 return;

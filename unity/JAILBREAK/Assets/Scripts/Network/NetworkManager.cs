@@ -42,10 +42,11 @@ namespace Jailbreak.Network
         public bool            IsAuthenticated { get; private set; }
 
         /// <summary>
-        /// Cached game:start payload so late-loading scenes (GameScene) can
-        /// read it even after the event has already fired.
+        /// Cached payloads so late-loading scenes (GameScene) can
+        /// read them even after the events have already fired during loading.
         /// </summary>
         public GameStartPayload CachedGameStart { get; private set; }
+        public GameReconnectPayload CachedGameReconnect { get; private set; }
 
         // ─── Events: Auth & Room Lobby ───────────────────────────────────────
         public event Action<AuthRegisteredPayload>    OnAuthRegisteredEvent;
@@ -357,10 +358,7 @@ namespace Jailbreak.Network
                 if (data == null) return;
                 LocalUserId = data.userId;
                 LocalDisplayName = data.displayName;
-                
-                // FIXED: Actually assign the socket ID as the LocalPlayerId
-                LocalPlayerId = data.socketId; 
-                
+                LocalPlayerId = data.userId; // use stable userId so it survives reconnects
                 IsAuthenticated = true;
                 SetState(ConnectionState.Connected);
                 OnConnectedEvent?.Invoke();
@@ -480,7 +478,11 @@ namespace Jailbreak.Network
             {
                 SetState(ConnectionState.InGame);
                 var data = JsonUtility.FromJson<GameReconnectPayload>(json);
-                if (data != null) OnGameReconnectEvent?.Invoke(data);
+                if (data != null)
+                {
+                    CachedGameReconnect = data;
+                    OnGameReconnectEvent?.Invoke(data);
+                }
             });
         }
 
@@ -639,10 +641,7 @@ namespace Jailbreak.Network
                 {
                     LocalUserId = data.userId;
                     LocalDisplayName = data.displayName;
-                    
-                    // FIXED: Actually assign the socket ID as the LocalPlayerId
-                    LocalPlayerId = data.socketId; 
-
+                    LocalPlayerId = data.userId; // use stable userId so it survives reconnects
                     IsAuthenticated = true;
                     PlayerPrefs.SetString("jailbreak_user_id",    data.userId);
                     PlayerPrefs.SetString("jailbreak_display_name", data.displayName);
@@ -755,7 +754,11 @@ namespace Jailbreak.Network
                 _mainThreadQueue.Enqueue(() =>
                 {
                     SetState(ConnectionState.InGame);
-                    if (data != null) OnGameReconnectEvent?.Invoke(data);
+                    if (data != null)
+                    {
+                        CachedGameReconnect = data;
+                        OnGameReconnectEvent?.Invoke(data);
+                    }
                 });
             });
 

@@ -48,7 +48,8 @@ namespace Jailbreak.Network
     [Serializable]
     public class PlayerStateData
     {
-        public string id;
+        public string id;     // player/user ID (stable across reconnects — same as userId)
+        public string userId; // persistent user ID (stable across reconnects)
         public string role;
         public SVector3 position;
         public SQuaternion rotation;
@@ -122,6 +123,7 @@ namespace Jailbreak.Network
         public ItemStateData[] items;
         public PhaseData phase;
         public int tick;
+        public JailPhaseSnapshot jailPhase; // populated when jail routine is active
     }
 
     [Serializable]

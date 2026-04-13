@@ -128,10 +128,26 @@ namespace Jailbreak.NPC
 
         private void HandleReconnect(GameReconnectPayload data)
         {
-            // GameReconnectPayload doesn't carry jailPhase directly in the
-            // current NetworkTypes, but the server includes it in the raw JSON.
-            // For now, we wait for the next phase:start to resync.
-            Debug.Log("[JAIL] Reconnected — waiting for next phase:start to resync NPC assignments");
+            if (data.jailPhase == null)
+            {
+                Debug.Log("[JAIL] Reconnected — no jailPhase snapshot, waiting for next phase:start");
+                return;
+            }
+
+            CurrentJailPhase = data.jailPhase.phase;
+            CurrentZone      = data.jailPhase.zone;
+            PhaseDuration    = 0f; // duration not included in snapshot
+            PhaseElapsed     = 0f;
+
+            waypointRegistry?.ResetOccupants();
+
+            if (data.jailPhase.npcAssignments != null)
+            {
+                foreach (var assignment in data.jailPhase.npcAssignments)
+                    ApplyAssignment(assignment);
+            }
+
+            Debug.Log($"[JAIL] Reconnect restored phase {data.jailPhase.phase} zone={data.jailPhase.zone} with {data.jailPhase.npcAssignments?.Length ?? 0} NPC assignments");
         }
 
         // ─── Private: Apply Single Assignment ────────────────────────────────

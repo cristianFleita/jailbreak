@@ -57,12 +57,12 @@ function requireAuth(socket: Socket, cb: () => void): void {
  * Sets up all socket event handlers.
  *
  * Flow:
- *   1. Client connects → emits `auth:register` with userId + displayName
- *   2. Server responds with `auth:registered` (userId confirmed or generated)
- *   3. Client can then: `room:create`, `room:join`, `room:list`
- *   4. Host can: `room:kick`, `room:start`
- *   5. All players can: `room:leave`
- *   6. During game: `player:move`, `player:interact`, `guard:mark`, `guard:catch`, `riot:activate`
+ * 1. Client connects → emits `auth:register` with userId + displayName
+ * 2. Server responds with `auth:registered` (userId confirmed or generated)
+ * 3. Client can then: `room:create`, `room:join`, `room:list`
+ * 4. Host can: `room:kick`, `room:start`
+ * 5. All players can: `room:leave`
+ * 6. During game: `player:move`, `player:interact`, `guard:mark`, `guard:catch`, `riot:activate`
  */
 export function setupGameSockets(io: Server) {
   // Periodic cleanup of stale users (no socket, inactive >1h)
@@ -84,7 +84,7 @@ export function setupGameSockets(io: Server) {
     // ==================================================================
     socket.on('auth:register', (payload: AuthRegisterPayload) => {
       try {
-        const profile = registerUser(socket.id, payload.userId, payload.displayName)
+        const profile = registerUser(socket.id, payload.userId)
 
         // If user was in a room, restore context
         if (profile.currentRoomId) {
@@ -107,7 +107,7 @@ export function setupGameSockets(io: Server) {
         if (profile.currentRoomId) {
           const roomForReconnect = getRoom(profile.currentRoomId)
           if (roomForReconnect && roomForReconnect.state.status === 'active') {
-            const reconnectResult = restorePlayerConnection(profile.currentRoomId, socket.id)
+            const reconnectResult = restorePlayerConnection(profile.currentRoomId, profile.userId)
             if (reconnectResult.success && reconnectResult.playerState) {
               roomForReconnect.state.players.set(socket.id, reconnectResult.playerState)
               roomForReconnect.state.playersByUserId.set(profile.userId, reconnectResult.playerState)
@@ -195,6 +195,7 @@ export function setupGameSockets(io: Server) {
             return
           }
 
+          // Sync closure state if it was cleared externally by a host leaving/kicking
           if (socket.data.currentRoomId === null) currentRoomId = null
 
           if (currentRoomId) {
@@ -240,8 +241,9 @@ export function setupGameSockets(io: Server) {
         try {
           const user = getUserBySocket(socket.id)!
 
-          // If this socket was kicked, the host's handler cleared socket.data.currentRoomId
-          // but couldn't touch our closure — sync it here before the guard runs.
+          // If this socket was kicked, or the room was destroyed by the host,
+          // the host's handler cleared socket.data.currentRoomId but couldn't touch 
+          // our closure — sync it here before joining.
           if (socket.data.currentRoomId === null) currentRoomId = null
 
           if (currentRoomId) {
@@ -266,7 +268,7 @@ export function setupGameSockets(io: Server) {
           }
 
           // Check if this user is reconnecting to this room
-          const reconnectResult = restorePlayerConnection(payload.roomId, socket.id)
+          const reconnectResult = restorePlayerConnection(payload.roomId, user.userId)
           if (reconnectResult.success && reconnectResult.playerState) {
             room.state.players.set(socket.id, reconnectResult.playerState)
             room.state.playersByUserId.set(user.userId, reconnectResult.playerState)
@@ -514,12 +516,13 @@ export function setupGameSockets(io: Server) {
         const room = getRoom(currentRoomId)
         if (!room || room.state.status !== 'active') return
 
+        const interactUser = getUserBySocket(socket.id)
         handlePlayerInteract({
           io,
           roomId: currentRoomId,
           room,
           socketId: socket.id,
-          playerId: socket.id,
+          playerId: interactUser?.userId ?? socket.id,
           objectId,
           action,
           timestamp: Date.now(),
@@ -623,11 +626,12 @@ function handleLeaveRoom(
     const isHost = userId === room.state.hostUserId
     const gameIsActive = room.state.status === 'active'
 
-    // During an active game: always save a reconnection slot (host included)
+    // During an active game: save reconnection slot then remove the stale socket entry
     if (gameIsActive) {
       markPlayerDisconnected(roomId, player, room.config.reconnectTimeout)
+      removePlayer(room.state, socket.id)
+      clearPlayerMoveTracking(socket.id)
       socket.leave(roomId)
-      // setUserStatus(userId, 'idle')
 
       // Notify remaining players that this player temporarily disconnected
       io.to(roomId).emit('room:player-left', {
@@ -654,8 +658,15 @@ function handleLeaveRoom(
       io.to(roomId).emit('room:destroyed', { roomId, reason: 'host-left' })
 
       // Update status for all remaining players
-      for (const [_sid, p] of room.state.players) {
+      for (const [sid, p] of room.state.players) {
         setUserStatus(p.userId, 'idle')
+
+        // FIX: Null out the room on the target socket's data bag so its own 
+        // closure variable can sync properly on their next room:join/create attempt.
+        const targetSocket = io.sockets.sockets.get(sid)
+        if (targetSocket) {
+          targetSocket.data.currentRoomId = null
+        }
       }
 
       // Force all sockets out of the room

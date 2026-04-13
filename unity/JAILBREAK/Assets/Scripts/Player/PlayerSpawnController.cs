@@ -42,20 +42,53 @@ namespace Jailbreak.Player
                 return;
             }
 
-            net.OnGameStartEvent += HandleGameStart;
+            net.OnGameStartEvent     += HandleGameStart;
+            net.OnGameReconnectEvent += HandleGameReconnect;
 
-            // Game may have already started before this scene loaded
+            // Game may have already started before this scene loaded (normal flow)
             if (net.State == ConnectionState.InGame && net.CachedGameStart != null)
                 HandleGameStart(net.CachedGameStart);
+            // F5 reload path: reconnect data is cached, game:start was never received this session
+            else if (net.State == ConnectionState.InGame && net.CachedGameReconnect != null)
+                HandleGameReconnect(net.CachedGameReconnect);
         }
 
         private void OnDestroy()
         {
             var net = NetworkManager.Instance;
-            if (net != null) net.OnGameStartEvent -= HandleGameStart;
+            if (net != null)
+            {
+                net.OnGameStartEvent     -= HandleGameStart;
+                net.OnGameReconnectEvent -= HandleGameReconnect;
+            }
         }
 
-        // ─── Game Start ───────────────────────────────────────────────────────
+        // ─── Game Start / Reconnect ───────────────────────────────────────────
+
+        private void HandleGameReconnect(GameReconnectPayload data)
+        {
+            if (_spawned) return;
+            if (data?.players == null) return;
+
+            var localId = NetworkManager.Instance?.LocalPlayerId;
+            if (string.IsNullOrEmpty(localId))
+            {
+                Debug.LogError("[SPAWN] LocalPlayerId not set — cannot spawn local player on reconnect");
+                return;
+            }
+
+            PlayerStateData myData = null;
+            foreach (var p in data.players)
+                if (p.userId == localId) { myData = p; break; }
+
+            if (myData == null)
+            {
+                Debug.LogWarning($"[SPAWN] Local player {localId} not found in game:reconnect payload");
+                return;
+            }
+
+            SpawnLocalPlayer(myData);
+        }
 
         private void HandleGameStart(GameStartPayload data)
         {
@@ -72,7 +105,7 @@ namespace Jailbreak.Player
             PlayerStateData myData = null;
             if (data.players != null)
                 foreach (var p in data.players)
-                    if (p.id == localId) { myData = p; break; }
+                    if (p.userId == localId) { myData = p; break; }
 
             if (myData == null)
             {

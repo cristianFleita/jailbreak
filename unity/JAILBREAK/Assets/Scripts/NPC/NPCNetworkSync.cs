@@ -37,10 +37,18 @@ namespace Jailbreak.NPC
             net.OnGameReconnectEvent += HandleGameReconnect;
 
             // If game:start already fired before this scene loaded, spawn NPCs now
-            if (net.State == ConnectionState.InGame && net.CachedGameStart?.npcs != null)
+            if (net.State == ConnectionState.InGame)
             {
-                Debug.Log("[NPC] Processing cached game:start NPCs");
-                HandleGameStart(net.CachedGameStart);
+                if (net.CachedGameStart?.npcs != null)
+                {
+                    Debug.Log("[NPC] Processing cached game:start NPCs");
+                    HandleGameStart(net.CachedGameStart);
+                }
+                else if (net.CachedGameReconnect?.npcs != null)
+                {
+                    Debug.Log("[NPC] Processing cached game:reconnect NPCs");
+                    HandleGameReconnect(net.CachedGameReconnect);
+                }
             }
 
             Debug.Log("[NPC] Initialized");
