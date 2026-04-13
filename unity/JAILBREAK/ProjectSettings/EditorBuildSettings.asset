@@ -6,9 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 0
     path: Assets/Scenes/demo-socket-io.unity
     guid: 67e416a49910a4f27a61a36abc84e4b2
   - enabled: 1
@@ -20,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/RoomScene.unity
     guid: d3361db5cbff24e3192cf5bb20df30e7
+  - enabled: 0
+    path: Assets/Scenes/MapScene.unity
+    guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
     path: Assets/Scenes/GameScene.unity
     guid: 902dcb41f0f9c4580b099a2d21a324f6

@@ -1,4 +1,3 @@
-using System.Collections;
 using Jailbreak.Network;
 using UnityEngine;
 
@@ -6,160 +5,131 @@ namespace Jailbreak.Player
 {
     /// <summary>
     /// Attach to the LOCAL player GameObject.
-    /// - Sends player:move every 50ms
-    /// - Receives server corrections and applies rubber-band reconciliation
-    ///
-    /// Requires: CharacterController on the same GameObject.
+    /// - Sends player:move ONLY when the player is actively moving (WASD input).
+    /// - Does NOT apply server corrections: the local player owns its position.
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class PlayerNetworkSync : MonoBehaviour
     {
         [Header("Tuning")]
-        [SerializeField] private float sendInterval = NetworkManager.TickInterval;
+        [SerializeField] private float positionThreshold = 0.05f;
+        [SerializeField] private float minSendInterval   = 0.05f; // 20 Hz cap
 
         private CharacterController _cc;
-        private Coroutine _sendLoop;
+        private PlayerInputController _input;
+
+        // Send-on-change tracking
+        private Vector3 _lastSentPosition;
+        private string  _lastSentState = "idle";
+        private float   _lastSentTime;
+        private bool    _hasSpawned;
+        private bool    _wasMovingLastFrame;
+        private int     _sendCount;
+        private Vector3 _spawnPosition;
+        private bool    _needsActivation;
 
         private void Awake()
         {
-            _cc = GetComponent<CharacterController>();
+            _cc    = GetComponent<CharacterController>();
+            _input = GetComponent<PlayerInputController>();
             if (_cc == null) Debug.LogError("[PNS] CharacterController not found");
+            if (_input == null) Debug.LogError("[PNS] PlayerInputController not found");
         }
 
-        private void Start()
+        public void TeleportToSpawn(Vector3 spawnPos)
         {
-            var net = NetworkManager.Instance;
-            if (net == null)
-            {
-                Debug.LogError("[PNS] NetworkManager not found");
-                return;
-            }
+            _cc.enabled = false;
 
-            net.OnPlayerStateEvent += HandlePlayerState;
-            net.OnConnectedEvent += OnConnected;
-            net.OnDisconnectedEvent += OnDisconnected;
+            float feetOffset = _cc.height * 0.5f - _cc.center.y;
+            spawnPos.y += feetOffset;
 
-            // If already connected/in-game (scene loaded after connection), start immediately
-            if (net.State == ConnectionState.InGame || net.State == ConnectionState.Connected)
-            {
-                Debug.Log("[PNS] Already connected — starting movement send loop");
-                OnConnected();
-            }
+            transform.position = spawnPos;
+
+            _lastSentPosition = spawnPos;
+            _spawnPosition = spawnPos;
+            _hasSpawned = true;
+            _needsActivation = true;
+
+            Debug.Log($"[PNS] Teleported to spawn: {spawnPos} (feet offset +{feetOffset:F2})");
         }
 
-        private void OnDestroy()
-        {
-            var net = NetworkManager.Instance;
-            if (net == null) return;
-            net.OnPlayerStateEvent -= HandlePlayerState;
-            net.OnConnectedEvent -= OnConnected;
-            net.OnDisconnectedEvent -= OnDisconnected;
-        }
-
-        private void OnConnected()
-        {
-            if (_sendLoop != null) StopCoroutine(_sendLoop);
-            _sendLoop = StartCoroutine(SendMovementLoop());
-            Debug.Log("[PNS] Connected — movement send loop started");
-        }
-
-        private void OnDisconnected()
-        {
-            if (_sendLoop != null) { StopCoroutine(_sendLoop); _sendLoop = null; }
-            Debug.Log("[PNS] Disconnected — movement send loop stopped");
-        }
-
-        // ─── Send Loop (every 50ms) ──────────────────────────────────────────
-
-        private IEnumerator SendMovementLoop()
-        {
-            var wait = new WaitForSeconds(sendInterval);
-            while (true)
-            {
-                yield return wait;
-                SendMove();
-            }
-        }
-
-        private int _sendCount;
-
-        private void SendMove()
+        private void Update()
         {
             var net = NetworkManager.Instance;
             if (net == null || net.State != ConnectionState.InGame) return;
+            if (!_hasSpawned) return;
 
+            if (_needsActivation)
+            {
+                _needsActivation = false;
+                transform.position = _spawnPosition;
+                _cc.enabled = true;
+                if (_input != null) _input.InputEnabled = true;
+                return;
+            }
+
+            var currentState = GetMovementState();
+            var currentPos   = transform.position;
+            var isMoving     = currentState != "idle";
+            var now          = Time.time;
+
+            // Rate-limit while moving
+            if (isMoving && (now - _lastSentTime < minSendInterval)) return;
+
+            if (isMoving)
+            {
+                // Player is pressing WASD — send position if it changed enough
+                if (Vector3.Distance(currentPos, _lastSentPosition) >= positionThreshold)
+                {
+                    SendMove(net, currentPos, currentState);
+                    _wasMovingLastFrame = true;
+                }
+            }
+            else if (_wasMovingLastFrame)
+            {
+                // Player just released keys — send one final "stopped" position
+                SendMove(net, currentPos, currentState);
+                _wasMovingLastFrame = false;
+            }
+        }
+
+        private void SendMove(NetworkManager net, Vector3 pos, string state)
+        {
             var payload = new PlayerMovePayload
             {
-                playerId = net.LocalPlayerId,
-                position = SVector3.FromUnity(transform.position),
-                rotation = SQuaternion.FromUnity(transform.rotation),
-                velocity = SVector3.FromUnity(_cc.velocity),
-                movementState = GetMovementState()
+                playerId      = net.LocalPlayerId,
+                position      = SVector3.FromUnity(pos),
+                // Rotation is still included so remote players see where you are looking
+                rotation      = SQuaternion.FromUnity(transform.rotation), 
+                velocity      = SVector3.FromUnity(_cc.velocity),
+                movementState = state,
             };
 
+            _lastSentPosition = pos;
+            _lastSentState    = state;
+            _lastSentTime     = Time.time;
+
             _sendCount++;
-            if (_sendCount % 20 == 1) // Log every ~1s (every 20th send at 50ms interval)
-                Debug.Log($"[PNS] SEND player:move #{_sendCount} id={payload.playerId} pos={payload.position} state={payload.movementState}");
+            if (_sendCount % 20 == 1)
+                Debug.Log($"[PNS] SEND #{_sendCount} pos={payload.position} state={payload.movementState}");
 
             net.SendPlayerMove(payload);
         }
 
         private string GetMovementState()
         {
-            if (!_cc.isGrounded) return "idle";
+            if (_input == null) return "idle";
 
-            var horzVel = new Vector3(_cc.velocity.x, 0, _cc.velocity.z);
-            var speed = horzVel.magnitude;
-
-            if (speed < 0.1f) return "idle";
-            if (speed < 4f) return "walking";
-            return "sprinting";
-        }
-
-        // ─── Server Reconciliation (Rubber-Band) ─────────────────────────────
-        // The local player trusts its own client-side prediction.
-        // Only hard-teleport on major desync (>5m), which indicates cheating
-        // or a genuine disconnect/reconnect. Normal latency (~1-2m at sprint)
-        // is expected and should NOT trigger corrections.
-
-        private void HandlePlayerState(PlayerStateUpdate data)
-        {
-            var net = NetworkManager.Instance;
-            if (net == null) return;
-
-            if (data.players == null) return;
-
-            foreach (var p in data.players)
+            switch (_input.CurrentState)
             {
-                if (p.id != net.LocalPlayerId) continue;
-
-                ApplyServerCorrection(p.position.ToUnity(), p.rotation.ToUnity());
-                break;
+                case PlayerInputController.MovementState.Walk:
+                case PlayerInputController.MovementState.CrouchWalk:
+                    return "walking";
+                case PlayerInputController.MovementState.Sprint:
+                    return "sprinting";
+                default:
+                    return "idle";
             }
-        }
-
-        private void ApplyServerCorrection(Vector3 serverPos, Quaternion serverRot)
-        {
-            float diff = Vector3.Distance(transform.position, serverPos);
-
-            if (diff >= NetworkManager.ReconciliationThreshold)
-            {
-                // Major desync (>5m) — hard teleport (cheat detection / reconnect)
-                if (_cc.enabled)
-                {
-                    _cc.enabled = false;
-                    transform.position = serverPos;
-                    _cc.enabled = true;
-                }
-                else
-                {
-                    transform.position = serverPos;
-                }
-
-                transform.rotation = serverRot;
-                Debug.LogWarning($"[PNS] Hard teleport — major desync (diff={diff:F2}m)");
-            }
-            // Below threshold: trust client-side prediction, don't fight the input controller
         }
     }
 }

@@ -15,7 +15,17 @@ namespace Jailbreak.Player
         public float walkSpeed        = 3.5f;
         public float sprintSpeed      = 5.5f;
         public float crouchWalkSpeed  = 1.75f;
-        public float gravity          = -9.81f;
+        public float gravity          = -19.62f;
+
+        // ──────────────────────────── Acceleration ──────────────────────
+        [Header("Acceleration")]
+        public float groundAcceleration = 50f;
+        public float groundDeceleration = 40f;
+        public float groundStickForce   = -5f;
+
+        // ──────────────────────────── Body Rotation ────────────────────
+        [Header("Body Rotation")]
+        public float bodyTurnSpeed = 12f;
 
         // ──────────────────────────── Crouch ────────────────────────────
         [Header("Crouch")]
@@ -28,18 +38,35 @@ namespace Jailbreak.Player
         public MovementState CurrentState { get; private set; }
         public bool IsCrouching          { get; private set; }
 
+        /// <summary>
+        /// Raw movement input in local space this frame.
+        /// x = horizontal strafe (-1 left … +1 right), y = forward/back (-1 … +1).
+        /// Read by PlayerAnimationController to drive the Strafe blend parameter.
+        /// </summary>
+        public Vector2 MoveInput { get; private set; }
+
+        /// <summary>
+        /// Set to true by PlayerNetworkSync.TeleportToSpawn() once the character
+        /// is properly positioned. Until then, NO movement or gravity runs.
+        /// </summary>
+        public bool InputEnabled { get; set; }
+
         // ──────────────────────────── Private ───────────────────────────
         private CharacterController _cc;
-        private float _verticalVelocity;
-        private bool  _crouchToggled;
+        private FPSCameraController _fpsCam;
+        private float   _verticalVelocity;
+        private bool    _crouchToggled;
+        private Vector3 _horizontalVelocity;
 
         private void Awake()
         {
             _cc = GetComponent<CharacterController>();
+            _fpsCam = GetComponentInChildren<FPSCameraController>();
         }
 
         private void Update()
         {
+            if (!InputEnabled) return;
             HandleCrouchInput();
             ApplyMovement();
         }
@@ -73,48 +100,81 @@ namespace Jailbreak.Player
                 shifting = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
             }
 
-            bool hasInput = Mathf.Abs(h) > 0.01f || Mathf.Abs(v) > 0.01f;
+            // Normalize diagonal input so it doesn't exceed magnitude 1
+            Vector2 rawInput = new Vector2(h, v);
+            if (rawInput.sqrMagnitude > 1f) rawInput.Normalize();
 
-            // Determine state and speed
-            float speed;
+            bool hasInput = rawInput.sqrMagnitude > 0.001f;
+
+            // Expose input for PlayerAnimationController
+            MoveInput = rawInput;
+
+            // Determine state and target speed
+            float targetSpeed;
             if (!hasInput && IsCrouching)
             {
                 CurrentState = MovementState.Crouch;
-                speed = 0f;
+                targetSpeed = 0f;
             }
             else if (!hasInput)
             {
                 CurrentState = MovementState.Idle;
-                speed = 0f;
+                targetSpeed = 0f;
             }
             else if (IsCrouching)
             {
-                // Shift+C → CrouchWalk (not sprint)
                 CurrentState = MovementState.CrouchWalk;
-                speed = crouchWalkSpeed;
+                targetSpeed = crouchWalkSpeed;
             }
             else if (shifting)
             {
                 CurrentState = MovementState.Sprint;
-                speed = sprintSpeed;
+                targetSpeed = sprintSpeed;
             }
             else
             {
                 CurrentState = MovementState.Walk;
-                speed = walkSpeed;
+                targetSpeed = walkSpeed;
             }
 
-            // Movement direction: body yaw handled by FPSCameraController
-            Vector3 fwd   = new Vector3(transform.forward.x, 0, transform.forward.z).normalized;
-            Vector3 right = new Vector3(transform.right.x,   0, transform.right.z  ).normalized;
-            Vector3 dir   = (fwd * v + right * h).normalized;
+            // Build wish direction from CAMERA yaw (not body forward).
+            // This way pressing W always goes where you're looking,
+            // and body rotation is purely cosmetic.
+            float camYaw = _fpsCam != null ? _fpsCam.Yaw : transform.eulerAngles.y;
+            float yawRad = camYaw * Mathf.Deg2Rad;
+            Vector3 fwd   = new Vector3(Mathf.Sin(yawRad), 0f, Mathf.Cos(yawRad));
+            Vector3 right = new Vector3(fwd.z, 0f, -fwd.x);
+            Vector3 wishDir = (fwd * rawInput.y + right * rawInput.x).normalized;
 
-            // Gravity
-            if (_cc.isGrounded && _verticalVelocity < 0)
-                _verticalVelocity = -2f;
-            _verticalVelocity += gravity * Time.deltaTime;
 
-            _cc.Move((dir * speed + Vector3.up * _verticalVelocity) * Time.deltaTime);
+            // Accelerate / decelerate toward wish velocity
+            Vector3 wishVelocity = wishDir * targetSpeed;
+            float accelRate = hasInput ? groundAcceleration : groundDeceleration;
+            _horizontalVelocity = Vector3.MoveTowards(
+                _horizontalVelocity, wishVelocity, accelRate * Time.deltaTime);
+
+            // Rotate body to face movement direction (in-place, no orbit).
+            // When idle, body faces camera direction so the character
+            // doesn't stand sideways when you stop.
+            if (hasInput && _horizontalVelocity.sqrMagnitude > 0.01f)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(_horizontalVelocity.normalized, Vector3.up);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, bodyTurnSpeed * Time.deltaTime);
+            }
+            else
+            {
+                Quaternion camFacing = Quaternion.Euler(0f, camYaw, 0f);
+                transform.rotation = Quaternion.Slerp(transform.rotation, camFacing, bodyTurnSpeed * Time.deltaTime);
+            }
+
+            // Gravity — always applied, with ground-stick to prevent bouncing on slopes
+            if (_cc.isGrounded)
+                _verticalVelocity = groundStickForce;
+            else
+                _verticalVelocity += gravity * Time.deltaTime;
+
+            Vector3 finalMove = _horizontalVelocity + Vector3.up * _verticalVelocity;
+            _cc.Move(finalMove * Time.deltaTime);
         }
     }
 }

@@ -10,9 +10,11 @@
             <ui:VisualElement name="game-logo" class="game-logo" style="background-image: url(&quot;project://database/Assets/UI/Sprites/start-screen-spreadsheet.png?fileID=-1678316579&amp;guid=423672918e02349638eadb2ca1b99f3f&amp;type=3#start-screen-spreadsheet_0&quot;);" />
             
             <!-- Metal Identity Panel -->
+            <!--
             <ui:VisualElement name="identity-panel" class="metal-panel" style="background-image: url(&quot;project://database/Assets/UI/Sprites/start-screen-spreadsheet.png?fileID=370931329&amp;guid=423672918e02349638eadb2ca1b99f3f&amp;type=3#start-screen-spreadsheet_2&quot;);">
-                <ui:TextField name="display-name-field" value="Enter Prisoner Name..." class="input-field" />
+                <ui:TextField name="display-name-field" value="" class="input-field" />
             </ui:VisualElement>
+            -->
             
             <!-- Start Game Button -->
             <ui:Button name="start-btn" text="" class="primary-btn" style="background-image: url(&quot;project://database/Assets/UI/Sprites/start-screen-spreadsheet.png?fileID=-944953441&amp;guid=423672918e02349638eadb2ca1b99f3f&amp;type=3#start-screen-spreadsheet_1&quot;);" />

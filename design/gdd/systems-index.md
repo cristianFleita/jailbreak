@@ -245,7 +245,7 @@ Orden de implementación combinando dependencias + prioridad MVP-first:
 | 1 | Movimiento FPS | Designed | [movimiento-fps.md](movimiento-fps.md) | S1 |
 | 2 | Persecución | Not Started | — | S2 |
 | 3 | Camuflaje | Not Started | — | S2 |
-| 4 | Rutina/Fases | Not Started | — | S1 |
+| 4 | Rutina/Fases | Designed | [rutina-fases-npc.md](rutina-fases-npc.md) | S1 |
 | 5 | Inventario | Not Started | — | S2 |
 | 6 | Rutas de Escape | Not Started | — | S2/S3/Polish |
 | 7 | Crafting Simple | Not Started | — | S2 |
@@ -254,7 +254,7 @@ Orden de implementación combinando dependencias + prioridad MVP-first:
 | 10 | Motín | Not Started | — | S3 |
 | 11 | Condiciones de Victoria | Not Started | — | S2 |
 | 12 | NPC State Machine | Not Started | — | S1 |
-| 13 | NPC Rutina/NavMesh | Not Started | — | S1 |
+| 13 | NPC Rutina/NavMesh | Designed | [rutina-fases-npc.md](rutina-fases-npc.md) | S1 |
 | 14 | NPC Soborno | Not Started | — | Polish |
 | 15 | Cámaras de Seguridad | Not Started | — | S3 |
 | 16 | Alertas de Comportamiento | Not Started | — | S3 |

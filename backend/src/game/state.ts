@@ -33,6 +33,47 @@ export function createGameRoomState(roomId: string, hostUserId: string, config: 
  * Role defaults to 'prisoner' in lobby — roles are reassigned randomly
  * when the host starts the game via assignRandomRoles().
  */
+// ─── 20 Cell Door Spawn Positions ───────────────────────────────────────────
+// Each entry: { id, position } — positions match the Unity scene layout.
+// TODO: adjust these Vector3 values to match your actual cell door transforms in Unity.
+// Cells are arranged in two rows of 10 along a corridor.
+// Row A (left side, facing +X):  Z from ~2 to ~38, X = -5
+// Row B (right side, facing -X): Z from ~2 to ~38, X = +5
+const CELL_DOOR_SPAWNS: { id: string; position: Vector3 }[] = [
+  // Row A — cells 1-10 (NPCs)
+  { id: 'cell_door_exit_01', position: { x: 1.78, y: 0, z:  7.96 } },
+  { id: 'cell_door_exit_02', position: { x: 1.78, y: 0, z:  3.597 } },
+  { id: 'cell_door_exit_03', position: { x: 1.78, y: 0, z: -0.26 } },
+  { id: 'cell_door_exit_04', position: { x: 1.78, y: 0, z: -4.1 } },
+  { id: 'cell_door_exit_05', position: { x: 1.78, y: 0, z: -8.48 } },
+  { id: 'cell_door_exit_06', position: { x: -5, y: 0, z: 22 } },
+  { id: 'cell_door_exit_07', position: { x: -5, y: 0, z: 26 } },
+  { id: 'cell_door_exit_08', position: { x: -5, y: 0, z: 30 } },
+  { id: 'cell_door_exit_09', position: { x: -5, y: 0, z: 34 } },
+  { id: 'cell_door_exit_10', position: { x: -5, y: 0, z: 38 } },
+  // Row B — cells 11-16 (NPCs)
+  { id: 'cell_door_exit_11', position: { x:  5, y: 0, z:  2 } },
+  { id: 'cell_door_exit_12', position: { x:  5, y: 0, z:  6 } },
+  { id: 'cell_door_exit_13', position: { x:  5, y: 0, z: 10 } },
+  { id: 'cell_door_exit_14', position: { x:  5, y: 0, z: 14 } },
+  { id: 'cell_door_exit_15', position: { x:  5, y: 0, z: 18 } },
+  { id: 'cell_door_exit_16', position: { x:  -6.065, y: 0, z: 8.237 } },
+  // Row B — cells 17-20 (Players)
+  { id: 'cell_door_exit_17', position: { x:  -6.065, y: 0, z: 4.166 } },
+  { id: 'cell_door_exit_18', position: { x:  -6.065, y: 0, z: -0.15 } },
+  { id: 'cell_door_exit_19', position: { x:  -6.065, y: 0, z: -3.837 } },
+  { id: 'cell_door_exit_20', position: { x:  -6.065, y: 0, z: -8.054 } },
+]
+
+// Guard spawns at a dedicated position (guard post / center of map)
+const GUARD_SPAWN: { id: string; position: Vector3 } = {
+  id: 'guard_spawn',
+  position: { x: -1.82251, y: -0.14, z: -0.84076 },
+}
+
+// Players take the last 4 slots (17-20) — only prisoner players use these
+const PLAYER_SPAWN_SLOTS = CELL_DOOR_SPAWNS.filter(s => ['cell_door_exit_17','cell_door_exit_18','cell_door_exit_19','cell_door_exit_20'].includes(s.id))
+
 export function addPlayer(
   state: GameRoomState,
   playerId: string,
@@ -43,19 +84,23 @@ export function addPlayer(
     throw new Error('Room is full (max 4 players)')
   }
 
+  const spawnSlot = PLAYER_SPAWN_SLOTS[state.players.size] ?? PLAYER_SPAWN_SLOTS[0]
+
   const player: PlayerState = {
-    id: playerId,
+    id: userId,
     userId,
     role: 'prisoner', // placeholder — reassigned on game start
-    position: { ...initialPosition },
+    position: { x:  0, y: 0, z: 0 },
     rotation: { x: 0, y: 0, z: 0, w: 1 },
     velocity: { x: 0, y: 0, z: 0 },
     movementState: 'idle',
     isAlive: true,
+    spawnWaypointId: spawnSlot.id,
   }
 
   state.players.set(playerId, player)
   state.playersByUserId.set(userId, player)
+
   return player
 }
 
@@ -70,14 +115,28 @@ export function assignRandomRoles(state: GameRoomState): void {
   // Pick a random player to be the guard
   const guardIndex = Math.floor(Math.random() * players.length)
 
+  let prisonerSlotIndex = 0
   for (let i = 0; i < players.length; i++) {
-    players[i].role = i === guardIndex ? 'guard' : 'prisoner'
+    const isGuard = i === guardIndex
+    players[i].role = isGuard ? 'guard' : 'prisoner'
+
+    if (isGuard) {
+      // Guard spawns at dedicated guard post
+      players[i].position = { ...GUARD_SPAWN.position }
+      players[i].spawnWaypointId = GUARD_SPAWN.id
+    } else {
+      // Prisoners spawn at cell doors
+      const slot = PLAYER_SPAWN_SLOTS[prisonerSlotIndex % PLAYER_SPAWN_SLOTS.length]
+      players[i].position = { ...slot.position }
+      players[i].spawnWaypointId = slot.id
+      prisonerSlotIndex++
+    }
   }
 
   // Log role assignments
-  console.log('[ROLES] Assigned roles:')
+  console.log('[ROLES] Assigned roles + spawn positions:')
   for (const p of players) {
-    console.log(`  → ${p.userId} (socket ${p.id}): ${p.role.toUpperCase()}`)
+    console.log(`  → ${p.userId}: ${p.role.toUpperCase()} @ (${p.position.x}, ${p.position.y}, ${p.position.z})`)
   }
 }
 
@@ -115,30 +174,45 @@ export function updatePlayerMovement(
 
 /**
  * Spawns NPCs for the room (called when game starts).
- * Creates 20 NPCs with random positions within map bounds.
+ * NPC count = 20 - (playerCount - 1).
+ * The guard has a dedicated spawn, prisoner players take PLAYER_SPAWN_SLOTS,
+ * and NPCs fill the remaining CELL_DOOR_SPAWNS with unique positions.
  */
-export function spawnNPCs(state: GameRoomState, config: GameConfig, npcCount: number = 20): void {
-  const { mapBounds } = config
+export function spawnNPCs(state: GameRoomState, _config: GameConfig): void {
+  const playerCount = state.players.size
+  // Guard has its own spawn, so prisoner players = playerCount - 1
+  // NPCs fill the remaining 20 - (playerCount - 1) cell slots
+  const npcCount = 20 - (playerCount - 1)
+
+  // Collect spawn slot IDs already taken by prisoner players
+  const usedSpawnIds = new Set<string>()
+  for (const player of state.players.values()) {
+    if (player.spawnWaypointId && player.spawnWaypointId !== GUARD_SPAWN.id) {
+      usedSpawnIds.add(player.spawnWaypointId)
+    }
+  }
+
+  // Available slots = all 20 cell door spawns minus player-occupied ones
+  const availableSlots = CELL_DOOR_SPAWNS.filter(s => !usedSpawnIds.has(s.id))
+
+  console.log(`[NPC] Spawning ${npcCount} NPCs (${playerCount} players, ${playerCount - 1} prisoner players)`)
 
   for (let i = 0; i < npcCount; i++) {
-    const npcId = `npc_prisoner_${String(i).padStart(3, '0')}`
-
-    const randomPosition: Vector3 = {
-      x: Math.random() * (mapBounds.maxX - mapBounds.minX) + mapBounds.minX,
-      y: mapBounds.minY + 1.5, // above ground
-      z: Math.random() * (mapBounds.maxZ - mapBounds.minZ) + mapBounds.minZ,
-    }
+    const npcId     = `npc_prisoner_${String(i).padStart(3, '0')}`
+    const spawnSlot = availableSlots[i % availableSlots.length]
 
     const npc: NPCState = {
       id: npcId,
-      type: 'helper', // all NPCs are prisoners blending with real players
-      position: { ...randomPosition },
+      type: 'helper', // all NPCs look like prisoners
+      position: { ...spawnSlot.position },
       rotation: { x: 0, y: Math.random() * Math.PI * 2, z: 0, w: 1 },
       animState: 'idle',
-      lastBroadcastPosition: { ...randomPosition },
+      lastBroadcastPosition: { ...spawnSlot.position },
+      spawnWaypointId: spawnSlot.id,
     }
 
     state.npcs.set(npcId, npc)
+    console.log(`[NPC] ${npcId} → spawn: ${spawnSlot.id} @ (${spawnSlot.position.x}, ${spawnSlot.position.y}, ${spawnSlot.position.z})`)
   }
 }
 

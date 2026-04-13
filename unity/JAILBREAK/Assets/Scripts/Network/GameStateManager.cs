@@ -16,8 +16,9 @@ namespace Jailbreak.Network
     /// </summary>
     public class GameStateManager : MonoBehaviour
     {
-        [Header("Remote Player Prefab")]
-        [SerializeField] private GameObject remotePlayerPrefab;
+        [Header("Remote Player Prefabs (by role)")]
+        [SerializeField] private GameObject remoteGuardPrefab;
+        [SerializeField] private GameObject remotePrisonerPrefab;
 
         // ─── State ──────────────────────────────────────────────────────────
         public Dictionary<string, PlayerStateData> Players { get; } = new();
@@ -72,6 +73,12 @@ namespace Jailbreak.Network
                 Debug.Log("[GSM] Processing cached game:start payload");
                 HandleGameStart(net.CachedGameStart);
             }
+            // F5 reload path: no game:start in this session, but reconnect data exists
+            else if (net.State == ConnectionState.InGame && net.CachedGameReconnect != null)
+            {
+                Debug.Log("[GSM] Processing cached game:reconnect payload (F5 reload)");
+                HandleGameReconnect(net.CachedGameReconnect);
+            }
         }
 
         private void OnDestroy()
@@ -97,13 +104,13 @@ namespace Jailbreak.Network
         {
             if (data.players == null) return;
 
-            var localId = LocalPlayerId;
+            var localId = LocalPlayerId; // stable userId
             Debug.Log($"[GSM] game:start — {data.players.Length} players, localId={localId}");
             foreach (var p in data.players)
             {
-                var tag = p.id == localId ? " ← YOU" : "";
-                Debug.Log($"  → {p.id}: {p.role.ToUpper()}{tag}");
-                if (p.id == localId)
+                var tag = p.userId == localId ? " ← YOU" : "";
+                Debug.Log($"  → {p.id}: {p.role.ToUpper()} spawn=({p.position.x:F1},{p.position.y:F1},{p.position.z:F1}){tag}");
+                if (p.userId == localId)
                     LocalRole = p.role;
             }
             Debug.Log($"[GSM] Local role = {LocalRole}");
@@ -146,6 +153,24 @@ namespace Jailbreak.Network
 
         private void HandleGameReconnect(GameReconnectPayload data)
         {
+            // Teleport local player to their last known server position (if already spawned)
+            var localId = LocalPlayerId; // stable userId
+            if (data.players != null && !string.IsNullOrEmpty(localId))
+            {
+                foreach (var p in data.players)
+                {
+                    if (p.userId == localId)
+                    {
+                        LocalRole = p.role;
+                        // Only teleport if the local player prefab already exists
+                        var pns = FindAnyObjectByType<Jailbreak.Player.PlayerNetworkSync>();
+                        if (pns != null)
+                            pns.TeleportToSpawn(p.position.ToUnity());
+                        break;
+                    }
+                }
+            }
+
             SyncPlayerList(data.players);
             SpawnRemotePlayers();
 
@@ -163,13 +188,18 @@ namespace Jailbreak.Network
         {
             if (data.players == null) return;
 
+            // Don't process until we know who we are — prevents spawning self as remote
+            var localId = LocalPlayerId;
+            if (string.IsNullOrEmpty(localId)) return;
+
             _stateRecvCount++;
 
             foreach (var p in data.players)
             {
                 Players[p.id] = p;
 
-                if (p.id == LocalPlayerId)
+                // NEVER spawn or move the local player — they own their own position
+                if (p.userId == localId)
                 {
                     if (string.IsNullOrEmpty(LocalRole) && !string.IsNullOrEmpty(p.role))
                     {
@@ -257,9 +287,12 @@ namespace Jailbreak.Network
 
         private void SpawnRemotePlayers()
         {
+            var localId = LocalPlayerId;
+            if (string.IsNullOrEmpty(localId)) return; // Don't spawn anything until we know who we are
+
             foreach (var (id, player) in Players)
             {
-                if (id == LocalPlayerId) continue;  // Don't spawn self
+                if (player.userId == localId) continue;  // Don't spawn self
                 if (RemotePlayerGameObjects.ContainsKey(id)) continue;  // Already spawned
 
                 SpawnRemotePlayer(id, player);
@@ -268,74 +301,90 @@ namespace Jailbreak.Network
 
         private void SpawnRemotePlayer(string playerId, PlayerStateData player)
         {
+            // Hard guard: NEVER spawn the local player as remote
+            if (player.userId == LocalPlayerId)
+            {
+                Debug.LogWarning($"[GSM] Blocked attempt to spawn LOCAL player {playerId} as remote!");
+                return;
+            }
+
+            // Pick the correct prefab based on role
+            var prefab = player.role == "guard" ? remoteGuardPrefab : remotePrisonerPrefab;
+
             GameObject go;
 
-            if (remotePlayerPrefab != null)
+            if (prefab != null)
             {
-                go = Instantiate(remotePlayerPrefab, player.position.ToUnity(), player.rotation.ToUnity());
+                go = Instantiate(prefab, player.position.ToUnity(), player.rotation.ToUnity());
 
-                // --- NEW CODE: Strip local components comprehensively ---
-                // We use GetComponentsInChildren to catch components even if they are nested on child GameObjects
-                foreach (var input in go.GetComponentsInChildren<PlayerInputController>(true)) 
+                // Strip local-only components — remote players are driven by interpolation only
+                foreach (var input in go.GetComponentsInChildren<PlayerInputController>(true))
                 {
-                    input.enabled = false; 
+                    input.enabled = false;
                     Destroy(input);
                 }
-                
-                foreach (var netSync in go.GetComponentsInChildren<PlayerNetworkSync>(true)) 
+
+                foreach (var netSync in go.GetComponentsInChildren<PlayerNetworkSync>(true))
                 {
-                    netSync.enabled = false; 
+                    netSync.enabled = false;
                     Destroy(netSync);
                 }
-                
-                foreach (var cc in go.GetComponentsInChildren<CharacterController>(true)) 
+
+                foreach (var cc in go.GetComponentsInChildren<CharacterController>(true))
                 {
-                    cc.enabled = false; 
+                    cc.enabled = false;
                     Destroy(cc);
                 }
-                
-                foreach (var fpsCam in go.GetComponentsInChildren<FPSCameraController>(true)) 
+
+                foreach (var fpsCam in go.GetComponentsInChildren<FPSCameraController>(true))
                 {
-                    fpsCam.enabled = false; 
+                    fpsCam.enabled = false;
                     Destroy(fpsCam);
                 }
-                
-                foreach (var visual in go.GetComponentsInChildren<LocalPlayerRoleVisual>(true)) 
+
+                foreach (var visual in go.GetComponentsInChildren<LocalPlayerRoleVisual>(true))
                 {
                     visual.enabled = false;
                     Destroy(visual);
                 }
 
-                // Destroy any cameras attached to the remote player to prevent view hijacking
-                foreach (var cam in go.GetComponentsInChildren<Camera>(true)) 
+                // Destroy Rigidbody — remote players use interpolation, not physics.
+                // A Rigidbody here causes the same erratic movement as on local players.
+                foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true))
                 {
-                    Destroy(cam.gameObject); 
+                    Destroy(rb);
                 }
-                
-                // Destroy AudioListeners to prevent hearing from the remote player's ears
-                foreach (var listener in go.GetComponentsInChildren<AudioListener>(true)) 
+
+                // Destroy cameras to prevent view hijacking
+                foreach (var cam in go.GetComponentsInChildren<Camera>(true))
                 {
-                    Destroy(listener); 
+                    Destroy(cam.gameObject);
                 }
-                // --------------------------------------------------------------------
+
+                // Destroy AudioListeners to prevent hearing from the remote player's position
+                foreach (var listener in go.GetComponentsInChildren<AudioListener>(true))
+                {
+                    Destroy(listener);
+                }
             }
             else
             {
+                // Fallback capsule — only if prefab is not assigned in Inspector
+                Debug.LogWarning($"[GSM] No prefab assigned for role '{player.role}' — using fallback capsule");
                 go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
                 go.transform.position = player.position.ToUnity();
                 go.transform.localScale = new Vector3(0.6f, 1.2f, 0.6f);
 
-                // FIXED: Changed Colors to Green and Black
                 var color = player.role == "guard"
-                    ? new Color(0.15f, 0.8f, 0.15f, 1f)  // Green = Guard
-                    : new Color(0.1f, 0.1f, 0.1f, 1f);   // Black/Dark grey = Prisoner
-                
+                    ? new Color(0.15f, 0.8f, 0.15f, 1f)
+                    : new Color(0.1f, 0.1f, 0.1f, 1f);
+
                 var rend = go.GetComponent<Renderer>();
                 if (rend != null)
                 {
                     var mpb = new MaterialPropertyBlock();
-                    mpb.SetColor("_BaseColor", color); // URP Lit
-                    mpb.SetColor("_Color",     color); // Built-in RP fallback
+                    mpb.SetColor("_BaseColor", color);
+                    mpb.SetColor("_Color",     color);
                     rend.SetPropertyBlock(mpb);
                 }
 
@@ -362,5 +411,6 @@ namespace Jailbreak.Network
                 Debug.Log($"[GSM] Despawned remote player {playerId}");
             }
         }
+
     }
 }

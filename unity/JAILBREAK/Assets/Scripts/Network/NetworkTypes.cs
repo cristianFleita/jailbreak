@@ -48,7 +48,8 @@ namespace Jailbreak.Network
     [Serializable]
     public class PlayerStateData
     {
-        public string id;
+        public string id;     // player/user ID (stable across reconnects — same as userId)
+        public string userId; // persistent user ID (stable across reconnects)
         public string role;
         public SVector3 position;
         public SQuaternion rotation;
@@ -56,6 +57,7 @@ namespace Jailbreak.Network
         public string movementState;
         public bool isAlive;
         public float health;
+        public string spawnWaypointId; // e.g. "cell_door_exit_17" — resolve via WaypointRegistry
     }
 
     [Serializable]
@@ -66,6 +68,7 @@ namespace Jailbreak.Network
         public SVector3 position;
         public SQuaternion rotation;
         public string animState;
+        public string spawnWaypointId; // e.g. "cell_door_exit_03"
     }
 
     [Serializable]
@@ -120,6 +123,7 @@ namespace Jailbreak.Network
         public ItemStateData[] items;
         public PhaseData phase;
         public int tick;
+        public JailPhaseSnapshot jailPhase; // populated when jail routine is active
     }
 
     [Serializable]
@@ -277,5 +281,66 @@ namespace Jailbreak.Network
         public SQuaternion rotation;
         public SVector3 velocity;
         public string movementState;
+    }
+
+    // ─── Jail Routine / NPC Phase System ─────────────────────────────────────
+    // Mirrors backend types.ts: NPCAssignment, PhaseJailStartPayload, etc.
+
+    [Serializable]
+    public class NPCAssignmentData
+    {
+        public string   npcId;
+        public string   actionId;
+        public string   animTrigger;
+        public string   waypointId;           // null if using chain
+        public string[] waypointChain;        // non-null for LOOPING chains
+        public float    duration;
+        public bool     loop;
+        public string   socialPartnerId;      // null for solo/idle
+        public string   subZone;              // null unless Phase 6
+    }
+
+    [Serializable]
+    public class PhaseJailStartPayload
+    {
+        public int                  phase;
+        public string               phaseName;
+        public float                duration;
+        public string               zone;
+        public NPCAssignmentData[]  npcAssignments;
+    }
+
+    [Serializable]
+    public class PhaseWarningPayload
+    {
+        public int    nextPhase;
+        public string nextPhaseName;
+        public float  warningInSeconds;
+    }
+
+    [Serializable]
+    public class NPCReassignPayload
+    {
+        public long                 timestamp;
+        public NPCAssignmentData[]  assignments;
+    }
+
+    [Serializable]
+    public class PhaseZoneCheckPayload
+    {
+        public string playerId;
+        public string currentZone;
+        public string expectedZone;
+        public int    phase;
+        public float  graceSeconds;
+    }
+
+    /// <summary>Included in game:reconnect when jail routine is active.</summary>
+    [Serializable]
+    public class JailPhaseSnapshot
+    {
+        public int                  phase;
+        public string               zone;
+        public NPCAssignmentData[]  npcAssignments;
     }
 }

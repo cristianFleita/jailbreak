@@ -623,3 +623,186 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260408_143236
+### Uncommitted Changes
+design/gdd/systems-index.md
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260410_020419
+### Uncommitted Changes
+.DS_Store
+backend/src/game/__tests__/validation.test.ts
+backend/src/game/event-handlers.ts
+backend/src/game/room-manager.ts
+backend/src/game/state.ts
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+design/gdd/rutina-fases-npc.md
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset.meta
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.cs
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Settings/DefaultVolumeProfile.asset
+unity/JAILBREAK/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260410_021522
+### Uncommitted Changes
+.DS_Store
+backend/src/game/__tests__/validation.test.ts
+backend/src/game/event-handlers.ts
+backend/src/game/room-manager.ts
+backend/src/game/state.ts
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset.meta
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.cs
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Settings/DefaultVolumeProfile.asset
+unity/JAILBREAK/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260410_022241
+### Uncommitted Changes
+.DS_Store
+backend/src/game/__tests__/validation.test.ts
+backend/src/game/event-handlers.ts
+backend/src/game/room-manager.ts
+backend/src/game/state.ts
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset.meta
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.cs
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Settings/DefaultVolumeProfile.asset
+unity/JAILBREAK/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260410_023351
+### Uncommitted Changes
+.DS_Store
+backend/src/game/__tests__/validation.test.ts
+backend/src/game/event-handlers.ts
+backend/src/game/room-manager.ts
+backend/src/game/state.ts
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset.meta
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.cs
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Settings/DefaultVolumeProfile.asset
+unity/JAILBREAK/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260410_024551
+### Uncommitted Changes
+.DS_Store
+backend/src/game/__tests__/validation.test.ts
+backend/src/game/event-handlers.ts
+backend/src/game/room-manager.ts
+backend/src/game/state.ts
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset.meta
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.cs
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerInputController.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Settings/DefaultVolumeProfile.asset
+unity/JAILBREAK/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260410_190828
+### Commits
+0a82a1c chore: wip map + spawn
+### Uncommitted Changes
+.DS_Store
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Player/FPSCameraController.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+

@@ -19,13 +19,28 @@ const users = new Map<string, UserProfile>()
 const socketToUser = new Map<string, string>()
 
 /**
+ * Generates a unique display name of the form "Player#XXXX".
+ * Retries until the tag is not already taken (max 10 attempts).
+ */
+function generateDisplayName(): string {
+  for (let i = 0; i < 10; i++) {
+    const tag = String(Math.floor(1000 + Math.random() * 9000))
+    const name = `Player#${tag}`
+    const taken = Array.from(users.values()).some(u => u.displayName === name)
+    if (!taken) return name
+  }
+  // Fallback: append extra random digits if all 10 attempts collided
+  return `Player#${Date.now().toString().slice(-6)}`
+}
+
+/**
  * Registers a user. If userId is provided and already known, updates the
- * socket mapping. Otherwise generates a new userId.
+ * socket mapping and keeps their existing generated name.
+ * Otherwise creates a new user with a server-generated display name.
  */
 export function registerUser(
   socketId: string,
-  existingUserId?: string,
-  displayName?: string
+  existingUserId?: string
 ): UserProfile {
   // Returning user (has a userId from localStorage)
   if (existingUserId && users.has(existingUserId)) {
@@ -38,18 +53,17 @@ export function registerUser(
 
     profile.socketId = socketId
     profile.lastSeenAt = Date.now()
-    if (displayName) profile.displayName = displayName
 
     socketToUser.set(socketId, existingUserId)
-    console.log(`[AUTH] Returning user ${existingUserId} (socket ${socketId})`)
+    console.log(`[AUTH] Returning user ${existingUserId} "${profile.displayName}" (socket ${socketId})`)
     return profile
   }
 
-  // New user
+  // New user — generate name server-side
   const userId = existingUserId || randomUUID()
   const profile: UserProfile = {
     userId,
-    displayName: displayName || `Player_${userId.slice(0, 6)}`,
+    displayName: generateDisplayName(),
     status: 'idle',
     socketId,
     createdAt: Date.now(),

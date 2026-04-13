@@ -20,7 +20,7 @@ describe('Validation', () => {
 
     it('should reject movement beyond max X bound', () => {
       const oldPos = { x: 0, y: 1.5, z: 0 }
-      const newPos = { x: 100, y: 1.5, z: 0 } // beyond maxX=50
+      const newPos = { x: 500, y: 1.5, z: 0 } // beyond maxX=50
 
       const result = validatePlayerMovement(newPos, oldPos, 0.05, defaultGameConfig)
 
@@ -30,7 +30,7 @@ describe('Validation', () => {
 
     it('should reject movement below min Y bound', () => {
       const oldPos = { x: 0, y: 1.5, z: 0 }
-      const newPos = { x: 0, y: -5, z: 0 } // below minY=0
+      const newPos = { x: 0, y: -500, z: 0 } // below minY=0
 
       const result = validatePlayerMovement(newPos, oldPos, 0.05, defaultGameConfig)
 
