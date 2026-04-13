@@ -139,9 +139,7 @@ namespace Jailbreak.Player
                 _currentAnimState = targetState;
             }
 
-            // ── 5. Body lean toward movement direction (local only) ───────────────
-            if (isLocal)
-                ApplyBodyLean(rawState);
+            // ── 5. Body rotation is now handled by PlayerInputController ──────────
 
             // ── 6. Procedural head bob (local only, camera root must be assigned) ──
             if (isLocal && _headBobEnabled && _cameraRoot != null)
