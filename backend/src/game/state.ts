@@ -68,7 +68,7 @@ const CELL_DOOR_SPAWNS: { id: string; position: Vector3 }[] = [
 // Guard spawns at a dedicated position (guard post / center of map)
 const GUARD_SPAWN: { id: string; position: Vector3 } = {
   id: 'guard_spawn',
-  position: { x: 0, y: 0, z: 0 },
+  position: { x: -1.82251, y: -0.14, z: -0.84076 },
 }
 
 // Players take the last 4 slots (17-20) — only prisoner players use these
