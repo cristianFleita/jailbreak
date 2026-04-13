@@ -65,10 +65,14 @@ const CELL_DOOR_SPAWNS: { id: string; position: Vector3 }[] = [
   { id: 'cell_door_exit_20', position: { x:  -6.065, y: 0, z: -8.054 } },
 ]
 
-// Players take the last 4 slots (17-20)
+// Guard spawns at a dedicated position (guard post / center of map)
+const GUARD_SPAWN: { id: string; position: Vector3 } = {
+  id: 'guard_spawn',
+  position: { x: 0, y: 0, z: 0 },
+}
+
+// Players take the last 4 slots (17-20) — only prisoner players use these
 const PLAYER_SPAWN_SLOTS = CELL_DOOR_SPAWNS.filter(s => ['cell_door_exit_17','cell_door_exit_18','cell_door_exit_19','cell_door_exit_20'].includes(s.id))
-// NPCs take the first 16 slots (01-16)
-const NPC_SPAWN_SLOTS = CELL_DOOR_SPAWNS.slice(0, 16)
 
 export function addPlayer(
   state: GameRoomState,
@@ -117,9 +121,9 @@ export function assignRandomRoles(state: GameRoomState): void {
     players[i].role = isGuard ? 'guard' : 'prisoner'
 
     if (isGuard) {
-      // Guard spawns at origin (center of map / guard post)
-      players[i].position = { x: 0, y: 0, z: 0 }
-      players[i].spawnWaypointId = undefined
+      // Guard spawns at dedicated guard post
+      players[i].position = { ...GUARD_SPAWN.position }
+      players[i].spawnWaypointId = GUARD_SPAWN.id
     } else {
       // Prisoners spawn at cell doors
       const slot = PLAYER_SPAWN_SLOTS[prisonerSlotIndex % PLAYER_SPAWN_SLOTS.length]
@@ -170,12 +174,32 @@ export function updatePlayerMovement(
 
 /**
  * Spawns NPCs for the room (called when game starts).
- * Creates 20 NPCs with random positions within map bounds.
+ * NPC count = 20 - (playerCount - 1).
+ * The guard has a dedicated spawn, prisoner players take PLAYER_SPAWN_SLOTS,
+ * and NPCs fill the remaining CELL_DOOR_SPAWNS with unique positions.
  */
-export function spawnNPCs(state: GameRoomState, _config: GameConfig, npcCount: number = 2): void {
+export function spawnNPCs(state: GameRoomState, _config: GameConfig): void {
+  const playerCount = state.players.size
+  // Guard has its own spawn, so prisoner players = playerCount - 1
+  // NPCs fill the remaining 20 - (playerCount - 1) cell slots
+  const npcCount = 20 - (playerCount - 1)
+
+  // Collect spawn slot IDs already taken by prisoner players
+  const usedSpawnIds = new Set<string>()
+  for (const player of state.players.values()) {
+    if (player.spawnWaypointId && player.spawnWaypointId !== GUARD_SPAWN.id) {
+      usedSpawnIds.add(player.spawnWaypointId)
+    }
+  }
+
+  // Available slots = all 20 cell door spawns minus player-occupied ones
+  const availableSlots = CELL_DOOR_SPAWNS.filter(s => !usedSpawnIds.has(s.id))
+
+  console.log(`[NPC] Spawning ${npcCount} NPCs (${playerCount} players, ${playerCount - 1} prisoner players)`)
+
   for (let i = 0; i < npcCount; i++) {
     const npcId     = `npc_prisoner_${String(i).padStart(3, '0')}`
-    const spawnSlot = NPC_SPAWN_SLOTS[i % NPC_SPAWN_SLOTS.length]
+    const spawnSlot = availableSlots[i % availableSlots.length]
 
     const npc: NPCState = {
       id: npcId,
@@ -188,6 +212,7 @@ export function spawnNPCs(state: GameRoomState, _config: GameConfig, npcCount: n
     }
 
     state.npcs.set(npcId, npc)
+    console.log(`[NPC] ${npcId} → spawn: ${spawnSlot.id} @ (${spawnSlot.position.x}, ${spawnSlot.position.y}, ${spawnSlot.position.z})`)
   }
 }
 
