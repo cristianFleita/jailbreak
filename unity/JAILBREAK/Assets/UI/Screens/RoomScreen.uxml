@@ -9,7 +9,7 @@
                 <ui:VisualElement class="monitor-screen-area" style="left: 0; right: 0; position: relative; top: 0%; bottom: 0%; width: 80%; height: 75%; margin-top: 6%;">
                     <ui:ScrollView name="players-list" class="players-scroll" style="margin-top: 0%; margin-right: 0%; margin-bottom: 0%; margin-left: 0%; padding-top: 0%; padding-right: 0%; padding-bottom: 0%; padding-left: 0%;"/>
                     <ui:VisualElement class="monitor-bottom-bar" style="height: 20%;">
-                        <ui:Label name="room-status-label" text="PLAYERS (4/8)" class="players-count-text"/>
+                        <ui:Label name="room-status-label" text="PLAYERS (4/4)" class="players-count-text"/>
                         <ui:Button name="leave-btn" text="" class="leave-btn" style="background-image: url(&quot;project://database/Assets/UI/Sprites/room-screen-spreadsheet.png?fileID=1052819597&amp;guid=19920e34ac2a1471f9a687ec84c80c61&amp;type=3#room-screen-spreadsheet_3&quot;);"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
