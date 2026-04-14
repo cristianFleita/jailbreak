@@ -67,9 +67,14 @@ namespace Jailbreak.NPC
         private void Update()
         {
             // Lerp all NPC transforms toward their server targets
+            // SKIP NPCs that are being driven by NPCBehaviorController (NavMesh movement)
             foreach (var (id, t) in _npcs)
             {
                 if (t == null || !_npcTargets.TryGetValue(id, out var target)) continue;
+
+                // If the NPC has an active behavior assignment, NavMeshAgent owns its position
+                var behavior = t.GetComponent<NPCBehaviorController>();
+                if (behavior != null && behavior.IsNavigating) continue;
 
                 t.position = Vector3.Lerp(t.position, target, NpcLerpSpeed * Time.deltaTime);
             }

@@ -1005,7 +1005,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 6.46
+      value: 7.07
       objectReference: {fileID: 0}
     - target: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
       propertyPath: m_LocalPosition.y
@@ -8389,11 +8389,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8118302418382996747, guid: d7a73d12671ed48b0b9aee920991bd9d, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.95
+      value: 4.877
       objectReference: {fileID: 0}
     - target: {fileID: 8118302418382996747, guid: d7a73d12671ed48b0b9aee920991bd9d, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.2349999
+      value: 2.012
       objectReference: {fileID: 0}
     - target: {fileID: 8118302418382996747, guid: d7a73d12671ed48b0b9aee920991bd9d, type: 3}
       propertyPath: m_LocalPosition.z
@@ -14059,6 +14059,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 336016850}
+  - {fileID: 1794342641}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &707740911
@@ -15647,6 +15648,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
   m_PrefabInstance: {fileID: 786995102}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &790942258
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 790942259}
+  m_Layer: 0
+  m_Name: cafeteria_entrance
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &790942259
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 790942258}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -16.58891, y: -0.14, z: -10.089}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1794342641}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &802968827
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16291,6 +16323,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
   m_PrefabInstance: {fileID: 831764708}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &834892420
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 834892421}
+  m_Layer: 0
+  m_Name: cf_counter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &834892421
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 834892420}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -25.99, y: 0.062, z: -10.73}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1794342641}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &835325219
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -18753,7 +18816,7 @@ MonoBehaviour:
     - 1
     currentOccupants: 0
   - waypointId: cafeteria_path_01
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 790942258}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18765,7 +18828,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_path_02
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 790942258}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18777,7 +18840,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_path_03
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 790942258}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18789,7 +18852,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_path_04
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 963347358}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18801,7 +18864,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_path_05
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 963347358}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18813,7 +18876,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_01
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18825,7 +18888,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_02
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18837,7 +18900,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_03
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18849,7 +18912,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_04
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18861,7 +18924,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_05
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18873,7 +18936,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_06
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18885,7 +18948,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_07
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18897,7 +18960,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_08
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18909,7 +18972,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_09
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18921,7 +18984,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_10
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18933,7 +18996,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_11
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18945,7 +19008,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_12
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18957,7 +19020,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_13
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18969,7 +19032,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_14
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18981,7 +19044,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_15
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -18993,7 +19056,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_seat_16
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 1321500782}
     zone: comedor
     subZone: 
     isExclusive: 0
@@ -19005,7 +19068,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_counter_01
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 834892420}
     zone: comedor
     subZone: 
     isExclusive: 1
@@ -19016,7 +19079,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_counter_02
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 834892420}
     zone: comedor
     subZone: 
     isExclusive: 1
@@ -19027,7 +19090,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_counter_03
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 834892420}
     zone: comedor
     subZone: 
     isExclusive: 1
@@ -19167,7 +19230,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_tray_deposit_01
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 2056381436}
     zone: comedor
     subZone: 
     isExclusive: 1
@@ -19178,7 +19241,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_tray_deposit_02
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 2056381436}
     zone: comedor
     subZone: 
     isExclusive: 1
@@ -19189,7 +19252,7 @@ MonoBehaviour:
     - 8
     currentOccupants: 0
   - waypointId: cafeteria_tray_deposit_03
-    waypointObject: {fileID: 0}
+    waypointObject: {fileID: 2056381436}
     zone: comedor
     subZone: 
     isExclusive: 1
@@ -23347,7 +23410,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1110055743}
-  - component: {fileID: 1110055742}
+  - component: {fileID: 1110055744}
   m_Layer: 0
   m_Name: NavMesh Surface
   m_TagString: Untagged
@@ -23355,7 +23418,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1110055742
+--- !u!4 &1110055743
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1110055741}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2.82412, y: -0.14, z: -2.76454}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1110055744
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -23375,7 +23453,7 @@ MonoBehaviour:
   m_LayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_UseGeometry: 0
+  m_UseGeometry: 1
   m_DefaultArea: 0
   m_GenerateLinks: 0
   m_IgnoreNavMeshAgent: 1
@@ -23385,23 +23463,8 @@ MonoBehaviour:
   m_OverrideVoxelSize: 0
   m_VoxelSize: 0.16666667
   m_MinRegionArea: 2
-  m_NavMeshData: {fileID: 23800000, guid: 8197eb6fe63de451a9d9511d3cab6a98, type: 2}
+  m_NavMeshData: {fileID: 23800000, guid: 3998d3d12e48f408aab329389500cc0e, type: 2}
   m_BuildHeightMesh: 0
---- !u!4 &1110055743
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1110055741}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.82412, y: -0.14, z: -2.76454}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1121860626
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -26879,6 +26942,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
   m_PrefabInstance: {fileID: 1304575456}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1304986039
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1304986040}
+  m_Layer: 0
+  m_Name: cf_line
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1304986040
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1304986039}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -22.99, y: 0.062, z: -11.12}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1794342641}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1312234172
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -27011,6 +27105,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7057107979833148574, guid: d520121a8bf284d21a53f62cec6cb656, type: 3}
   m_PrefabInstance: {fileID: 1313600933}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1321500782
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1321500783}
+  m_Layer: 0
+  m_Name: cf_seat_01
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1321500783
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1321500782}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -25.06, y: 0.062, z: -15.9}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1794342641}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1324065373
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -27704,7 +27829,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.94
+      value: -4.382
       objectReference: {fileID: 0}
     - target: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
       propertyPath: m_LocalRotation.w
@@ -34668,6 +34793,42 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2264797227903064262, guid: 01dbeed18bb884e09af25faa24e94d28, type: 3}
   m_PrefabInstance: {fileID: 1791582005}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1794342640
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1794342641}
+  m_Layer: 0
+  m_Name: CafeteriaWP
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1794342641
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1794342640}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 790942259}
+  - {fileID: 1304986040}
+  - {fileID: 2056381437}
+  - {fileID: 834892421}
+  - {fileID: 1321500783}
+  m_Father: {fileID: 702837958}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1812053069
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -39099,6 +39260,37 @@ Transform:
   - {fileID: 943418529}
   m_Father: {fileID: 1519381224}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2056381436
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2056381437}
+  m_Layer: 0
+  m_Name: cf_tray
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2056381437
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2056381436}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -24.54, y: 0.062, z: -7.51}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1794342641}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2056394884
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -39751,6 +39943,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 733948117}
     m_Modifications:
+    - target: {fileID: 584683655775346450, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6659286099743998268, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
       propertyPath: m_Name
       value: Wall (47)
@@ -39761,7 +39957,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.3600001
+      value: 3.008
       objectReference: {fileID: 0}
     - target: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
       propertyPath: m_LocalPosition.y

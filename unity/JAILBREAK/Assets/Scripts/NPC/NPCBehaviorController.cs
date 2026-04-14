@@ -31,6 +31,9 @@ namespace Jailbreak.NPC
         [SerializeField] private float idleFallbackDelay = 3f;   // wait before idle if no reassign
 
         // ─── Current action state ─────────────────────────────────────────────
+        /// <summary>True when this NPC has an active behavior assignment (NPCNetworkSync should not lerp).</summary>
+        public bool IsNavigating => _current != null;
+
         private NPCAssignmentData _current;
         private float  _actionTimer;
         private bool   _hasArrived;
@@ -89,11 +92,14 @@ namespace Jailbreak.NPC
         /// </summary>
         public void AssignAction(NPCAssignmentData data, WaypointRegistry registry = null)
         {
+            Debug.Log($"[NPC-DEBUG] {gameObject.name} AssignAction called: action={data.actionId} wpId={data.waypointId ?? "NULL"} registryParam={(registry != null ? "provided" : "null")}");
+
             if (registry != null) waypointRegistry = registry;
 
             // Edge case: reassign while mid-LOOPING → grace period
             if (_isLooping && _current != null)
             {
+                Debug.Log($"[NPC-DEBUG] {gameObject.name} is mid-LOOPING — queuing assignment, grace={LoopingGrace}s");
                 _pendingAssignment = data;
                 _loopingGraceTimer = LoopingGrace;
                 return;
@@ -106,6 +112,8 @@ namespace Jailbreak.NPC
 
         private void ApplyAssignment(NPCAssignmentData data)
         {
+            string npcName = gameObject.name;
+
             if (_current != null)
             {
                 if (!string.IsNullOrEmpty(_current.waypointId))
@@ -121,10 +129,17 @@ namespace Jailbreak.NPC
             _chainIndex   = 0;
             _isLooping    = data.loop;
 
+            Debug.Log($"[NPC-DEBUG] {npcName} ApplyAssignment: action={data.actionId} wpId={data.waypointId ?? "NULL"} " +
+                      $"wpChain={(data.waypointChain != null ? string.Join(",", data.waypointChain) : "NULL")} " +
+                      $"registry={(waypointRegistry != null ? "OK" : "MISSING")}");
+
             // Navigate to first waypoint
             var destination = ResolveFirstDestination(data);
             if (destination.HasValue)
             {
+                Debug.Log($"[NPC-DEBUG] {npcName} resolved destination={destination.Value} " +
+                          $"myPos={transform.position} dist={Vector3.Distance(transform.position, destination.Value):F2}");
+
                 // Try to reserve slot; if full → idle in place
                 var wpId = data.waypointChain != null && data.waypointChain.Length > 0
                     ? data.waypointChain[0] : data.waypointId;
@@ -134,19 +149,40 @@ namespace Jailbreak.NPC
                     bool reserved = waypointRegistry.Reserve(wpId);
                     if (!reserved)
                     {
-                        // Waypoint full — fall back to idle
+                        Debug.LogWarning($"[NPC-DEBUG] {npcName} waypoint '{wpId}' FULL — falling back to idle");
                         PlayAnimation("idle");
                         _current = null;
                         return;
                     }
+                    Debug.Log($"[NPC-DEBUG] {npcName} reserved waypoint '{wpId}' OK");
+                }
+
+                // Check NavMeshAgent status before setting destination
+                if (agent == null)
+                {
+                    Debug.LogError($"[NPC-DEBUG] {npcName} NavMeshAgent is NULL!");
+                    return;
+                }
+                if (!agent.isOnNavMesh)
+                {
+                    Debug.LogError($"[NPC-DEBUG] {npcName} is NOT on NavMesh! pos={transform.position}");
+                    return;
                 }
 
                 agent.SetDestination(destination.Value);
+
+                // Log path status after setting destination
+                Debug.Log($"[NPC-DEBUG] {npcName} SetDestination({destination.Value}) — " +
+                          $"agent.isOnNavMesh={agent.isOnNavMesh} pathPending={agent.pathPending} " +
+                          $"pathStatus={agent.pathStatus} hasPath={agent.hasPath} " +
+                          $"isStopped={agent.isStopped} speed={agent.speed}");
+
                 PlayAnimation("walk"); // Move to waypoint!
             }
             else
             {
-                // No waypoint resolved → idle immediately
+                Debug.LogWarning($"[NPC-DEBUG] {npcName} NO destination resolved for wpId={data.waypointId ?? "NULL"} " +
+                                 $"wpChain={(data.waypointChain != null ? string.Join(",", data.waypointChain) : "NULL")} — idling in place");
                 _hasArrived  = true;
                 PlayAnimation("idle");
             }
@@ -158,7 +194,7 @@ namespace Jailbreak.NPC
         {
             if (_current == null) return;
 
-            PlayAnimation(_current.animTrigger);
+            Debug.Log($"[NPC-DEBUG] {gameObject.name} ARRIVED at waypoint! action={_current.actionId} playing anim='{_current.animTrigger}' timer={_actionTimer:F1}s");
 
             // LOOPING chain: advance to next waypoint
             if (_isLooping && _current.waypointChain != null && _current.waypointChain.Length > 1)
@@ -176,24 +212,49 @@ namespace Jailbreak.NPC
                     agent.SetDestination(nextPos.Value);
                     _hasArrived = false;
                     PlayAnimation("walk");
+                    return;
                 }
             }
+
+            // Not looping or no next waypoint — stop and perform action in place
+            agent.ResetPath();
+            agent.velocity = Vector3.zero;
+            PlayAnimation(_current.animTrigger);
         }
 
         private void OnActionComplete()
         {
+            Debug.Log($"[NPC-DEBUG] {gameObject.name} action complete — returning to idle");
             _isLooping = false;
             _current   = null;
+            if (agent.isOnNavMesh)
+            {
+                agent.ResetPath();
+                agent.velocity = Vector3.zero;
+            }
             PlayAnimation("idle");
         }
 
         private Vector3? ResolveFirstDestination(NPCAssignmentData data)
         {
-            if (waypointRegistry == null) return null;
+            if (waypointRegistry == null)
+            {
+                Debug.LogWarning($"[NPC-DEBUG] {gameObject.name} ResolveFirstDestination: waypointRegistry is NULL");
+                return null;
+            }
             if (data.waypointChain != null && data.waypointChain.Length > 0)
-                return waypointRegistry.GetPosition(data.waypointChain[0]);
+            {
+                var pos = waypointRegistry.GetPosition(data.waypointChain[0]);
+                Debug.Log($"[NPC-DEBUG] {gameObject.name} ResolveFirstDestination chain[0]='{data.waypointChain[0]}' → {(pos.HasValue ? pos.Value.ToString() : "NOT FOUND")}");
+                return pos;
+            }
             if (!string.IsNullOrEmpty(data.waypointId))
-                return waypointRegistry.GetPosition(data.waypointId);
+            {
+                var pos = waypointRegistry.GetPosition(data.waypointId);
+                Debug.Log($"[NPC-DEBUG] {gameObject.name} ResolveFirstDestination wpId='{data.waypointId}' → {(pos.HasValue ? pos.Value.ToString() : "NOT FOUND")}");
+                return pos;
+            }
+            Debug.Log($"[NPC-DEBUG] {gameObject.name} ResolveFirstDestination: no waypointId or chain provided");
             return null;
         }
 

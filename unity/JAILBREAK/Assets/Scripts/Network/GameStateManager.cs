@@ -210,8 +210,8 @@ namespace Jailbreak.Network
                 }
 
                 // Log remote player position every ~1s
-                if (_stateRecvCount % 20 == 1)
-                    Debug.Log($"[GSM] RECV remote player:state #{_stateRecvCount} id={p.id} pos={p.position} state={p.movementState}");
+                // if (_stateRecvCount % 20 == 1)
+                //     Debug.Log($"[GSM] RECV remote player:state #{_stateRecvCount} id={p.id} pos={p.position} state={p.movementState}");
 
                 if (!RemotePlayerGameObjects.ContainsKey(p.id))
                 {

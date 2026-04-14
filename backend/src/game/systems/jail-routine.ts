@@ -63,21 +63,21 @@ const JAIL_PHASES: JailPhaseDef[] = [
     phase: 1, name: 'Inicio', duration: 30, zone: 'celda',
     actions: [
       // Spawn: cada NPC arranca parado en la puerta de su celda (20 WPs únicos)
-      { actionId: 'spawn_at_door',     type: 'IDLE',    animTrigger: 'idle',          waypointTag: 'cell_door_exit',  weight: 100, minDuration: 3,  maxDuration: 8  },
+      { actionId: 'spawn_at_door',     type: 'IDLE',    animTrigger: 'Idle',          waypointTag: 'cell_door_exit',  weight: 100, minDuration: 3,  maxDuration: 8  },
       // Social sin waypoint: el NPC camina hacia la posición de su pareja (Unity navega al Transform del partner)
-      { actionId: 'greet_neighbor',    type: 'SOCIAL',  animTrigger: 'talk_standing', waypointTag: '',                weight: 30,  minDuration: 5,  maxDuration: 12 },
+      { actionId: 'greet_neighbor',    type: 'SOCIAL',  animTrigger: 'Salute', waypointTag: '',                weight: 30,  minDuration: 5,  maxDuration: 12 },
       // Idle en el lugar (sin waypoint: el NPC se queda donde está)
       { actionId: 'idle_stretch',      type: 'IDLE',    animTrigger: 'stretch',       waypointTag: '',                weight: 20,  minDuration: 2,  maxDuration: 4  },
       { actionId: 'idle_yawn',         type: 'IDLE',    animTrigger: 'yawn',          waypointTag: '',                weight: 15,  minDuration: 1,  maxDuration: 3  },
       // Transición al comedor: NPC navega al entry point del comedor
-      { actionId: 'walk_to_cafeteria', type: 'ONESHOT', animTrigger: 'walk_slow',     waypointTag: 'cafeteria_path_', weight: 35,  minDuration: 10, maxDuration: 20 },
+      { actionId: 'walk_to_cafeteria', type: 'ONESHOT', animTrigger: 'Walking',     waypointTag: 'cafeteria_path_', weight: 35,  minDuration: 10, maxDuration: 20 },
     ],
   },
   {
     phase: 2, name: 'Desayuno', duration: 90, zone: 'comedor',
     actions: [
       { actionId: 'cafe_sit_eat',         type: 'IDLE',    animTrigger: 'sit_eat',    waypointTag: 'cafeteria_seat_',        weight: 45, minDuration: 20, maxDuration: 50 },
-      { actionId: 'cafe_walk_to_counter', type: 'LOOPING', animTrigger: 'walk',       waypointTag: 'cafeteria_counter_',     weight: 20, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
+      { actionId: 'cafe_walk_to_counter', type: 'LOOPING', animTrigger: 'Walking',       waypointTag: 'cafeteria_counter_',     weight: 20, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
       { actionId: 'cafe_wait_in_line',    type: 'IDLE',    animTrigger: 'idle_queue', waypointTag: 'cafeteria_line_',        weight: 15, minDuration: 8,  maxDuration: 15 },
       { actionId: 'cafe_talk_seated',     type: 'SOCIAL',  animTrigger: 'talk_seated',waypointTag: 'cafeteria_seat_',        weight: 12, minDuration: 8,  maxDuration: 20 },
       { actionId: 'cafe_clear_tray',      type: 'LOOPING', animTrigger: 'carry_tray', waypointTag: 'cafeteria_tray_deposit_', weight: 8, minDuration: 6,  maxDuration: 12, loop: true, chainLength: 2 },
@@ -106,7 +106,7 @@ const JAIL_PHASES: JailPhaseDef[] = [
     subZones: ['patio', 'comedor', 'lavanderia'],
     actions: [
       // Patio
-      { actionId: 'yard_walk_perimeter',     type: 'LOOPING', animTrigger: 'walk',          waypointTag: 'yard_perimeter_',         weight: 20, minDuration: 30, maxDuration: 60, loop: true, chainLength: 4 },
+      { actionId: 'yard_walk_perimeter',     type: 'LOOPING', animTrigger: 'Walking',          waypointTag: 'yard_perimeter_',         weight: 20, minDuration: 30, maxDuration: 60, loop: true, chainLength: 4 },
       { actionId: 'yard_sit_bench',          type: 'IDLE',    animTrigger: 'sit_bench',     waypointTag: 'yard_bench_',             weight: 20, minDuration: 20, maxDuration: 60 },
       { actionId: 'yard_exercise',           type: 'IDLE',    animTrigger: 'exercise',      waypointTag: 'yard_exercise_area_',     weight: 15, minDuration: 15, maxDuration: 40 },
       { actionId: 'yard_conversation_group', type: 'SOCIAL',  animTrigger: 'talk_standing', waypointTag: 'yard_conversation_spot_', weight: 20, minDuration: 15, maxDuration: 35 },
@@ -129,7 +129,7 @@ const JAIL_PHASES: JailPhaseDef[] = [
     phase: 5, name: 'Almuerzo', duration: 90, zone: 'comedor',
     actions: [
       { actionId: 'cafe_sit_eat',         type: 'IDLE',    animTrigger: 'sit_eat',     waypointTag: 'cafeteria_seat_',         weight: 45, minDuration: 20, maxDuration: 50 },
-      { actionId: 'cafe_walk_to_counter', type: 'LOOPING', animTrigger: 'walk',         waypointTag: 'cafeteria_counter_',     weight: 20, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
+      { actionId: 'cafe_walk_to_counter', type: 'LOOPING', animTrigger: 'Walking',         waypointTag: 'cafeteria_counter_',     weight: 20, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
       { actionId: 'cafe_wait_in_line',    type: 'IDLE',    animTrigger: 'idle_queue',   waypointTag: 'cafeteria_line_',        weight: 15, minDuration: 8,  maxDuration: 15 },
       { actionId: 'cafe_talk_seated',     type: 'SOCIAL',  animTrigger: 'talk_seated',  waypointTag: 'cafeteria_seat_',        weight: 12, minDuration: 8,  maxDuration: 20 },
       { actionId: 'cafe_clear_tray',      type: 'LOOPING', animTrigger: 'carry_tray',   waypointTag: 'cafeteria_tray_deposit_', weight: 8, minDuration: 6,  maxDuration: 12, loop: true, chainLength: 2 },
@@ -166,7 +166,7 @@ const JAIL_PHASES: JailPhaseDef[] = [
     phase: 8, name: 'Cena', duration: 90, zone: 'comedor',
     actions: [
       { actionId: 'cafe_sit_eat',         type: 'IDLE',    animTrigger: 'sit_eat',      waypointTag: 'cafeteria_seat_',         weight: 45, minDuration: 20, maxDuration: 50 },
-      { actionId: 'cafe_walk_to_counter', type: 'LOOPING', animTrigger: 'walk',          waypointTag: 'cafeteria_counter_',     weight: 20, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
+      { actionId: 'cafe_walk_to_counter', type: 'LOOPING', animTrigger: 'Walking',          waypointTag: 'cafeteria_counter_',     weight: 20, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
       { actionId: 'cafe_wait_in_line',    type: 'IDLE',    animTrigger: 'idle_queue',    waypointTag: 'cafeteria_line_',        weight: 15, minDuration: 8,  maxDuration: 15 },
       { actionId: 'cafe_talk_seated',     type: 'SOCIAL',  animTrigger: 'talk_seated',   waypointTag: 'cafeteria_seat_',        weight: 12, minDuration: 8,  maxDuration: 20 },
       { actionId: 'cafe_clear_tray',      type: 'LOOPING', animTrigger: 'carry_tray',    waypointTag: 'cafeteria_tray_deposit_', weight: 8, minDuration: 6,  maxDuration: 12, loop: true, chainLength: 2 },

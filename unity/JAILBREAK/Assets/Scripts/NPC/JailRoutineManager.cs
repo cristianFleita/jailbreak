@@ -156,8 +156,17 @@ namespace Jailbreak.NPC
         {
             if (string.IsNullOrEmpty(assignment.npcId)) return;
 
+            Debug.Log($"[JAIL-DEBUG] ApplyAssignment: npc={assignment.npcId} action={assignment.actionId} " +
+                      $"wpId={assignment.waypointId ?? "NULL"} " +
+                      $"wpChain={( assignment.waypointChain != null ? string.Join(",", assignment.waypointChain) : "NULL" )} " +
+                      $"anim={assignment.animTrigger} dur={assignment.duration:F1}s loop={assignment.loop}");
+
             var controller = GetOrCreateController(assignment.npcId);
-            if (controller == null) return;
+            if (controller == null)
+            {
+                Debug.LogWarning($"[JAIL-DEBUG] No controller for NPC '{assignment.npcId}' — assignment dropped!");
+                return;
+            }
 
             controller.AssignAction(assignment, waypointRegistry);
         }
