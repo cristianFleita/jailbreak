@@ -10,11 +10,19 @@ namespace Jailbreak.NPC
     ///
     /// Usage:
     ///   1. Run menu: Jailbreak → Setup WaypointRegistry in Scene
-    ///   2. In the Inspector, drag each scene GameObject onto its "Waypoint Object" slot
-    ///   3. Assign this component to JailRoutineManager.waypointRegistry
+    ///   2. Add parent GameObjects to "Waypoint Roots" (one per zone)
+    ///   3. Name each child GameObject to match its waypointId (e.g. "yard_bench_01")
+    ///   4. Assign this component to JailRoutineManager.waypointRegistry
+    ///
+    /// Auto-resolve: On Init, children of each root are scanned recursively.
+    /// If child.name matches a waypointId, the waypointObject is assigned automatically.
+    /// Manual waypointObject assignments in the Inspector take priority (override).
     /// </summary>
     public class WaypointRegistry : MonoBehaviour
     {
+        [Header("Drag parent transforms here (one per zone). Children are matched by name.")]
+        [SerializeField] private Transform[] waypointRoots = new Transform[0];
+
         [SerializeField] private List<WaypointEntry> waypoints = new();
 
         private Dictionary<string, WaypointEntry> _lookup;
@@ -42,7 +50,7 @@ namespace Jailbreak.NPC
 
         // ─── Public API ───────────────────────────────────────────────────────
 
-        /// <summary>Initialize lookup. Call before first use (or rely on auto-init).</summary>
+        /// <summary>Initialize lookup and auto-resolve waypoint objects from roots.</summary>
         public void Init()
         {
             _lookup = new Dictionary<string, WaypointEntry>(waypoints.Count);
@@ -50,6 +58,51 @@ namespace Jailbreak.NPC
             {
                 if (!string.IsNullOrEmpty(entry.waypointId))
                     _lookup[entry.waypointId] = entry;
+            }
+
+            // Auto-resolve: scan children of each root and match by name
+            if (waypointRoots != null)
+            {
+                int resolved = 0;
+                foreach (var root in waypointRoots)
+                {
+                    if (root == null) continue;
+                    ResolveChildrenRecursive(root, ref resolved);
+                }
+                Debug.Log($"[WaypointRegistry] Auto-resolved {resolved}/{waypoints.Count} waypoints from {waypointRoots.Length} roots.");
+            }
+
+            // Warn about unresolved entries
+            int missing = 0;
+            foreach (var entry in waypoints)
+            {
+                if (entry.waypointObject == null)
+                {
+                    missing++;
+                    if (missing <= 10)
+                        Debug.LogWarning($"[WaypointRegistry] No GameObject found for waypoint '{entry.waypointId}'");
+                }
+            }
+            if (missing > 10)
+                Debug.LogWarning($"[WaypointRegistry] ... and {missing - 10} more unresolved waypoints.");
+        }
+
+        private void ResolveChildrenRecursive(Transform parent, ref int resolved)
+        {
+            foreach (Transform child in parent)
+            {
+                if (_lookup.TryGetValue(child.name, out var entry))
+                {
+                    // Manual override: skip if already assigned in Inspector
+                    if (entry.waypointObject == null)
+                    {
+                        entry.waypointObject = child.gameObject;
+                        resolved++;
+                    }
+                }
+                // Recurse into nested children
+                if (child.childCount > 0)
+                    ResolveChildrenRecursive(child, ref resolved);
             }
         }
 

@@ -2,7 +2,7 @@
 
 > **Status**: Designed  
 > **Author**: Cris + Claude  
-> **Last Updated**: 2026-04-08  
+> **Last Updated**: 2026-04-14  
 > **Cubre sistemas**: #4 Rutina/Fases + #13 NPC Rutina/NavMesh  
 > **Implementa Pilar**: "La rutina es la cárcel" — los jugadores prisioneros deben imitar a los NPCs para sobrevivir
 
@@ -17,7 +17,7 @@ La novedad arquitectónica central es el **sistema de libre albedrío**: dentro 
 **Entidades en la partida:**
 
 - 1 jugador guardia (human-controlled, no usa este sistema)
-- 2–3 jugadores prisioneros (human-controlled, deben imitar la rutina)
+- 1–3 jugadores prisioneros (human-controlled, deben imitar la rutina)
 - 17–19 NPCs prisioneros (este sistema los controla)
 - **Total: siempre 20 entidades**
 
@@ -27,7 +27,7 @@ La novedad arquitectónica central es el **sistema de libre albedrío**: dentro 
 
 **Para el jugador prisionero:** La rutina no se siente como un tutorial — se siente como presión social constante. Estás rodeado de NPCs que saben exactamente qué hacer y dónde estar. Si te quedás quieto o vas a la zona equivocada, el contraste te delata. Los NPCs charlan, barren, doblan ropa, juegan cartas — y vos tenés que encajar en esa normalidad mientras planificás la fuga.
 
-**Para el jugador guardia:** Los NPCs le dan cobertura a los prisioneros. La cancha con 18 personajes moviéndose crea ruido visual real. Detectar quién es jugador y quién es NPC requiere atención sostenida, no solo mirar el minimapa. Un NPC que dobla bandeja y se va a su celda a tiempo es ruido. Un "NPC" que se queda parado tres segundos demasiado cerca de la ventilación es señal.
+**Para el jugador guardia:** Los NPCs le dan cobertura a los prisioneros. La cancha con los personajes moviéndose crea ruido visual real. Detectar quién es jugador y quién es NPC requiere atención sostenida, no solo mirar el minimapa. Un NPC que dobla bandeja y se va a su celda a tiempo es ruido. Un "NPC" que se queda parado tres segundos demasiado cerca de la ventilación es señal.
 
 ---
 
@@ -36,17 +36,17 @@ La novedad arquitectónica central es el **sistema de libre albedrío**: dentro 
 ### 3.1 Fases de la Jornada
 
 
-| #   | Fase           | Hora ficticia | Duración real | Zona                    | Sub-zonas                        |
-| --- | -------------- | ------------- | ------------- | ----------------------- | -------------------------------- |
-| 1   | Inicio         | 06:00         | 30 s          | Celda                   | —                                |
-| 2   | Desayuno       | 07:00         | 90 s          | Comedor                 | —                                |
-| 3   | Trabajo        | 08:00         | 90 s          | Taller / Lavandería     | Taller, Lavandería               |
-| 4   | Hora libre     | 10:00         | 120 s         | Libre (patio/comedor/lavandería) | Patio, Comedor, Lavandería |
-| 5   | Almuerzo       | 12:00         | 90 s          | Comedor                 | — (mismo que Desayuno)           |
-| 6   | Trabajo        | 14:00         | 120 s         | Taller / Lavandería     | Taller, Lavandería               |
-| 7   | Siesta         | 16:00         | 90 s          | Celdas                  | —                                |
-| 8   | Cena           | 18:00         | 90 s          | Comedor                 | — (mismo que Desayuno)           |
-| 9   | Luces apagadas | 22:00         | 120 s         | Celdas                  | —                                |
+| #   | Fase           | Hora ficticia | Duración real | Zona                                    | Sub-zonas                          |
+| --- | -------------- | ------------- | ------------- | --------------------------------------- | ---------------------------------- |
+| 1   | Inicio         | 06:00         | 30 s          | Celda                                   | —                                  |
+| 2   | Desayuno       | 07:00         | 90 s          | Comedor                                 | —                                  |
+| 3   | Trabajo        | 08:00         | 90 s          | Taller / Lavandería                     | Taller, Lavandería                 |
+| 4   | Hora libre     | 10:00         | 120 s         | Libre (patio/comedor/lavandería/celdas) | Patio, Comedor, Lavandería, Celdas |
+| 5   | Almuerzo       | 12:00         | 90 s          | Comedor                                 | — (mismo que Desayuno)             |
+| 6   | Trabajo        | 14:00         | 120 s         | Taller / Lavandería                     | Taller, Lavandería                 |
+| 7   | Hora libre     | 16:00         | 90 s          | Libre (patio/comedor/lavandería/celdas) | Patio, Comedor, Lavandería, Celdas |
+| 8   | Cena           | 18:00         | 90 s          | Comedor                                 | — (mismo que Desayuno)             |
+| 9   | Luces apagadas | 22:00         | 120 s         | Celdas                                  | —                                  |
 
 
 **Reglas de transición:**
@@ -85,19 +85,36 @@ Cada acción define:
 
 #### Fase 1 — Inicio | Celda → Comedor (transición)
 
-> Cada NPC hace spawn parado afuera de su celda. Durante 30 segundos se mueven libremente — charlan con el de al lado, se estiran, bostezan — y gradualmente van caminando hacia el comedor. No hay fila ni orden estricto. Es una transición orgánica al Desayuno.
+> Cada NPC hace spawn parado afuera de su celda (`cell_door_exit_XX`). Durante ~30 segundos sucede lo siguiente de forma orgánica y no ordenada:
 >
-> **Waypoints con posición fija:** `cell_door_exit_` (spawn) y `cafeteria_path_` (entrada al comedor).  
-> **Sin waypoint fijo:** acciones `greet_neighbor`, `idle_stretch`, `idle_yawn` — el NPC permanece donde está o navega al Transform de su pareja social.
+> - **Algunos** se saludan con el vecino de celda y después charlan un momento.
+> - **Otros** simplemente caminan hacia la zona de la cafetería sin interacción (caminar no tiene duración propia).
+> - **Un grupo** se junta cerca de la entrada de la cafetería y sigue conversando ahí antes de entrar.
+> - **Los idle** se estiran o bostezan en su lugar hasta que el timer de la fase los fuerza a moverse.
+>
+> El resultado visual es una dispersión natural: algunos ya están en la puerta del comedor a los 10s, otros recién salen de sus celdas a los 25s. No hay fila ni orden estricto — es una transición orgánica al Desayuno.
+>
+> **Waypoints con posición fija:** `cell_door_exit_01..20` (spawn) y `cafeteria_entrance_spot_01..06` (zona de espera en la puerta).  
+> **Sin waypoint fijo:** `greet_neighbor`, `talk_standing`, `idle_stretch`, `idle_yawn` — el NPC permanece donde está o navega al Transform de su pareja.  
+> **Regla de movimiento:** caminar a un waypoint no tiene duración asignada; el timer solo corre una vez que el NPC llega y ejecuta la acción.
 
-| ActionId            | Type    | Waypoint                | Animation       | Weight | Duration |
-| ------------------- | ------- | ----------------------- | --------------- | ------ | -------- |
-| `spawn_at_door`     | IDLE    | `cell_door_exit_01..20` | idle            | 100    | 3–8s     |
-| `greet_neighbor`    | SOCIAL  | *(posición del partner)*| talk_standing   | 30     | 5–12s    |
-| `idle_stretch`      | IDLE    | *(sin mover)*           | stretch         | 20     | 2–4s     |
-| `idle_yawn`         | IDLE    | *(sin mover)*           | yawn            | 15     | 1–3s     |
-| `walk_to_cafeteria` | ONESHOT | `cafeteria_path_01..05` | walk_slow       | 35     | 10–20s   |
 
+| ActionId                 | Type    | Waypoint                         | Animation     | Weight | Duración                        |
+| ------------------------ | ------- | -------------------------------- | ------------- | ------ | ------------------------------- |
+| `spawn_at_door`          | IDLE    | `cell_door_exit_01..20`          | idle          | 100    | —                               |
+| `greet_neighbor`         | SOCIAL  | *(posición del partner)*         | greet         | 35     | 3–4s                            |
+| `talk_standing`          | SOCIAL  | *(posición del partner)*         | talk_standing | 30     | 6–7s                            |
+| `idle_stretch`           | IDLE    | *(sin mover)*                    | stretch       | 15     | 2–4s                            |
+| `idle_yawn`              | IDLE    | *(sin mover)*                    | yawn          | 10     | 1–3s                            |
+| `walk_to_cafeteria_area` | ONESHOT | `cafeteria_entrance_spot_01..06` | walk_slow     | 40     | *(sin duración — solo caminar)* |
+| `talk_at_cafeteria_door` | SOCIAL  | `cafeteria_entrance_spot_01..06` | talk_standing | 25     | 6–7s                            |
+
+
+> **Notas de implementación:**
+>
+> - `greet_neighbor` y `talk_at_cafeteria_door` se distinguen por el waypoint destino: el primero usa la posición del partner cerca de la celda, el segundo se resuelve en la zona de la puerta del comedor.
+> - El backend puede encadenar `walk_to_cafeteria_area` → `talk_at_cafeteria_door` en un mismo NPC al inicio de la fase para lograr el comportamiento "camina hasta la puerta y charla ahí".
+> - Al expirar la Fase 1, todos los NPCs reciben el assignment de Desayuno (Fase 2). Los que ya están en la puerta simplemente entran; los que aún están en celdas navegan directamente al counter.
 
 ---
 
@@ -107,19 +124,52 @@ Cada acción define:
 
 #### Fase 8 — Cena | Comedor
 
-> Las tres fases de comedor comparten el mismo pool de acciones.
+> Las tres fases de comedor comparten el mismo pool de acciones y el mismo flujo ordenado obligatorio.
+
+**Flujo obligatorio (cada NPC lo recorre en este orden):**
+
+```
+[Opcional] Esperar afuera y hablar
+       ↓
+  Caminar al counter        ← sin duración
+       ↓
+  Agarrar la comida         ← 4–6s
+       ↓
+  Caminar a un asiento      ← sin duración
+       ↓
+  Sentarse a comer          ← 10–15s
+   (con posible charla      ← +6–7s si hay partner disponible)
+       ↓
+  Caminar al depósito       ← sin duración
+       ↓
+  Tirar la bandeja          ← 3–5s
+[Opcional] Charlar al salir ← 6–7s
+```
+
+> **Regla de movimiento:** caminar entre puntos (counter → asiento → depósito) no tiene duración asignada. El timer solo corre una vez que el NPC ejecuta la acción en destino.
+
+**Catálogo de acciones:**
 
 
-| ActionId               | Type    | Animation         | WaypointTag                 | Weight | Duration                |
-| ---------------------- | ------- | ----------------- | --------------------------- | ------ | ----------------------- |
-| `cafe_sit_eat`         | IDLE    | Sit_Eat           | `cafeteria_seat`_           | 45     | 20–50s                  |
-| `cafe_walk_to_counter` | LOOPING | Walk + Serve_Self | `cafeteria_counter`_ → seat | 20     | 10–18s                  |
-| `cafe_wait_in_line`    | IDLE    | Idle_Queue        | `cafeteria_line`_           | 15     | 8–15s → walk to counter |
-| `cafe_talk_seated`     | SOCIAL  | Talk_Seated       | mismo seat + vecino         | 12     | 8–20s                   |
-| `cafe_clear_tray`      | LOOPING | Carry_Tray        | `cafeteria_tray_deposit`_   | 8      | 6–12s                   |
+| ActionId                 | Type    | Animation             | WaypointTag                     | Weight | Duración                        | Orden en flujo    |
+| ------------------------ | ------- | --------------------- | ------------------------------- | ------ | ------------------------------- | ----------------- |
+| `cafe_wait_outside_talk` | SOCIAL  | Talk_Standing         | `cafeteria_entrance_spot`_      | 20     | 6–7s                            | Opcional — inicio |
+| `cafe_walk_to_counter`   | ONESHOT | Walk                  | `cafeteria_counter_01..06`      | 100    | *(sin duración — solo caminar)* | 1° obligatorio    |
+| `cafe_grab_food`         | IDLE    | Serve_Self            | `cafeteria_counter_01..06`      | 100    | 4–6s                            | 2° obligatorio    |
+| `cafe_walk_to_seat`      | ONESHOT | Walk                  | `cafeteria_seat_01..16`         | 100    | *(sin duración — solo caminar)* | 3° obligatorio    |
+| `cafe_sit_eat`           | IDLE    | Sit_Eat               | `cafeteria_seat_01..16`         | 60     | 10–15s                          | 4° obligatorio    |
+| `cafe_sit_eat_talk`      | SOCIAL  | Sit_Eat + Talk_Seated | mismo seat + vecino             | 40     | 10–15s (chat interno 6–7s)      | 4° alternativo    |
+| `cafe_walk_to_trash`     | ONESHOT | Walk + Carry_Tray     | `cafeteria_tray_deposit_01..04` | 100    | *(sin duración — solo caminar)* | 5° obligatorio    |
+| `cafe_clear_tray`        | IDLE    | Deposit_Tray          | `cafeteria_tray_deposit_01..04` | 100    | 3–5s                            | 6° obligatorio    |
+| `cafe_talk_after_trash`  | SOCIAL  | Talk_Standing         | `cafeteria_tray_deposit_01..04` | 25     | 6–7s                            | Opcional — final  |
 
 
-> `cafeteria_seat_01..16` — máx 2 ocupantes por mesa de 2, máx 4 por mesa de 4.
+> **Notas:**
+>
+> - `cafeteria_seat_01..16` — máx 2 ocupantes por mesa de 2, máx 4 por mesa de 4.
+> - El backend encadena el flujo completo en el assignment inicial de la fase (counter → seat → trash). Las acciones opcionales se insertan como pasos intermedios con probabilidad definida por weight.
+> - `cafe_sit_eat_talk` requiere partner disponible en asiento adyacente; si no hay partner, se usa `cafe_sit_eat` por defecto.
+> - Los tiempos de comer (10–15s) ya contemplan posibles charlas entrelazadas; no se suman por separado.
 
 ---
 
@@ -130,58 +180,79 @@ Cada acción define:
 
 **Sub-zona: Taller**
 
+
 | ActionId                 | Type    | Animation     | WaypointTag           | Weight | Duration |
 | ------------------------ | ------- | ------------- | --------------------- | ------ | -------- |
-| `work_use_workbench`     | IDLE    | Work_Bench    | `workshop_bench_`     | 40     | 20–50s   |
-| `work_carry_box`         | LOOPING | Carry_Box     | `workshop_shelf_`     | 30     | 12–20s   |
-| `work_inspect_equipment` | IDLE    | Inspect       | `workshop_machine_`   | 20     | 10–20s   |
-| `work_talk_coworker`     | SOCIAL  | Talk_Standing | `workshop_chat_spot_` | 10     | 8–15s    |
+| `work_use_workbench`     | IDLE    | Work_Bench    | `workshop_bench`_     | 40     | 20–50s   |
+| `work_carry_box`         | LOOPING | Carry_Box     | `workshop_shelf`_     | 30     | 12–20s   |
+| `work_inspect_equipment` | IDLE    | Inspect       | `workshop_machine`_   | 20     | 10–20s   |
+| `work_talk_coworker`     | SOCIAL  | Talk_Standing | `workshop_chat_spot`_ | 10     | 8–15s    |
+
 
 **Sub-zona: Lavandería**
 
-| ActionId               | Type    | Animation          | WaypointTag        | Weight | Duration |
-| ---------------------- | ------- | ------------------ | ------------------ | ------ | -------- |
-| `laundry_load_washer`  | IDLE    | Load_Machine       | `laundry_washer_`  | 30     | 15–30s   |
-| `laundry_fold_clothes` | IDLE    | Fold_Clothes       | `laundry_fold_`    | 35     | 20–40s   |
-| `laundry_carry_basket` | LOOPING | Carry_Basket       | `laundry_washer_`  | 25     | 10–18s   |
-| `laundry_idle_check`   | IDLE    | Idle_Check_Machine | `laundry_washer_`  | 10     | 5–12s    |
-
----
-
-#### Fase 4 — Hora libre | Patio / Comedor / Lavandería
-
-> Fase de máxima variedad. Los NPCs eligen libremente entre tres sub-zonas.  
-> Distribución: ~6 patio / ~6 comedor / ~6 lavandería (ropa personal).
-
-**Sub-zona: Patio**
-
-| ActionId                  | Type    | Animation     | WaypointTag                | Weight | Duration    |
-| ------------------------- | ------- | ------------- | -------------------------- | ------ | ----------- |
-| `yard_walk_perimeter`     | LOOPING | Walk          | `yard_perimeter_` (cadena) | 20     | 30–60s loop |
-| `yard_sit_bench`          | IDLE    | Sit_Bench     | `yard_bench_`              | 20     | 20–60s      |
-| `yard_exercise`           | IDLE    | Exercise      | `yard_exercise_area_`      | 15     | 15–40s      |
-| `yard_conversation_group` | SOCIAL  | Talk_Standing | `yard_conversation_spot_`  | 20     | 15–35s      |
-| `yard_play_cards`         | SOCIAL  | Sit_Cards     | `yard_card_table_`         | 10     | 30–90s      |
-| `yard_lean_wall`          | IDLE    | Lean_Wall     | `yard_wall_lean_`          | 8      | 15–40s      |
-| `yard_shadow_boxing`      | IDLE    | Shadowbox     | `yard_exercise_area_`      | 5      | 10–20s      |
-| `yard_kick_ball`          | SOCIAL  | Kick          | `yard_ball_spot`           | 2      | 20–40s      |
-
-**Sub-zona: Comedor** *(charlar, no comer)*
-
-| ActionId                | Type   | Animation     | WaypointTag       | Weight | Duration |
-| ----------------------- | ------ | ------------- | ----------------- | ------ | -------- |
-| `free_cafe_sit_talk`    | SOCIAL | Talk_Seated   | `cafeteria_seat_` | 40     | 15–40s   |
-| `free_cafe_sit_idle`    | IDLE   | Sit_Idle      | `cafeteria_seat_` | 35     | 10–30s   |
-| `free_cafe_stand_chat`  | SOCIAL | Talk_Standing | `cafeteria_line_` | 25     | 10–25s   |
-
-**Sub-zona: Lavandería** *(ropa personal, mismas acciones que turno de trabajo)*
 
 | ActionId               | Type    | Animation          | WaypointTag       | Weight | Duration |
 | ---------------------- | ------- | ------------------ | ----------------- | ------ | -------- |
-| `laundry_load_washer`  | IDLE    | Load_Machine       | `laundry_washer_` | 30     | 15–30s   |
-| `laundry_fold_clothes` | IDLE    | Fold_Clothes       | `laundry_fold_`   | 35     | 20–40s   |
-| `laundry_carry_basket` | LOOPING | Carry_Basket       | `laundry_washer_` | 25     | 10–18s   |
-| `laundry_idle_check`   | IDLE    | Idle_Check_Machine | `laundry_washer_` | 10     | 5–12s    |
+| `laundry_load_washer`  | IDLE    | Load_Machine       | `laundry_washer`_ | 30     | 15–30s   |
+| `laundry_fold_clothes` | IDLE    | Fold_Clothes       | `laundry_fold`_   | 35     | 20–40s   |
+| `laundry_carry_basket` | LOOPING | Carry_Basket       | `laundry_washer`_ | 25     | 10–18s   |
+| `laundry_idle_check`   | IDLE    | Idle_Check_Machine | `laundry_washer`_ | 10     | 5–12s    |
+
+
+---
+
+#### Fase 4 — Hora libre | Patio / Comedor / Lavandería / Celdas
+
+> Fase de máxima variedad. Los NPCs eligen libremente entre cuatro sub-zonas.  
+> Distribución inicial: ~5 patio / ~5 comedor / ~5 lavandería (ropa personal) / ~3 celdas (descanso).  
+> **A diferencia de Trabajo, los NPCs pueden cambiar de sub-zona durante la fase.** En cada `npc:reassign` un NPC puede ser reasignado a una sub-zona distinta (camina hasta allá y ejecuta una acción del nuevo pool). Esto genera tráfico orgánico entre zonas que camufla los movimientos de los jugadores reales.
+
+**Sub-zona: Patio**
+
+
+| ActionId                  | Type    | Animation     | WaypointTag                | Weight | Duration    |
+| ------------------------- | ------- | ------------- | -------------------------- | ------ | ----------- |
+| `yard_walk_perimeter`     | LOOPING | Walk          | `yard_perimeter`_ (cadena) | 20     | 30–60s loop |
+| `yard_sit_bench`          | IDLE    | Sit_Bench     | `yard_bench`_              | 20     | 20–60s      |
+| `yard_exercise`           | IDLE    | Exercise      | `yard_exercise_area`_      | 15     | 15–40s      |
+| `yard_conversation_group` | SOCIAL  | Talk_Standing | `yard_conversation_spot`_  | 20     | 15–35s      |
+| `yard_play_cards`         | SOCIAL  | Sit_Cards     | `yard_card_table`_         | 10     | 30–90s      |
+| `yard_lean_wall`          | IDLE    | Lean_Wall     | `yard_wall_lean`_          | 8      | 15–40s      |
+| `yard_shadow_boxing`      | IDLE    | Shadowbox     | `yard_exercise_area`_      | 5      | 10–20s      |
+| `yard_kick_ball`          | SOCIAL  | Kick          | `yard_ball_spot`           | 2      | 20–40s      |
+
+
+**Sub-zona: Comedor** *(charlar, no comer)*
+
+
+| ActionId               | Type   | Animation     | WaypointTag       | Weight | Duration |
+| ---------------------- | ------ | ------------- | ----------------- | ------ | -------- |
+| `free_cafe_sit_talk`   | SOCIAL | Talk_Seated   | `cafeteria_seat`_ | 40     | 15–40s   |
+| `free_cafe_sit_idle`   | IDLE   | Sit_Idle      | `cafeteria_seat`_ | 35     | 10–30s   |
+| `free_cafe_stand_chat` | SOCIAL | Talk_Standing | `cafeteria_line`_ | 25     | 10–25s   |
+
+
+**Sub-zona: Lavandería** *(ropa personal, mismas acciones que turno de trabajo)*
+
+
+| ActionId               | Type    | Animation          | WaypointTag       | Weight | Duration |
+| ---------------------- | ------- | ------------------ | ----------------- | ------ | -------- |
+| `laundry_load_washer`  | IDLE    | Load_Machine       | `laundry_washer`_ | 30     | 15–30s   |
+| `laundry_fold_clothes` | IDLE    | Fold_Clothes       | `laundry_fold`_   | 35     | 20–40s   |
+| `laundry_carry_basket` | LOOPING | Carry_Basket       | `laundry_washer`_ | 25     | 10–18s   |
+| `laundry_idle_check`   | IDLE    | Idle_Check_Machine | `laundry_washer`_ | 10     | 5–12s    |
+
+
+**Sub-zona: Celdas** *(descanso)*
+
+> Cada NPC que elige esta sub-zona vuelve a su celda asignada. Solo accede a los waypoints de su propia celda.
+
+| ActionId       | Type | Animation    | WaypointTag    | Weight | Duration |
+| -------------- | ---- | ------------ | -------------- | ------ | -------- |
+| `cell_lie_bed` | IDLE | Lie_Down     | `cell_XX_bed`_ | 60     | 20–60s   |
+| `cell_sit_bed` | IDLE | Sit_Bed_Edge | `cell_XX_bed`_ | 40     | 15–40s   |
+
 
 ---
 
@@ -193,18 +264,11 @@ Cada acción define:
 
 ---
 
-#### Fase 7 — Siesta | Celdas
+#### Fase 7 — Hora libre (2da) | Patio / Comedor / Lavandería / Celdas
 
-> Cada NPC tiene celda asignada al inicio de la partida. Solo accede a los waypoints de su celda.
+> Idéntico a Fase 4. Los NPCs pueden elegir una sub-zona distinta a la de la primera hora libre (libre albedrío de fase).
 
-
-| ActionId                | Type   | Animation      | WaypointTag                   | Weight | Duration |
-| ----------------------- | ------ | -------------- | ----------------------------- | ------ | -------- |
-| `cell_lie_bed`          | IDLE   | Lie_Down       | `cell_XX_bed`_                | 50     | 30–90s   |
-| `cell_sit_bed`          | IDLE   | Sit_Bed_Edge   | `cell_XX_bed`_                | 20     | 15–40s   |
-| `cell_read_book`        | IDLE   | Read_Book      | `cell_XX_desk`                | 15     | 20–60s   |
-| `cell_stare_window`     | IDLE   | Idle_Window    | `cell_XX_window`              | 10     | 10–25s   |
-| `cell_whisper_cellmate` | SOCIAL | Whisper_Seated | ambas camas de la misma celda | 5      | 8–20s    |
+*(Mismo catálogo de acciones que Fase 4 — ver arriba)*
 
 
 ---
@@ -408,7 +472,66 @@ public class NPCBehaviorController : MonoBehaviour
 }
 ```
 
-### 3.6 Libre Albedrío — Lógica Backend
+### 3.6 Transición Orgánica entre Fases
+
+> **Problema que resuelve:** Si todos los NPCs se mueven a su zona de destino en el mismo instante al sonar el silbato, el guardia puede inferir quién es jugador por ser el que tarda en reaccionar o va en dirección distinta. Este sistema elimina esa señal.
+
+#### Perfiles de salida
+
+Al emitir `phase:start`, el backend asigna a cada NPC un `actionSequence` que incluye un **prefijo de transición orgánica** antes de su acción de fase:
+
+| Perfil | % NPCs | Linger (in-place) | Detour corredor | Chat en corredor |
+|--------|--------|-------------------|-----------------|------------------|
+| **Salida temprana** | 30% | 0–5 s | No | — |
+| **Salida normal** | 50% | 5–15 s | 40% de prob. | 30% de prob. |
+| **Rezagado** | 20% | 15–20 s | 60% de prob. | 30% de prob. |
+
+El linger usa animaciones idle / stretch / yawn para que el NPC se vea "distraído" antes de moverse.
+
+#### Waypoints de corredor
+
+Los NPCs que toman el desvío navegan a un `corridor_idle_XX` (10 slots disponibles en la prisión) antes de continuar hacia su destino de fase. Algunos se detienen a conversar brevemente allí (`corridor_chat_stop`, 4–11 s).
+
+#### Flujo completo de un NPC con desvío
+
+```
+phase:start recibido
+     │
+     ▼
+[LINGER 8s]  ← in-place, anim "stretch"
+     │
+     ▼
+[WALK → corridor_idle_04]  ← walk-only, sin duración
+     │
+     ▼
+[CHAT STOP 6s]  ← en el pasillo, anim "talk_standing"
+     │
+     ▼
+[WALK → workshop_bench_02]  ← destino de fase real
+     │
+     ▼
+[WORK_BENCH 35s]  ← acción de fase
+```
+
+#### Comportamiento de LOOPING
+
+Las acciones de tipo LOOPING (p.ej. `yard_walk_perimeter`, `work_carry_box`) **no reciben prefijo de transición** — su animación de loop ya es visualmente orgánica y meterles un linger los haría comenzar en el lugar equivocado.
+
+#### Libre albedrío + cambio de sub-zona (Fases 4 y 7)
+
+Durante el reassign (cada 20s), los NPCs en Hora libre tienen un **25% de probabilidad de cambiar de sub-zona**:
+
+```
+NPC actualmente en: patio
+Roll = 0.18 < SUBZONE_CHANGE_PROB (0.25)
+→ New sub-zone elegida: comedor
+→ NPC recibe acción de comedor (free_cafe_sit_idle) en siguiente reassign
+→ Se genera tráfico visible patio → comedor que camufla movimientos de jugadores
+```
+
+---
+
+### 3.7 Libre Albedrío — Lógica Backend
 
 ```
 Al inicio de cada fase:
@@ -420,19 +543,20 @@ Al inicio de cada fase:
      e. Calcular duration = random(minDuration, maxDuration)
   2. Emitir phase:start con todos los assignments
 
-Cada REASSIGN_INTERVAL segundos (default 25s):
+Cada REASSIGN_INTERVAL segundos (default 20s):
   1. Para cada NPC con actionTimer < 5s (a punto de terminar):
-     a. 70% probabilidad de cambiar acción
-     b. Si cambia: nuevo weighted random, excluyendo la acción actual
-     c. SOCIAL: buscar partner con acción compatible y actionTimer > 10s
-     d. Si hay partner disponible: pair ambos NPCs en la misma acción social
+     a. 80% probabilidad de cambiar acción
+     b. Fases 4/7 únicamente: 25% de probabilidad de cambiar de sub-zona antes de elegir acción
+     c. Si cambia: nuevo weighted random del pool de su sub-zona, excluyendo acción actual
+     d. SOCIAL: skip en reassign (partner logic es complejo para incremental)
   2. Emitir npc:reassign solo con los NPCs que cambian
 
 Restricciones:
   - No asignar waypoints exclusivos ya ocupados
   - En Fase 9 (Luces apagadas): solo acciones IDLE del pool de la fase
-  - En Fase 1 (Formación): solo acciones del pool de formación
+  - En Fase 1 (Inicio): solo acciones del pool de inicio
   - Sub-zona de Trabajo: NPC no cambia de sub-zona durante la fase
+  - Sub-zona de Hora libre: NPC SÍ puede cambiar de sub-zona vía reassign (genera tráfico que camufla jugadores)
 ```
 
 ---
@@ -448,11 +572,17 @@ for action in phase_pool:
     running += action.weight
     if r < running: return action
 
-// Distribución de sub-zonas (Fase 6 — Trabajo)
+// Distribución de sub-zonas (Fase 3/6 — Trabajo)
 n_npcs = total_npcs                            // 17–19
-taller_count    = floor(n_npcs / 3)            // ~6
-lavanderia_count = floor(n_npcs / 3)           // ~6
-piso_count      = n_npcs - taller - lavanderia // ~5–7
+taller_count    = floor(n_npcs / 2)            // ~9
+lavanderia_count = n_npcs - taller             // ~9
+
+// Distribución de sub-zonas (Fase 4/7 — Hora libre)
+n_npcs = total_npcs                            // 17–19
+patio_count     = floor(n_npcs * 0.28)         // ~5
+comedor_count   = floor(n_npcs * 0.28)         // ~5
+lavanderia_count = floor(n_npcs * 0.28)        // ~5
+celdas_count    = n_npcs - patio - comedor - lavanderia // ~3
 
 // Bandwidth estimada (reemplaza npc:positions)
 phase_start_payload = n_npcs × (npcId[4B] + actionId[20B] + waypointId[20B] + duration[2B]) 
@@ -514,15 +644,20 @@ Este sistema depende de #18 (Sync) para emitir eventos. El GDD de #18 debe actua
 
 | Knob                          | Default     | Rango seguro    | Si muy bajo                                         | Si muy alto                                           |
 | ----------------------------- | ----------- | --------------- | --------------------------------------------------- | ----------------------------------------------------- |
-| `reassign_interval`           | 25s         | 10–45s          | NPCs cambien demasiado seguido, se ven inquietos    | Los NPCs se ven robóticos, siempre haciendo lo mismo  |
-| `reassign_change_probability` | 0.70        | 0.3–0.9         | Pocos NPCs cambian, comportamiento estático         | Todos cambian a la vez, movimiento caótico en ráfagas |
+| `reassign_interval`           | 20s         | 10–45s          | NPCs cambian demasiado seguido, se ven inquietos    | Los NPCs se ven robóticos, siempre haciendo lo mismo  |
+| `reassign_change_probability` | 0.80        | 0.3–0.9         | Pocos NPCs cambian, comportamiento estático         | Todos cambian a la vez, movimiento caótico en ráfagas |
 | `action_min_duration`         | por acción  | 5–30s           | NPCs no completan animaciones completas             | NPCs parecen pegados a su waypoint                    |
 | `action_max_duration`         | por acción  | 15–90s          | Reasignaciones muy frecuentes                       | Comportamiento muy predecible                         |
 | `waypoint_arrival_threshold`  | 0.3m        | 0.1–1.0m        | NPCs nunca "llegan" a destino (se quedan orbitando) | NPCs ejecutan animación demasiado lejos del waypoint  |
 | `social_max_pair_distance`    | 15m         | 5–25m           | Muy pocas interacciones sociales posibles           | NPCs viajan demasiado lejos para socializar (irreal)  |
 | `phase_warning_time`          | 10s         | 5–15s           | Jugadores sin tiempo para reaccionar                | Warning demasiado anticipado, pierde tensión          |
 | `zone_grace_period`           | 5s          | 3–10s           | Demasiado punitivo con jugadores que cambian zona   | Jugadores pueden ignorar la zona correcta             |
-| `work_subzone_split`          | 33%/33%/33% | 20-50% por zona | Una zona queda vacía (visual raro)                  | Una zona queda sobrecargada                           |
+| `work_subzone_split`          | 50%/50%     | 30–70% por zona | Una zona queda vacía (visual raro)                  | Una zona queda sobrecargada                           |
+| `free_subzone_split`          | 28%/28%/28%/16% | 15–40% por zona | Una zona queda vacía (visual raro)              | Una zona queda sobrecargada                           |
+| `transition_linger_max`       | 20s         | 10–30s          | Todos se mueven casi igual de rápido (NPC-tell)     | Algunos NPCs llegan muy tarde a la zona              |
+| `transition_detour_prob`      | 0.40        | 0.15–0.65       | Poco tráfico en pasillos, ruido visual bajo         | Demasiados NPCs en corredores, congestión             |
+| `transition_enroute_chat_prob`| 0.30        | 0.10–0.50       | Los desvíos se ven mecánicos (nadie charla)         | Demasiadas charlas, los NPCs tardan en llegar         |
+| `subzone_change_prob`         | 0.25        | 0.05–0.45       | Poca movilidad entre zonas en hora libre            | NPCs cambian zona tan seguido que no tienen actividad |
 
 
 ---
@@ -543,6 +678,303 @@ Este sistema depende de #18 (Sync) para emitir eventos. El GDD de #18 debe actua
 | AC-9  | En Fase 9, ningún NPC ejecuta una acción SOCIAL                                                               | Loggear todas las acciones asignadas en Fase 9 → ninguna tiene `socialPartnerId`                        |
 | AC-10 | Los jugadores prisioneros reciben `phase:zone_check` si están en zona incorrecta 5s después de `phase:start`  | Jugador permanece en comedor cuando empieza Fase 4 (patio) → recibe warning a los 5s                    |
 | AC-11 | Los NPCs de Fase 6 (Trabajo) permanecen en su sub-zona asignada toda la fase                                  | Observar visualmente que los NPCs de taller no navegan a lavandería durante la fase                     |
-| AC-12 | Los NPCs de Formación (Fase 1) permanecen en su slot salvo acciones de fidget/whisper                         | Verificar que ningún NPC de Formación navega a más de 2m de su `formation_slot_XX`                      |
+| AC-12 | En Fases 4 y 7 (Hora libre), los NPCs cambian de sub-zona vía reassign generando tráfico entre zonas         | Observar que al menos 3 NPCs cambian de sub-zona durante una fase de hora libre completa                |
+| AC-13 | Al sonar el silbato de transición, los NPCs NO se mueven todos a la vez — el movimiento es escalonado        | En el momento exacto de `phase:start`, ≥5 NPCs están aún en su posición anterior (linger activo)        |
+| AC-14 | Al menos el 30% de los NPCs pasan por un waypoint de corredor durante una transición de fase                  | Loguear waypoints reservados en `corridor_idle_*` durante 3 transiciones → al menos 6 NPCs usan corredor|
 
+---
+
+## 9. Referencia Completa de Waypoints (177 total)
+
+> **Fuente canónica:** `Assets/Editor/WaypointRegistryGenerator.cs`
+> **Convención de nombres:** Los GameObjects en escena deben tener exactamente este nombre para que `WaypointRegistry` los resuelva automáticamente desde los `waypointRoots`.
+
+---
+
+### 9.1 Celdas — Spawn (20 waypoints)
+
+**Parent sugerido:** `WP_Celdas`
+**Fases:** 1
+
+| # | Waypoint ID | Zona | Cap | Fases |
+|---|-------------|------|-----|-------|
+| 1 | `cell_door_exit_01` | celda | 1 | 1 |
+| 2 | `cell_door_exit_02` | celda | 1 | 1 |
+| 3 | `cell_door_exit_03` | celda | 1 | 1 |
+| 4 | `cell_door_exit_04` | celda | 1 | 1 |
+| 5 | `cell_door_exit_05` | celda | 1 | 1 |
+| 6 | `cell_door_exit_06` | celda | 1 | 1 |
+| 7 | `cell_door_exit_07` | celda | 1 | 1 |
+| 8 | `cell_door_exit_08` | celda | 1 | 1 |
+| 9 | `cell_door_exit_09` | celda | 1 | 1 |
+| 10 | `cell_door_exit_10` | celda | 1 | 1 |
+| 11 | `cell_door_exit_11` | celda | 1 | 1 |
+| 12 | `cell_door_exit_12` | celda | 1 | 1 |
+| 13 | `cell_door_exit_13` | celda | 1 | 1 |
+| 14 | `cell_door_exit_14` | celda | 1 | 1 |
+| 15 | `cell_door_exit_15` | celda | 1 | 1 |
+| 16 | `cell_door_exit_16` | celda | 1 | 1 |
+| 17 | `cell_door_exit_17` | celda | 1 | 1 |
+| 18 | `cell_door_exit_18` | celda | 1 | 1 |
+| 19 | `cell_door_exit_19` | celda | 1 | 1 |
+| 20 | `cell_door_exit_20` | celda | 1 | 1 |
+
+---
+
+### 9.2 Comedor (45 waypoints)
+
+**Parent sugerido:** `WP_Comedor`
+**Fases:** 1, 2, 4, 5, 7, 8
+
+#### Entrada (6)
+
+| # | Waypoint ID | Cap | Fases |
+|---|-------------|-----|-------|
+| 1 | `cafeteria_entrance_spot_01` | 3 | 1, 2, 5, 8 |
+| 2 | `cafeteria_entrance_spot_02` | 3 | 1, 2, 5, 8 |
+| 3 | `cafeteria_entrance_spot_03` | 3 | 1, 2, 5, 8 |
+| 4 | `cafeteria_entrance_spot_04` | 3 | 1, 2, 5, 8 |
+| 5 | `cafeteria_entrance_spot_05` | 3 | 1, 2, 5, 8 |
+| 6 | `cafeteria_entrance_spot_06` | 3 | 1, 2, 5, 8 |
+
+#### Caminos (5)
+
+| # | Waypoint ID | Cap | Fases |
+|---|-------------|-----|-------|
+| 1 | `cafeteria_path_01` | 4 | 1, 2, 5, 8 |
+| 2 | `cafeteria_path_02` | 4 | 1, 2, 5, 8 |
+| 3 | `cafeteria_path_03` | 4 | 1, 2, 5, 8 |
+| 4 | `cafeteria_path_04` | 4 | 1, 2, 5, 8 |
+| 5 | `cafeteria_path_05` | 4 | 1, 2, 5, 8 |
+
+#### Asientos (16)
+
+| # | Waypoint ID | Cap | Fases |
+|---|-------------|-----|-------|
+| 1 | `cafeteria_seat_01` | 2 | 2, 4, 5, 7, 8 |
+| 2 | `cafeteria_seat_02` | 2 | 2, 4, 5, 7, 8 |
+| 3 | `cafeteria_seat_03` | 2 | 2, 4, 5, 7, 8 |
+| 4 | `cafeteria_seat_04` | 2 | 2, 4, 5, 7, 8 |
+| 5 | `cafeteria_seat_05` | 2 | 2, 4, 5, 7, 8 |
+| 6 | `cafeteria_seat_06` | 2 | 2, 4, 5, 7, 8 |
+| 7 | `cafeteria_seat_07` | 2 | 2, 4, 5, 7, 8 |
+| 8 | `cafeteria_seat_08` | 2 | 2, 4, 5, 7, 8 |
+| 9 | `cafeteria_seat_09` | 2 | 2, 4, 5, 7, 8 |
+| 10 | `cafeteria_seat_10` | 2 | 2, 4, 5, 7, 8 |
+| 11 | `cafeteria_seat_11` | 2 | 2, 4, 5, 7, 8 |
+| 12 | `cafeteria_seat_12` | 2 | 2, 4, 5, 7, 8 |
+| 13 | `cafeteria_seat_13` | 2 | 2, 4, 5, 7, 8 |
+| 14 | `cafeteria_seat_14` | 2 | 2, 4, 5, 7, 8 |
+| 15 | `cafeteria_seat_15` | 2 | 2, 4, 5, 7, 8 |
+| 16 | `cafeteria_seat_16` | 2 | 2, 4, 5, 7, 8 |
+
+#### Counter (6)
+
+| # | Waypoint ID | Cap | Fases |
+|---|-------------|-----|-------|
+| 1 | `cafeteria_counter_01` | 1 | 2, 5, 8 |
+| 2 | `cafeteria_counter_02` | 1 | 2, 5, 8 |
+| 3 | `cafeteria_counter_03` | 1 | 2, 5, 8 |
+| 4 | `cafeteria_counter_04` | 1 | 2, 5, 8 |
+| 5 | `cafeteria_counter_05` | 1 | 2, 5, 8 |
+| 6 | `cafeteria_counter_06` | 1 | 2, 5, 8 |
+
+#### Fila (8)
+
+| # | Waypoint ID | Cap | Fases |
+|---|-------------|-----|-------|
+| 1 | `cafeteria_line_01` | 1 | 2, 4, 5, 7, 8 |
+| 2 | `cafeteria_line_02` | 1 | 2, 4, 5, 7, 8 |
+| 3 | `cafeteria_line_03` | 1 | 2, 4, 5, 7, 8 |
+| 4 | `cafeteria_line_04` | 1 | 2, 4, 5, 7, 8 |
+| 5 | `cafeteria_line_05` | 1 | 2, 4, 5, 7, 8 |
+| 6 | `cafeteria_line_06` | 1 | 2, 4, 5, 7, 8 |
+| 7 | `cafeteria_line_07` | 1 | 2, 4, 5, 7, 8 |
+| 8 | `cafeteria_line_08` | 1 | 2, 4, 5, 7, 8 |
+
+#### Depósito de bandejas (4)
+
+| # | Waypoint ID | Cap | Fases |
+|---|-------------|-----|-------|
+| 1 | `cafeteria_tray_deposit_01` | 2 | 2, 5, 8 |
+| 2 | `cafeteria_tray_deposit_02` | 2 | 2, 5, 8 |
+| 3 | `cafeteria_tray_deposit_03` | 2 | 2, 5, 8 |
+| 4 | `cafeteria_tray_deposit_04` | 2 | 2, 5, 8 |
+
+---
+
+### 9.3 Corredores — Transición (24 waypoints)
+
+**Parent sugerido:** `WP_Corredor`
+**Fases:** todas (sin restricción)
+
+| # | Waypoint ID | Cap | Fases |
+|---|-------------|-----|-------|
+| 1 | `corridor_idle_01` | 1 | todas |
+| 2 | `corridor_idle_02` | 1 | todas |
+| 3 | `corridor_idle_03` | 1 | todas |
+| 4 | `corridor_idle_04` | 1 | todas |
+| 5 | `corridor_idle_05` | 1 | todas |
+| 6 | `corridor_idle_06` | 1 | todas |
+| 7 | `corridor_idle_07` | 1 | todas |
+| 8 | `corridor_idle_08` | 1 | todas |
+| 9 | `corridor_idle_09` | 1 | todas |
+| 10 | `corridor_idle_10` | 1 | todas |
+| 11 | `corridor_chat_spot_01` | 2 | todas |
+| 12 | `corridor_chat_spot_02` | 2 | todas |
+| 13 | `corridor_chat_spot_03` | 2 | todas |
+| 14 | `corridor_chat_spot_04` | 2 | todas |
+| 15 | `hallway_slot_01` | 1 | todas |
+| 16 | `hallway_slot_02` | 1 | todas |
+| 17 | `hallway_slot_03` | 1 | todas |
+| 18 | `hallway_slot_04` | 1 | todas |
+| 19 | `hallway_slot_05` | 1 | todas |
+| 20 | `hallway_slot_06` | 1 | todas |
+| 21 | `hallway_slot_07` | 1 | todas |
+| 22 | `hallway_slot_08` | 1 | todas |
+| 23 | `hallway_slot_09` | 1 | todas |
+| 24 | `hallway_slot_10` | 1 | todas |
+
+---
+
+### 9.4 Taller (17 waypoints)
+
+**Parent sugerido:** `WP_Taller`
+**Fases:** 3, 6
+
+| # | Waypoint ID | Sub-zona | Cap | Fases |
+|---|-------------|----------|-----|-------|
+| 1 | `workshop_bench_01` | taller | 1 | 3, 6 |
+| 2 | `workshop_bench_02` | taller | 1 | 3, 6 |
+| 3 | `workshop_bench_03` | taller | 1 | 3, 6 |
+| 4 | `workshop_bench_04` | taller | 1 | 3, 6 |
+| 5 | `workshop_bench_05` | taller | 1 | 3, 6 |
+| 6 | `workshop_bench_06` | taller | 1 | 3, 6 |
+| 7 | `workshop_shelf_01` | taller | 1 | 3, 6 |
+| 8 | `workshop_shelf_02` | taller | 1 | 3, 6 |
+| 9 | `workshop_shelf_03` | taller | 1 | 3, 6 |
+| 10 | `workshop_shelf_04` | taller | 1 | 3, 6 |
+| 11 | `workshop_machine_01` | taller | 1 | 3, 6 |
+| 12 | `workshop_machine_02` | taller | 1 | 3, 6 |
+| 13 | `workshop_machine_03` | taller | 1 | 3, 6 |
+| 14 | `workshop_machine_04` | taller | 1 | 3, 6 |
+| 15 | `workshop_chat_spot_01` | taller | 2 | 3, 6 |
+| 16 | `workshop_chat_spot_02` | taller | 2 | 3, 6 |
+| 17 | `workshop_chat_spot_03` | taller | 2 | 3, 6 |
+
+---
+
+### 9.5 Lavanderia (16 waypoints)
+
+**Parent sugerido:** `WP_Lavanderia`
+**Fases:** 3, 4, 6, 7
+
+| # | Waypoint ID | Sub-zona | Cap | Fases |
+|---|-------------|----------|-----|-------|
+| 1 | `laundry_washer_01` | lavanderia | 1 | 3, 4, 6, 7 |
+| 2 | `laundry_washer_02` | lavanderia | 1 | 3, 4, 6, 7 |
+| 3 | `laundry_washer_03` | lavanderia | 1 | 3, 4, 6, 7 |
+| 4 | `laundry_washer_04` | lavanderia | 1 | 3, 4, 6, 7 |
+| 5 | `laundry_washer_05` | lavanderia | 1 | 3, 4, 6, 7 |
+| 6 | `laundry_washer_06` | lavanderia | 1 | 3, 4, 6, 7 |
+| 7 | `laundry_fold_01` | lavanderia | 1 | 3, 4, 6, 7 |
+| 8 | `laundry_fold_02` | lavanderia | 1 | 3, 4, 6, 7 |
+| 9 | `laundry_fold_03` | lavanderia | 1 | 3, 4, 6, 7 |
+| 10 | `laundry_fold_04` | lavanderia | 1 | 3, 4, 6, 7 |
+| 11 | `laundry_fold_05` | lavanderia | 1 | 3, 4, 6, 7 |
+| 12 | `laundry_fold_06` | lavanderia | 1 | 3, 4, 6, 7 |
+| 13 | `laundry_dryer_01` | lavanderia | 1 | 3, 4, 6, 7 |
+| 14 | `laundry_dryer_02` | lavanderia | 1 | 3, 4, 6, 7 |
+| 15 | `laundry_dryer_03` | lavanderia | 1 | 3, 4, 6, 7 |
+| 16 | `laundry_dryer_04` | lavanderia | 1 | 3, 4, 6, 7 |
+
+---
+
+### 9.6 Patio (35 waypoints)
+
+**Parent sugerido:** `WP_Patio`
+**Fases:** 4, 7
+
+| # | Waypoint ID | Cap | Fases |
+|---|-------------|-----|-------|
+| 1 | `yard_perimeter_01` | 1 | 4, 7 |
+| 2 | `yard_perimeter_02` | 1 | 4, 7 |
+| 3 | `yard_perimeter_03` | 1 | 4, 7 |
+| 4 | `yard_perimeter_04` | 1 | 4, 7 |
+| 5 | `yard_perimeter_05` | 1 | 4, 7 |
+| 6 | `yard_perimeter_06` | 1 | 4, 7 |
+| 7 | `yard_perimeter_07` | 1 | 4, 7 |
+| 8 | `yard_perimeter_08` | 1 | 4, 7 |
+| 9 | `yard_bench_01` | 1 | 4, 7 |
+| 10 | `yard_bench_02` | 1 | 4, 7 |
+| 11 | `yard_bench_03` | 1 | 4, 7 |
+| 12 | `yard_bench_04` | 1 | 4, 7 |
+| 13 | `yard_bench_05` | 1 | 4, 7 |
+| 14 | `yard_bench_06` | 1 | 4, 7 |
+| 15 | `yard_bench_07` | 1 | 4, 7 |
+| 16 | `yard_bench_08` | 1 | 4, 7 |
+| 17 | `yard_exercise_area_01` | 2 | 4, 7 |
+| 18 | `yard_exercise_area_02` | 2 | 4, 7 |
+| 19 | `yard_exercise_area_03` | 2 | 4, 7 |
+| 20 | `yard_exercise_area_04` | 2 | 4, 7 |
+| 21 | `yard_conversation_spot_01` | 2 | 4, 7 |
+| 22 | `yard_conversation_spot_02` | 2 | 4, 7 |
+| 23 | `yard_conversation_spot_03` | 2 | 4, 7 |
+| 24 | `yard_conversation_spot_04` | 2 | 4, 7 |
+| 25 | `yard_conversation_spot_05` | 2 | 4, 7 |
+| 26 | `yard_conversation_spot_06` | 2 | 4, 7 |
+| 27 | `yard_card_table_01` | 4 | 4, 7 |
+| 28 | `yard_card_table_02` | 4 | 4, 7 |
+| 29 | `yard_wall_lean_01` | 1 | 4, 7 |
+| 30 | `yard_wall_lean_02` | 1 | 4, 7 |
+| 31 | `yard_wall_lean_03` | 1 | 4, 7 |
+| 32 | `yard_wall_lean_04` | 1 | 4, 7 |
+| 33 | `yard_wall_lean_05` | 1 | 4, 7 |
+| 34 | `yard_wall_lean_06` | 1 | 4, 7 |
+| 35 | `yard_ball_spot` | 2 | 4, 7 |
+
+---
+
+### 9.7 Celdas — Interior (20 waypoints)
+
+**Parent sugerido:** `WP_Celdas_Interior`
+**Fases:** 4, 7, 9
+
+| # | Waypoint ID | Cap | Fases |
+|---|-------------|-----|-------|
+| 1 | `cell_00_bed_01` | 1 | 4, 7, 9 |
+| 2 | `cell_00_bed_02` | 1 | 4, 7, 9 |
+| 3 | `cell_01_bed_01` | 1 | 4, 7, 9 |
+| 4 | `cell_01_bed_02` | 1 | 4, 7, 9 |
+| 5 | `cell_02_bed_01` | 1 | 4, 7, 9 |
+| 6 | `cell_02_bed_02` | 1 | 4, 7, 9 |
+| 7 | `cell_03_bed_01` | 1 | 4, 7, 9 |
+| 8 | `cell_03_bed_02` | 1 | 4, 7, 9 |
+| 9 | `cell_04_bed_01` | 1 | 4, 7, 9 |
+| 10 | `cell_04_bed_02` | 1 | 4, 7, 9 |
+| 11 | `cell_05_bed_01` | 1 | 4, 7, 9 |
+| 12 | `cell_05_bed_02` | 1 | 4, 7, 9 |
+| 13 | `cell_06_bed_01` | 1 | 4, 7, 9 |
+| 14 | `cell_06_bed_02` | 1 | 4, 7, 9 |
+| 15 | `cell_07_bed_01` | 1 | 4, 7, 9 |
+| 16 | `cell_07_bed_02` | 1 | 4, 7, 9 |
+| 17 | `cell_08_bed_01` | 1 | 4, 7, 9 |
+| 18 | `cell_08_bed_02` | 1 | 4, 7, 9 |
+| 19 | `cell_09_bed_01` | 1 | 4, 7, 9 |
+| 20 | `cell_09_bed_02` | 1 | 4, 7, 9 |
+
+---
+
+### 9.8 Resumen por Parent
+
+| Parent sugerido | Zona | Waypoints | Fases principales |
+|-----------------|------|-----------|-------------------|
+| `WP_Celdas` | celda | 20 | 1 |
+| `WP_Comedor` | comedor | 45 | 1, 2, 4, 5, 7, 8 |
+| `WP_Corredor` | corredor | 24 | todas |
+| `WP_Taller` | trabajo/taller | 17 | 3, 6 |
+| `WP_Lavanderia` | lavanderia | 16 | 3, 4, 6, 7 |
+| `WP_Patio` | patio | 35 | 4, 7 |
+| `WP_Celdas_Interior` | celdas | 20 | 4, 7, 9 |
+| **Total** | | **177** | |
 

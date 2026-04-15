@@ -286,6 +286,17 @@ namespace Jailbreak.Network
     // ─── Jail Routine / NPC Phase System ─────────────────────────────────────
     // Mirrors backend types.ts: NPCAssignment, PhaseJailStartPayload, etc.
 
+    /// <summary>A single step inside an ordered action sequence (cafeteria flow, Phase 1 chain).</summary>
+    [Serializable]
+    public class NPCActionStepData
+    {
+        public string actionId;
+        public string animTrigger;
+        public string waypointId;            // null = stay in place / use partner position
+        public float  duration;              // 0 = walk-only (no dwell at destination)
+        public string socialPartnerId;       // null for solo steps
+    }
+
     [Serializable]
     public class NPCAssignmentData
     {
@@ -298,6 +309,7 @@ namespace Jailbreak.Network
         public bool     loop;
         public string   socialPartnerId;      // null for solo/idle
         public string   subZone;              // null unless Phase 6
+        public NPCActionStepData[] actionSequence; // ordered steps (cafeteria, Phase 1)
     }
 
     [Serializable]

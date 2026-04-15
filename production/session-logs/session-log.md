@@ -818,3 +818,115 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260414_002741
+### Commits
+a5e9766 chore: adjust npc movements
+07b5c6f chore: spawn positions
+09d78d4 chore: update guard spawn position
+8277bbb chore: wip movement adjust
+68a0890 chore: adjust npc spawn
+### Uncommitted Changes
+design/gdd/rutina-fases-npc.md
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260414_005810
+### Commits
+a5e9766 chore: adjust npc movements
+07b5c6f chore: spawn positions
+09d78d4 chore: update guard spawn position
+8277bbb chore: wip movement adjust
+68a0890 chore: adjust npc spawn
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/agent-audit.log
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260414_011009
+### Commits
+a5e9766 chore: adjust npc movements
+07b5c6f chore: spawn positions
+09d78d4 chore: update guard spawn position
+8277bbb chore: wip movement adjust
+68a0890 chore: adjust npc spawn
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/agent-audit.log
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WaypointRegistryGenerator.cs
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260414_110521
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/agent-audit.log
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WaypointRegistryGenerator.cs
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260414_110812
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/agent-audit.log
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WaypointRegistryGenerator.cs
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260414_111937
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+design/GDD.md
+design/gdd/rutina-fases-npc.md
+production/session-logs/agent-audit.log
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WaypointRegistryGenerator.cs
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+

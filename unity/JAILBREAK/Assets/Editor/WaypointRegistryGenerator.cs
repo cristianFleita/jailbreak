@@ -85,20 +85,34 @@ namespace Jailbreak.Editor
                 d.Add(new WPDef($"cell_door_exit_{i:D2}", "celda", "", 1, "1"));
 
             // ── Comedor: Fases 1 (entry), 2, 5, 8 ───────────────────────────
+            // Zona de espera en la puerta del comedor (Phase 1 walk_to_cafeteria_area + cafe_wait_outside_talk)
+            for (int i = 1; i <= 6; i++)
+                d.Add(new WPDef($"cafeteria_entrance_spot_{i:D2}", "comedor", "", 3, "1", "2", "5", "8"));
+
             for (int i = 1; i <= 5; i++)
                 d.Add(new WPDef($"cafeteria_path_{i:D2}", "comedor", "", 4, "1", "2", "5", "8"));
 
             for (int i = 1; i <= 16; i++)
-                d.Add(new WPDef($"cafeteria_seat_{i:D2}", "comedor", "", 2, "2", "4", "5", "8"));
+                d.Add(new WPDef($"cafeteria_seat_{i:D2}", "comedor", "", 2, "2", "4", "5", "7", "8"));
 
             for (int i = 1; i <= 6; i++)
                 d.Add(new WPDef($"cafeteria_counter_{i:D2}", "comedor", "", 1, "2", "5", "8"));
 
             for (int i = 1; i <= 8; i++)
-                d.Add(new WPDef($"cafeteria_line_{i:D2}", "comedor", "", 1, "2", "4", "5", "8"));
+                d.Add(new WPDef($"cafeteria_line_{i:D2}", "comedor", "", 1, "2", "4", "5", "7", "8"));
 
-            for (int i = 1; i <= 3; i++)
-                d.Add(new WPDef($"cafeteria_tray_deposit_{i:D2}", "comedor", "", 1, "2", "5", "8"));
+            for (int i = 1; i <= 4; i++)
+                d.Add(new WPDef($"cafeteria_tray_deposit_{i:D2}", "comedor", "", 2, "2", "5", "8"));
+
+            // ── Pasillos / Corredores: transición orgánica entre zonas (todos los fases) ──
+            // Used by buildTransitionPrefix() — NPCs can detour through these spots en route.
+            // validPhases is empty → valid in all phases (transition waypoints are always usable).
+            for (int i = 1; i <= 10; i++)
+                d.Add(new WPDef($"corridor_idle_{i:D2}", "corredor", "", 1));
+            for (int i = 1; i <= 4; i++)
+                d.Add(new WPDef($"corridor_chat_spot_{i:D2}", "corredor", "", 2));
+            for (int i = 1; i <= 10; i++)
+                d.Add(new WPDef($"hallway_slot_{i:D2}", "corredor", "", 1));
 
             // ── Fases 3 y 6: Trabajo — Taller ────────────────────────────────
             for (int i = 1; i <= 6; i++)
@@ -113,45 +127,46 @@ namespace Jailbreak.Editor
             for (int i = 1; i <= 3; i++)
                 d.Add(new WPDef($"workshop_chat_spot_{i:D2}", "trabajo", "taller", 2, "3", "6"));
 
-            // ── Fases 3, 4 y 6: Lavandería ───────────────────────────────────
+            // ── Fases 3, 4, 6 y 7: Lavandería ────────────────────────────────
             for (int i = 1; i <= 6; i++)
-                d.Add(new WPDef($"laundry_washer_{i:D2}", "lavanderia", "lavanderia", 1, "3", "4", "6"));
+                d.Add(new WPDef($"laundry_washer_{i:D2}", "lavanderia", "lavanderia", 1, "3", "4", "6", "7"));
 
             for (int i = 1; i <= 6; i++)
-                d.Add(new WPDef($"laundry_fold_{i:D2}", "lavanderia", "lavanderia", 1, "3", "4", "6"));
+                d.Add(new WPDef($"laundry_fold_{i:D2}", "lavanderia", "lavanderia", 1, "3", "4", "6", "7"));
 
             for (int i = 1; i <= 4; i++)
-                d.Add(new WPDef($"laundry_dryer_{i:D2}", "lavanderia", "lavanderia", 1, "3", "4", "6"));
+                d.Add(new WPDef($"laundry_dryer_{i:D2}", "lavanderia", "lavanderia", 1, "3", "4", "6", "7"));
 
-            // ── Fase 4: Hora libre — Patio ────────────────────────────────────
+            // ── Fases 4 y 7: Hora libre — Patio ──────────────────────────────
             for (int i = 1; i <= 8; i++)
-                d.Add(new WPDef($"yard_perimeter_{i:D2}", "patio", "patio", 1, "4"));
+                d.Add(new WPDef($"yard_perimeter_{i:D2}", "patio", "patio", 1, "4", "7"));
 
             for (int i = 1; i <= 8; i++)
-                d.Add(new WPDef($"yard_bench_{i:D2}", "patio", "patio", 1, "4"));
+                d.Add(new WPDef($"yard_bench_{i:D2}", "patio", "patio", 1, "4", "7"));
 
             for (int i = 1; i <= 4; i++)
-                d.Add(new WPDef($"yard_exercise_area_{i:D2}", "patio", "patio", 2, "4"));
+                d.Add(new WPDef($"yard_exercise_area_{i:D2}", "patio", "patio", 2, "4", "7"));
 
             for (int i = 1; i <= 6; i++)
-                d.Add(new WPDef($"yard_conversation_spot_{i:D2}", "patio", "patio", 2, "4"));
+                d.Add(new WPDef($"yard_conversation_spot_{i:D2}", "patio", "patio", 2, "4", "7"));
 
             for (int i = 1; i <= 2; i++)
-                d.Add(new WPDef($"yard_card_table_{i:D2}", "patio", "patio", 4, "4"));
+                d.Add(new WPDef($"yard_card_table_{i:D2}", "patio", "patio", 4, "4", "7"));
 
             for (int i = 1; i <= 6; i++)
-                d.Add(new WPDef($"yard_wall_lean_{i:D2}", "patio", "patio", 1, "4"));
+                d.Add(new WPDef($"yard_wall_lean_{i:D2}", "patio", "patio", 1, "4", "7"));
 
-            d.Add(new WPDef("yard_ball_spot", "patio", "patio", 2, "4"));
+            d.Add(new WPDef("yard_ball_spot", "patio", "patio", 2, "4", "7"));
 
-            // ── Fases 7 y 9: Celdas ──────────────────────────────────────────
+            // ── Fases 4, 7 y 9: Celdas ───────────────────────────────────────
+            // Phase 4 and 7 (hora libre / celdas sub-zone): cell_lie_bed + cell_sit_bed
+            // Phase 9 (luces apagadas): lights_sleep + lights_toss
+            // No desk or window waypoints — those actions were removed from the design.
             for (int cell = 0; cell <= 9; cell++)
             {
                 string c = cell.ToString("D2");
-                d.Add(new WPDef($"cell_{c}_bed_01",    "celdas", "", 1, "7", "9"));
-                d.Add(new WPDef($"cell_{c}_bed_02",    "celdas", "", 1, "7", "9"));
-                d.Add(new WPDef($"cell_{c}_desk_01",   "celdas", "", 1, "7"));
-                d.Add(new WPDef($"cell_{c}_window_01", "celdas", "", 1, "7"));
+                d.Add(new WPDef($"cell_{c}_bed_01", "celdas", "", 1, "4", "7", "9"));
+                d.Add(new WPDef($"cell_{c}_bed_02", "celdas", "", 1, "4", "7", "9"));
             }
 
             return d;

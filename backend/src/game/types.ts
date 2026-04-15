@@ -262,6 +262,15 @@ export interface RoomDestroyedPayload {
 
 export type JailPhaseNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
+/** A single step inside an ordered action sequence (cafeteria flow, Phase 1 chain). */
+export interface NPCActionStep {
+  actionId: string
+  animTrigger: string
+  waypointId?: string           // destination waypoint (null = stay in place / use partner pos)
+  duration: number              // seconds to perform action at destination (0 = walk-only, no dwell)
+  socialPartnerId?: string      // set for SOCIAL steps
+}
+
 /** A single NPC's action assignment for a phase or reassign event. */
 export interface NPCAssignment {
   npcId: string
@@ -269,10 +278,11 @@ export interface NPCAssignment {
   animTrigger: string
   waypointId?: string           // single waypoint (most actions)
   waypointChain?: string[]      // LOOPING chain (e.g. yard_perimeter)
-  duration: number              // seconds before action expires
+  duration: number              // seconds before action expires (total for sequences)
   loop?: boolean                // true for LOOPING actions
   socialPartnerId?: string      // set for SOCIAL actions
   subZone?: string              // set for Phase 6 (taller/lavanderia/piso)
+  actionSequence?: NPCActionStep[]  // ordered steps (cafeteria flow, Phase 1 chain)
 }
 
 /** Emitted to all clients when a jail phase starts. */

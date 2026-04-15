@@ -1,11 +1,11 @@
 # JAILBREAK — Game Design Document
 
-**Version:** 1.1  
-**Fecha:** 6 de abril de 2026  
+**Version:** 1.2  
+**Fecha:** 14 de abril de 2026  
 **Plataforma:** PC (Unity WebGL)  
 **Jugadores:** 2–4 online  
 **Motor:** Unity 6 LTS  
-**Duración de partida:** 10–15 minutos  
+**Duración de partida:** ~13 minutos (ver tabla detallada en §4.1)  
 
 ---
 
@@ -88,13 +88,16 @@
 
 ### 2.3 Condiciones de Fin de Partida
 
-| Condición | Resultado |
-|-----------|-----------|
-| Al menos 1 preso jugador escapa por cualquier ruta | **Presos ganan** |
-| Se activa un motín exitoso (3 errores del guardia) | **Presos ganan** |
-| Se acaba el jornada sin que el guardia capture a todos | **Presos ganan** |
-| El guardia captura a todos los presos jugadores | **Guardia gana** |
-| Jornada completa termina sin escape ni motín | **Guardia gana** |
+La partida simula **un solo día** en la prisión (06:00 → 00:00 hora ficticia). Al llegar a medianoche (fin de Fase 9 — Luces apagadas) la jornada termina y se evalúa el resultado.
+
+| Condición | Resultado | Cuándo se evalúa |
+|-----------|-----------|-------------------|
+| Al menos 1 preso jugador escapa por cualquier ruta | **Presos ganan** | Inmediato al escapar |
+| Se activa un motín exitoso (3 errores del guardia) | **Presos ganan** | Inmediato al activar motín |
+| El guardia captura a todos los presos jugadores | **Guardia gana** | Inmediato al capturar al último |
+| La jornada termina (00:00) sin que ningún preso escape | **Guardia gana** | Al finalizar Fase 9 |
+
+**Nota:** Si quedan presos vivos pero ninguno escapó al llegar medianoche, el guardia gana — los prisioneros no lograron fugarse a tiempo.
 
 ---
 
@@ -170,19 +173,31 @@ ESTADO: PERSECUCIÓN ACTIVA
 
 La jornada es el "reloj" de la partida. Cada fase dura un tiempo real fijo y ocurre en una zona específica. Los NPCs siguen la rutina automáticamente. Los presos jugadores deben imitarla.
 
-| # | Fase | Hora (ficticia) | Duración real | Zona | Comportamiento NPC |
-|---|------|-----------------|---------------|------|-------------------|
-| 1 | Formación | 06:00 | 60 seg | Patio central | Fila ordenada, quietos |
-| 2 | Desayuno | 07:00 | 90 seg | Comedor | Sentados comiendo, algunos caminan a servirse |
-| 3 | Limpieza | 08:00 | 90 seg | Pasillos / celdas | Caminan con trapeadores, entran/salen de celdas |
-| 4 | Patio libre | 10:00 | 120 seg | Patio exterior | Caminan libre, grupos conversando, ejercicio |
-| 5 | Almuerzo | 12:00 | 90 seg | Comedor | Igual que desayuno |
-| 6 | Trabajo | 14:00 | 120 seg | Taller / cocina / lavandería | NPCs usan herramientas, cargan objetos |
-| 7 | Celda (siesta) | 16:00 | 90 seg | Celdas | Acostados o sentados en la celda |
-| 8 | Cena | 18:00 | 90 seg | Comedor | Igual que desayuno/almuerzo |
-| 9 | Luces apagadas | 22:00 | 120 seg | Celdas | Acostados, oscuridad, guardia con linterna |
+| # | Fase | Hora ficticia | Duración fase | Transición | Advertencia | Zona | Comportamiento NPC |
+|---|------|---------------|---------------|------------|-------------|------|-------------------|
+| 1 | Inicio | 06:00 | 30 seg | — | — | Celdas → Comedor | Spawn en celda, saludos, charlas, migran hacia comedor |
+| 2 | Desayuno | 06:30 | 90 seg | 10 seg | Silbato 10s antes | Comedor | Agarrar comida → sentarse a comer → tirar bandeja |
+| 3 | Trabajo (1er turno) | 08:00 | 90 seg | 10 seg | Silbato 10s antes | Taller / Lavandería | Bancos de trabajo, cargar cajas, lavar ropa |
+| 4 | Hora libre | 09:30 | 120 seg | 10 seg | Silbato 10s antes | Patio / Comedor / Lavandería / Celdas | Libre: ejercicio, cartas, charlar, descansar en celda. NPCs cambian de sub-zona |
+| 5 | Almuerzo | 11:30 | 90 seg | 10 seg | Silbato 10s antes | Comedor | Mismo flujo que Desayuno |
+| 6 | Trabajo (2do turno) | 13:00 | 120 seg | 10 seg | Silbato 10s antes | Taller / Lavandería | Mismo pool que Trabajo 1er turno |
+| 7 | Hora libre | 15:00 | 90 seg | 10 seg | Silbato 10s antes | Patio / Comedor / Lavandería / Celdas | Mismo pool que Hora libre (Fase 4) |
+| 8 | Cena | 16:30 | 90 seg | 10 seg | Silbato 10s antes | Comedor | Mismo flujo que Desayuno |
+| 9 | Luces apagadas | 18:00 → 00:00 | 120 seg | 10 seg | Silbato 10s antes | Celdas | Acostados, oscuridad, guardia con linterna |
 
-**Duración total de la partida:** ~15 minutos (930 seg de fases + transiciones de ~30 seg entre fases).
+**Desglose de tiempos:**
+
+| Concepto | Cálculo | Total |
+|----------|---------|-------|
+| Fases (gameplay) | 30 + 90 + 90 + 120 + 90 + 120 + 90 + 90 + 120 | **840 seg** |
+| Transiciones (8 cambios × 10 seg) | 8 × 10 | **80 seg** |
+| **Total partida** | | **920 seg (~15 min 20 seg)** |
+
+**Sistema de advertencias:**
+- **10 seg antes** de cada cambio de fase: suena un **silbato** audible globalmente.
+- Los NPCs comienzan a moverse hacia la zona de la siguiente fase durante la transición.
+- Los presos tienen **10 seg de transición** para llegar a la zona correcta.
+- Si un preso no llega a tiempo después de la transición, genera una alerta para el guardia: **"Alguien no está en su zona"** (sin identidad).
 
 ### 4.2 Comportamiento Sospechoso (Qué Detecta el Guardia)
 
@@ -197,10 +212,30 @@ La jornada es el "reloj" de la partida. Cada fase dura un tiempo real fijo y ocu
 
 ### 4.3 Transiciones entre Fases
 
-- Un **silbato** suena 5 seg antes de cada cambio de fase (audio global).
-- Los NPCs comienzan a moverse hacia la zona de la siguiente fase.
-- Los presos tienen **10 seg de gracia** para llegar a la zona correcta sin generar sospecha.
-- Si un preso no llega a tiempo, genera una alerta visual para el guardia: **"Alguien no está en su zona"** (sin identidad).
+> Ver tabla detallada arriba. Cada transición tiene 10 seg de duración con silbato de advertencia previo.
+
+- El **silbato** suena al inicio de los 10 seg de transición (audio global).
+- Los presos deben llegar a la zona correcta antes de que termine la transición de 10 seg.
+- Si un preso no está en la zona correcta al finalizar la transición, genera una alerta visual para el guardia: **"Alguien no está en su zona"** (sin identidad).
+- **Hora libre (Fases 4 y 7):** Los NPCs pueden cambiar de sub-zona durante toda la fase (no solo al inicio), lo que genera tráfico orgánico que camufla los movimientos de los jugadores reales.
+
+#### 4.3.1 Movimiento Orgánico post-silbato (Anti-NPC-Tell)
+
+Los NPCs **no reaccionan al silbato todos a la vez**. Cada uno recibe un **perfil de salida** aleatorio que determina cuándo y cómo se mueve hacia la zona de la siguiente fase:
+
+| Perfil | Porcentaje | Delay | Comportamiento |
+|--------|-----------|-------|----------------|
+| **Salida temprana** | 30% | 0–5 seg | Se pone en marcha casi de inmediato, sin desvíos |
+| **Salida normal** | 50% | 5–15 seg | Termina lo que estaba haciendo, puede hacer un desvío por pasillo |
+| **Rezagado** | 20% | 15–20 seg | Se queda parado (bostezo/estiramiento), luego deambula por el pasillo |
+
+Además, el ~40% de los NPCs toma un **desvío por pasillo** antes de llegar a su destino de fase. Un 30% de esos se detiene a conversar brevemente en el camino.
+
+**Por qué importa al gameplay:**
+1. El jugador preso que tarda en reaccionar al silbato queda camuflado entre los rezagados
+2. El guardia no puede usar "nadie se mueve todavía" como señal de que alguien es jugador
+3. El tráfico continuo de NPCs por pasillos crea ruido visual persistente entre zonas
+4. Durante Hora libre (fases 4 y 7), los NPCs también cambian de sub-zona libremente (~25% en cada reassign), creando cruce de zonas que confunde la búsqueda del guardia
 
 ---
 
@@ -216,18 +251,64 @@ La jornada es el "reloj" de la partida. Cada fase dura un tiempo real fijo y ocu
 
 ### 5.2 Objetos de Escape (por Ruta)
 
-#### Ruta 1 — Conducto de Ventilación (Cooperativa)
+#### Ruta 1 — La Rejilla de Ventilación Industrial (Cooperativa)
 
-Los presos fabrican una herramienta improvisada para abrir la rejilla de seguridad del conducto de ventilación del taller y usan un mapa de conductos para navegar hacia el exterior.
+> **Tipo:** Cooperativa (2–3 jugadores recomendados)  
+> **Zonas clave:** Taller, Sala de Electricidad, Oficina del Guardia  
 
-| Paso | Objeto | Ubicación | Fase disponible | Quién | Dificultad |
-|------|--------|-----------|-----------------|-------|------------|
-| 1 | **Destornillador** | Taller — banco de trabajo | Trabajo | Preso A | Media — guardia patrulla el taller |
-| 2 | **Palo de madera** → combinar con destornillador para fabricar **herramienta improvisada** (más torque para tornillos de seguridad de la rejilla) | Taller — zona de carpintería → fabricar en Celda | Trabajo → Siesta | Preso B | Media — debe llevar el palo a la celda sin ser visto |
-| 3 | **Mapa de conductos** de la oficina del guardia → necesario para navegar el sistema de ventilación sin llegar a un callejón sin salida | Pasillo — oficina del guardia | Cualquier fase (muy arriesgado) | Preso C | Alta — la oficina es zona de alto riesgo |
+**Concepto:** El conducto de ventilación del Taller es lo suficientemente grande para escapar, pero está bloqueado por una pesada rejilla atornillada y un ventilador industrial mortal que está encendido. Los presos deben encontrar las herramientas, identificar y cortar el suministro eléctrico correcto en la otra punta de la prisión, y desatornillar la reja haciendo el menor ruido posible.
 
-**Acción final:** Cuando los 3 objetos están listos, los presos van al taller, abren la rejilla con la herramienta improvisada y navegan los conductos con el mapa. Salen por el techo. Se puede ejecutar en **cualquier fase** — el riesgo está en llegar al taller sin ser detectados.
-**Tiempo de escape final:** 15 seg (animación de apertura + gateo por conducto).
+**Fase 1 — Recolección de herramientas:**
+
+| Objeto | Ubicación | Mecánica | Efecto en inventario |
+|--------|-----------|----------|---------------------|
+| **Pinzas (cizallas)** | Taller — banco de trabajo o cajón (spawn aleatorio) | Interacción rápida (3 seg) | Ocupa 1 slot |
+| **Llave inglesa pesada** | Sala de Electricidad — tablero de herramientas o caja (spawn aleatorio) | Interacción rápida (3 seg) | Ocupa 1 slot. **Preso camina 5% más lento** mientras la lleva |
+
+**Fase 2 — Sabotaje eléctrico (puzzle de tensión):**
+
+Un preso debe ir a la Sala de Electricidad con las **Pinzas** para cortar el cable que alimenta el ventilador del Taller.
+
+- **El problema:** Hay un servidor eléctrico con 4 cajas de fusibles (cables gruesos) etiquetadas 1, 2, 3 y 4. Solo una apaga el ventilador del Taller.
+- **La pista (plano eléctrico):** La información de qué fusible apaga el Taller está oculta en la **Oficina del Guardia**. El preso debe infiltrarse e interactuar con archivadores/cajones para encontrarla (el mueble exacto cambia aleatoriamente en cada partida). Interacción de **1 seg** — es un "hit and run" táctico.
+- **Mecánica de corte (DbD style):**
+  - El preso interactúa con el cable correcto usando las Pinzas.
+  - **Barra de progreso:** 15 seg netos.
+  - **QTEs (Skill Checks):** Aparecen círculos de timing en pantalla.
+    - **Acierto perfecto:** +5% de progreso bonus.
+    - **Fallo:** Descarga eléctrica. Animación interrumpida (stun 2 seg), pierde 10% de progreso, suena un **CHISPAZO** audible a 15m (alerta al guardia).
+- **Riesgo de equivocarse:** Si corta el cable equivocado (ej. el de las celdas o el comedor), el ventilador **NO** se apaga. En su lugar, se apagan las luces de esa otra zona, generando pánico en los NPCs y dándole al guardia una alerta exacta de sabotaje en la Sala de Electricidad.
+
+**Fase 3 — Fuerza bruta silenciosa (desatornillar la rejilla):**
+
+Con el ventilador apagado (las aspas se detienen, el ruido de fondo del Taller cesa), los presos van a la rejilla con la **Llave Inglesa Pesada**.
+
+- **Mecánica de fuerza (DbD style):**
+  - Barra de progreso: **25 seg** para 1 solo jugador.
+  - Animación: El personaje hace fuerza con todo el cuerpo. Rechinido de metal constante.
+  - **QTEs:** Si falla, la llave se zafa y golpea la rejilla. Suena un **¡CLANG!** audible a 25m y la barra retrocede **15%**.
+- **Cooperación (acelerador):** Si un segundo preso se acerca a la rejilla sin objetos e interactúa, entra en animación de "sostener la reja y amortiguar el ruido". Esto **acelera el progreso 50%** (baja a ~12 seg) y **reduce la frecuencia** de los QTEs.
+- **Interrupción:** Si el guardia se acerca, pueden soltar la interacción al instante. La barra de progreso decae lentamente **(-1%/seg)** mientras nadie trabaja.
+
+**Fase 4 — La fuga (ventana de vulnerabilidad):**
+
+Una vez la barra llega a 100%, la reja cae al piso (ruido moderado).
+
+- **Escape:** Interactuar con el hueco abierto inicia animación de trepar al conducto.
+- **Duración:** 4 seg de animación ininterrumpible.
+- **Peligro final:** Durante estos 4 seg la hitbox del preso sigue en la sala. Si el guardia entra en ese preciso instante, puede atraparlo de las piernas y sacarlo del conducto. Una vez terminada la animación, el preso es inmune, desaparece y **gana**.
+
+**Flujo ideal de ejemplo:**
+
+1. **Preso A** se infiltra en la Oficina del Guardia, revisa un archivador (1s) → descubre: "Taller = Fusible 3". Luego, en fase de Trabajo, roba las Pinzas en el Taller.
+2. **Preso B** roba la Llave Inglesa en la Sala de Electricidad durante Hora libre (aprovechando que hay tráfico de NPCs moviéndose entre zonas).
+3. **Preso A** se cuela en la Sala de Electricidad, corta el Fusible 3, completa QTEs → apaga el ventilador.
+4. Ambos se reúnen en el Taller (ej. durante Hora libre, aprovechando que está más vacío). B desatornilla la rejilla mientras A sostiene. Completan la barra y escapan.
+
+**Contramedidas del guardia:**
+- Si cesa el ruido de ventilación del Taller → sabe que la Ruta 1 está en marcha.
+- Si hay apagón en otra zona (ej. luces del comedor parpadean) → sabe que están adivinando fusibles en la Sala de Electricidad.
+- Si patrullando el Taller nota que la rejilla está a medio abrir (tornillos visualmente sueltos) → puede "campear" la zona u observarla por cámaras.
 
 #### Ruta 2 — Túnel (Individual)
 
@@ -235,9 +316,9 @@ Un solo preso excava un túnel desde su celda, saca la tierra disimuladamente y 
 
 | Paso | Objeto | Ubicación | Fase disponible | Quién | Dificultad |
 |------|--------|-----------|-----------------|-------|------------|
-| 1 | **Cuchara** → cavar detrás del inodoro de la celda (requiere 2 fases de siesta para completar la excavación) | Comedor — cajón de cubiertos | Desayuno / Almuerzo / Cena | El mismo preso | Baja — muchos NPCs cerca, fácil disimular |
+| 1 | **Cuchara** → cavar detrás del inodoro de la celda (requiere 2 fases de hora libre en celda para completar la excavación) | Comedor — cajón de cubiertos | Desayuno / Almuerzo / Cena | El mismo preso | Baja — muchos NPCs cerca, fácil disimular |
 | 2 | **Bolsa de lona** → sacar la tierra del túnel durante el patio (vaciarla en esquina NE, punto ciego de cámara) | Lavandería — canastos | Trabajo | El mismo preso | Media — debe ir a la lavandería fuera de su zona |
-| 3 | **Mapa de cloacas** → navegar el túnel subterráneo sin perderse | Pasillo — cuarto de servicio | Limpieza | El mismo preso | Alta — cuarto de servicio es zona restringida |
+| 3 | **Mapa de cloacas** → navegar el túnel subterráneo sin perderse | Sala de Electricidad — armario lateral | Hora libre / Trabajo | El mismo preso | Alta — sala de electricidad es zona restringida |
 
 **Gestión de inventario:** El preso tiene 2 slots pero necesita 3 objetos. Debe usar la cuchara (cavar) y descartarla antes de buscar el mapa. Orden obligatorio: cuchara → bolsa → (vaciar tierra, libera slot) → mapa.
 **Acción final:** De noche (luces apagadas), entra al túnel desde la celda y sale por una alcantarilla fuera del muro este.
@@ -249,7 +330,7 @@ Los presos preparan un dummy para cubrir la ausencia de uno de ellos, sobornan a
 
 | Paso | Objeto/Acción | Ubicación | Fase disponible | Quién | Dificultad |
 |------|---------------|-----------|-----------------|-------|------------|
-| 1 | **Almohada extra + ropa** → fabricar **dummy** y dejarlo en el catre propio (engaña la inspección nocturna del guardia) | Celda / Lavandería | Siesta / Trabajo | Preso A | Media — debe conseguir ropa de la lavandería |
+| 1 | **Almohada extra + ropa** → fabricar **dummy** y dejarlo en el catre propio (engaña la inspección nocturna del guardia) | Celda / Lavandería | Hora libre (sub-zona celda) / Trabajo | Preso A | Media — debe conseguir ropa de la lavandería |
 | 2 | **Sobornar a un NPC** del turno de lavandería con un objeto de valor (cuchara afilada o cigarrillos del patio) → el NPC deja el carro destrabado cerca de la puerta de servicio | Patio → Lavandería | Patio libre → Trabajo | Preso B | Media — debe conseguir el objeto de soborno primero |
 | 3 | **Horario de recolección** de la oficina del guardia → saber exactamente cuándo pasa el carro por la puerta de servicio (ventana de 30 seg) | Pasillo — oficina del guardia | Cualquier fase (muy arriesgado) | Preso C | Alta — la oficina es zona de alto riesgo |
 
@@ -258,23 +339,22 @@ Los presos preparan un dummy para cubrir la ausencia de uno de ellos, sobornan a
 
 #### Comparación de Rutas
 
-| | Ventilación | Túnel | Carro de Ropa |
+| | Ventilación Industrial | Túnel | Carro de Ropa |
 |---|---|---|---|
-| **Tipo** | Cooperativa (3 presos) | Individual (1 preso) | Cooperativa (3 presos) |
-| **Pasos** | 3 | 3 | 3 |
+| **Tipo** | Cooperativa (2–3 presos) | Individual (1 preso) | Cooperativa (3 presos) |
+| **Objetos** | 2 + pista | 3 | 3 |
 | **Cuándo se puede escapar** | Cualquier fase | Luces apagadas | Cena |
-| **Mayor riesgo** | Robar mapa de oficina del guardia | Gestión de inventario (3 objetos, 2 slots) | Robar horario de oficina + inspección del catre |
-| **Escapa** | Todos los presos juntos | Solo 1 preso | Solo 1 preso (los otros cubren) |
-| **Contramedida del guardia** | Ver a alguien en el taller fuera de fase | Escuchar excavación / ver tierra en el patio | Inspeccionar catre de cerca / revisar el carro |
+| **Mayor riesgo** | QTEs ruidosos + infiltrar Oficina | Gestión de inventario (3 objetos, 2 slots) | Robar horario de oficina + inspección del catre |
+| **Escapa** | Todos los presos en la rejilla | Solo 1 preso | Solo 1 preso (los otros cubren) |
+| **Contramedida del guardia** | Ruido de ventilador cesa + CLANG audible | Escuchar excavación / ver tierra en el patio | Inspeccionar catre de cerca / revisar el carro |
 
 ### 5.3 Objetos de Molestia (Tácticos)
 
 | Objeto | Ubicación | Efecto | Duración | Usos |
 |--------|-----------|--------|----------|------|
-| Jabón | Baños (celda) | Guardia tropieza, pierde orientación | 3 seg stun | 1 uso, se consume |
+| Jabón | Lavanderia | Guardia tropieza, pierde orientación | 3 seg stun | 1 uso, se consume |
 | Bandeja de comida | Comedor | Visión del guardia reducida (salpicadura) | 2 seg | 1 uso, se consume |
 | Interruptor de luz | Panel eléctrico (pasillo) | Sector a oscuras, guardia debe reparar | 15 seg o hasta que el guardia repare | Ilimitado pero ruidoso |
-| Dummy (muñeco) | Celda — fabricado con almohada + ropa | Engaña al guardia en inspección nocturna | Hasta que el guardia inspeccione de cerca | 1 uso |
 
 ---
 
@@ -289,8 +369,6 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 | **Falsa alarma** | Activar puerta/ruido a distancia | Guardia recibe alerta falsa en zona lejana | NPCs miran hacia el ruido | Sonido de puerta/golpe |
 | **Apagar luz** | Interruptor en panel eléctrico | Sector a oscuras, debe reparar o patrullar a ciegas | NPCs en esa zona se detienen, confundidos | Apagón visual + murmullos |
 | **Señales entre presos** | Golpear pared / toser (tecla) | Guardia escucha si está cerca (audio 3D) | NPCs no reaccionan | Sonido posicional 3D |
-| **Dummy en la cama** | Colocar en celda propia | Engaña inspección visual nocturna del guardia | — | Bulto visible bajo la sábana |
-
 ---
 
 ## 7. Sistema de Cámaras de Seguridad (Guardia)
@@ -311,8 +389,10 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 |--------|--------------|-------------|
 | CAM-1 | Bloque de celdas (pasillo central) | Interior de las celdas |
 | CAM-2 | Comedor (vista cenital) | Debajo de las mesas |
-| CAM-3 | Taller + lavandería (entrada) | Interior de conductos |
+| CAM-3 | Taller (entrada + zona de trabajo) | Zona del conducto de ventilación (ángulo muerto) |
 | CAM-4 | Patio exterior (esquina SW) | Esquina NE (muro perimetral) |
+
+> **Nota:** La Sala de Electricidad y la Lavandería **no tienen cámaras**. El guardia debe patrullarlas en persona.
 
 ### 7.3 Contramedidas de los Presos
 
@@ -327,30 +407,39 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 ### 8.1 Layout General
 
 ```
-                    ┌──────────────────────────┐
-                    │      PATIO EXTERIOR       │
-                    │   (punto ciego NE →) ○    │
-                    │                          │
-                    └──────────┬───────────────┘
-                               │
-    ┌──────────────┬───────────┼───────────────┬──────────────┐
-    │              │           │               │              │
-    │   TALLER     │  PASILLO PRINCIPAL        │  LAVANDERÍA  │
-    │              │  (panel eléctrico,        │  (desagüe,   │
-    │  (herram.)   │   oficina guardia,        │   canastos)  │
-    │              │   cámaras)                │              │
-    ├──────────────┤           │               ├──────────────┤
-    │              │           │               │              │
-    │   COMEDOR    │           │               │   BAÑOS      │
-    │              │           │               │              │
-    └──────────────┘           │               └──────────────┘
-                               │
-                    ┌──────────┴───────────────┐
-                    │    BLOQUE DE CELDAS       │
-                    │    (2 pisos, 20 celdas)   │
-                    │    Pasillo central        │
-                    └──────────────────────────┘
+┌──────────────────┬───────────────────────────────┬──────────────┐
+│                  │                               │              │
+│  OFICINA DEL     │     BLOQUE DE CELDAS          │   TALLER     │
+│  GUARDIA         │     (2 pisos, 20 celdas)      │              │
+│  (cámaras,       │     Pasillo central           │  (herram.,   │
+│   archivos)      │                               │   ventilac.) │
+│                  │                               │              │
+├──────────────────┤                               ├──────────────┤
+│                  │                               │              │
+│                  │     P A S I L L O             │              │
+│                  │                               │              │
+├──────────────────┤     (conecta todo,            ├──────────────┤
+│                  │      alto tráfico NPC)        │              │
+│  LAVANDERÍA      │                               │   COMEDOR    │
+│                  │                               │              │
+│  (lavadoras,     ├───────────────────────────────┤  (mesas,     │
+│   canastos,      │                               │   counter,   │
+│   carro ropa)    │     SALA DE ELECTRICIDAD      │   depósito)  │
+│                  │     (servidores, fusibles)     │              │
+├──────────────────┴───────────────────────────────┴──────────────┤
+│                                                                 │
+│                       PATIO EXTERIOR                            │
+│               (bancos, ejercicio, cartas)                       │
+│                     (punto ciego NE →) ○                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+**Distribución espacial:**
+- **Fila norte:** Oficina del guardia — Bloque de celdas — Taller
+- **Centro:** Pasillo principal (conecta todas las zonas)
+- **Fila sur:** Lavandería — Sala de electricidad — Comedor
+- **Borde sur:** Patio exterior
 
 ### 8.2 Zonas Detalladas
 
@@ -366,9 +455,9 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 - **Punto de interés:** Debajo de las mesas es punto ciego de la cámara.
 
 #### Taller
-- **Estructura:** Zona de carpintería con bancos, zona de metal con herramientas, conductos de ventilación visibles en el techo.
-- **Objetos interactuables:** Destornillador (escape ruta 1), palo de madera (escape ruta 1), cajones con llave.
-- **Punto de interés:** Rejilla del conducto de ventilación con tornillos de seguridad (ruta de escape 1). Requiere herramienta improvisada para abrirla.
+- **Estructura:** Zona de carpintería con bancos, zona de metal con herramientas, conducto de ventilación industrial visible en el techo con ventilador encendido (ruido constante de fondo).
+- **Objetos interactuables:** Pinzas/cizallas (escape ruta 1, spawn aleatorio en banco o cajón), cajones con llave.
+- **Punto de interés:** Rejilla del conducto de ventilación con 4 pernos de seguridad (ruta de escape 1). El ventilador industrial debe estar apagado primero. Requiere llave inglesa pesada para desatornillar.
 
 #### Lavandería
 - **Estructura:** Canastos grandes, máquinas industriales, tuberías visibles, puerta de servicio hacia exterior, carro de ropa sucia.
@@ -380,28 +469,41 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 - **Objetos interactuables:** Tierra cavable en esquina NE (punto ciego).
 - **Punto de interés:** Zona más amplia, difícil para el guardia cubrir todo.
 
+#### Oficina del Guardia
+- **Estructura:** Zona de alto riesgo en la esquina noroeste. Escritorio, archivadores, monitores de cámaras.
+- **Objetos interactuables:** Archivadores/cajones (plano eléctrico ruta 1 — el mueble que lo contiene cambia aleatoriamente cada partida), horario de recolección (ruta 3).
+- **Punto de interés:** Territorio del guardia — entrar es extremadamente arriesgado. Interacción rápida (1 seg) tipo "hit and run".
+
+#### Sala de Electricidad
+- **Estructura:** Sala técnica entre la lavandería y el comedor. Contiene servidores eléctricos con 4 cajas de fusibles etiquetadas (1, 2, 3, 4).
+- **Objetos interactuables:** Cables/fusibles (sabotaje ruta 1 — cortar el cable correcto apaga el ventilador del taller). Panel eléctrico (apagar luces de sectores — molestia táctica).
+- **Punto de interés:** Cortar el cable equivocado apaga las luces de otra zona, generando pánico en NPCs y alertando al guardia.
+
 #### Pasillo Principal
-- **Estructura:** Conecta todas las zonas. Contiene oficina del guardia, panel eléctrico, sistema de cámaras.
-- **Objetos interactuables:** Panel eléctrico (apagar luces), oficina del guardia (mapa de conductos ruta 1, horario de recolección ruta 3 — muy arriesgado), cuarto de servicio (mapa de cloacas ruta 2).
+- **Estructura:** Conecta todas las zonas. Alto tráfico de NPCs durante transiciones.
+- **Objetos interactuables:** —
 - **Punto de interés:** Zona de alto tráfico NPC, fácil mezclarse pero también fácil ser visto.
 
 ### 8.3 Rutas de Escape (Mapa Detallado)
 
-#### Ruta 1 — Conducto de Ventilación (Cooperativa)
+#### Ruta 1 — La Rejilla de Ventilación Industrial (Cooperativa)
 ```
-Taller (robar destornillador) + Taller (robar palo de madera) → 
-Celda (fabricar herramienta improvisada) + Oficina guardia (robar mapa de conductos) →
-Taller (abrir rejilla con herramienta) → Conducto (navegar con mapa) → Techo → Exterior
+Oficina guardia (leer plano eléctrico, 1s) → descubrir qué fusible apaga el Taller
+Taller (robar pinzas, 3s) + Sala de electricidad (robar llave inglesa, 3s) →
+Sala de electricidad (cortar fusible correcto con pinzas, 15s + QTEs) → ventilador se apaga →
+Taller (desatornillar rejilla con llave inglesa, 25s solo / 12s cooperativo + QTEs) →
+Taller (trepar al conducto, 4s animación) → Exterior
 ```
-- **Acciones requeridas:** 3 (una por jugador).
-- **Cuándo se puede ejecutar:** Cualquier fase — el riesgo es llegar al taller sin ser detectado.
-- **Tiempo de escape final:** 15 seg.
+- **Objetos requeridos:** 2 (pinzas + llave inglesa). Pista separada (plano eléctrico).
+- **Jugadores recomendados:** 2–3.
+- **Cuándo se puede ejecutar:** Cualquier fase — el riesgo es el ruido y el tiempo expuesto.
+- **Tiempo de escape final:** 4 seg (trepar al conducto).
 
 #### Ruta 2 — Túnel (Individual)
 ```
-Comedor (robar cuchara) → Celda (cavar túnel, 2 fases de siesta) →
+Comedor (robar cuchara) → Celda (cavar túnel, 2 fases de hora libre en celda) →
 Lavandería (robar bolsa de lona) → Patio NE (vaciar tierra, punto ciego) →
-Cuarto de servicio (robar mapa de cloacas) → Celda (entrar al túnel de noche) →
+Sala de electricidad (robar mapa de cloacas) → Celda (entrar al túnel de noche) →
 Cloacas (navegar con mapa) → Exterior muro este
 ```
 - **Acciones requeridas:** 3 (un solo preso, gestión de inventario forzada por 2 slots).
@@ -475,7 +577,7 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 
 | Fase | Iluminación |
 |------|-------------|
-| Día (formación → cena) | Fluorescente interior, luz natural en patio |
+| Día (inicio → cena) | Fluorescente interior, luz natural en patio |
 | Luces apagadas | Oscuridad casi total, linterna del guardia es la única fuente principal |
 | Cámaras | Luz roja cuando activas, verde cuando inactivas |
 
@@ -829,7 +931,7 @@ Siempre **20 personajes en total** para mantener consistencia visual y de perfor
 
 | Término | Definición |
 |---------|-----------|
-| **Fase** | Período de tiempo dentro de la jornada (formación, desayuno, etc.) |
+| **Fase** | Período de tiempo dentro de la jornada (inicio, desayuno, trabajo, etc.) |
 | **Rutina** | Comportamiento esperado de un preso/NPC durante una fase específica |
 | **Señalar** | Acción del guardia para marcar a alguien como sospechoso e iniciar persecución |
 | **Camuflaje** | Acción de mezclarse con NPCs o volver a la rutina para perder al guardia |

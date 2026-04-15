@@ -159,6 +159,7 @@ namespace Jailbreak.NPC
             Debug.Log($"[JAIL-DEBUG] ApplyAssignment: npc={assignment.npcId} action={assignment.actionId} " +
                       $"wpId={assignment.waypointId ?? "NULL"} " +
                       $"wpChain={( assignment.waypointChain != null ? string.Join(",", assignment.waypointChain) : "NULL" )} " +
+                      $"seq={(assignment.actionSequence != null ? assignment.actionSequence.Length + " steps" : "none")} " +
                       $"anim={assignment.animTrigger} dur={assignment.duration:F1}s loop={assignment.loop}");
 
             var controller = GetOrCreateController(assignment.npcId);
@@ -168,7 +169,22 @@ namespace Jailbreak.NPC
                 return;
             }
 
+            // Wire up partner resolver so social actions can navigate to partner's Transform
+            controller.SetPartnerResolver(ResolvePartnerTransform);
             controller.AssignAction(assignment, waypointRegistry);
+        }
+
+        /// <summary>
+        /// Resolves an NPC's social partner ID to the partner's Transform.
+        /// Used by NPCBehaviorController for social actions (greet_neighbor, talk_standing, etc.)
+        /// where the NPC navigates to the partner's position instead of a fixed waypoint.
+        /// </summary>
+        private Transform ResolvePartnerTransform(string partnerId)
+        {
+            if (string.IsNullOrEmpty(partnerId)) return null;
+
+            var partnerGo = FindNPCGameObject(partnerId);
+            return partnerGo?.transform;
         }
 
         // ─── Private: Controller Pool ─────────────────────────────────────────
