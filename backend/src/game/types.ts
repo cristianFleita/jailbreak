@@ -333,6 +333,99 @@ export interface MapBounds {
 // Configuration / Tuning
 // ============================================================================
 
+// ============================================================================
+// NPC Personality & Emergent Behavior System
+// ============================================================================
+
+/**
+ * Archetype determines base behavior tendencies.
+ * Each NPC gets one at game start — it biases action weights, not overrides them.
+ */
+export type NPCArchetype =
+  | 'troublemaker'   // provokes guard, starts commotions, higher agitation
+  | 'loner'          // prefers solo actions, avoids social, wanders alone
+  | 'social'         // seeks groups, talks often, pairs up frequently
+  | 'worker'         // high work ethic, stays on task, rarely idles
+  | 'athletic'       // exercises, shadowboxes, runs perimeter
+  | 'nervous'        // fidgets, paces, reacts strongly to guard proximity
+  | 'schemer'        // lingers near escape routes, whispers, acts suspicious
+
+/**
+ * Dynamic mood that shifts based on game events and time.
+ * Mood modifies action weight multipliers per tick.
+ */
+export type NPCMood =
+  | 'calm'           // default — follows routine normally
+  | 'bored'          // seeks variety, switches actions faster
+  | 'agitated'       // paces, fidgets, may provoke guard
+  | 'nervous'        // avoids guard, stays in groups, fidgets
+  | 'rebellious'     // anti-guard actions unlocked, confrontational
+  | 'social'         // seeks conversation partners actively
+  | 'tired'          // slower movement, prefers sitting/lying
+
+/** Mood transition trigger — what caused the mood shift. */
+export type MoodTrigger =
+  | 'time_decay'     // natural drift toward calm over time
+  | 'guard_nearby'   // guard entered NPC's zone
+  | 'guard_left'     // guard left NPC's zone
+  | 'caught_witness' // NPC saw a player get caught
+  | 'phase_change'   // new phase started
+  | 'social_interaction' // finished talking with someone
+  | 'boredom'        // stayed on same action too long
+  | 'riot_brewing'   // riot meter is high
+
+/** Full NPC personality profile — assigned at game start, persists for match. */
+export interface NPCProfile {
+  npcId: string
+  archetype: NPCArchetype
+  mood: NPCMood
+  moodIntensity: number        // 0.0–1.0 — how strongly mood affects weights
+  actionHistory: string[]      // last 5 action IDs (prevents repetition)
+  socialPreference: string[]   // NPC IDs this NPC prefers to pair with (2-3)
+  lastMoodChange: number       // timestamp
+  guardProximityTimer: number  // seconds guard has been nearby
+  spontaneousTimer: number     // countdown to next spontaneous action check
+}
+
+/**
+ * Emergent action — an unscheduled behavior an NPC can trigger
+ * based on mood, archetype, and environmental context.
+ */
+export interface EmergentAction {
+  actionId: string
+  animTrigger: string
+  type: 'anti_guard' | 'environmental' | 'social_reactive' | 'self_expression'
+  duration: number
+  waypointTag?: string
+  requiresMood?: NPCMood[]     // only available in these moods
+  requiresArchetype?: NPCArchetype[] // only available for these archetypes
+  guardProximityRequired?: boolean    // needs guard nearby
+  cooldownSeconds: number      // per-NPC cooldown after use
+  probability: number          // base chance per check (0.0–1.0)
+}
+
+/** Emitted to clients when an NPC triggers an emergent behavior. */
+export interface NPCEmergentPayload {
+  npcId: string
+  actionId: string
+  animTrigger: string
+  waypointId?: string
+  duration: number
+  targetNpcId?: string         // for social reactive actions
+  mood: NPCMood
+}
+
+/** Emitted to clients when an NPC's visible behavior changes noticeably. */
+export interface NPCMoodShiftPayload {
+  npcId: string
+  newMood: NPCMood
+  animHint: string             // idle animation that reflects mood (fidget, pace, etc.)
+}
+
+// ============================================================================
+// Configuration / Tuning
+// ============================================================================
+
 export interface GameConfig {
   tickRate: number // ticks per second (default 20)
   tickInterval: number // ms per tick (default 50)

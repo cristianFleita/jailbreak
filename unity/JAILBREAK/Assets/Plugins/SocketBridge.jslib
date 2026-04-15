@@ -172,8 +172,16 @@ mergeInto(LibraryManager.library, {
         window.unityInstance.SendMessage(window._jbGoName, 'OnNPCReassign', JSON.stringify(data));
       });                                                                                                                                                        
       
-      window._jbSocket.on('phase:zone_check', function (data) {                                                                                                  
+      window._jbSocket.on('phase:zone_check', function (data) {
         window.unityInstance.SendMessage(window._jbGoName, 'OnPhaseZoneCheck', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('npc:emergent', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnNPCEmergent', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('npc:mood_shift', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnNPCMoodShift', JSON.stringify(data));
       });
 
     } // end doConnect

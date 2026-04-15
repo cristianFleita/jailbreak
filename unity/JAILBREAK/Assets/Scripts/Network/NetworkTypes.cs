@@ -355,4 +355,28 @@ namespace Jailbreak.Network
         public string               zone;
         public NPCAssignmentData[]  npcAssignments;
     }
+
+    // ─── NPC Personality & Emergent Behavior ─────────────────────────────
+
+    /// <summary>Emitted when an NPC triggers a spontaneous/emergent behavior.</summary>
+    [Serializable]
+    public class NPCEmergentData
+    {
+        public string npcId;
+        public string actionId;
+        public string animTrigger;
+        public string waypointId;
+        public float  duration;
+        public string targetNpcId;
+        public string mood;
+    }
+
+    /// <summary>Emitted when an NPC's mood visibly shifts (affects idle animation).</summary>
+    [Serializable]
+    public class NPCMoodShiftData
+    {
+        public string npcId;
+        public string newMood;
+        public string animHint;
+    }
 }

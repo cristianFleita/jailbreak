@@ -21,6 +21,7 @@ import {
   NPCReassignPayload,
   PhaseZoneCheckPayload,
 } from '../types.js'
+import { NPCPersonalitySystem } from './npc-personality.js'
 
 // ─── Tuning Knobs ─────────────────────────────────────────────────────────────
 
@@ -128,6 +129,13 @@ const JAIL_PHASES: JailPhaseDef[] = [
       { actionId: 'yard_lean_wall',          type: 'IDLE',    animTrigger: 'lean_wall',        waypointTag: 'yard_wall_lean_',         weight: 8,  minDuration: 15, maxDuration: 40 },
       { actionId: 'yard_shadow_boxing',      type: 'IDLE',    animTrigger: 'shadowbox',        waypointTag: 'yard_exercise_area_',     weight: 5,  minDuration: 10, maxDuration: 20 },
       { actionId: 'yard_kick_ball',          type: 'SOCIAL',  animTrigger: 'kick',             waypointTag: 'yard_ball_spot',          weight: 2,  minDuration: 20, maxDuration: 40 },
+      // Patio — acciones de personalidad (sesgadas por archetype/mood)
+      { actionId: 'yard_pushups',            type: 'IDLE',    animTrigger: 'PushUp',           waypointTag: 'yard_exercise_area_',     weight: 8,  minDuration: 10, maxDuration: 25 },
+      { actionId: 'yard_pace_nervous',       type: 'IDLE',    animTrigger: 'pace',             waypointTag: 'yard_perimeter_',         weight: 5,  minDuration: 8,  maxDuration: 20 },
+      { actionId: 'yard_stare_wall',         type: 'IDLE',    animTrigger: 'idle_window',      waypointTag: 'yard_wall_lean_',         weight: 4,  minDuration: 10, maxDuration: 30 },
+      { actionId: 'yard_whisper_secret',     type: 'SOCIAL',  animTrigger: 'whisper',          waypointTag: 'yard_conversation_spot_', weight: 6,  minDuration: 8,  maxDuration: 15 },
+      { actionId: 'yard_argue_loud',         type: 'SOCIAL',  animTrigger: 'argue',            waypointTag: 'yard_conversation_spot_', weight: 3,  minDuration: 6,  maxDuration: 12 },
+      { actionId: 'yard_sit_floor',          type: 'IDLE',    animTrigger: 'sit_floor',        waypointTag: 'yard_wall_lean_',         weight: 4,  minDuration: 12, maxDuration: 30 },
       // Comedor (charlar, no comer)
       { actionId: 'free_cafe_sit_talk',      type: 'SOCIAL',  animTrigger: 'talk_seated',      waypointTag: 'cafeteria_seat_',         weight: 40, minDuration: 15, maxDuration: 40 },
       { actionId: 'free_cafe_sit_idle',      type: 'IDLE',    animTrigger: 'sit_idle',         waypointTag: 'cafeteria_seat_',         weight: 35, minDuration: 10, maxDuration: 30 },
@@ -140,6 +148,9 @@ const JAIL_PHASES: JailPhaseDef[] = [
       // Celdas (descanso — NPC vuelve a su celda asignada)
       { actionId: 'cell_lie_bed',            type: 'IDLE',    animTrigger: 'lie_down',         waypointTag: 'cell_bed_',               weight: 60, minDuration: 20, maxDuration: 60 },
       { actionId: 'cell_sit_bed',            type: 'IDLE',    animTrigger: 'sit_bed_edge',     waypointTag: 'cell_bed_',               weight: 40, minDuration: 15, maxDuration: 40 },
+      // Celdas — acciones de personalidad
+      { actionId: 'cell_read_book',          type: 'IDLE',    animTrigger: 'read_book',        waypointTag: 'cell_bed_',               weight: 20, minDuration: 15, maxDuration: 40 },
+      { actionId: 'cell_idle_window',        type: 'IDLE',    animTrigger: 'idle_window',      waypointTag: 'cell_bed_',               weight: 15, minDuration: 10, maxDuration: 30 },
     ],
   },
   {
@@ -188,6 +199,13 @@ const JAIL_PHASES: JailPhaseDef[] = [
       { actionId: 'yard_lean_wall',          type: 'IDLE',    animTrigger: 'lean_wall',        waypointTag: 'yard_wall_lean_',         weight: 8,  minDuration: 15, maxDuration: 40 },
       { actionId: 'yard_shadow_boxing',      type: 'IDLE',    animTrigger: 'shadowbox',        waypointTag: 'yard_exercise_area_',     weight: 5,  minDuration: 10, maxDuration: 20 },
       { actionId: 'yard_kick_ball',          type: 'SOCIAL',  animTrigger: 'kick',             waypointTag: 'yard_ball_spot',          weight: 2,  minDuration: 20, maxDuration: 40 },
+      // Patio — acciones de personalidad (sesgadas por archetype/mood)
+      { actionId: 'yard_pushups',            type: 'IDLE',    animTrigger: 'PushUp',           waypointTag: 'yard_exercise_area_',     weight: 8,  minDuration: 10, maxDuration: 25 },
+      { actionId: 'yard_pace_nervous',       type: 'IDLE',    animTrigger: 'pace',             waypointTag: 'yard_perimeter_',         weight: 5,  minDuration: 8,  maxDuration: 20 },
+      { actionId: 'yard_stare_wall',         type: 'IDLE',    animTrigger: 'idle_window',      waypointTag: 'yard_wall_lean_',         weight: 4,  minDuration: 10, maxDuration: 30 },
+      { actionId: 'yard_whisper_secret',     type: 'SOCIAL',  animTrigger: 'whisper',          waypointTag: 'yard_conversation_spot_', weight: 6,  minDuration: 8,  maxDuration: 15 },
+      { actionId: 'yard_argue_loud',         type: 'SOCIAL',  animTrigger: 'argue',            waypointTag: 'yard_conversation_spot_', weight: 3,  minDuration: 6,  maxDuration: 12 },
+      { actionId: 'yard_sit_floor',          type: 'IDLE',    animTrigger: 'sit_floor',        waypointTag: 'yard_wall_lean_',         weight: 4,  minDuration: 12, maxDuration: 30 },
       // Comedor (charlar, no comer)
       { actionId: 'free_cafe_sit_talk',      type: 'SOCIAL',  animTrigger: 'talk_seated',      waypointTag: 'cafeteria_seat_',         weight: 40, minDuration: 15, maxDuration: 40 },
       { actionId: 'free_cafe_sit_idle',      type: 'IDLE',    animTrigger: 'sit_idle',         waypointTag: 'cafeteria_seat_',         weight: 35, minDuration: 10, maxDuration: 30 },
@@ -200,6 +218,9 @@ const JAIL_PHASES: JailPhaseDef[] = [
       // Celdas (descanso)
       { actionId: 'cell_lie_bed',            type: 'IDLE',    animTrigger: 'lie_down',         waypointTag: 'cell_bed_',               weight: 60, minDuration: 20, maxDuration: 60 },
       { actionId: 'cell_sit_bed',            type: 'IDLE',    animTrigger: 'sit_bed_edge',     waypointTag: 'cell_bed_',               weight: 40, minDuration: 15, maxDuration: 40 },
+      // Celdas — acciones de personalidad
+      { actionId: 'cell_read_book',          type: 'IDLE',    animTrigger: 'read_book',        waypointTag: 'cell_bed_',               weight: 20, minDuration: 15, maxDuration: 40 },
+      { actionId: 'cell_idle_window',        type: 'IDLE',    animTrigger: 'idle_window',      waypointTag: 'cell_bed_',               weight: 15, minDuration: 10, maxDuration: 30 },
     ],
   },
   {
@@ -285,9 +306,9 @@ const SUBZONE_ACTIONS: Record<string, string[]> = {
   taller:     ['work_use_workbench', 'work_carry_box', 'work_inspect_equipment', 'work_talk_coworker'],
   lavanderia: ['laundry_load_washer', 'laundry_fold_clothes', 'laundry_carry_basket', 'laundry_idle_check'],
   // Fases 4 y 7 — Hora libre
-  patio:      ['yard_walk_perimeter', 'yard_sit_bench', 'yard_exercise', 'yard_conversation_group', 'yard_play_cards', 'yard_lean_wall', 'yard_shadow_boxing', 'yard_kick_ball'],
+  patio:      ['yard_walk_perimeter', 'yard_sit_bench', 'yard_exercise', 'yard_conversation_group', 'yard_play_cards', 'yard_lean_wall', 'yard_shadow_boxing', 'yard_kick_ball', 'yard_pushups', 'yard_pace_nervous', 'yard_stare_wall', 'yard_whisper_secret', 'yard_argue_loud', 'yard_sit_floor'],
   comedor:    ['free_cafe_sit_talk', 'free_cafe_sit_idle', 'free_cafe_stand_chat'],
-  celdas:     ['cell_lie_bed', 'cell_sit_bed'],
+  celdas:     ['cell_lie_bed', 'cell_sit_bed', 'cell_read_book', 'cell_idle_window'],
 }
 
 // ─── Zone Map (for player zone validation) ────────────────────────────────────
@@ -328,8 +349,17 @@ export class JailRoutineSystem {
   // Waypoint occupancy: waypointId → set of npcIds
   private waypointOccupants = new Map<string, Set<string>>()
 
+  // Personality system — modifies action weights per NPC archetype/mood
+  private personality: NPCPersonalitySystem
+
   constructor(private state: GameRoomState) {
     this.assignCells()
+    this.personality = new NPCPersonalitySystem(state)
+  }
+
+  /** Returns the personality system for external event hooks (guard catches, etc.) */
+  getPersonalitySystem(): NPCPersonalitySystem {
+    return this.personality
   }
 
   /** Called when the game transitions to active state. */
@@ -353,6 +383,7 @@ export class JailRoutineSystem {
     this.checkPhaseTimer()
     this.checkReassignInterval()
     this.checkZoneViolations()
+    this.personality.update(tickDelta)
   }
 
   getCurrentJailPhase(): JailPhaseNumber { return this.currentPhase }
@@ -398,6 +429,7 @@ export class JailRoutineSystem {
     this.zoneCheckedPlayers.clear()
     this.releaseAllWaypoints()
     this.npcSubZones.clear()    // reset sub-zone locks for new phase
+    this.personality.onPhaseChanged()
     this.emitPhaseStart()
     console.log(`[JAIL] Phase ${this.currentPhase} (${this.getPhaseDef(this.currentPhase)!.name})`)
   }
@@ -469,12 +501,17 @@ export class JailRoutineSystem {
 
       const subZone    = this.npcSubZones.get(npcId)
       const actionPool = this.getActionPool(def, subZone)
-      const action     = this.weightedRandom(actionPool)
+      // Apply personality-weighted action selection per NPC
+      const personalizedPool = this.personality.applyWeightModifiers(npcId, actionPool)
+      const action     = this.weightedRandom(personalizedPool)
 
       if (!action) {
         assignments.push(this.buildIdleAssignment(npcId))
         continue
       }
+
+      // Record action for anti-repetition
+      this.personality.recordAction(npcId, action.actionId)
 
       // LOOPING: skip transition prefix — the loop itself is already visually organic
       if (action.loop && action.chainLength) {
@@ -562,125 +599,146 @@ export class JailRoutineSystem {
       if (paired.has(npcId)) continue
 
       const steps: NPCActionStep[] = []
-      const cellNum = this.npcCells.get(npcId) ?? '00'
-      const spawnWp = `cell_door_exit_${cellNum}`
 
-      // Step 1: Spawn at cell door (brief idle, 1-3s to stagger departures)
-      steps.push({
-        actionId: 'spawn_at_door',
-        animTrigger: 'Idle',
-        waypointId: spawnWp,
-        duration: 1 + Math.random() * 2,
-      })
+      // ─── IMMEDIATE MOVEMENT ─────────────────────────────────────────────
+      // NPCs do NOT idle at their cell door. The first step is always a walk
+      // to a meeting point (hallway, corridor, neighbor's cell). This makes
+      // all 20 entities start moving from frame 1.
+      //
+      // Behavior distribution:
+      //   35% — walk to hallway meeting point, greet a partner there, chat, then cafeteria
+      //   25% — walk to a neighbor's cell, salute, walk together to corridor, then cafeteria
+      //   20% — walk to corridor, stretch/look around while walking, then cafeteria
+      //   12% — walk directly toward cafeteria (early bird) with a mid-walk yawn/stretch
+      //    8% — walk to hallway, idle briefly (loner), then cafeteria
 
-      // Step 2: Random social or idle behavior near cells
       const roll = Math.random()
+
       if (roll < 0.35 && !paired.has(npcId)) {
-        // Greet neighbor (social — navigate to partner position)
+        // ── Meet at hallway, chat, walk to cafeteria together ──
         const partner = this.findPartner(shuffled, paired, npcId)
         if (partner) {
-          steps.push({
-            actionId: 'greet_neighbor',
-            animTrigger: 'Salute',
-            duration: 3 + Math.random(),
-            socialPartnerId: partner,
-          })
-          // Partner gets a mirrored sequence
-          const partnerCellNum = this.npcCells.get(partner) ?? '00'
-          const partnerSpawnWp = `cell_door_exit_${partnerCellNum}`
-          const partnerSteps: NPCActionStep[] = [
-            { actionId: 'spawn_at_door', animTrigger: 'Idle', waypointId: partnerSpawnWp, duration: 1 + Math.random() * 2 },
-            { actionId: 'greet_neighbor', animTrigger: 'Salute', duration: 3 + Math.random(), socialPartnerId: npcId },
-          ]
-          // Partner also walks to cafeteria
-          const partnerEntranceWp = this.reserveWaypoint(partner, 'cafeteria_entrance_spot_')
-          partnerSteps.push({
-            actionId: 'walk_to_cafeteria_area',
-            animTrigger: 'walk_slow',
-            waypointId: partnerEntranceWp ?? undefined,
-            duration: 0,
-          })
-          // Maybe partner chats at door too
-          if (Math.random() < 0.4) {
-            partnerSteps.push({
-              actionId: 'talk_at_cafeteria_door',
-              animTrigger: 'talk_standing',
-              waypointId: partnerEntranceWp ?? undefined,
-              duration: 6 + Math.random(),
-              socialPartnerId: npcId,
-            })
+          const meetingWp = this.reserveWaypoint(npcId, 'hallway_slot_')
+          const partnerMeetWp = meetingWp ?? this.reserveWaypoint(npcId, 'corridor_idle_')
+
+          // NPC walks to meeting point immediately
+          if (partnerMeetWp) {
+            steps.push({ actionId: 'walk_to_meeting', animTrigger: 'walk_slow', waypointId: partnerMeetWp, duration: 0 })
+            steps.push({ actionId: 'greet_at_meeting', animTrigger: 'Salute', waypointId: partnerMeetWp, duration: 2 + Math.random() * 1.5, socialPartnerId: partner })
+            steps.push({ actionId: 'chat_at_meeting', animTrigger: 'talk_standing', waypointId: partnerMeetWp, duration: 3 + Math.random() * 4, socialPartnerId: partner })
           }
-          const partnerTotalDur = partnerSteps.reduce((s, st) => s + st.duration, 0) + 5 // +5s walking estimate
-          assignments.push({
-            npcId: partner,
-            actionId: 'phase1_sequence',
-            animTrigger: 'Idle',
-            duration: Math.min(partnerTotalDur, def.duration),
-            actionSequence: partnerSteps,
-          })
-          paired.add(partner)
-          paired.add(npcId)
-          this.npcPartners.set(npcId, partner)
-          this.npcPartners.set(partner, npcId)
-        }
-      } else if (roll < 0.55) {
-        // Talk standing with neighbor (longer social)
-        const partner = this.findPartner(shuffled, paired, npcId)
-        if (partner) {
-          steps.push({
-            actionId: 'talk_standing',
-            animTrigger: 'talk_standing',
-            duration: 6 + Math.random(),
-            socialPartnerId: partner,
-          })
-          // Simple partner sequence
+
+          // Partner walks to the same meeting point
           const partnerCellNum = this.npcCells.get(partner) ?? '00'
           const partnerSpawnWp = `cell_door_exit_${partnerCellNum}`
+          const partnerSteps: NPCActionStep[] = []
+          if (partnerMeetWp) {
+            partnerSteps.push({ actionId: 'walk_to_meeting', animTrigger: 'walk_slow', waypointId: partnerMeetWp, duration: 0 })
+            partnerSteps.push({ actionId: 'greet_at_meeting', animTrigger: 'Salute', waypointId: partnerMeetWp, duration: 2 + Math.random() * 1.5, socialPartnerId: npcId })
+            partnerSteps.push({ actionId: 'chat_at_meeting', animTrigger: 'talk_standing', waypointId: partnerMeetWp, duration: 3 + Math.random() * 4, socialPartnerId: npcId })
+          }
+          // Both walk to cafeteria
           const partnerEntranceWp = this.reserveWaypoint(partner, 'cafeteria_entrance_spot_')
-          const partnerSteps: NPCActionStep[] = [
-            { actionId: 'spawn_at_door', animTrigger: 'Idle', waypointId: partnerSpawnWp, duration: 1 + Math.random() * 2 },
-            { actionId: 'talk_standing', animTrigger: 'talk_standing', duration: 6 + Math.random(), socialPartnerId: npcId },
-            { actionId: 'walk_to_cafeteria_area', animTrigger: 'walk_slow', waypointId: partnerEntranceWp ?? undefined, duration: 0 },
-          ]
+          partnerSteps.push({ actionId: 'walk_to_cafeteria_area', animTrigger: 'walk_slow', waypointId: partnerEntranceWp ?? undefined, duration: 0 })
+          if (Math.random() < 0.5) {
+            partnerSteps.push({ actionId: 'talk_at_cafeteria_door', animTrigger: 'talk_standing', waypointId: partnerEntranceWp ?? undefined, duration: 3 + Math.random() * 3, socialPartnerId: npcId })
+          }
           const partnerTotalDur = partnerSteps.reduce((s, st) => s + st.duration, 0) + 5
           assignments.push({
-            npcId: partner,
-            actionId: 'phase1_sequence',
-            animTrigger: 'Idle',
-            duration: Math.min(partnerTotalDur, def.duration),
-            actionSequence: partnerSteps,
+            npcId: partner, actionId: 'phase1_sequence', animTrigger: 'Idle',
+            duration: Math.min(partnerTotalDur, def.duration), actionSequence: partnerSteps,
           })
-          paired.add(partner)
-          paired.add(npcId)
-          this.npcPartners.set(npcId, partner)
-          this.npcPartners.set(partner, npcId)
+          paired.add(partner); paired.add(npcId)
+          this.npcPartners.set(npcId, partner); this.npcPartners.set(partner, npcId)
         }
-      } else if (roll < 0.70) {
-        // Idle stretch
-        steps.push({ actionId: 'idle_stretch', animTrigger: 'stretch', duration: 2 + Math.random() * 2 })
-      } else if (roll < 0.80) {
-        // Idle yawn
-        steps.push({ actionId: 'idle_yawn', animTrigger: 'yawn', duration: 1 + Math.random() * 2 })
-      }
-      // else: skip straight to walking (the "just walks to cafeteria" group)
+      } else if (roll < 0.60 && !paired.has(npcId)) {
+        // ── Walk to neighbor's cell, salute, walk together through corridor ──
+        const partner = this.findPartner(shuffled, paired, npcId)
+        if (partner) {
+          const partnerCellNum = this.npcCells.get(partner) ?? '00'
+          const partnerDoorWp = `cell_door_exit_${partnerCellNum}`
 
-      // Step 3: Walk to cafeteria entrance
+          // NPC walks to partner's cell door
+          steps.push({ actionId: 'walk_to_neighbor', animTrigger: 'walk_slow', waypointId: partnerDoorWp, duration: 0 })
+          steps.push({ actionId: 'greet_neighbor', animTrigger: 'Salute', waypointId: partnerDoorWp, duration: 1.5 + Math.random() * 1.5, socialPartnerId: partner })
+
+          // Walk together through corridor
+          const corridorWp = this.reserveWaypoint(npcId, 'corridor_idle_')
+          if (corridorWp) {
+            steps.push({ actionId: 'walk_corridor_together', animTrigger: 'walk_slow', waypointId: corridorWp, duration: 0 })
+            steps.push({ actionId: 'corridor_chat', animTrigger: 'talk_standing', waypointId: corridorWp, duration: 3 + Math.random() * 3, socialPartnerId: partner })
+          }
+
+          // Partner mirrors: walks to corridor too
+          const partnerCorridorWp = this.reserveWaypoint(partner, 'corridor_idle_')
+          const partnerEntranceWp = this.reserveWaypoint(partner, 'cafeteria_entrance_spot_')
+          const partnerSteps: NPCActionStep[] = []
+          // Partner walks to meeting in corridor (or same corridor wp)
+          if (partnerCorridorWp) {
+            partnerSteps.push({ actionId: 'walk_to_corridor', animTrigger: 'walk_slow', waypointId: partnerCorridorWp, duration: 0 })
+            partnerSteps.push({ actionId: 'corridor_chat', animTrigger: 'talk_standing', waypointId: partnerCorridorWp, duration: 3 + Math.random() * 3, socialPartnerId: npcId })
+          }
+          partnerSteps.push({ actionId: 'walk_to_cafeteria_area', animTrigger: 'walk_slow', waypointId: partnerEntranceWp ?? undefined, duration: 0 })
+          const partnerTotalDur = partnerSteps.reduce((s, st) => s + st.duration, 0) + 5
+          assignments.push({
+            npcId: partner, actionId: 'phase1_sequence', animTrigger: 'Idle',
+            duration: Math.min(partnerTotalDur, def.duration), actionSequence: partnerSteps,
+          })
+          paired.add(partner); paired.add(npcId)
+          this.npcPartners.set(npcId, partner); this.npcPartners.set(partner, npcId)
+        }
+      } else if (roll < 0.80) {
+        // ── Walk through corridor solo, stretch/look around while moving ──
+        const corridorWp = this.reserveWaypoint(npcId, 'corridor_idle_')
+        if (corridorWp) {
+          steps.push({ actionId: 'walk_to_corridor', animTrigger: 'walk_slow', waypointId: corridorWp, duration: 0 })
+          // Brief expression at corridor (stretch or look around — not standing still)
+          const expr = Math.random() < 0.5 ? 'stretch' : 'look_around'
+          steps.push({ actionId: 'corridor_express', animTrigger: expr, waypointId: corridorWp, duration: 1.5 + Math.random() * 2 })
+        }
+        // Optional: walk through hallway too before cafeteria
+        if (Math.random() < 0.5) {
+          const hallwayWp = this.reserveWaypoint(npcId, 'hallway_slot_')
+          if (hallwayWp) {
+            steps.push({ actionId: 'walk_hallway', animTrigger: 'walk_slow', waypointId: hallwayWp, duration: 0 })
+          }
+        }
+      } else if (roll < 0.92) {
+        // ── Early bird: walk directly toward cafeteria, yawn/stretch mid-walk ──
+        // Walk to a hallway point first (not straight to cafeteria — path variety)
+        const hallwayWp = this.reserveWaypoint(npcId, 'hallway_slot_')
+        if (hallwayWp) {
+          steps.push({ actionId: 'walk_early', animTrigger: 'walk_slow', waypointId: hallwayWp, duration: 0 })
+          // Brief yawn or stretch while walking (keeps them moving, not stuck)
+          const expr = Math.random() < 0.5 ? 'yawn' : 'stretch'
+          steps.push({ actionId: 'walk_express', animTrigger: expr, waypointId: hallwayWp, duration: 1 + Math.random() * 1.5 })
+        }
+      } else {
+        // ── Loner: walk to hallway corner, brief idle, then cafeteria ──
+        const hallwayWp = this.reserveWaypoint(npcId, 'hallway_slot_')
+        if (hallwayWp) {
+          steps.push({ actionId: 'walk_to_hallway', animTrigger: 'walk_slow', waypointId: hallwayWp, duration: 0 })
+          steps.push({ actionId: 'loner_idle', animTrigger: 'lean_wall', waypointId: hallwayWp, duration: 2 + Math.random() * 3 })
+        }
+      }
+
+      // ─── FINAL: Walk to cafeteria entrance ────────────────────────────────
       const entranceWp = this.reserveWaypoint(npcId, 'cafeteria_entrance_spot_')
       steps.push({
         actionId: 'walk_to_cafeteria_area',
         animTrigger: 'walk_slow',
         waypointId: entranceWp ?? undefined,
-        duration: 0, // walk-only, no dwell
+        duration: 0,
       })
 
-      // Step 4: Optional chat at cafeteria door (~25% of NPCs)
-      if (Math.random() < 0.25) {
+      // Activity at cafeteria door (~45% chat, grouped up)
+      if (Math.random() < 0.45) {
         const chatPartner = this.findPartner(shuffled, paired, npcId)
         steps.push({
           actionId: 'talk_at_cafeteria_door',
           animTrigger: 'talk_standing',
           waypointId: entranceWp ?? undefined,
-          duration: 6 + Math.random(),
+          duration: 3 + Math.random() * 4,
           socialPartnerId: chatPartner ?? undefined,
         })
       }
@@ -954,11 +1012,22 @@ export class JailRoutineSystem {
       const current    = this.npcAssignments.get(npcId)
       // Exclude current action to force variety
       const pool       = actionPool.filter(a => a.actionId !== current?.actionId)
-      const action     = this.weightedRandom(pool)
+      // Apply personality-weighted selection on reassign
+      const personalizedPool = this.personality.applyWeightModifiers(npcId, pool)
+      const action     = this.weightedRandom(personalizedPool)
       if (!action) continue
 
       // Skip social (partner logic is complex for incremental reassign)
       if (action.type === 'SOCIAL') continue
+
+      // Record action for anti-repetition tracking
+      this.personality.recordAction(npcId, action.actionId)
+
+      // Boredom trigger: NPC's timer expired → they might get bored
+      const profile = this.personality.getProfile(npcId)
+      if (profile && timer <= 0 && Math.random() < 0.25) {
+        this.personality.triggerMoodEvent(npcId, 'boredom')
+      }
 
       // Release old waypoint
       if (current?.waypointId)   this.releaseWaypoint(npcId, current.waypointId)

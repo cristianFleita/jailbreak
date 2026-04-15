@@ -30,6 +30,7 @@ namespace Jailbreak.NPC
 
         // ─── Current action state ─────────────────────────────────────────────
         public bool IsNavigating => _current != null || _sequenceSteps != null;
+        public bool IsEmergent => _isPlayingEmergent;
 
         private NPCAssignmentData _current;
         private float  _actionTimer;
@@ -49,6 +50,11 @@ namespace Jailbreak.NPC
         private float  _loopingGraceTimer;
         private const float LoopingGrace = 5f;
 
+        // ─── Emergent behavior state ──────────────────────────────────────────
+        private bool   _isPlayingEmergent;
+        private float  _emergentTimer;
+        private NPCAssignmentData _preEmergentState; // saved state to resume after
+
         // ─── Social partner lookup (set by JailRoutineManager) ────────────────
         private System.Func<string, Transform> _resolvePartnerTransform;
 
@@ -67,6 +73,17 @@ namespace Jailbreak.NPC
 
         private void Update()
         {
+            // Emergent behavior: plays a short animation then resumes previous state
+            if (_isPlayingEmergent)
+            {
+                _emergentTimer -= Time.deltaTime;
+                if (_emergentTimer <= 0f)
+                {
+                    OnEmergentComplete();
+                }
+                return;
+            }
+
             // Flush pending assignment once LOOPING grace expires
             if (_pendingAssignment != null)
             {
@@ -121,6 +138,78 @@ namespace Jailbreak.NPC
             }
 
             ApplyAssignment(data);
+        }
+
+        /// <summary>
+        /// Triggers an emergent/spontaneous behavior: NPC interrupts current action,
+        /// plays a short animation, then resumes where it left off.
+        /// Called by JailRoutineManager when backend sends npc:emergent event.
+        /// </summary>
+        public void PlayEmergentAction(string animTrigger, float duration)
+        {
+            if (_isPlayingEmergent) return; // don't stack emergent actions
+
+            Debug.Log($"[NPC-EMERGENT] {gameObject.name} emergent: {animTrigger} for {duration:F1}s");
+
+            // Save current state
+            _preEmergentState = _current;
+            _isPlayingEmergent = true;
+            _emergentTimer = duration;
+
+            // Stop movement during emergent action
+            if (agent != null && agent.isOnNavMesh)
+            {
+                agent.ResetPath();
+                agent.velocity = Vector3.zero;
+            }
+
+            PlayAnimation(animTrigger);
+        }
+
+        private void OnEmergentComplete()
+        {
+            _isPlayingEmergent = false;
+            Debug.Log($"[NPC-EMERGENT] {gameObject.name} emergent complete — resuming");
+
+            // Resume previous navigation if we had a destination
+            if (_preEmergentState != null && _current != null)
+            {
+                // Re-set destination if we were navigating
+                var dest = ResolveFirstDestination(_current);
+                if (dest.HasValue && !_hasArrived && agent != null && agent.isOnNavMesh)
+                {
+                    agent.SetDestination(dest.Value);
+                    PlayAnimation("walk");
+                }
+                else if (_hasArrived && _current != null)
+                {
+                    PlayAnimation(_current.animTrigger);
+                }
+                else
+                {
+                    PlayAnimation("idle");
+                }
+            }
+            else
+            {
+                PlayAnimation("idle");
+            }
+
+            _preEmergentState = null;
+        }
+
+        /// <summary>
+        /// Updates NPC idle animation based on mood shift from backend.
+        /// This creates subtle visual cues (fidgeting, pacing) without
+        /// interrupting the current action flow.
+        /// </summary>
+        public void ApplyMoodHint(string animHint)
+        {
+            // Only apply mood hint if NPC is currently idle (not navigating or acting)
+            if (!IsNavigating && !_isPlayingEmergent && (_current == null || _hasArrived))
+            {
+                PlayAnimation(animHint);
+            }
         }
 
         // ─── Private: Apply ───────────────────────────────────────────────────
@@ -451,42 +540,77 @@ namespace Jailbreak.NPC
         {
             return trigger switch
             {
-                "idle" => "Idle",
-                "Salute" => "Salute",
-                "talk_standing" => "Talking",
-                "stretch" => "Idle",
-                "yawn" => "Idle",
-                "walk_slow" => "Walking",
-                "walk" => "Walking",
-                "sit_eat" => "Sitting",
-                "sit_eat_talk" => "SittingTalking",
-                "serve_self" => "Rummaging",
-                "deposit_tray" => "Opening",
-                "carry_tray" => "Walking",
-                "idle_queue" => "Idle",
-                "talk_seated" => "SittingTalking",
-                "work_bench" => "ButtonPushing",
-                "carry_box" => "Walking",
-                "inspect" => "Rummaging",
-                "load_machine" => "Opening",
-                "fold_clothes" => "Idle",
-                "carry_basket" => "Walking",
-                "idle_check" => "Idle",
-                "sit_bench" => "SeatedIdle",
-                "exercise" => "PushUp",
-                "sit_cards" => "Sitting",
-                "lean_wall" => "Idle",
-                "shadowbox" => "Punching",
-                "kick" => "Attack",
-                "sit_idle" => "Sitting",
-                "lie_down" => "LyingDown",
-                "sit_bed_edge" => "Sitting",
-                "read_book" => "SeatedIdle",
-                "idle_window" => "Idle",
-                "whisper_seated" => "TellingSecret",
-                "sleep" => "LayingPose",
-                "toss_turn" => "LyingDown",
-                _ => "Idle"
+                // ─── Core locomotion & idle ──────────────────────────────
+                "idle"             => "Idle",
+                "walk"             => "Walking",
+                "walk_slow"        => "Walking",
+                "Walking"          => "Walking",
+
+                // ─── Social ─────────────────────────────────────────────
+                "Salute"           => "Salute",
+                "talk_standing"    => "Talking",
+                "talk_seated"      => "SittingTalking",
+                "whisper_seated"   => "TellingSecret",
+                "whisper"          => "TellingSecret",
+                "argue"            => "Talking",          // reuse Talking with intensity
+                "nod"              => "Salute",
+                "fist_bump"        => "Salute",
+
+                // ─── Idle expressions ───────────────────────────────────
+                "stretch"          => "Idle",
+                "yawn"             => "Idle",
+                "sigh"             => "Idle",
+                "fidget"           => "Idle",
+                "look_around"      => "Idle",
+                "lean_think"       => "Idle",
+                "crack_knuckles"   => "Idle",
+                "pace"             => "Walking",          // pacing = slow walking loop
+                "idle_window"      => "Idle",
+                "idle_queue"       => "Idle",
+                "idle_check"       => "Idle",
+                "lean_wall"        => "Idle",
+
+                // ─── Sitting ────────────────────────────────────────────
+                "sit_eat"          => "Sitting",
+                "sit_eat_talk"     => "SittingTalking",
+                "sit_bench"        => "SeatedIdle",
+                "sit_cards"        => "Sitting",
+                "sit_idle"         => "Sitting",
+                "sit_bed_edge"     => "Sitting",
+                "sit_floor"        => "Sitting",
+                "read_book"        => "SeatedIdle",
+
+                // ─── Work / Interact ────────────────────────────────────
+                "serve_self"       => "Rummaging",
+                "deposit_tray"     => "Opening",
+                "carry_tray"       => "Walking",
+                "carry_box"        => "Walking",
+                "carry_basket"     => "Walking",
+                "work_bench"       => "ButtonPushing",
+                "inspect"          => "Rummaging",
+                "load_machine"     => "Opening",
+                "fold_clothes"     => "Idle",
+
+                // ─── Athletic / Combat ──────────────────────────────────
+                "exercise"         => "PushUp",
+                "PushUp"           => "PushUp",
+                "shadowbox"        => "Punching",
+                "shadow_punch"     => "Punching",
+                "kick"             => "Attack",
+                "kick_wall"        => "Attack",
+                "fight_stance"     => "Punching",
+
+                // ─── Anti-guard ─────────────────────────────────────────
+                "block_stance"     => "Idle",             // TODO: custom block anim
+                "taunt"            => "Talking",          // reuse talking with attitude
+                "yell"             => "Talking",
+
+                // ─── Lying / Sleep ──────────────────────────────────────
+                "lie_down"         => "LyingDown",
+                "sleep"            => "LayingPose",
+                "toss_turn"        => "LyingDown",
+
+                _                  => "Idle"
             };
         }
     }

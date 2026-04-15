@@ -185,6 +185,16 @@ export function startGameLoop(io: Server, room: GameRoom): void {
     io.to(playerId).emit('phase:zone_check', payload)
   }
 
+  // Wire NPC personality system callbacks
+  const personality = gameManager.jailRoutine.getPersonalitySystem()
+  personality.onEmergentAction = (payload) => {
+    io.to(state.id).emit('npc:emergent', payload)
+    console.log(`[NPC-EMERGENT] Emitted: ${payload.npcId} → ${payload.actionId}`)
+  }
+  personality.onMoodShift = (payload) => {
+    io.to(state.id).emit('npc:mood_shift', payload)
+  }
+
   // Start jail routine
   gameManager.jailRoutine.start()
 

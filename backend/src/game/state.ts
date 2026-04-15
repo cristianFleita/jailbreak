@@ -71,8 +71,9 @@ const GUARD_SPAWN: { id: string; position: Vector3 } = {
   position: { x: -1.82251, y: -0.14, z: -0.84076 },
 }
 
-// Players take the last 4 slots (17-20) — only prisoner players use these
-const PLAYER_SPAWN_SLOTS = CELL_DOOR_SPAWNS.filter(s => ['cell_door_exit_17','cell_door_exit_18','cell_door_exit_19','cell_door_exit_20'].includes(s.id))
+// Players can spawn at ANY of the 20 cell door positions (randomized at game start).
+// This makes player positions indistinguishable from NPCs.
+// The actual random selection happens in assignRandomRoles().
 
 export function addPlayer(
   state: GameRoomState,
@@ -84,8 +85,7 @@ export function addPlayer(
     throw new Error('Room is full (max 4 players)')
   }
 
-  const spawnSlot = PLAYER_SPAWN_SLOTS[state.players.size] ?? PLAYER_SPAWN_SLOTS[0]
-
+  // Temporary spawn — real position assigned randomly in assignRandomRoles()
   const player: PlayerState = {
     id: userId,
     userId,
@@ -95,7 +95,6 @@ export function addPlayer(
     velocity: { x: 0, y: 0, z: 0 },
     movementState: 'idle',
     isAlive: true,
-    spawnWaypointId: spawnSlot.id,
   }
 
   state.players.set(playerId, player)
@@ -115,7 +114,10 @@ export function assignRandomRoles(state: GameRoomState): void {
   // Pick a random player to be the guard
   const guardIndex = Math.floor(Math.random() * players.length)
 
-  let prisonerSlotIndex = 0
+  // Shuffle ALL 20 cell door spawns — prisoners pick from the shuffled pool
+  const shuffledSpawns = [...CELL_DOOR_SPAWNS].sort(() => Math.random() - 0.5)
+  let spawnIndex = 0
+
   for (let i = 0; i < players.length; i++) {
     const isGuard = i === guardIndex
     players[i].role = isGuard ? 'guard' : 'prisoner'
@@ -125,18 +127,18 @@ export function assignRandomRoles(state: GameRoomState): void {
       players[i].position = { ...GUARD_SPAWN.position }
       players[i].spawnWaypointId = GUARD_SPAWN.id
     } else {
-      // Prisoners spawn at cell doors
-      const slot = PLAYER_SPAWN_SLOTS[prisonerSlotIndex % PLAYER_SPAWN_SLOTS.length]
+      // Prisoners spawn at random cell doors (any of the 20)
+      const slot = shuffledSpawns[spawnIndex]
       players[i].position = { ...slot.position }
       players[i].spawnWaypointId = slot.id
-      prisonerSlotIndex++
+      spawnIndex++
     }
   }
 
   // Log role assignments
   console.log('[ROLES] Assigned roles + spawn positions:')
   for (const p of players) {
-    console.log(`  → ${p.userId}: ${p.role.toUpperCase()} @ (${p.position.x}, ${p.position.y}, ${p.position.z})`)
+    console.log(`  → ${p.userId}: ${p.role.toUpperCase()} @ ${p.spawnWaypointId} (${p.position.x.toFixed(2)}, ${p.position.y.toFixed(2)}, ${p.position.z.toFixed(2)})`)
   }
 }
 
@@ -175,7 +177,7 @@ export function updatePlayerMovement(
 /**
  * Spawns NPCs for the room (called when game starts).
  * NPC count = 20 - (playerCount - 1).
- * The guard has a dedicated spawn, prisoner players take PLAYER_SPAWN_SLOTS,
+ * The guard has a dedicated spawn, prisoner players take random cell doors,
  * and NPCs fill the remaining CELL_DOOR_SPAWNS with unique positions.
  */
 export function spawnNPCs(state: GameRoomState, _config: GameConfig): void {

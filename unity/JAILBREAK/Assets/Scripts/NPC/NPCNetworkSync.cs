@@ -36,6 +36,10 @@ namespace Jailbreak.NPC
             net.OnNPCPositionsEvent  += HandleNPCPositions;
             net.OnGameReconnectEvent += HandleGameReconnect;
 
+            // Emergent behavior & mood events
+            net.OnNPCEmergentEvent   += HandleNPCEmergent;
+            net.OnNPCMoodShiftEvent  += HandleNPCMoodShift;
+
             // If game:start already fired before this scene loaded, spawn NPCs now
             if (net.State == ConnectionState.InGame)
             {
@@ -62,6 +66,8 @@ namespace Jailbreak.NPC
             net.OnGameStartEvent     -= HandleGameStart;
             net.OnNPCPositionsEvent  -= HandleNPCPositions;
             net.OnGameReconnectEvent -= HandleGameReconnect;
+            net.OnNPCEmergentEvent   -= HandleNPCEmergent;
+            net.OnNPCMoodShiftEvent  -= HandleNPCMoodShift;
         }
 
         private void Update()
@@ -109,6 +115,32 @@ namespace Jailbreak.NPC
             {
                 EnsureNPC(npc);
                 _npcTargets[npc.id] = npc.position.ToUnity();
+            }
+        }
+
+        // ─── Emergent Behavior & Mood Handlers ─────────────────────────────
+
+        private void HandleNPCEmergent(NPCEmergentData data)
+        {
+            if (!_npcs.TryGetValue(data.npcId, out var npcTransform)) return;
+
+            var behavior = npcTransform.GetComponent<NPCBehaviorController>();
+            if (behavior != null)
+            {
+                behavior.PlayEmergentAction(data.animTrigger, data.duration);
+                Debug.Log($"[NPC] Emergent action: {data.npcId} → {data.actionId} ({data.mood})");
+            }
+        }
+
+        private void HandleNPCMoodShift(NPCMoodShiftData data)
+        {
+            if (!_npcs.TryGetValue(data.npcId, out var npcTransform)) return;
+
+            var behavior = npcTransform.GetComponent<NPCBehaviorController>();
+            if (behavior != null)
+            {
+                behavior.ApplyMoodHint(data.animHint);
+                Debug.Log($"[NPC] Mood shift: {data.npcId} → {data.newMood} (hint={data.animHint})");
             }
         }
 

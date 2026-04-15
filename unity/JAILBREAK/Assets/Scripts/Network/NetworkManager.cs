@@ -82,6 +82,10 @@ namespace Jailbreak.Network
         public event Action<NPCReassignPayload>       OnNPCReassignEvent;
         public event Action<PhaseZoneCheckPayload>    OnPhaseZoneCheckEvent;
 
+        // ─── Events: NPC Personality & Emergent Behavior ─────────────────
+        public event Action<NPCEmergentData>          OnNPCEmergentEvent;
+        public event Action<NPCMoodShiftData>         OnNPCMoodShiftEvent;
+
         // ─── Private ─────────────────────────────────────────────────────────
         private string _currentRoomId;
         private readonly ConcurrentQueue<Action> _mainThreadQueue = new();
@@ -560,6 +564,24 @@ namespace Jailbreak.Network
             });
         }
 
+        public void OnNPCEmergent(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<NPCEmergentData>(json);
+                if (data != null) OnNPCEmergentEvent?.Invoke(data);
+            });
+        }
+
+        public void OnNPCMoodShift(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<NPCMoodShiftData>(json);
+                if (data != null) OnNPCMoodShiftEvent?.Invoke(data);
+            });
+        }
+
         public void OnNetworkError(string json)
         {
             _mainThreadQueue.Enqueue(() =>
@@ -772,6 +794,8 @@ namespace Jailbreak.Network
             SafeOn("phase:warning",   r => { var d = DeserializePayload<PhaseWarningPayload>(r);   if (d != null) _mainThreadQueue.Enqueue(() => OnPhaseWarningEvent?.Invoke(d)); });
             SafeOn("npc:reassign",    r => { var d = DeserializePayload<NPCReassignPayload>(r);    if (d != null) _mainThreadQueue.Enqueue(() => OnNPCReassignEvent?.Invoke(d)); });
             SafeOn("phase:zone_check",r => { var d = DeserializePayload<PhaseZoneCheckPayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnPhaseZoneCheckEvent?.Invoke(d)); });
+            SafeOn("npc:emergent",    r => { var d = DeserializePayload<NPCEmergentData>(r);       if (d != null) _mainThreadQueue.Enqueue(() => OnNPCEmergentEvent?.Invoke(d)); });
+            SafeOn("npc:mood_shift",  r => { var d = DeserializePayload<NPCMoodShiftData>(r);      if (d != null) _mainThreadQueue.Enqueue(() => OnNPCMoodShiftEvent?.Invoke(d)); });
 
             SafeOn("game:error", r =>
             {
