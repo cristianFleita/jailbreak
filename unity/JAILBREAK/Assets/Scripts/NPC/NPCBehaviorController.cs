@@ -11,8 +11,8 @@ namespace Jailbreak.NPC
     /// the backend (via JailRoutineManager).
     ///
     /// Supports two modes:
-    ///   1. Single action: waypointId/waypointChain + animTrigger + duration (legacy)
-    ///   2. Action sequence: ordered steps processed sequentially (cafeteria flow, Phase 1 chain)
+    ///   1. Single action: zoneId/seed + animTrigger + duration
+    ///   2. Action sequence: ordered steps processed sequentially
     ///
     /// The backend does NOT stream positions. All movement is local NavMesh.
     /// </summary>
@@ -22,7 +22,7 @@ namespace Jailbreak.NPC
         [Header("References")]
         [SerializeField] private NavMeshAgent  agent;
         [SerializeField] private Animator      animator;
-        [SerializeField] private WaypointRegistry waypointRegistry;
+        [SerializeField] private ZoneRegistry  zoneRegistry;
 
         [Header("Tuning")]
         [SerializeField] private float arrivalThreshold = 0.3f;
@@ -43,7 +43,7 @@ namespace Jailbreak.NPC
         private int    _sequenceIndex;
         private float  _stepTimer;
         private bool   _stepArrived;
-        private string _currentStepWaypointId;
+        private string _currentStepZoneId;
 
         // Pending reassign received while NPC is mid-LOOPING cycle
         private NPCAssignmentData _pendingAssignment;
@@ -53,7 +53,7 @@ namespace Jailbreak.NPC
         // ─── Emergent behavior state ──────────────────────────────────────────
         private bool   _isPlayingEmergent;
         private float  _emergentTimer;
-        private NPCAssignmentData _preEmergentState; // saved state to resume after
+        private NPCAssignmentData _preEmergentState;
 
         // ─── Social partner lookup (set by JailRoutineManager) ────────────────
         private System.Func<string, Transform> _resolvePartnerTransform;
@@ -73,18 +73,13 @@ namespace Jailbreak.NPC
 
         private void Update()
         {
-            // Emergent behavior: plays a short animation then resumes previous state
             if (_isPlayingEmergent)
             {
                 _emergentTimer -= Time.deltaTime;
-                if (_emergentTimer <= 0f)
-                {
-                    OnEmergentComplete();
-                }
+                if (_emergentTimer <= 0f) OnEmergentComplete();
                 return;
             }
 
-            // Flush pending assignment once LOOPING grace expires
             if (_pendingAssignment != null)
             {
                 _loopingGraceTimer -= Time.deltaTime;
@@ -95,43 +90,35 @@ namespace Jailbreak.NPC
                 }
             }
 
-            // Sequence mode: process ordered steps
             if (_sequenceSteps != null)
             {
                 UpdateSequence();
                 return;
             }
 
-            // Single action mode (legacy)
             if (_current == null) return;
 
             if (!_hasArrived && !agent.pathPending && agent.remainingDistance < arrivalThreshold)
             {
                 _hasArrived = true;
-                OnReachedWaypoint();
+                OnReachedDestination();
             }
 
             if (_hasArrived)
             {
                 _actionTimer -= Time.deltaTime;
-                if (_actionTimer <= 0f)
-                    OnActionComplete();
+                if (_actionTimer <= 0f) OnActionComplete();
             }
         }
 
         // ─── Public API ───────────────────────────────────────────────────────
 
-        public void AssignAction(NPCAssignmentData data, WaypointRegistry registry = null)
+        public void AssignAction(NPCAssignmentData data, ZoneRegistry registry = null)
         {
-            Debug.Log($"[NPC-DEBUG] {gameObject.name} AssignAction: action={data.actionId} " +
-                      $"seq={(data.actionSequence != null ? data.actionSequence.Length + " steps" : "none")}");
+            if (registry != null) zoneRegistry = registry;
 
-            if (registry != null) waypointRegistry = registry;
-
-            // Edge case: reassign while mid-LOOPING → grace period
             if (_isLooping && _current != null && data.actionSequence == null)
             {
-                Debug.Log($"[NPC-DEBUG] {gameObject.name} is mid-LOOPING — queuing assignment, grace={LoopingGrace}s");
                 _pendingAssignment = data;
                 _loopingGraceTimer = LoopingGrace;
                 return;
@@ -140,23 +127,14 @@ namespace Jailbreak.NPC
             ApplyAssignment(data);
         }
 
-        /// <summary>
-        /// Triggers an emergent/spontaneous behavior: NPC interrupts current action,
-        /// plays a short animation, then resumes where it left off.
-        /// Called by JailRoutineManager when backend sends npc:emergent event.
-        /// </summary>
         public void PlayEmergentAction(string animTrigger, float duration)
         {
-            if (_isPlayingEmergent) return; // don't stack emergent actions
+            if (_isPlayingEmergent) return;
 
-            Debug.Log($"[NPC-EMERGENT] {gameObject.name} emergent: {animTrigger} for {duration:F1}s");
-
-            // Save current state
             _preEmergentState = _current;
             _isPlayingEmergent = true;
             _emergentTimer = duration;
 
-            // Stop movement during emergent action
             if (agent != null && agent.isOnNavMesh)
             {
                 agent.ResetPath();
@@ -169,12 +147,8 @@ namespace Jailbreak.NPC
         private void OnEmergentComplete()
         {
             _isPlayingEmergent = false;
-            Debug.Log($"[NPC-EMERGENT] {gameObject.name} emergent complete — resuming");
-
-            // Resume previous navigation if we had a destination
             if (_preEmergentState != null && _current != null)
             {
-                // Re-set destination if we were navigating
                 var dest = ResolveFirstDestination(_current);
                 if (dest.HasValue && !_hasArrived && agent != null && agent.isOnNavMesh)
                 {
@@ -185,27 +159,14 @@ namespace Jailbreak.NPC
                 {
                     PlayAnimation(_current.animTrigger);
                 }
-                else
-                {
-                    PlayAnimation("idle");
-                }
+                else PlayAnimation("idle");
             }
-            else
-            {
-                PlayAnimation("idle");
-            }
-
+            else PlayAnimation("idle");
             _preEmergentState = null;
         }
 
-        /// <summary>
-        /// Updates NPC idle animation based on mood shift from backend.
-        /// This creates subtle visual cues (fidgeting, pacing) without
-        /// interrupting the current action flow.
-        /// </summary>
         public void ApplyMoodHint(string animHint)
         {
-            // Only apply mood hint if NPC is currently idle (not navigating or acting)
             if (!IsNavigating && !_isPlayingEmergent && (_current == null || _hasArrived))
             {
                 PlayAnimation(animHint);
@@ -216,10 +177,13 @@ namespace Jailbreak.NPC
 
         private void ApplyAssignment(NPCAssignmentData data)
         {
-            // Clean up previous state
             CleanupCurrent();
 
-            // Route to sequence mode or single action mode
+            if (data.walkSpeedMult > 0 && agent != null)
+                agent.speed = 3.5f * data.walkSpeedMult; // base speed * mult
+
+            Debug.Log($"[NPC-CTRL] {name} ApplyAssignment action={data.actionId} seq={(data.actionSequence != null ? data.actionSequence.Length : 0)}steps agent.onNavMesh={(agent != null && agent.isOnNavMesh)} zoneRegistry={(zoneRegistry != null ? "set" : "NULL")}");
+
             if (data.actionSequence != null && data.actionSequence.Length > 0)
             {
                 StartSequence(data);
@@ -232,27 +196,13 @@ namespace Jailbreak.NPC
 
         private void CleanupCurrent()
         {
-            if (_current != null)
-            {
-                if (!string.IsNullOrEmpty(_current.waypointId))
-                    waypointRegistry?.Release(_current.waypointId);
-                if (_current.waypointChain != null)
-                    foreach (var wp in _current.waypointChain)
-                        waypointRegistry?.Release(wp);
-            }
-
-            if (!string.IsNullOrEmpty(_currentStepWaypointId))
-            {
-                waypointRegistry?.Release(_currentStepWaypointId);
-                _currentStepWaypointId = null;
-            }
-
+            _currentStepZoneId = null;
             _current = null;
             _sequenceSteps = null;
             _isLooping = false;
         }
 
-        // ─── Single Action Mode (legacy) ──────────────────────────────────────
+        // ─── Single Action Mode ───────────────────────────────────────────────
 
         private void StartSingleAction(NPCAssignmentData data)
         {
@@ -265,27 +215,7 @@ namespace Jailbreak.NPC
             var destination = ResolveFirstDestination(data);
             if (destination.HasValue)
             {
-                var wpId = data.waypointChain != null && data.waypointChain.Length > 0
-                    ? data.waypointChain[0] : data.waypointId;
-
-                if (waypointRegistry != null && !string.IsNullOrEmpty(wpId))
-                {
-                    bool reserved = waypointRegistry.Reserve(wpId);
-                    if (!reserved)
-                    {
-                        Debug.LogWarning($"[NPC-DEBUG] {gameObject.name} waypoint '{wpId}' FULL — falling back to idle");
-                        PlayAnimation("idle");
-                        _current = null;
-                        return;
-                    }
-                }
-
-                if (agent == null || !agent.isOnNavMesh)
-                {
-                    Debug.LogError($"[NPC-DEBUG] {gameObject.name} NavMeshAgent issue — cannot navigate");
-                    return;
-                }
-
+                if (agent == null || !agent.isOnNavMesh) return;
                 agent.SetDestination(destination.Value);
                 PlayAnimation("walk");
             }
@@ -296,16 +226,13 @@ namespace Jailbreak.NPC
             }
         }
 
-        // ─── Sequence Mode (cafeteria flow, Phase 1 chain) ───────────────────
+        // ─── Sequence Mode ───────────────────────────────────────────────────
 
         private void StartSequence(NPCAssignmentData data)
         {
             _sequenceSteps = data.actionSequence;
             _sequenceIndex = 0;
-            _current = data; // keep reference for cleanup
-
-            Debug.Log($"[NPC-SEQ] {gameObject.name} starting sequence: {_sequenceSteps.Length} steps");
-
+            _current = data;
             BeginStep(_sequenceSteps[0]);
         }
 
@@ -319,7 +246,6 @@ namespace Jailbreak.NPC
 
             var step = _sequenceSteps[_sequenceIndex];
 
-            // Phase 1: Navigate to destination
             if (!_stepArrived)
             {
                 if (!agent.pathPending && agent.remainingDistance < arrivalThreshold)
@@ -330,57 +256,41 @@ namespace Jailbreak.NPC
                 return;
             }
 
-            // Phase 2: Perform action at destination (duration > 0)
             if (step.duration > 0)
             {
                 _stepTimer -= Time.deltaTime;
-                if (_stepTimer <= 0f)
-                {
-                    AdvanceSequence();
-                }
+                if (_stepTimer <= 0f) AdvanceSequence();
             }
-            // duration == 0 means walk-only — advance immediately on arrival
         }
 
         private void BeginStep(NPCActionStepData step)
         {
             _stepArrived = false;
             _stepTimer = step.duration;
+            _currentStepZoneId = step.zoneId;
 
-            // Release previous step's waypoint
-            if (!string.IsNullOrEmpty(_currentStepWaypointId))
-            {
-                waypointRegistry?.Release(_currentStepWaypointId);
-                _currentStepWaypointId = null;
-            }
-
-            Debug.Log($"[NPC-SEQ] {gameObject.name} step {_sequenceIndex}/{_sequenceSteps.Length}: " +
-                      $"action={step.actionId} wp={step.waypointId ?? "none"} dur={step.duration:F1}s " +
-                      $"partner={step.socialPartnerId ?? "none"}");
-
-            // Resolve destination
             Vector3? destination = null;
+            string destSrc = "none";
 
-            if (!string.IsNullOrEmpty(step.waypointId) && waypointRegistry != null)
+            if (!string.IsNullOrEmpty(step.zoneId) && zoneRegistry != null)
             {
-                var pos = waypointRegistry.GetPosition(step.waypointId);
-                if (pos.HasValue)
+                var point = zoneRegistry.GetDeterministicPoint(step.zoneId, step.seed);
+                if (point.HasValue)
                 {
-                    waypointRegistry.Reserve(step.waypointId);
-                    _currentStepWaypointId = step.waypointId;
-                    destination = pos.Value;
+                    if (NavMesh.SamplePosition(point.Value, out var hit, 5f, NavMesh.AllAreas))
+                    { destination = hit.position; destSrc = "zone+navmesh"; }
+                    else { destination = point.Value; destSrc = "zone(no-navmesh)"; }
                 }
+                else destSrc = $"zone '{step.zoneId}' not registered";
             }
 
-            // Social steps without waypoint: navigate to partner's position
             if (!destination.HasValue && !string.IsNullOrEmpty(step.socialPartnerId) && _resolvePartnerTransform != null)
             {
                 var partnerTransform = _resolvePartnerTransform(step.socialPartnerId);
-                if (partnerTransform != null)
-                {
-                    destination = partnerTransform.position;
-                }
+                if (partnerTransform != null) { destination = partnerTransform.position; destSrc = "partner"; }
             }
+
+            Debug.Log($"[NPC-CTRL] {name} BeginStep {_sequenceIndex + 1}/{_sequenceSteps.Length} action={step.actionId} anim={step.animTrigger} zone={step.zoneId ?? "-"} dur={step.duration:F1}s dest={destSrc}");
 
             if (destination.HasValue && agent != null && agent.isOnNavMesh)
             {
@@ -393,14 +303,12 @@ namespace Jailbreak.NPC
                 }
             }
 
-            // Already at destination (or no destination) — skip straight to arrived
             _stepArrived = true;
             OnStepArrived(step);
         }
 
         private void OnStepArrived(NPCActionStepData step)
         {
-            // Stop NavMeshAgent movement
             if (agent != null && agent.isOnNavMesh)
             {
                 agent.ResetPath();
@@ -409,44 +317,23 @@ namespace Jailbreak.NPC
 
             if (step.duration > 0)
             {
-                // Play action animation and wait for duration
                 PlayAnimation(step.animTrigger);
-                Debug.Log($"[NPC-SEQ] {gameObject.name} arrived at step {_sequenceIndex}, playing '{step.animTrigger}' for {step.duration:F1}s");
             }
-            else
-            {
-                // Walk-only step (duration == 0) — advance immediately
-                Debug.Log($"[NPC-SEQ] {gameObject.name} walk-only step {_sequenceIndex} complete, advancing");
-                AdvanceSequence();
-            }
+            else AdvanceSequence();
         }
 
         private void AdvanceSequence()
         {
             _sequenceIndex++;
-
-            if (_sequenceIndex >= _sequenceSteps.Length)
-            {
-                OnSequenceComplete();
-                return;
-            }
-
-            BeginStep(_sequenceSteps[_sequenceIndex]);
+            if (_sequenceIndex >= _sequenceSteps.Length) OnSequenceComplete();
+            else BeginStep(_sequenceSteps[_sequenceIndex]);
         }
 
         private void OnSequenceComplete()
         {
-            Debug.Log($"[NPC-SEQ] {gameObject.name} sequence complete — idle");
-
-            if (!string.IsNullOrEmpty(_currentStepWaypointId))
-            {
-                waypointRegistry?.Release(_currentStepWaypointId);
-                _currentStepWaypointId = null;
-            }
-
+            _currentStepZoneId = null;
             _sequenceSteps = null;
             _current = null;
-
             if (agent != null && agent.isOnNavMesh)
             {
                 agent.ResetPath();
@@ -457,28 +344,25 @@ namespace Jailbreak.NPC
 
         // ─── Private: Single Action — Arrival & Chain Logic ──────────────────
 
-        private void OnReachedWaypoint()
+        private void OnReachedDestination()
         {
             if (_current == null) return;
 
-            Debug.Log($"[NPC-DEBUG] {gameObject.name} ARRIVED at waypoint! action={_current.actionId} playing anim='{_current.animTrigger}' timer={_actionTimer:F1}s");
-
-            // LOOPING chain: advance to next waypoint
-            if (_isLooping && _current.waypointChain != null && _current.waypointChain.Length > 1)
+            if (_isLooping && _current.seedChain != null && _current.seedChain.Length > 1)
             {
-                waypointRegistry?.Release(_current.waypointChain[_chainIndex]);
-
-                _chainIndex = (_chainIndex + 1) % _current.waypointChain.Length;
-                var nextId  = _current.waypointChain[_chainIndex];
-                var nextPos = waypointRegistry?.GetPosition(nextId);
-
-                if (nextPos.HasValue)
+                _chainIndex = (_chainIndex + 1) % _current.seedChain.Length;
+                var nextSeed = _current.seedChain[_chainIndex];
+                
+                var point = zoneRegistry?.GetDeterministicPoint(_current.zoneId, nextSeed);
+                if (point.HasValue)
                 {
-                    waypointRegistry?.Reserve(nextId);
-                    agent.SetDestination(nextPos.Value);
-                    _hasArrived = false;
-                    PlayAnimation("walk");
-                    return;
+                    if (NavMesh.SamplePosition(point.Value, out var hit, 5f, NavMesh.AllAreas))
+                    {
+                        agent.SetDestination(hit.position);
+                        _hasArrived = false;
+                        PlayAnimation("walk");
+                        return;
+                    }
                 }
             }
 
@@ -489,7 +373,6 @@ namespace Jailbreak.NPC
 
         private void OnActionComplete()
         {
-            Debug.Log($"[NPC-DEBUG] {gameObject.name} action complete — returning to idle");
             _isLooping = false;
             _current   = null;
             if (agent.isOnNavMesh)
@@ -502,61 +385,62 @@ namespace Jailbreak.NPC
 
         private Vector3? ResolveFirstDestination(NPCAssignmentData data)
         {
-            if (waypointRegistry == null) return null;
+            if (zoneRegistry == null) return null;
 
-            if (data.waypointChain != null && data.waypointChain.Length > 0)
-                return waypointRegistry.GetPosition(data.waypointChain[0]);
+            if (data.seedChain != null && data.seedChain.Length > 0)
+            {
+                var pt = zoneRegistry.GetDeterministicPoint(data.zoneId, data.seedChain[0]);
+                if (pt.HasValue && NavMesh.SamplePosition(pt.Value, out var hit, 5f, NavMesh.AllAreas)) return hit.position;
+            }
 
-            if (!string.IsNullOrEmpty(data.waypointId))
-                return waypointRegistry.GetPosition(data.waypointId);
+            if (!string.IsNullOrEmpty(data.zoneId))
+            {
+                var pt = zoneRegistry.GetDeterministicPoint(data.zoneId, data.seed);
+                if (pt.HasValue && NavMesh.SamplePosition(pt.Value, out var hit, 5f, NavMesh.AllAreas)) return hit.position;
+            }
 
-            // Social action without waypoint: try partner position
             if (!string.IsNullOrEmpty(data.socialPartnerId) && _resolvePartnerTransform != null)
             {
                 var partnerTransform = _resolvePartnerTransform(data.socialPartnerId);
-                if (partnerTransform != null)
-                    return partnerTransform.position;
+                if (partnerTransform != null) return partnerTransform.position;
             }
 
             return null;
         }
 
         // ─── Animator Map ───────────────────────────────────────────────────────
-
         private void PlayAnimation(string backendTrigger)
         {
-            if (animator == null || string.IsNullOrEmpty(backendTrigger)) return;
-
-            string stateName = MapTriggerToStateName(backendTrigger);
-
-            try
+            if (animator == null)
             {
-                animator.CrossFade(stateName, 0.25f);
+                Debug.LogWarning($"[NPC-CTRL] {name} PlayAnimation('{backendTrigger}') skipped — animator is NULL");
+                return;
             }
-            catch { /* Ignore if animator state is missing */ }
+            if (string.IsNullOrEmpty(backendTrigger)) return;
+            string stateName = MapTriggerToStateName(backendTrigger);
+            try { animator.CrossFade(stateName, 0.25f); }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[NPC-CTRL] {name} CrossFade('{stateName}' from trigger '{backendTrigger}') failed: {ex.Message}");
+            }
         }
 
         private string MapTriggerToStateName(string trigger)
         {
             return trigger switch
             {
-                // ─── Core locomotion & idle ──────────────────────────────
                 "idle"             => "Idle",
                 "walk"             => "Walking",
                 "walk_slow"        => "Walking",
                 "Walking"          => "Walking",
-
-                // ─── Social ─────────────────────────────────────────────
                 "Salute"           => "Salute",
                 "talk_standing"    => "Talking",
                 "talk_seated"      => "SittingTalking",
                 "whisper_seated"   => "TellingSecret",
                 "whisper"          => "TellingSecret",
-                "argue"            => "Talking",          // reuse Talking with intensity
+                "argue"            => "Angry",
                 "nod"              => "Salute",
                 "fist_bump"        => "Salute",
-
-                // ─── Idle expressions ───────────────────────────────────
                 "stretch"          => "Idle",
                 "yawn"             => "Idle",
                 "sigh"             => "Idle",
@@ -564,13 +448,11 @@ namespace Jailbreak.NPC
                 "look_around"      => "Idle",
                 "lean_think"       => "Idle",
                 "crack_knuckles"   => "Idle",
-                "pace"             => "Walking",          // pacing = slow walking loop
+                "pace"             => "Walking",
                 "idle_window"      => "Idle",
                 "idle_queue"       => "Idle",
                 "idle_check"       => "Idle",
                 "lean_wall"        => "Idle",
-
-                // ─── Sitting ────────────────────────────────────────────
                 "sit_eat"          => "Sitting",
                 "sit_eat_talk"     => "SittingTalking",
                 "sit_bench"        => "SeatedIdle",
@@ -579,8 +461,6 @@ namespace Jailbreak.NPC
                 "sit_bed_edge"     => "Sitting",
                 "sit_floor"        => "Sitting",
                 "read_book"        => "SeatedIdle",
-
-                // ─── Work / Interact ────────────────────────────────────
                 "serve_self"       => "Rummaging",
                 "deposit_tray"     => "Opening",
                 "carry_tray"       => "Walking",
@@ -590,8 +470,6 @@ namespace Jailbreak.NPC
                 "inspect"          => "Rummaging",
                 "load_machine"     => "Opening",
                 "fold_clothes"     => "Idle",
-
-                // ─── Athletic / Combat ──────────────────────────────────
                 "exercise"         => "PushUp",
                 "PushUp"           => "PushUp",
                 "shadowbox"        => "Punching",
@@ -599,17 +477,12 @@ namespace Jailbreak.NPC
                 "kick"             => "Attack",
                 "kick_wall"        => "Attack",
                 "fight_stance"     => "Punching",
-
-                // ─── Anti-guard ─────────────────────────────────────────
-                "block_stance"     => "Idle",             // TODO: custom block anim
-                "taunt"            => "Talking",          // reuse talking with attitude
-                "yell"             => "Talking",
-
-                // ─── Lying / Sleep ──────────────────────────────────────
+                "block_stance"     => "Idle",
+                "taunt"            => "Angry",
+                "yell"             => "Angry",
                 "lie_down"         => "LyingDown",
                 "sleep"            => "LayingPose",
                 "toss_turn"        => "LyingDown",
-
                 _                  => "Idle"
             };
         }

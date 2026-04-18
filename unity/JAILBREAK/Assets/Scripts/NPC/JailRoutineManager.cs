@@ -25,7 +25,7 @@ namespace Jailbreak.NPC
     public class JailRoutineManager : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private WaypointRegistry waypointRegistry;
+        [SerializeField] private ZoneRegistry zoneRegistry;
         [SerializeField] private NPCNetworkSync    npcNetworkSync;   // optional — for NPC pool
 
         [Header("NPC Prefab (if not using NPCNetworkSync)")]
@@ -62,7 +62,16 @@ namespace Jailbreak.NPC
             net.OnPhaseZoneCheckEvent += HandleZoneCheck;
             net.OnGameReconnectEvent  += HandleReconnect;
 
-            Debug.Log("[JAIL] JailRoutineManager initialized");
+            Debug.Log($"[JAIL] JailRoutineManager initialized (npcNetworkSync={(npcNetworkSync != null ? "set" : "NULL")}, zoneRegistry={(zoneRegistry != null ? "set" : "NULL")})");
+
+            // If phase:start already fired before this component's Start() ran
+            // (race between GameScene load and backend emit), process the cached
+            // payload so NPCs get their assignments on join.
+            if (net.CachedPhaseJailStart != null)
+            {
+                Debug.Log("[JAIL] Processing cached phase:start payload");
+                HandlePhaseStart(net.CachedPhaseJailStart);
+            }
         }
 
         private void OnDestroy()
@@ -92,8 +101,7 @@ namespace Jailbreak.NPC
             PhaseDuration    = data.duration;
             PhaseElapsed     = 0f;
 
-            // Reset waypoint occupancy for the new phase
-            waypointRegistry?.ResetOccupants();
+            // No waypoint occupants to reset anymore
 
             if (data.npcAssignments != null)
             {
@@ -139,7 +147,7 @@ namespace Jailbreak.NPC
             PhaseDuration    = 0f; // duration not included in snapshot
             PhaseElapsed     = 0f;
 
-            waypointRegistry?.ResetOccupants();
+            // No waypoint occupants to reset anymore
 
             if (data.jailPhase.npcAssignments != null)
             {
@@ -157,8 +165,8 @@ namespace Jailbreak.NPC
             if (string.IsNullOrEmpty(assignment.npcId)) return;
 
             Debug.Log($"[JAIL-DEBUG] ApplyAssignment: npc={assignment.npcId} action={assignment.actionId} " +
-                      $"wpId={assignment.waypointId ?? "NULL"} " +
-                      $"wpChain={( assignment.waypointChain != null ? string.Join(",", assignment.waypointChain) : "NULL" )} " +
+                      $"zoneId={assignment.zoneId ?? "NULL"} seed={assignment.seed} " +
+                      $"seedChain={( assignment.seedChain != null ? assignment.seedChain.Length + " seeds" : "NULL" )} " +
                       $"seq={(assignment.actionSequence != null ? assignment.actionSequence.Length + " steps" : "none")} " +
                       $"anim={assignment.animTrigger} dur={assignment.duration:F1}s loop={assignment.loop}");
 
@@ -171,7 +179,7 @@ namespace Jailbreak.NPC
 
             // Wire up partner resolver so social actions can navigate to partner's Transform
             controller.SetPartnerResolver(ResolvePartnerTransform);
-            controller.AssignAction(assignment, waypointRegistry);
+            controller.AssignAction(assignment, zoneRegistry);
         }
 
         /// <summary>

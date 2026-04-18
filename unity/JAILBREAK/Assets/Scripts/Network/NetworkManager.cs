@@ -47,6 +47,7 @@ namespace Jailbreak.Network
         /// </summary>
         public GameStartPayload CachedGameStart { get; private set; }
         public GameReconnectPayload CachedGameReconnect { get; private set; }
+        public PhaseJailStartPayload CachedPhaseJailStart { get; private set; }
 
         // ─── Events: Auth & Room Lobby ───────────────────────────────────────
         public event Action<AuthRegisteredPayload>    OnAuthRegisteredEvent;
@@ -790,7 +791,22 @@ namespace Jailbreak.Network
             SafeOn("riot:available",  r => { var d = DeserializePayload<RiotAvailablePayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnRiotAvailableEvent?.Invoke(d)); });
 
             // ── Jail Routine ────────────────────────────────────────────────
-            SafeOn("phase:start",     r => { var d = DeserializePayload<PhaseJailStartPayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnPhaseJailStartEvent?.Invoke(d)); });
+            SafeOn("phase:start",     r =>
+            {
+                var d = DeserializePayload<PhaseJailStartPayload>(r);
+                if (d == null)
+                {
+                    Debug.LogError("[NET] phase:start deserialize returned null");
+                    return;
+                }
+                _mainThreadQueue.Enqueue(() =>
+                {
+                    CachedPhaseJailStart = d;
+                    int subs = OnPhaseJailStartEvent?.GetInvocationList()?.Length ?? 0;
+                    Debug.Log($"[NET] phase:start received — Phase {d.phase} ({d.phaseName}) assignments={d.npcAssignments?.Length ?? 0} subscribers={subs}");
+                    OnPhaseJailStartEvent?.Invoke(d);
+                });
+            });
             SafeOn("phase:warning",   r => { var d = DeserializePayload<PhaseWarningPayload>(r);   if (d != null) _mainThreadQueue.Enqueue(() => OnPhaseWarningEvent?.Invoke(d)); });
             SafeOn("npc:reassign",    r => { var d = DeserializePayload<NPCReassignPayload>(r);    if (d != null) _mainThreadQueue.Enqueue(() => OnNPCReassignEvent?.Invoke(d)); });
             SafeOn("phase:zone_check",r => { var d = DeserializePayload<PhaseZoneCheckPayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnPhaseZoneCheckEvent?.Invoke(d)); });

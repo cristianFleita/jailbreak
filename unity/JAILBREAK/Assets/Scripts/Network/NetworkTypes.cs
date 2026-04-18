@@ -292,7 +292,8 @@ namespace Jailbreak.Network
     {
         public string actionId;
         public string animTrigger;
-        public string waypointId;            // null = stay in place / use partner position
+        public string zoneId;                // null = stay in place / use partner position
+        public uint   seed;                  // deterministic random point seed
         public float  duration;              // 0 = walk-only (no dwell at destination)
         public string socialPartnerId;       // null for solo steps
     }
@@ -303,12 +304,14 @@ namespace Jailbreak.Network
         public string   npcId;
         public string   actionId;
         public string   animTrigger;
-        public string   waypointId;           // null if using chain
-        public string[] waypointChain;        // non-null for LOOPING chains
+        public string   zoneId;               // null if using chain
+        public uint     seed;
+        public uint[]   seedChain;            // non-null for LOOPING chains
         public float    duration;
         public bool     loop;
         public string   socialPartnerId;      // null for solo/idle
         public string   subZone;              // null unless Phase 6
+        public float    walkSpeedMult;        // backend assigned walk speed var
         public NPCActionStepData[] actionSequence; // ordered steps (cafeteria, Phase 1)
     }
 
@@ -365,7 +368,8 @@ namespace Jailbreak.Network
         public string npcId;
         public string actionId;
         public string animTrigger;
-        public string waypointId;
+        public string zoneId;
+        public uint   seed;
         public float  duration;
         public string targetNpcId;
         public string mood;

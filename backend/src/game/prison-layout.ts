@@ -1,38 +1,54 @@
 /**
- * Prison Layout — Zone definitions in backend world coordinates.
- * All positions use the same coordinate system as Unity (X, Y, Z).
- * Y = 1.5 throughout (player height above ground).
- * Map bounds: X[-50,50], Z[-50,50].
+ * Prison Layout — Zone-Based Definitions.
  *
- * Layout (top-down view, Z+ = north):
- *   Kitchen  [ Z 25–40 ]
- *   Yard     [ Z -15–15 ]
- *   Cells    [ Z -40 – -25 ]
+ * Defines the logical zones used by the routine system.
+ * Bounds have been moved entirely to Unity (ZoneRegistry.cs) 
+ * so the backend no longer hardcodes spatial coordinates.
+ *
+ * Deterministic movement:
+ *   - Backend sends zoneId + seed per NPC action
+ *   - All clients use the same seeded RNG to generate identical random points inside the zone
+ *   - NavMesh.SamplePosition snaps the point to walkable surface
  */
 
-import { Vector3 } from './types.js'
-
-export interface Zone {
-  minX: number
-  maxX: number
-  minZ: number
-  maxZ: number
-  y:    number
+export interface ZoneDefinition {
+  id: string
+  name: string
+  /** Parent zone ID — sub-zones inherit from a parent (e.g. cafeteria_counter ⊂ cafeteria) */
+  parentZone?: string
 }
 
-export const ZONES = {
-  cells:   { minX: -20, maxX: 20, minZ: -40, maxZ: -25, y: 1.5 },
-  yard:    { minX: -30, maxX: 30, minZ: -15, maxZ:  15, y: 1.5 },
-  kitchen: { minX: -20, maxX: 20, minZ:  25, maxZ:  40, y: 1.5 },
-} as const satisfies Record<string, Zone>
+export const ZONES: Record<string, ZoneDefinition> = {
+  // ── Primary zones ──────────────────────────────────────────────────────
+  cells:       { id: 'cells',       name: 'Bloque de Celdas' },
+  cafeteria:   { id: 'cafeteria',   name: 'Comedor' },
+  workshop:    { id: 'workshop',    name: 'Taller' },
+  laundry:     { id: 'laundry',     name: 'Lavandería' },
+  yard:        { id: 'yard',        name: 'Patio Exterior' },
+  hallway:     { id: 'hallway',     name: 'Pasillo Principal' },
+  office:      { id: 'office',      name: 'Oficina del Guardia' },
+  electrical:  { id: 'electrical',  name: 'Sala de Electricidad' },
 
-export type ZoneName = keyof typeof ZONES
+  // ── Sub-zones (finer areas inside primary zones) ───────────────────────
+  cafeteria_counter:  { id: 'cafeteria_counter',  name: 'Counter del comedor',   parentZone: 'cafeteria' },
+  cafeteria_seating:  { id: 'cafeteria_seating',  name: 'Mesas del comedor',     parentZone: 'cafeteria' },
+  cafeteria_trash:    { id: 'cafeteria_trash',    name: 'Depósito de bandejas',  parentZone: 'cafeteria' },
+  yard_exercise:      { id: 'yard_exercise',      name: 'Zona de ejercicio',     parentZone: 'yard' },
+  yard_benches:       { id: 'yard_benches',       name: 'Bancos del patio',      parentZone: 'yard' },
+  workshop_benches:   { id: 'workshop_benches',   name: 'Bancos de trabajo',     parentZone: 'workshop' },
+  laundry_machines:   { id: 'laundry_machines',   name: 'Lavadoras',             parentZone: 'laundry' },
+}
 
-/** Returns a uniformly random point within the given zone. */
-export function randomPointInZone(zone: Zone): Vector3 {
-  return {
-    x: zone.minX + Math.random() * (zone.maxX - zone.minX),
-    y: zone.y,
-    z: zone.minZ + Math.random() * (zone.maxZ - zone.minZ),
-  }
+/**
+ * Generate a random seed (non-deterministic — called only on the backend).
+ */
+export function generateSeed(): number {
+  return (Math.random() * 0xFFFFFFFF) >>> 0
+}
+
+/**
+ * Get all sub-zones for a given parent zone.
+ */
+export function getSubZones(parentId: string): ZoneDefinition[] {
+  return Object.values(ZONES).filter(z => z.parentZone === parentId)
 }

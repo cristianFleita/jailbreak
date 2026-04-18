@@ -22,9 +22,6 @@ namespace Jailbreak.Player
         [SerializeField] private GameObject prisonerPrefab;
         [SerializeField] private GameObject guardPrefab;
 
-        [Header("References")]
-        [SerializeField] private WaypointRegistry waypointRegistry;
-
         [Header("Fallback spawn if waypoint not found")]
         [SerializeField] private Vector3 fallbackSpawnPosition = new Vector3(0f, 1f, 0f);
 

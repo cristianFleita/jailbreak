@@ -761,7 +761,6 @@ export class NPCPersonalitySystem {
         animHint,
       })
 
-      console.log(`[NPC-MOOD] ${profile.npcId} ${oldMood} → ${newMood} (trigger=${trigger})`)
     }
   }
 
@@ -811,8 +810,6 @@ export class NPCPersonalitySystem {
         duration: action.duration,
         mood: profile.mood,
       })
-
-      console.log(`[NPC-EMERGENT] ${npcId} (${profile.archetype}/${profile.mood}) → ${action.actionId}`)
     }
   }
 

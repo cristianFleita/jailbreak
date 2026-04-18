@@ -260,13 +260,14 @@ export interface RoomDestroyedPayload {
 // See design/gdd/rutina-fases-npc.md for full specification.
 // ============================================================================
 
-export type JailPhaseNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+export type JailPhaseNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 
-/** A single step inside an ordered action sequence (cafeteria flow, Phase 1 chain). */
+/** A single step inside an ordered action sequence (cafeteria flow, etc.). */
 export interface NPCActionStep {
   actionId: string
   animTrigger: string
-  waypointId?: string           // destination waypoint (null = stay in place / use partner pos)
+  zoneId?: string               // target zone (null = stay in place / use partner pos)
+  seed?: number                 // deterministic RNG seed for point generation inside zone
   duration: number              // seconds to perform action at destination (0 = walk-only, no dwell)
   socialPartnerId?: string      // set for SOCIAL steps
 }
@@ -276,13 +277,15 @@ export interface NPCAssignment {
   npcId: string
   actionId: string
   animTrigger: string
-  waypointId?: string           // single waypoint (most actions)
-  waypointChain?: string[]      // LOOPING chain (e.g. yard_perimeter)
+  zoneId?: string               // target zone for navigation
+  seed?: number                 // deterministic seed for random point in zone
+  seedChain?: number[]          // LOOPING: multiple seeds for patrol points
   duration: number              // seconds before action expires (total for sequences)
   loop?: boolean                // true for LOOPING actions
   socialPartnerId?: string      // set for SOCIAL actions
-  subZone?: string              // set for Phase 6 (taller/lavanderia/piso)
-  actionSequence?: NPCActionStep[]  // ordered steps (cafeteria flow, Phase 1 chain)
+  subZone?: string              // sub-zone within parent zone
+  actionSequence?: NPCActionStep[]  // ordered steps (cafeteria flow, etc.)
+  walkSpeedMult?: number        // per-NPC walk speed variation (0.85–1.15)
 }
 
 /** Emitted to all clients when a jail phase starts. */
@@ -301,7 +304,7 @@ export interface PhaseWarningPayload {
   warningInSeconds: number
 }
 
-/** Emitted every ~25s with partial NPC reassignments (libre albedrío). */
+/** Emitted every ~15-25s with partial NPC reassignments (libre albedrío). */
 export interface NPCReassignPayload {
   timestamp: number
   assignments: NPCAssignment[]

@@ -189,14 +189,13 @@ export function startGameLoop(io: Server, room: GameRoom): void {
   const personality = gameManager.jailRoutine.getPersonalitySystem()
   personality.onEmergentAction = (payload) => {
     io.to(state.id).emit('npc:emergent', payload)
-    console.log(`[NPC-EMERGENT] Emitted: ${payload.npcId} → ${payload.actionId}`)
   }
   personality.onMoodShift = (payload) => {
     io.to(state.id).emit('npc:mood_shift', payload)
   }
 
-  // Start jail routine
-  gameManager.jailRoutine.start()
+  // Jail routine is started by transitionToActive AFTER game:start is emitted,
+  // so clients have time to load GameScene and subscribe to phase:start.
 
   let npcBroadcastCounter = 0
   const npcBroadcastThreshold = config.tickRate / npcSendRate // emit NPC every N ticks
@@ -272,6 +271,13 @@ export function initializeNPCs(room: GameRoom): void {
  * Transitions a room from lobby to active game.
  * Only the host can trigger this.
  */
+/**
+ * Delay (ms) between emitting `game:start` and starting the jail routine.
+ * Clients need this window to load the GameScene and let JailRoutineManager
+ * subscribe to `phase:start` before the server fires the first one.
+ */
+const JAIL_ROUTINE_START_DELAY_MS = 2000
+
 export function transitionToActive(io: Server, room: GameRoom): void {
   if (room.state.status !== 'lobby') {
     console.warn(`Cannot transition room "${room.state.id}" from ${room.state.status} to active`)
@@ -290,6 +296,22 @@ export function transitionToActive(io: Server, room: GameRoom): void {
   })
 
   console.log(`[ROOM] "${room.state.id}" transitioned to ACTIVE`)
+
+  // Start the jail routine AFTER clients have time to load GameScene and
+  // register JailRoutineManager subscribers. Without this delay, the first
+  // phase:start is emitted before Unity's JailRoutineManager.Start() runs,
+  // so NPCs receive no assignments and stay idle.
+  const roomId = room.state.id
+  setTimeout(() => {
+    const current = activeRooms.get(roomId)
+    if (!current || current.state.status !== 'active') return
+    const gm = (current as any).gameManager as GameManager | undefined
+    if (!gm) {
+      console.warn(`[JAIL] Cannot start routine — gameManager missing for room "${roomId}"`)
+      return
+    }
+    gm.jailRoutine.start()
+  }, JAIL_ROUTINE_START_DELAY_MS)
 }
 
 // ============================================================================

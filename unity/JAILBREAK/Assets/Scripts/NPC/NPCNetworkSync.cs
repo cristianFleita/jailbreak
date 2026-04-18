@@ -128,7 +128,7 @@ namespace Jailbreak.NPC
             if (behavior != null)
             {
                 behavior.PlayEmergentAction(data.animTrigger, data.duration);
-                Debug.Log($"[NPC] Emergent action: {data.npcId} → {data.actionId} ({data.mood})");
+                // Debug.Log($"[NPC] Emergent action: {data.npcId} → {data.actionId} ({data.mood})");
             }
         }
 
@@ -140,7 +140,7 @@ namespace Jailbreak.NPC
             if (behavior != null)
             {
                 behavior.ApplyMoodHint(data.animHint);
-                Debug.Log($"[NPC] Mood shift: {data.npcId} → {data.newMood} (hint={data.animHint})");
+                // Debug.Log($"[NPC] Mood shift: {data.npcId} → {data.newMood} (hint={data.animHint})");
             }
         }
 
