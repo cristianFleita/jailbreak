@@ -156,6 +156,10 @@ mergeInto(LibraryManager.library, {
         window.unityInstance.SendMessage(window._jbGoName, 'OnRiotAvailable', JSON.stringify(data));
       });
 
+      window._jbSocket.on('player:action', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnPlayerAction', JSON.stringify(data));
+      });
+
       window._jbSocket.on('game:error', function (data) {
         window.unityInstance.SendMessage(window._jbGoName, 'OnNetworkError', JSON.stringify(data));
       });
@@ -272,6 +276,13 @@ mergeInto(LibraryManager.library, {
     var action   = UTF8ToString(actionPtr);
     if (window._jbSocket && window._jbSocket.connected)
       window._jbSocket.emit('player:interact', { objectId: objectId, action: action });
+  },
+
+  SocketSendPlayerAction: function(objectIdPtr, actionPtr) {
+    var objectId = UTF8ToString(objectIdPtr);
+    var action   = UTF8ToString(actionPtr);
+    if (window._jbSocket && window._jbSocket.connected)
+      window._jbSocket.emit('player:action', { objectId: objectId, action: action });
   },
 
   SocketSendRiotActivate: function() {

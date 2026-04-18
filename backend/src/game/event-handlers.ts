@@ -237,6 +237,42 @@ function handleItemDrop(io: Server, roomId: string, room: GameRoom, playerId: st
 }
 
 // ============================================================================
+// player:action handler (animation / world-interaction broadcast)
+// ============================================================================
+
+export interface PlayerActionContext {
+  io: Server
+  roomId: string
+  room: GameRoom
+  socketId: string
+  objectId: string
+  action: string
+  timestamp: number
+}
+
+/**
+ * Handles generic world interactions that only need to be relayed so
+ * other clients can replay the animation on this player's avatar
+ * (sit/stand/etc). No item-inventory side effects — use player:interact
+ * for those.
+ */
+export function handlePlayerAction(context: PlayerActionContext): void {
+  const { io, roomId, room, socketId, objectId, action } = context
+
+  const player = room.state.players.get(socketId)
+  if (!player) return
+
+  if (!objectId || !action) return
+  if (objectId.length > 128 || action.length > 32) return
+
+  io.to(roomId).except(socketId).emit('player:action', {
+    playerId: player.userId,
+    objectId,
+    action,
+  })
+}
+
+// ============================================================================
 // guard:catch handler (guard attempts to catch prisoner)
 // ============================================================================
 

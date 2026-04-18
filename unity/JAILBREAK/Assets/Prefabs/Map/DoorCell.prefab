@@ -1,5 +1,173 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5717464332334727905
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1666529398394302257}
+  - component: {fileID: 8414492081526834052}
+  - component: {fileID: 628165448823221026}
+  - component: {fileID: 638105533171565665}
+  m_Layer: 6
+  m_Name: SideB
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!4 &1666529398394302257
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5717464332334727905}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.70710677, y: -0, z: -0, w: 0.7071069}
+  m_LocalPosition: {x: 0, y: -0.0063, z: -0}
+  m_LocalScale: {x: 1, y: 0.83333325, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9084947633364275715}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+--- !u!135 &8414492081526834052
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5717464332334727905}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.0025
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &628165448823221026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5717464332334727905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a60501593829649fa88290ce1828644a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DoorInteractable
+  fade: {fileID: 0}
+  holdDuration: 0.5
+--- !u!114 &638105533171565665
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5717464332334727905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc005fb9160bb47ac81abc44c9640108, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DoorAction
+  destination: {fileID: 7603646882560276550}
+  stateOpening: Opening
+  delayBeforeFade: 0.5
+--- !u!1 &8556814575915482004
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7603646882560276550}
+  - component: {fileID: 4717752684105195442}
+  - component: {fileID: 1792578161576796037}
+  - component: {fileID: 7973200605244168724}
+  m_Layer: 6
+  m_Name: SideA
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!4 &7603646882560276550
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556814575915482004}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.70710677, z: 0.70710677, w: 0}
+  m_LocalPosition: {x: 0, y: 0.0056, z: 0}
+  m_LocalScale: {x: 1, y: 0.83333325, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9084947633364275715}
+  m_LocalEulerAnglesHint: {x: -90, y: 90, z: 90}
+--- !u!135 &4717752684105195442
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556814575915482004}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.0025
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1792578161576796037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556814575915482004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a60501593829649fa88290ce1828644a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DoorInteractable
+  fade: {fileID: 0}
+  holdDuration: 0.5
+--- !u!114 &7973200605244168724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556814575915482004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc005fb9160bb47ac81abc44c9640108, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DoorAction
+  destination: {fileID: 1666529398394302257}
+  stateOpening: Opening
+  delayBeforeFade: 0.5
 --- !u!1001 &8763598882191537640
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14,15 +182,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f143f5cd42d9d430d844e660f8bd04cb, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 11.570291
+      value: 3.5551388
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f143f5cd42d9d430d844e660f8bd04cb, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1
+      value: 1.1999999
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f143f5cd42d9d430d844e660f8bd04cb, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.43
+      value: -2.6282403
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f143f5cd42d9d430d844e660f8bd04cb, type: 3}
       propertyPath: m_LocalRotation.w
@@ -64,8 +232,52 @@ PrefabInstance:
       propertyPath: m_Name
       value: DoorCell
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: f143f5cd42d9d430d844e660f8bd04cb, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: f143f5cd42d9d430d844e660f8bd04cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7603646882560276550}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: f143f5cd42d9d430d844e660f8bd04cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1666529398394302257}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f143f5cd42d9d430d844e660f8bd04cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7652660098092545296}
   m_SourcePrefab: {fileID: 100100000, guid: f143f5cd42d9d430d844e660f8bd04cb, type: 3}
+--- !u!1 &8457732687892072633 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: f143f5cd42d9d430d844e660f8bd04cb, type: 3}
+  m_PrefabInstance: {fileID: 8763598882191537640}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &7652660098092545296
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8457732687892072633}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.012295319, y: 0.0009209651, z: 0.020000005}
+  m_Center: {x: 0, y: -0.00009393563, z: 1.1606046e-18}
+--- !u!4 &9084947633364275715 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: f143f5cd42d9d430d844e660f8bd04cb, type: 3}
+  m_PrefabInstance: {fileID: 8763598882191537640}
+  m_PrefabAsset: {fileID: 0}

@@ -54,6 +54,7 @@ namespace Jailbreak.Player
         // ──────────────────────────── Private ───────────────────────────
         private CharacterController _cc;
         private FPSCameraController _fpsCam;
+        private SitInteraction      _sitInteraction;
         private float   _verticalVelocity;
         private bool    _crouchToggled;
         private Vector3 _horizontalVelocity;
@@ -62,11 +63,22 @@ namespace Jailbreak.Player
         {
             _cc = GetComponent<CharacterController>();
             _fpsCam = GetComponentInChildren<FPSCameraController>();
+            _sitInteraction = GetComponent<SitInteraction>();
         }
 
         private void Update()
         {
             if (!InputEnabled) return;
+
+            // Freeze input while seated — SitInteraction owns the avatar.
+            if (_sitInteraction != null && _sitInteraction.IsSitting)
+            {
+                MoveInput = Vector2.zero;
+                CurrentState = MovementState.Idle;
+                _horizontalVelocity = Vector3.zero;
+                return;
+            }
+
             HandleCrouchInput();
             ApplyMovement();
         }
@@ -172,6 +184,8 @@ namespace Jailbreak.Player
                 _verticalVelocity = groundStickForce;
             else
                 _verticalVelocity += gravity * Time.deltaTime;
+
+            if (!_cc.enabled) return;
 
             Vector3 finalMove = _horizontalVelocity + Vector3.up * _verticalVelocity;
             _cc.Move(finalMove * Time.deltaTime);

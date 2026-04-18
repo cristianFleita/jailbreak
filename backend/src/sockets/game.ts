@@ -20,6 +20,7 @@ import {
   handlePlayerMove,
   clearPlayerMoveTracking,
   handlePlayerInteract,
+  handlePlayerAction,
   handleGuardCatch,
   handleGuardMark,
   handleRiotActivate,
@@ -529,6 +530,30 @@ export function setupGameSockets(io: Server) {
         })
       } catch (err) {
         console.error(`[ERROR] player:interact: ${err}`)
+      }
+    })
+
+    // ==================================================================
+    // GAMEPLAY: player:action (sit, stand, other pure animation broadcasts)
+    // ==================================================================
+    socket.on('player:action', ({ objectId, action }: { objectId: string; action: string }) => {
+      if (!currentRoomId) return
+
+      try {
+        const room = getRoom(currentRoomId)
+        if (!room || room.state.status !== 'active') return
+
+        handlePlayerAction({
+          io,
+          roomId: currentRoomId,
+          room,
+          socketId: socket.id,
+          objectId,
+          action,
+          timestamp: Date.now(),
+        })
+      } catch (err) {
+        console.error(`[ERROR] player:action: ${err}`)
       }
     })
 

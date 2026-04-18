@@ -342,6 +342,13 @@ namespace Jailbreak.Network
                     Destroy(fpsCam);
                 }
 
+                // InteractionManager is local-only — remote avatars don't scan for interactables.
+                foreach (var im in go.GetComponentsInChildren<InteractionManager>(true))
+                {
+                    im.enabled = false;
+                    Destroy(im);
+                }
+
                 foreach (var visual in go.GetComponentsInChildren<LocalPlayerRoleVisual>(true))
                 {
                     visual.enabled = false;
@@ -397,6 +404,10 @@ namespace Jailbreak.Network
             var sync = go.AddComponent<RemotePlayerSync>();
             sync.PlayerId = playerId;
             sync.Role = player.role;
+
+            // Replays sit/stand and other broadcast animations on this avatar.
+            var remoteInteract = go.AddComponent<RemoteInteractionHandler>();
+            remoteInteract.PlayerId = playerId;
 
             RemotePlayerGameObjects[playerId] = go;
             Debug.Log($"[GSM] Spawned remote player {playerId} ({player.role})");

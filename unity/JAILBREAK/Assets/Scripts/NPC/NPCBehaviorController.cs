@@ -418,10 +418,19 @@ namespace Jailbreak.NPC
             }
             if (string.IsNullOrEmpty(backendTrigger)) return;
             string stateName = MapTriggerToStateName(backendTrigger);
-            try { animator.CrossFade(stateName, 0.25f); }
-            catch (System.Exception ex)
+
+            if (animator.HasState(0, Animator.StringToHash(stateName)))
             {
-                Debug.LogWarning($"[NPC-CTRL] {name} CrossFade('{stateName}' from trigger '{backendTrigger}') failed: {ex.Message}");
+                try { animator.CrossFade(stateName, 0.25f); }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[NPC-CTRL] {name} CrossFade('{stateName}') failed: {ex.Message}");
+                }
+            }
+            else
+            {
+                // Comment out to reduce console spam, or keep as trace log
+                // Debug.Log($"[NPC-CTRL] Animator state '{stateName}' missing. Skipping.");
             }
         }
 

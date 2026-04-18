@@ -74,6 +74,7 @@ namespace Jailbreak.Network
         public event Action<ChaseEndPayload>          OnChaseEndEvent;
         public event Action<ItemPickupPayload>        OnItemPickupEvent;
         public event Action<RiotAvailablePayload>     OnRiotAvailableEvent;
+        public event Action<PlayerActionBroadcast>    OnPlayerActionEvent;
         public event Action<GameEndPayload>           OnGameEndEvent;
         public event Action<ErrorPayload>             OnNetworkErrorEvent;
 
@@ -110,6 +111,7 @@ namespace Jailbreak.Network
         [DllImport("__Internal")] private static extern void   SocketSendGuardMark(string targetId);
         [DllImport("__Internal")] private static extern void   SocketSendGuardCatch(string targetId);
         [DllImport("__Internal")] private static extern void   SocketSendInteract(string objectId, string action);
+        [DllImport("__Internal")] private static extern void   SocketSendPlayerAction(string objectId, string action);
         [DllImport("__Internal")] private static extern void   SocketSendRiotActivate();
         [DllImport("__Internal")] private static extern void   SocketDisconnect();
         [DllImport("__Internal")] private static extern string SocketGetSavedUserId();
@@ -307,6 +309,21 @@ namespace Jailbreak.Network
             SocketSendInteract(objectId, action);
 #else
             _socket?.Emit("player:interact", new { objectId, action });
+#endif
+        }
+
+        /// <summary>
+        /// Broadcast an animation/interaction action (sit, stand, etc.) so
+        /// other players can replay it on their local view of this avatar.
+        /// </summary>
+        public void SendPlayerAction(string objectId, string action)
+        {
+            if (!IsInGame()) return;
+            if (string.IsNullOrEmpty(objectId) || string.IsNullOrEmpty(action)) return;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketSendPlayerAction(objectId, action);
+#else
+            _socket?.Emit("player:action", new { objectId, action });
 #endif
         }
 
@@ -524,6 +541,15 @@ namespace Jailbreak.Network
             {
                 var data = JsonUtility.FromJson<RiotAvailablePayload>(json);
                 if (data != null) OnRiotAvailableEvent?.Invoke(data);
+            });
+        }
+
+        public void OnPlayerAction(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<PlayerActionBroadcast>(json);
+                if (data != null) OnPlayerActionEvent?.Invoke(data);
             });
         }
 
@@ -789,6 +815,7 @@ namespace Jailbreak.Network
             SafeOn("guard:catch",     r => { var d = DeserializePayload<GuardCatchPayload>(r);   if (d != null) _mainThreadQueue.Enqueue(() => OnGuardCatchResultEvent?.Invoke(d)); });
             SafeOn("item:pickup",     r => { var d = DeserializePayload<ItemPickupPayload>(r);   if (d != null) _mainThreadQueue.Enqueue(() => OnItemPickupEvent?.Invoke(d)); });
             SafeOn("riot:available",  r => { var d = DeserializePayload<RiotAvailablePayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnRiotAvailableEvent?.Invoke(d)); });
+            SafeOn("player:action",   r => { var d = DeserializePayload<PlayerActionBroadcast>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnPlayerActionEvent?.Invoke(d)); });
 
             // ── Jail Routine ────────────────────────────────────────────────
             SafeOn("phase:start",     r =>

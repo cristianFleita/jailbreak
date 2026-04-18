@@ -241,6 +241,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2600528320395038493}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -7930234721466850350}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -4780673932401400159}
   m_SourcePrefab: {fileID: 100100000, guid: 95f474a6999504cab8d278219818a844, type: 3}
 --- !u!1 &4896770664015057812 stripped
 GameObject:
@@ -333,6 +339,10 @@ MonoBehaviour:
   sprintSpeed: 5.5
   crouchWalkSpeed: 1.75
   gravity: -9.81
+  groundAcceleration: 50
+  groundDeceleration: 40
+  groundStickForce: -5
+  bodyTurnSpeed: 12
   standHeight: 1.8
   crouchHeight: 1.08
 --- !u!114 &1867405715995006684
@@ -372,6 +382,42 @@ MonoBehaviour:
   _bobReturnSpeed: 6
   _cameraRoot: {fileID: 0}
   _minAirTimeForLanding: 0.25
+--- !u!114 &-7930234721466850350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4896770664015057812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d0f86a8c123748bda22eccf806ed284, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SitInteraction
+  animator: {fileID: 8499304390062826147}
+  characterController: {fileID: 6888280968545402477}
+  stateSitDown: Sitting
+  stateSitIdle: Sitting
+  stateStandUp: SitToStand
+  animationEndThreshold: 0.9
+--- !u!114 &-4780673932401400159
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4896770664015057812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d7a6c2dcc9b748b5bb91c7abd831c10, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InteractionManager
+  detectionRadius: 2
+  interactableLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  prompt: {fileID: 0}
+  arrowPrefab: {fileID: 0}
 --- !u!4 &5241911055874754862 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 95f474a6999504cab8d278219818a844, type: 3}

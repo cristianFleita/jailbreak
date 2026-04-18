@@ -283,6 +283,21 @@ namespace Jailbreak.Network
         public string movementState;
     }
 
+    [Serializable]
+    public class PlayerActionPayload
+    {
+        public string objectId;
+        public string action;
+    }
+
+    [Serializable]
+    public class PlayerActionBroadcast
+    {
+        public string playerId;
+        public string objectId;
+        public string action;
+    }
+
     // ─── Jail Routine / NPC Phase System ─────────────────────────────────────
     // Mirrors backend types.ts: NPCAssignment, PhaseJailStartPayload, etc.
 
