@@ -126,11 +126,11 @@ public class SitInteraction : MonoBehaviour
         if (animator != null)
         {
             if (animator.HasState(0, Animator.StringToHash(stateSitDown)))
-                animator.CrossFade(stateSitDown, 0.2f);
+                animator.CrossFade(stateSitDown, 0.1f);
         }
 
         // Snappy wait to let the sit animation begin and settle
-        yield return new WaitForSeconds(0.35f);
+        yield return new WaitForSeconds(0.15f);
 
         if (animator != null) animator.applyRootMotion = false;
         interactionLock.Release();
@@ -155,14 +155,14 @@ public class SitInteraction : MonoBehaviour
             // If there's a specific stand up state, play it. 
             // Otherwise force them back to Idle so they don't get stuck sitting.
             if (animator.HasState(0, Animator.StringToHash(stateStandUp)))
-                animator.CrossFade(stateStandUp, 0.2f);
+                animator.CrossFade(stateStandUp, 0.1f);
             else
-                animator.CrossFade("Idle", 0.2f);
+                animator.CrossFade("Idle", 0.1f);
         }
 
-        // Just wait a snappy 0.35s to let the crossfade/stand animation finish.
+        // Just wait a snappy 0.15s to let the crossfade/stand animation finish.
         // This avoids the 2-second timeout when the state name is missing.
-        yield return new WaitForSeconds(0.35f);
+        yield return new WaitForSeconds(0.15f);
 
         Vector3 finalPosition = transform.position;
 
