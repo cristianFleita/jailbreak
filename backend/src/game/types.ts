@@ -54,6 +54,7 @@ export interface PlayerState {
   isAlive: boolean
   health?: number
   spawnWaypointId?: string // e.g. "cell_door_exit_03" — Unity resolves to world position
+  carrying?: string | null // e.g. "food_plate" — visual prop parented to player's hand (reconnect-safe)
 }
 
 // ============================================================================

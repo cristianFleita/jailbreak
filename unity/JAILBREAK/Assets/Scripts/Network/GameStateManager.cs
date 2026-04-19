@@ -206,6 +206,7 @@ namespace Jailbreak.Network
                         LocalRole = p.role;
                         Debug.Log($"[GSM] Role discovered from player:state → {LocalRole.ToUpper()}");
                     }
+                    SyncLocalCarrying(p.carrying);
                     continue;
                 }
 
@@ -221,6 +222,9 @@ namespace Jailbreak.Network
                 {
                     var sync = go.GetComponent<RemotePlayerSync>();
                     if (sync != null) sync.PushState(p);
+
+                    var carry = go.GetComponent<CarryFoodInteraction>();
+                    if (carry != null) carry.SyncFromServer(p.carrying);
                 }
             }
 
@@ -276,6 +280,38 @@ namespace Jailbreak.Network
         }
 
         // ─── Helpers ─────────────────────────────────────────────────────────
+
+        // Cached reference to the local player's carry component. Located lazily
+        // because the local player prefab may spawn after the first player:state.
+        private CarryFoodInteraction _localCarry;
+
+        /// <summary>
+        /// Applies the authoritative `carrying` value to the local player so the
+        /// plate visual survives player:state churn and F5 reconnects.
+        /// </summary>
+        private void SyncLocalCarrying(string serverCarrying)
+        {
+            if (_localCarry == null)
+            {
+#if UNITY_2023_1_OR_NEWER
+                var all = Object.FindObjectsByType<CarryFoodInteraction>(FindObjectsSortMode.None);
+#else
+                var all = Object.FindObjectsOfType<CarryFoodInteraction>();
+#endif
+                foreach (var c in all)
+                {
+                    // Local player is the one with an InteractionManager — remotes get it stripped.
+                    if (c.GetComponent<InteractionManager>() != null)
+                    {
+                        _localCarry = c;
+                        break;
+                    }
+                }
+            }
+
+            if (_localCarry != null)
+                _localCarry.SyncFromServer(serverCarrying);
+        }
 
         private void SyncPlayerList(PlayerStateData[] incoming)
         {

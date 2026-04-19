@@ -1025,3 +1025,13 @@ web/public/unity-build/Build/unity-build.wasm
 76a9a87 chore: sit interaction - player + broadcast
 ---
 
+## Session End: 20260419_000945
+### Commits
+ba3ae43 chore: npcs action sit
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+

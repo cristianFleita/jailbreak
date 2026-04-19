@@ -59,6 +59,7 @@ namespace Jailbreak.Player
         private PlayerInputController _input;
         private RemotePlayerSync      _remote;
         private CharacterController   _characterController;
+        private CarryFoodInteraction  _carryFood;
 
         private string _currentAnimState  = "";
         private float  _currentStrafeBlend = 0f;
@@ -79,6 +80,7 @@ namespace Jailbreak.Player
             _animator            = GetComponentInChildren<Animator>();
             _input               = GetComponent<PlayerInputController>();
             _characterController = GetComponent<CharacterController>();
+            _carryFood           = GetComponent<CarryFoodInteraction>();
 
             if (_animator == null)
                 Debug.LogWarning($"[AnimController] CRITICAL: No Animator found on '{gameObject.name}' or its children!");
@@ -119,6 +121,11 @@ namespace Jailbreak.Player
                                        : true;
             string targetState   = MapToAnimatorState(rawState, isGrounded);
 
+            // Carrying overlay: route grounded idle/walk/run to the Carrying* variants
+            // when the character is holding a plate. Airborne stays as-is (no CarryingJump state).
+            if (isGrounded && _carryFood != null && _carryFood.IsCarrying)
+                targetState = MapToCarryingState(targetState);
+
             // ── 3. Drive Animator float parameters ───────────────────────────────
             float targetStrafe = isLocal ? ResolveLocalStrafe() : 0f;
             _currentStrafeBlend = Mathf.Lerp(_currentStrafeBlend, targetStrafe,
@@ -131,7 +138,11 @@ namespace Jailbreak.Player
             if (_hasParamSpeed) _animator.SetFloat(HashSpeed, normalizedSpeed);
 
             // ── 4. State transition ───────────────────────────────────────────────
-            if (_currentAnimState != targetState)
+            // Skip locomotion crossfades while the pick-up one-shot is playing; otherwise
+            // the overlay would immediately restate CarryingIdle/CarryingWalk and
+            // steal the Any State → Pick trigger transition.
+            bool isPickingUp = _carryFood != null && _carryFood.IsPickingUp;
+            if (!isPickingUp && _currentAnimState != targetState)
             {
                 string playerTag = isLocal ? "LOCAL" : "REMOTE";
                 Debug.Log($"[AnimController] {playerTag} '{gameObject.name}': {_currentAnimState} → {targetState} (raw: {rawState})");
@@ -158,6 +169,21 @@ namespace Jailbreak.Player
             return _remote != null
                 ? _remote.MovementState?.ToLower() ?? "idle"
                 : "idle";
+        }
+
+        // Maps base locomotion states to their carrying-a-plate variants.
+        // Only CarryingIdle / CarryingWalk exist, so Running collapses into CarryingWalk.
+        private static string MapToCarryingState(string baseState)
+        {
+            return baseState switch
+            {
+                "Idle"       => "CarryingIdle",
+                "Walking"    => "CarryingWalk",
+                "Running"    => "CarryingWalk",
+                "CrouchWalk" => "CarryingWalk",
+                "Crouch"     => "CarryingIdle",
+                _            => baseState // Airborne and anything else: keep as-is
+            };
         }
 
         // ── Animator state mapping ────────────────────────────────────────────────

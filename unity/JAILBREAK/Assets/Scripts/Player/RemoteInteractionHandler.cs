@@ -20,10 +20,12 @@ namespace Jailbreak.Player
         public string PlayerId { get; set; }
 
         private SitInteraction sitInteraction;
+        private CarryFoodInteraction carryFoodInteraction;
 
         void Awake()
         {
-            sitInteraction = GetComponent<SitInteraction>();
+            sitInteraction       = GetComponent<SitInteraction>();
+            carryFoodInteraction = GetComponent<CarryFoodInteraction>();
         }
 
         void OnEnable()
@@ -39,6 +41,8 @@ namespace Jailbreak.Player
 
             // Free any occupied seats if this remote player disconnects mid-sit.
             sitInteraction?.ForceReset();
+            // Drop any held prop so the plate prefab doesn't leak when the avatar despawns.
+            carryFoodInteraction?.ForceReset();
         }
 
         // ─── Broadcast handler ────────────────────────────────────────────────
@@ -61,6 +65,15 @@ namespace Jailbreak.Player
             if (sitPoint != null && sitInteraction != null)
             {
                 sitPoint.ApplyRemote(sitInteraction, data.action);
+                Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
+                return;
+            }
+
+            // ── Food counter pickup ──────────────────────────────────────────
+            var foodCounter = ni.GetComponent<FoodCounterInteractable>();
+            if (foodCounter != null && carryFoodInteraction != null)
+            {
+                foodCounter.ApplyRemote(carryFoodInteraction, data.action);
                 Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
                 return;
             }

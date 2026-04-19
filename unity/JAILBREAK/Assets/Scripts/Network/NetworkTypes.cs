@@ -58,6 +58,7 @@ namespace Jailbreak.Network
         public bool isAlive;
         public float health;
         public string spawnWaypointId; // e.g. "cell_door_exit_17" — resolve via WaypointRegistry
+        public string carrying;        // e.g. "food_plate" — null/empty means "nothing carried"
     }
 
     [Serializable]

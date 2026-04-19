@@ -95,6 +95,7 @@ export function addPlayer(
     velocity: { x: 0, y: 0, z: 0 },
     movementState: 'idle',
     isAlive: true,
+    carrying: null,
   }
 
   state.players.set(playerId, player)

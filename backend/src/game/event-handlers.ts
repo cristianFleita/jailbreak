@@ -255,6 +255,9 @@ export interface PlayerActionContext {
  * other clients can replay the animation on this player's avatar
  * (sit/stand/etc). No item-inventory side effects — use player:interact
  * for those.
+ *
+ * Exception: a short allowlist of actions mutates a small piece of PlayerState
+ * (e.g. `carrying`) so the visual prop survives reconnects.
  */
 export function handlePlayerAction(context: PlayerActionContext): void {
   const { io, roomId, room, socketId, objectId, action } = context
@@ -264,6 +267,14 @@ export function handlePlayerAction(context: PlayerActionContext): void {
 
   if (!objectId || !action) return
   if (objectId.length > 128 || action.length > 32) return
+
+  // Persist reconnect-safe side effects for known actions.
+  // Keep this list tight — purely-animation actions (sit/stand) stay stateless.
+  if (action === 'takeFood') {
+    player.carrying = 'food_plate'
+  } else if (action === 'leaveFood') {
+    player.carrying = null
+  }
 
   io.to(roomId).except(socketId).emit('player:action', {
     playerId: player.userId,
