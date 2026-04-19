@@ -16534,6 +16534,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Desk
       objectReference: {fileID: 0}
+    - target: {fileID: 4513094701262644639, guid: 543176ee17d0748879f3fabe5829c85f, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -21803,6 +21807,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Desk (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 4513094701262644639, guid: 543176ee17d0748879f3fabe5829c85f, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -30235,6 +30243,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Desk (6)
       objectReference: {fileID: 0}
+    - target: {fileID: 4513094701262644639, guid: 543176ee17d0748879f3fabe5829c85f, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -34899,6 +34911,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Desk (7)
       objectReference: {fileID: 0}
+    - target: {fileID: 4513094701262644639, guid: 543176ee17d0748879f3fabe5829c85f, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
