@@ -317,7 +317,7 @@ NavMeshAgent:
   m_Height: 2
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4
+  m_ObstacleAvoidanceType: 0
 --- !u!114 &5742666933800053897
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -357,6 +357,8 @@ MonoBehaviour:
   animBoolCarrying: isCarrying
   animTriggerPickUp: PickUp
   plateSpawnDelay: 0.6
+  animTriggerPutDown: PutDown
+  plateDestroyDelay: 0.6
 --- !u!4 &6233008144420507917 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1852576806548013000, guid: 95f474a6999504cab8d278219818a844, type: 3}
