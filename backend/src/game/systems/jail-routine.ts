@@ -84,14 +84,15 @@ const JAIL_PHASES: JailPhaseDef[] = [
     phase: 2, name: 'Trabajo', duration: 90, zone: 'trabajo',
     subZones: ['taller', 'lavanderia'],
     actions: [
-      { actionId: 'work_use_workbench',     type: 'IDLE',    animTrigger: 'work_bench',    zoneId: 'workshop_benches', weight: 40, minDuration: 20, maxDuration: 50 },
-      { actionId: 'work_carry_box',         type: 'LOOPING', animTrigger: 'carry_box',     zoneId: 'workshop',         weight: 30, minDuration: 12, maxDuration: 20, loop: true, chainLength: 2 },
-      { actionId: 'work_inspect_equipment', type: 'IDLE',    animTrigger: 'inspect',       zoneId: 'workshop',         weight: 20, minDuration: 10, maxDuration: 20 },
-      { actionId: 'work_talk_coworker',     type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'workshop',         weight: 10, minDuration: 8,  maxDuration: 15 },
-      { actionId: 'laundry_load_washer',    type: 'IDLE',    animTrigger: 'load_machine',  zoneId: 'laundry_machines', weight: 30, minDuration: 15, maxDuration: 30 },
-      { actionId: 'laundry_fold_clothes',   type: 'IDLE',    animTrigger: 'fold_clothes',  zoneId: 'laundry',          weight: 35, minDuration: 20, maxDuration: 40 },
-      { actionId: 'laundry_carry_basket',   type: 'LOOPING', animTrigger: 'carry_basket',  zoneId: 'laundry_machines', weight: 25, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
-      { actionId: 'laundry_idle_check',     type: 'IDLE',    animTrigger: 'idle_check',    zoneId: 'laundry_machines', weight: 10, minDuration: 5,  maxDuration: 12 },
+      // Taller — free choice (weighted random)
+      { actionId: 'work_use_workbench',     type: 'IDLE',    animTrigger: 'work_bench',    zoneId: 'zone_workshop_bench', weight: 45, minDuration: 20, maxDuration: 50 },
+      { actionId: 'work_inspect_cabinets',  type: 'IDLE',    animTrigger: 'inspect',       zoneId: 'zone_workshop_cab',   weight: 35, minDuration: 10, maxDuration: 20 },
+      { actionId: 'work_talk_coworker',     type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'zone_workshop_chat',  weight: 20, minDuration: 8,  maxDuration: 15 },
+      // Lavandería — strict sequential flow (see buildLaundrySequence)
+      { actionId: 'laundry_grab_clothes',   type: 'ONESHOT', animTrigger: 'rummaging',     zoneId: 'zone_laundry_pile',   weight: 100, minDuration: 3,  maxDuration: 5  },
+      { actionId: 'laundry_load_washer',    type: 'IDLE',    animTrigger: 'load_machine',  zoneId: 'zone_laundry_wash',   weight: 100, minDuration: 15, maxDuration: 20 },
+      { actionId: 'laundry_store_clothes',  type: 'IDLE',    animTrigger: 'store_clothes', zoneId: 'zone_laundry_shelf',  weight: 100, minDuration: 3,  maxDuration: 5  },
+      { actionId: 'laundry_talk_coworker',  type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'zone_laundry_chat',   weight: 30,  minDuration: 8,  maxDuration: 15 },
     ],
   },
   {
@@ -109,8 +110,11 @@ const JAIL_PHASES: JailPhaseDef[] = [
       { actionId: 'free_cafe_sit_talk',      type: 'SOCIAL',  animTrigger: 'talk_seated',   zoneId: 'cafeteria_seating',weight: 40, minDuration: 15, maxDuration: 40 },
       { actionId: 'free_cafe_sit_idle',      type: 'IDLE',    animTrigger: 'sit_idle',      zoneId: 'cafeteria_seating',weight: 35, minDuration: 10, maxDuration: 30 },
       { actionId: 'free_cafe_stand_chat',    type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'cafeteria',       weight: 25, minDuration: 10, maxDuration: 25 },
-      { actionId: 'laundry_load_washer',     type: 'IDLE',    animTrigger: 'load_machine',  zoneId: 'laundry_machines',weight: 30, minDuration: 15, maxDuration: 30 },
-      { actionId: 'laundry_fold_clothes',    type: 'IDLE',    animTrigger: 'fold_clothes',  zoneId: 'laundry',         weight: 35, minDuration: 20, maxDuration: 40 },
+      // Lavandería (ropa personal) — strict sequential flow (see buildLaundrySequence)
+      { actionId: 'laundry_grab_clothes',    type: 'ONESHOT', animTrigger: 'rummaging',     zoneId: 'zone_laundry_pile',   weight: 100, minDuration: 3,  maxDuration: 5  },
+      { actionId: 'laundry_load_washer',     type: 'IDLE',    animTrigger: 'load_machine',  zoneId: 'zone_laundry_wash',   weight: 100, minDuration: 15, maxDuration: 20 },
+      { actionId: 'laundry_store_clothes',   type: 'IDLE',    animTrigger: 'store_clothes', zoneId: 'zone_laundry_shelf',  weight: 100, minDuration: 3,  maxDuration: 5  },
+      { actionId: 'laundry_talk_coworker',   type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'zone_laundry_chat',   weight: 30,  minDuration: 8,  maxDuration: 15 },
       { actionId: 'cell_lie_bed',            type: 'IDLE',    animTrigger: 'lie_down',      zoneId: 'cells',           weight: 60, minDuration: 20, maxDuration: 60 },
       { actionId: 'cell_sit_bed',            type: 'IDLE',    animTrigger: 'sit_bed_edge',  zoneId: 'cells',           weight: 40, minDuration: 15, maxDuration: 40 },
     ],
@@ -133,14 +137,15 @@ const JAIL_PHASES: JailPhaseDef[] = [
     phase: 5, name: 'Trabajo', duration: 120, zone: 'trabajo',
     subZones: ['taller', 'lavanderia'],
     actions: [
-      { actionId: 'work_use_workbench',     type: 'IDLE',    animTrigger: 'work_bench',    zoneId: 'workshop_benches', weight: 40, minDuration: 20, maxDuration: 50 },
-      { actionId: 'work_carry_box',         type: 'LOOPING', animTrigger: 'carry_box',     zoneId: 'workshop',         weight: 30, minDuration: 12, maxDuration: 20, loop: true, chainLength: 2 },
-      { actionId: 'work_inspect_equipment', type: 'IDLE',    animTrigger: 'inspect',       zoneId: 'workshop',         weight: 20, minDuration: 10, maxDuration: 20 },
-      { actionId: 'work_talk_coworker',     type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'workshop',         weight: 10, minDuration: 8,  maxDuration: 15 },
-      { actionId: 'laundry_load_washer',    type: 'IDLE',    animTrigger: 'load_machine',  zoneId: 'laundry_machines', weight: 30, minDuration: 15, maxDuration: 30 },
-      { actionId: 'laundry_fold_clothes',   type: 'IDLE',    animTrigger: 'fold_clothes',  zoneId: 'laundry',          weight: 35, minDuration: 20, maxDuration: 40 },
-      { actionId: 'laundry_carry_basket',   type: 'LOOPING', animTrigger: 'carry_basket',  zoneId: 'laundry_machines', weight: 25, minDuration: 10, maxDuration: 18, loop: true, chainLength: 2 },
-      { actionId: 'laundry_idle_check',     type: 'IDLE',    animTrigger: 'idle_check',    zoneId: 'laundry_machines', weight: 10, minDuration: 5,  maxDuration: 12 },
+      // Taller — free choice (weighted random)
+      { actionId: 'work_use_workbench',     type: 'IDLE',    animTrigger: 'work_bench',    zoneId: 'zone_workshop_bench', weight: 45, minDuration: 20, maxDuration: 50 },
+      { actionId: 'work_inspect_cabinets',  type: 'IDLE',    animTrigger: 'inspect',       zoneId: 'zone_workshop_cab',   weight: 35, minDuration: 10, maxDuration: 20 },
+      { actionId: 'work_talk_coworker',     type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'zone_workshop_chat',  weight: 20, minDuration: 8,  maxDuration: 15 },
+      // Lavandería — strict sequential flow (see buildLaundrySequence)
+      { actionId: 'laundry_grab_clothes',   type: 'ONESHOT', animTrigger: 'rummaging',     zoneId: 'zone_laundry_pile',   weight: 100, minDuration: 3,  maxDuration: 5  },
+      { actionId: 'laundry_load_washer',    type: 'IDLE',    animTrigger: 'load_machine',  zoneId: 'zone_laundry_wash',   weight: 100, minDuration: 15, maxDuration: 20 },
+      { actionId: 'laundry_store_clothes',  type: 'IDLE',    animTrigger: 'store_clothes', zoneId: 'zone_laundry_shelf',  weight: 100, minDuration: 3,  maxDuration: 5  },
+      { actionId: 'laundry_talk_coworker',  type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'zone_laundry_chat',   weight: 30,  minDuration: 8,  maxDuration: 15 },
     ],
   },
   {
@@ -155,6 +160,11 @@ const JAIL_PHASES: JailPhaseDef[] = [
       { actionId: 'free_cafe_sit_talk',      type: 'SOCIAL',  animTrigger: 'talk_seated',   zoneId: 'cafeteria_seating',weight: 40, minDuration: 15, maxDuration: 40 },
       { actionId: 'free_cafe_sit_idle',      type: 'IDLE',    animTrigger: 'sit_idle',      zoneId: 'cafeteria_seating',weight: 35, minDuration: 10, maxDuration: 30 },
       { actionId: 'free_cafe_stand_chat',    type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'cafeteria',       weight: 25, minDuration: 10, maxDuration: 25 },
+      // Lavandería (ropa personal) — strict sequential flow (see buildLaundrySequence)
+      { actionId: 'laundry_grab_clothes',    type: 'ONESHOT', animTrigger: 'rummaging',     zoneId: 'zone_laundry_pile',   weight: 100, minDuration: 3,  maxDuration: 5  },
+      { actionId: 'laundry_load_washer',     type: 'IDLE',    animTrigger: 'load_machine',  zoneId: 'zone_laundry_wash',   weight: 100, minDuration: 15, maxDuration: 20 },
+      { actionId: 'laundry_store_clothes',   type: 'IDLE',    animTrigger: 'store_clothes', zoneId: 'zone_laundry_shelf',  weight: 100, minDuration: 3,  maxDuration: 5  },
+      { actionId: 'laundry_talk_coworker',   type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'zone_laundry_chat',   weight: 30,  minDuration: 8,  maxDuration: 15 },
       { actionId: 'cell_lie_bed',            type: 'IDLE',    animTrigger: 'lie_down',      zoneId: 'cells',           weight: 60, minDuration: 20, maxDuration: 60 },
       { actionId: 'cell_sit_bed',            type: 'IDLE',    animTrigger: 'sit_bed_edge',  zoneId: 'cells',           weight: 40, minDuration: 15, maxDuration: 40 },
     ],
@@ -183,9 +193,11 @@ const JAIL_PHASES: JailPhaseDef[] = [
 ]
 
 // Sub-zone → valid action IDs
+// Note: lavanderia uses a hand-rolled strict sequence (buildLaundrySequence), so these
+// entries exist only so getActionPool() returns something non-empty when queried.
 const SUBZONE_ACTIONS: Record<string, string[]> = {
-  taller:     ['work_use_workbench', 'work_carry_box', 'work_inspect_equipment', 'work_talk_coworker'],
-  lavanderia: ['laundry_load_washer', 'laundry_fold_clothes', 'laundry_carry_basket', 'laundry_idle_check'],
+  taller:     ['work_use_workbench', 'work_inspect_cabinets', 'work_talk_coworker'],
+  lavanderia: ['laundry_grab_clothes', 'laundry_load_washer', 'laundry_store_clothes', 'laundry_talk_coworker'],
   patio:      ['yard_walk_perimeter', 'yard_sit_bench', 'yard_exercise', 'yard_conversation_group', 'yard_play_cards', 'yard_lean_wall', 'yard_shadow_boxing', 'yard_kick_ball'],
   comedor:    ['free_cafe_sit_talk', 'free_cafe_sit_idle', 'free_cafe_stand_chat'],
   celdas:     ['cell_lie_bed', 'cell_sit_bed', 'cell_read_book', 'cell_idle_window'],
@@ -341,6 +353,17 @@ export class JailRoutineSystem {
       if (paired.has(npcId)) continue
 
       const subZone    = this.npcSubZones.get(npcId)
+
+      // Lavandería uses a strict sequential flow (grab → load → store → opt. talk),
+      // not weighted random from a pool.
+      if (subZone === 'lavanderia') {
+        const walkSpeedMult = 0.85 + Math.random() * 0.30
+        const usePrefix = def.phase !== 8
+        const prefix    = usePrefix ? this.buildTransitionPrefix(npcId) : []
+        assignments.push(this.buildLaundrySequence(npcId, subZone, walkSpeedMult, prefix, def.duration))
+        continue
+      }
+
       const actionPool = this.getActionPool(def, subZone)
       const personalizedPool = this.personality.applyWeightModifiers(npcId, actionPool)
       const action     = this.weightedRandom(personalizedPool)
@@ -546,6 +569,56 @@ export class JailRoutineSystem {
     return assignments
   }
 
+  /**
+   * Strict laundry flow: grab_clothes → load_washer → store_clothes → [optional talk].
+   * Used for Phase 2/5 (Trabajo · lavanderia subzone) and Phase 3/6 (Hora libre · lavanderia).
+   * The backend emits the full ordered sequence as actionSequence steps so Unity
+   * chains them automatically via NPCBehaviorController.UpdateSequence.
+   */
+  private buildLaundrySequence(
+    npcId: string,
+    subZone: string,
+    walkSpeedMult: number,
+    prefix: NPCActionStep[],
+    phaseDuration: number,
+  ): NPCAssignment {
+    const steps: NPCActionStep[] = [...prefix]
+
+    const grabDur  = 3 + Math.random() * 2       // 3–5s
+    const loadDur  = 15 + Math.random() * 5      // 15–20s
+    const storeDur = 3 + Math.random() * 2       // 3–5s
+
+    // Reuse one seed per zone so all clients pick the same pile/washer/shelf slot.
+    const pileSeed  = generateSeed()
+    const washSeed  = generateSeed()
+    const shelfSeed = generateSeed()
+
+    steps.push({ actionId: 'laundry_grab_clothes',  animTrigger: 'rummaging',     zoneId: 'zone_laundry_pile',  seed: pileSeed,  duration: grabDur  })
+    steps.push({ actionId: 'laundry_load_washer',   animTrigger: 'load_machine',  zoneId: 'zone_laundry_wash',  seed: washSeed,  duration: loadDur  })
+    steps.push({ actionId: 'laundry_store_clothes', animTrigger: 'store_clothes', zoneId: 'zone_laundry_shelf', seed: shelfSeed, duration: storeDur })
+
+    // Optional post-flow chat. SOCIAL partner logic is skipped here: a laundry
+    // chat targets the zone, not a specific NPC, so no partner pairing needed.
+    if (Math.random() < 0.30) {
+      const chatDur  = 8 + Math.random() * 7     // 8–15s
+      const chatSeed = generateSeed()
+      steps.push({ actionId: 'laundry_talk_coworker', animTrigger: 'talk_standing', zoneId: 'zone_laundry_chat', seed: chatSeed, duration: chatDur })
+    }
+
+    const totalDur = steps.reduce((s, st) => s + st.duration, 0) + 5
+    this.personality.recordAction(npcId, 'laundry_grab_clothes')
+
+    return {
+      npcId,
+      actionId:       'laundry_sequence',
+      animTrigger:    'idle',
+      duration:       Math.min(totalDur, phaseDuration),
+      subZone,
+      actionSequence: steps,
+      walkSpeedMult,
+    }
+  }
+
   private buildSoloAssignment(npcId: string, action: ActionDef, subZone?: string, walkSpeedMult?: number): NPCAssignment {
     const dur  = this.randomDuration(action)
     const seed = generateSeed()
@@ -629,6 +702,17 @@ export class JailRoutineSystem {
           this.npcSubZones.set(npcId, newSubZone)
           subZone = newSubZone
         }
+      }
+
+      // Lavandería: rebuild the full strict sequence so NPCs keep looping
+      // grab → load → store → optional chat instead of jumping to a random action.
+      if (subZone === 'lavanderia') {
+        const walkSpeedMult = 0.85 + Math.random() * 0.30
+        const assignment = this.buildLaundrySequence(npcId, subZone, walkSpeedMult, [], def.duration)
+        this.npcAssignments.set(npcId, assignment)
+        this.npcTimers.set(npcId, assignment.duration)
+        changed.push(assignment)
+        continue
       }
 
       const actionPool = this.getActionPool(def, subZone)

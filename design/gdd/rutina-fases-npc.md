@@ -177,28 +177,39 @@ Cada acción define:
 
 > NPCs divididos en dos sub-zonas al inicio de la fase. Permanecen en su sub-zona toda la fase.  
 > Distribución: ~9 NPCs taller / ~9 lavandería.
+> **Nota Técnica:** Ya no usamos *waypoints* predefinidos desde el backend. Ahora asignamos **Zonas de Actividad** (`ZoneId`) y el cliente de Unity resuelve localmente el punto exacto usando su `ZoneRegistry` y NavMesh.
 
 **Sub-zona: Taller**
 
+> Los NPCs eligen libremente entre estas acciones usando el sistema de libre albedrío por zonas.
 
-| ActionId                 | Type    | Animation     | WaypointTag           | Weight | Duration |
-| ------------------------ | ------- | ------------- | --------------------- | ------ | -------- |
-| `work_use_workbench`     | IDLE    | Work_Bench    | `workshop_bench`_     | 40     | 20–50s   |
-| `work_carry_box`         | LOOPING | Carry_Box     | `workshop_shelf`_     | 30     | 12–20s   |
-| `work_inspect_equipment` | IDLE    | Inspect       | `workshop_machine`_   | 20     | 10–20s   |
-| `work_talk_coworker`     | SOCIAL  | Talk_Standing | `workshop_chat_spot`_ | 10     | 8–15s    |
+| ActionId                 | Type    | Animation     | ZoneId               | Weight | Duration |
+| ------------------------ | ------- | ------------- | -------------------- | ------ | -------- |
+| `work_use_workbench`     | IDLE    | Work_Bench    | `zone_workshop_bench`| 45     | 20–50s   |
+| `work_inspect_cabinets`  | IDLE    | Inspect       | `zone_workshop_cab`  | 35     | 10–20s   |
+| `work_talk_coworker`     | SOCIAL  | Talk_Standing | `zone_workshop_chat` | 20     | 8–15s    |
 
 
 **Sub-zona: Lavandería**
 
+> La lavandería usa un **flujo secuencial estricto**, simulando un proceso de trabajo real. El backend envía esto como un `actionSequence`.
 
-| ActionId               | Type    | Animation          | WaypointTag       | Weight | Duration |
-| ---------------------- | ------- | ------------------ | ----------------- | ------ | -------- |
-| `laundry_load_washer`  | IDLE    | Load_Machine       | `laundry_washer`_ | 30     | 15–30s   |
-| `laundry_fold_clothes` | IDLE    | Fold_Clothes       | `laundry_fold`_   | 35     | 20–40s   |
-| `laundry_carry_basket` | LOOPING | Carry_Basket       | `laundry_washer`_ | 25     | 10–18s   |
-| `laundry_idle_check`   | IDLE    | Idle_Check_Machine | `laundry_washer`_ | 10     | 5–12s    |
+**Flujo obligatorio:**
+```
+  Agarrar ropa del bulto    ← 3–5s (activa prop ropa en mano)
+       ↓
+  Cargar lavadoras          ← 15–20s (animación de progreso, resulta en ropa doblada)
+       ↓
+  Dejar ropa en estante     ← 3–5s (animación de depósito)
+[Opcional] Charlar          ← 8–15s
+```
 
+| ActionId                 | Type    | Animation          | ZoneId              | Weight | Duration | Orden en flujo |
+| ------------------------ | ------- | ------------------ | ------------------- | ------ | -------- | -------------- |
+| `laundry_grab_clothes`   | ONESHOT | Rummaging          | `zone_laundry_pile` | 100    | 3–5s     | 1° obligatorio |
+| `laundry_load_washer`    | IDLE    | Load_Machine       | `zone_laundry_wash` | 100    | 15–20s   | 2° obligatorio |
+| `laundry_store_clothes`  | IDLE    | Opening            | `zone_laundry_shelf`| 100    | 3–5s     | 3° obligatorio |
+| `laundry_talk_coworker`  | SOCIAL  | Talk_Standing      | `zone_laundry_chat` | 30     | 8–15s    | Opcional       |
 
 ---
 
@@ -233,16 +244,14 @@ Cada acción define:
 | `free_cafe_stand_chat` | SOCIAL | Talk_Standing | `cafeteria_line`_ | 25     | 10–25s   |
 
 
-**Sub-zona: Lavandería** *(ropa personal, mismas acciones que turno de trabajo)*
+**Sub-zona: Lavandería** *(ropa personal, sigue el mismo flujo estructurado que el turno de trabajo)*
 
-
-| ActionId               | Type    | Animation          | WaypointTag       | Weight | Duration |
-| ---------------------- | ------- | ------------------ | ----------------- | ------ | -------- |
-| `laundry_load_washer`  | IDLE    | Load_Machine       | `laundry_washer`_ | 30     | 15–30s   |
-| `laundry_fold_clothes` | IDLE    | Fold_Clothes       | `laundry_fold`_   | 35     | 20–40s   |
-| `laundry_carry_basket` | LOOPING | Carry_Basket       | `laundry_washer`_ | 25     | 10–18s   |
-| `laundry_idle_check`   | IDLE    | Idle_Check_Machine | `laundry_washer`_ | 10     | 5–12s    |
-
+| ActionId                 | Type    | Animation          | ZoneId              | Weight | Duration | Orden en flujo |
+| ------------------------ | ------- | ------------------ | ------------------- | ------ | -------- | -------------- |
+| `laundry_grab_clothes`   | ONESHOT | Rummaging          | `zone_laundry_pile` | 100    | 3–5s     | 1° obligatorio |
+| `laundry_load_washer`    | IDLE    | Load_Machine       | `zone_laundry_wash` | 100    | 15–20s   | 2° obligatorio |
+| `laundry_store_clothes`  | IDLE    | Opening            | `zone_laundry_shelf`| 100    | 3–5s     | 3° obligatorio |
+| `laundry_talk_coworker`  | SOCIAL  | Talk_Standing      | `zone_laundry_chat` | 30     | 8–15s    | Opcional       |
 
 **Sub-zona: Celdas** *(descanso)*
 
