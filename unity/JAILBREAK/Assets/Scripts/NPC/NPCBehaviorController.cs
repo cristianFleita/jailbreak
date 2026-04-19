@@ -71,6 +71,13 @@ namespace Jailbreak.NPC
         // to finish the stand-up animation before walking anywhere else.
         private bool   _waitingForStandUp;
 
+        // True while we are holding the next step because the NavMeshAgent
+        // is not yet (re)registered on the NavMesh. Happens the frame after
+        // SitInteraction.StandUpRoutine clears isSitting but before it
+        // re-enables the agent — if BeginStep fires in that window, the
+        // destination would silently short-circuit to "already arrived".
+        private bool   _waitingForAgent;
+
         // Pending reassign received while NPC is mid-LOOPING cycle
         private NPCAssignmentData _pendingAssignment;
         private float  _loopingGraceTimer;
@@ -196,6 +203,7 @@ namespace Jailbreak.NPC
             _sequenceSteps = null;
             _isLooping = false;
             _waitingForStandUp = false;
+            _waitingForAgent = false;
         }
 
         // ─── Single Action Mode ───────────────────────────────────────────────
@@ -266,6 +274,16 @@ namespace Jailbreak.NPC
                 return;
             }
 
+            // Holding the step until the NavMeshAgent is registered on the
+            // NavMesh again (covers the 1-frame gap after sit→stand re-enables it).
+            if (_waitingForAgent)
+            {
+                if (agent == null || !agent.isOnNavMesh) return;
+                _waitingForAgent = false;
+                BeginStep(step);
+                return;
+            }
+
             if (!_stepArrived)
             {
                 if (agent != null && agent.isOnNavMesh && !agent.pathPending && agent.remainingDistance < arrivalThreshold)
@@ -306,6 +324,12 @@ namespace Jailbreak.NPC
                     if (counter != null) { destination = counter.transform.position; destSrc = "food_counter"; }
                 }
 
+                if (!destination.HasValue && (IsLeaveFoodAction(step.animTrigger) || IsWalkToSinkAction(step.actionId)))
+                {
+                    var sink = zoneRegistry.GetDeterministicSink(step.zoneId, step.seed);
+                    if (sink != null) { destination = sink.transform.position; destSrc = "sink"; }
+                }
+
                 if (!destination.HasValue)
                 {
                     var point = zoneRegistry.GetDeterministicPoint(step.zoneId, step.seed);
@@ -327,13 +351,24 @@ namespace Jailbreak.NPC
 
             Debug.Log($"[NPC-CTRL] {name} BeginStep {_sequenceIndex + 1}/{_sequenceSteps.Length} action={step.actionId} anim={step.animTrigger} zone={step.zoneId ?? "-"} dur={step.duration:F1}s dest={destSrc}");
 
-            if (destination.HasValue && agent != null && agent.isOnNavMesh)
+            if (destination.HasValue)
             {
-                float dist = Vector3.Distance(transform.position, destination.Value);
-                if (dist > arrivalThreshold)
+                if (agent != null && agent.isOnNavMesh)
                 {
-                    agent.SetDestination(destination.Value);
-                    PlayAnimation("walk");
+                    float dist = Vector3.Distance(transform.position, destination.Value);
+                    if (dist > arrivalThreshold)
+                    {
+                        agent.SetDestination(destination.Value);
+                        PlayAnimation("walk");
+                        return;
+                    }
+                }
+                else
+                {
+                    // Destination is known but the agent is not ready yet
+                    // (e.g., NavMeshAgent still being re-enabled after stand-up).
+                    // Hold the step; UpdateSequence will retry next frame.
+                    _waitingForAgent = true;
                     return;
                 }
             }
@@ -466,6 +501,12 @@ namespace Jailbreak.NPC
                 if (counter != null) return counter.transform.position;
             }
 
+            if ((IsLeaveFoodAction(data.animTrigger) || IsWalkToSinkAction(data.actionId)) && !string.IsNullOrEmpty(data.zoneId))
+            {
+                var sink = zoneRegistry.GetDeterministicSink(data.zoneId, data.seed);
+                if (sink != null) return sink.transform.position;
+            }
+
             if (data.seedChain != null && data.seedChain.Length > 0)
             {
                 var pt = zoneRegistry.GetDeterministicPoint(data.zoneId, data.seedChain[0]);
@@ -511,6 +552,11 @@ namespace Jailbreak.NPC
         private bool IsWalkToCounterAction(string actionId)
         {
             return actionId != null && (actionId.Contains("walk_to_counter") || actionId == "cafe_grab_food");
+        }
+
+        private bool IsWalkToSinkAction(string actionId)
+        {
+            return actionId != null && (actionId.Contains("walk_to_trash") || actionId == "cafe_clear_tray");
         }
 
         private void HandleArrivalAnimation(string animTrigger, string zoneId, uint seed)

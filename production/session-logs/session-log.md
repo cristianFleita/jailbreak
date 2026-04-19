@@ -1069,3 +1069,35 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260419_132325
+### Commits
+dd9c675 chore: sink interaction player
+0b444fe chore: interact food counter npcs
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260419_140050
+### Commits
+dd9c675 chore: sink interaction player
+0b444fe chore: interact food counter npcs
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Prefabs/Props/Sink.prefab
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/GameScene/NavMesh-NavMesh Surface.asset
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+

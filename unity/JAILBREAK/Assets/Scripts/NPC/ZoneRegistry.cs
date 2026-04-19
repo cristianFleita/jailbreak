@@ -110,6 +110,37 @@ namespace Jailbreak.NPC
         }
 
         /// <summary>
+        /// Returns a deterministic SinkInteractable inside the requested zone.
+        /// Mirrors GetDeterministicFoodCounter: XZ-bounds scan + stable sort + seed index,
+        /// so every client (and the backend's seed) resolves to the same sink.
+        /// </summary>
+        public SinkInteractable GetDeterministicSink(string zoneId, uint seed)
+        {
+            var col = GetZoneBounds(zoneId);
+            if (col == null) return null;
+
+            var b = col.bounds;
+            var all = FindObjectsOfType<SinkInteractable>();
+            var inZone = new List<SinkInteractable>();
+            foreach (var sk in all)
+            {
+                var p = sk.transform.position;
+                if (p.x >= b.min.x && p.x <= b.max.x && p.z >= b.min.z && p.z <= b.max.z)
+                    inZone.Add(sk);
+            }
+
+            if (inZone.Count == 0) return null;
+
+            inZone.Sort((a, b2) => {
+                int cmp = a.transform.position.x.CompareTo(b2.transform.position.x);
+                if (cmp == 0) cmp = a.transform.position.z.CompareTo(b2.transform.position.z);
+                return cmp;
+            });
+
+            return inZone[(int)(seed % inZone.Count)];
+        }
+
+        /// <summary>
         /// Generates a deterministic random point inside the requested zone's bounds using Mulberry32.
         /// The point is generated on the XZ plane at the collider's center Y.
         /// Callers (e.g., NPCBehaviorController) should use NavMesh.SamplePosition to snap it to the floor.

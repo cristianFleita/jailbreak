@@ -439,6 +439,9 @@ export class JailRoutineSystem {
       // exact same FoodCounterInteractable on every client (mirrors seatSeed
       // for the sit/walk-to-seat pair).
       const counterSeed = shuffled.indexOf(npcId);
+      // Same seed for walk-to-trash and clear-tray so the NPC walks to and
+      // deposits at the exact same SinkInteractable on every client.
+      const sinkSeed = shuffled.indexOf(npcId);
 
       if (!directSit) {
         if (Math.random() < 0.20) {
@@ -477,8 +480,8 @@ export class JailRoutineSystem {
         });
       }
 
-      steps.push({ actionId: 'cafe_walk_to_trash', animTrigger: 'carry_tray', zoneId: 'cafeteria_trash', seed: generateSeed(), duration: 0 });
-      steps.push({ actionId: 'cafe_clear_tray', animTrigger: 'deposit_tray', zoneId: 'cafeteria_trash', seed: generateSeed(), duration: 3 + Math.random() * 2 });
+      steps.push({ actionId: 'cafe_walk_to_trash', animTrigger: 'carry_tray', zoneId: 'cafeteria_trash', seed: sinkSeed, duration: 0 });
+      steps.push({ actionId: 'cafe_clear_tray', animTrigger: 'deposit_tray', zoneId: 'cafeteria_trash', seed: sinkSeed, duration: 3 + Math.random() * 2 });
 
       if (Math.random() < 0.25) {
         const chatPartner = this.findPartner(shuffled, paired, npcId)
