@@ -83,6 +83,13 @@ namespace Jailbreak.NPC
         private float  _loopingGraceTimer;
         private const float LoopingGrace = 5f;
 
+        // True if the current assignment was determined to be a run action
+        private bool _isRunning;
+        private int _runWalkTransitionMode; // 0=None, 1=Walk->Run, 2=Run->Walk
+        private float _initialDistance;
+        private float _baseSpeedVariance;
+        private float _baseWalkMult;
+
         // ─── Emergent behavior state ──────────────────────────────────────────
         private bool   _isPlayingEmergent;
         private float  _emergentTimer;
@@ -104,8 +111,29 @@ namespace Jailbreak.NPC
             if (animator == null) animator = GetComponentInChildren<Animator>();
         }
 
+        private void UpdateMovementTransition()
+        {
+            if (_runWalkTransitionMode != 0 && agent != null && agent.isOnNavMesh && !agent.pathPending && agent.hasPath)
+            {
+                if (_initialDistance <= 0f)
+                {
+                    _initialDistance = agent.remainingDistance;
+                }
+                else if (agent.remainingDistance > 0.1f && agent.remainingDistance < _initialDistance * 0.5f)
+                {
+                    // We crossed the halfway mark
+                    _isRunning = (_runWalkTransitionMode == 1);
+                    _runWalkTransitionMode = 0; // Transition complete
+                    UpdateSpeedMultiplier();
+                    PlayAnimation(_isRunning ? "run" : "walk");
+                }
+            }
+        }
+
         private void Update()
         {
+            UpdateMovementTransition();
+
             if (_pendingAssignment != null)
             {
                 _loopingGraceTimer -= Time.deltaTime;
@@ -181,8 +209,31 @@ namespace Jailbreak.NPC
 
             CleanupCurrent();
 
-            if (data.walkSpeedMult > 0 && agent != null)
-                agent.speed = 3.5f * data.walkSpeedMult; // base speed * mult
+            if (agent != null)
+            {
+                _baseWalkMult = data.walkSpeedMult > 0 ? data.walkSpeedMult : 1.0f;
+                
+                int uniqueSeed = (int)data.seed ^ gameObject.name.GetHashCode();
+                System.Random rnd = new System.Random(uniqueSeed);
+                
+                double choice = rnd.NextDouble();
+                if (choice < 0.6) {
+                    _isRunning = false; 
+                    _runWalkTransitionMode = 0; // 60% just walk
+                } else if (choice < 0.8) {
+                    _isRunning = true;
+                    _runWalkTransitionMode = 0; // 20% just run
+                } else if (choice < 0.9) {
+                    _isRunning = false;
+                    _runWalkTransitionMode = 1; // 10% walk then run
+                } else {
+                    _isRunning = true;
+                    _runWalkTransitionMode = 2; // 10% run then walk
+                }
+                
+                _baseSpeedVariance = 0.85f + (float)rnd.NextDouble() * 0.30f;
+                UpdateSpeedMultiplier();
+            }
 
             Debug.Log($"[NPC-CTRL] {name} ApplyAssignment action={data.actionId} seq={(data.actionSequence != null ? data.actionSequence.Length : 0)}steps agent.onNavMesh={(agent != null && agent.isOnNavMesh)} zoneRegistry={(zoneRegistry != null ? "set" : "NULL")}");
 
@@ -204,6 +255,18 @@ namespace Jailbreak.NPC
             _isLooping = false;
             _waitingForStandUp = false;
             _waitingForAgent = false;
+            _isRunning = false;
+            _runWalkTransitionMode = 0;
+            _initialDistance = 0f;
+        }
+
+        private void UpdateSpeedMultiplier()
+        {
+            if (agent != null)
+            {
+                float runMultiplier = _isRunning ? 1.8f : 1.0f;
+                agent.speed = 3.5f * _baseWalkMult * _baseSpeedVariance * runMultiplier;
+            }
         }
 
         // ─── Single Action Mode ───────────────────────────────────────────────
@@ -221,7 +284,8 @@ namespace Jailbreak.NPC
             {
                 if (agent == null || !agent.isOnNavMesh) return;
                 agent.SetDestination(destination.Value);
-                PlayAnimation("walk");
+                _initialDistance = 0f;
+                PlayAnimation(_isRunning ? "run" : "walk");
             }
             else
             {
@@ -359,7 +423,8 @@ namespace Jailbreak.NPC
                     if (dist > arrivalThreshold)
                     {
                         agent.SetDestination(destination.Value);
-                        PlayAnimation("walk");
+                        _initialDistance = 0f;
+                        PlayAnimation(_isRunning ? "run" : "walk");
                         return;
                     }
                 }
@@ -462,7 +527,8 @@ namespace Jailbreak.NPC
                     {
                         agent.SetDestination(hit.position);
                         _hasArrived = false;
-                        PlayAnimation("walk");
+                        _initialDistance = 0f;
+                        PlayAnimation(_isRunning ? "run" : "walk");
                         return;
                     }
                 }
@@ -668,6 +734,7 @@ namespace Jailbreak.NPC
             {
                 "idle"             => "Idle",
                 "walk"             => "Walking",
+                "run"              => "Running",
                 "walk_slow"        => "Walking",
                 "Walking"          => "Walking",
                 "Salute"           => "Salute",
