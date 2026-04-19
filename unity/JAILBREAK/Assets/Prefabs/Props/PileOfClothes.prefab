@@ -9,16 +9,28 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 29841e75550194590bb8287adf8e5468, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 29841e75550194590bb8287adf8e5468, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 29841e75550194590bb8287adf8e5468, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 29841e75550194590bb8287adf8e5468, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -35.02
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 29841e75550194590bb8287adf8e5468, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.5034793
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 29841e75550194590bb8287adf8e5468, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 14.699546
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 29841e75550194590bb8287adf8e5468, type: 3}
       propertyPath: m_LocalRotation.w
@@ -55,5 +67,30 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 29841e75550194590bb8287adf8e5468, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7734682893358971166}
   m_SourcePrefab: {fileID: 100100000, guid: 29841e75550194590bb8287adf8e5468, type: 3}
+--- !u!1 &7051908033841968754 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 29841e75550194590bb8287adf8e5468, type: 3}
+  m_PrefabInstance: {fileID: 7862160352565431075}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7734682893358971166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7051908033841968754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35e95dc5ff2b64380880dd7ac5922847, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifierVolume
+  m_SerializedVersion: 0
+  m_Size: {x: 0.019650782, y: 0.019309582, z: 0.011965461}
+  m_Center: {x: -0.00014686864, y: -0.00019278284, z: 0.0009827306}
+  m_Area: 1
+  m_AffectedAgents: ffffffff

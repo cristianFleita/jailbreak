@@ -110,8 +110,8 @@ namespace Jailbreak.Player
             _lastSentTime     = Time.time;
 
             _sendCount++;
-            if (_sendCount % 20 == 1)
-                Debug.Log($"[PNS] SEND #{_sendCount} pos={payload.position} state={payload.movementState}");
+            // if (_sendCount % 20 == 1)
+            //     Debug.Log($"[PNS] SEND #{_sendCount} pos={payload.position} state={payload.movementState}");
 
             net.SendPlayerMove(payload);
         }
