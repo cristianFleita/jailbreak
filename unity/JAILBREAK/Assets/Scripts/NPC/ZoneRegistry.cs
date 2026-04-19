@@ -39,6 +39,45 @@ namespace Jailbreak.NPC
             Init();
         }
 
+        public BoxCollider GetZoneBounds(string zoneId)
+        {
+            if (_lookup == null) Init();
+            if (!string.IsNullOrEmpty(zoneId) && _lookup.TryGetValue(zoneId, out var col))
+            {
+                return col;
+            }
+            return null;
+        }
+
+        public SitPoint GetDeterministicSitPoint(string zoneId, uint seed)
+        {
+            var col = GetZoneBounds(zoneId);
+            if (col == null) return null;
+
+            // Test XZ containment only. Zone BoxColliders are usually thin slabs
+            // at floor level, while SitPoints live at seat height (~0.5m), so a
+            // full 3D Contains() check would reject valid sit points.
+            var b = col.bounds;
+            var all = FindObjectsOfType<SitPoint>();
+            var inZone = new List<SitPoint>();
+            foreach (var sp in all)
+            {
+                var p = sp.transform.position;
+                if (p.x >= b.min.x && p.x <= b.max.x && p.z >= b.min.z && p.z <= b.max.z)
+                    inZone.Add(sp);
+            }
+
+            if (inZone.Count == 0) return null;
+
+            inZone.Sort((a, b2) => {
+                int cmp = a.transform.position.x.CompareTo(b2.transform.position.x);
+                if (cmp == 0) cmp = a.transform.position.z.CompareTo(b2.transform.position.z);
+                return cmp;
+            });
+
+            return inZone[(int)(seed % inZone.Count)];
+        }
+
         /// <summary>
         /// Generates a deterministic random point inside the requested zone's bounds using Mulberry32.
         /// The point is generated on the XZ plane at the collider's center Y.

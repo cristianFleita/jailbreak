@@ -32,6 +32,22 @@ namespace Jailbreak.NPC
         public bool IsNavigating => _current != null || _sequenceSteps != null;
         public bool IsEmergent => _isPlayingEmergent;
 
+        // True once this NPC has received at least one assignment. From that
+        // point on, NavMesh is the single source of truth for its position —
+        // NPCNetworkSync should stop lerping toward stale backend targets.
+        public bool IsBehaviorDriven => _hasEverReceivedAssignment;
+
+        // True while a SitInteraction on this NPC is active (settled OR standing up).
+        public bool IsSitting
+        {
+            get
+            {
+                return TryGetComponent<SitInteraction>(out var sit) && sit.IsSitting;
+            }
+        }
+
+        private bool _hasEverReceivedAssignment;
+
         private NPCAssignmentData _current;
         private float  _actionTimer;
         private bool   _hasArrived;
@@ -44,6 +60,10 @@ namespace Jailbreak.NPC
         private float  _stepTimer;
         private bool   _stepArrived;
         private string _currentStepZoneId;
+
+        // True while we are holding the next step because the NPC still needs
+        // to finish the stand-up animation before walking anywhere else.
+        private bool   _waitingForStandUp;
 
         // Pending reassign received while NPC is mid-LOOPING cycle
         private NPCAssignmentData _pendingAssignment;
@@ -73,13 +93,6 @@ namespace Jailbreak.NPC
 
         private void Update()
         {
-            if (_isPlayingEmergent)
-            {
-                _emergentTimer -= Time.deltaTime;
-                if (_emergentTimer <= 0f) OnEmergentComplete();
-                return;
-            }
-
             if (_pendingAssignment != null)
             {
                 _loopingGraceTimer -= Time.deltaTime;
@@ -116,6 +129,7 @@ namespace Jailbreak.NPC
         public void AssignAction(NPCAssignmentData data, ZoneRegistry registry = null)
         {
             if (registry != null) zoneRegistry = registry;
+            _hasEverReceivedAssignment = true;
 
             if (_isLooping && _current != null && data.actionSequence == null)
             {
@@ -127,48 +141,11 @@ namespace Jailbreak.NPC
             ApplyAssignment(data);
         }
 
-        public void PlayEmergentAction(string animTrigger, float duration)
-        {
-            if (_isPlayingEmergent) return;
-
-            _preEmergentState = _current;
-            _isPlayingEmergent = true;
-            _emergentTimer = duration;
-
-            if (agent != null && agent.isOnNavMesh)
-            {
-                agent.ResetPath();
-                agent.velocity = Vector3.zero;
-            }
-
-            PlayAnimation(animTrigger);
-        }
-
-        private void OnEmergentComplete()
-        {
-            _isPlayingEmergent = false;
-            if (_preEmergentState != null && _current != null)
-            {
-                var dest = ResolveFirstDestination(_current);
-                if (dest.HasValue && !_hasArrived && agent != null && agent.isOnNavMesh)
-                {
-                    agent.SetDestination(dest.Value);
-                    PlayAnimation("walk");
-                }
-                else if (_hasArrived && _current != null)
-                {
-                    PlayAnimation(_current.animTrigger);
-                }
-                else PlayAnimation("idle");
-            }
-            else PlayAnimation("idle");
-            _preEmergentState = null;
-        }
-
         public void ApplyMoodHint(string animHint)
         {
-            if (!IsNavigating && !_isPlayingEmergent && (_current == null || _hasArrived))
+            if (!IsNavigating && (_current == null || _hasArrived))
             {
+                if (TryGetComponent<SitInteraction>(out var sit) && sit.IsSitting) return;
                 PlayAnimation(animHint);
             }
         }
@@ -177,6 +154,18 @@ namespace Jailbreak.NPC
 
         private void ApplyAssignment(NPCAssignmentData data)
         {
+            string newAnim = data.actionSequence != null && data.actionSequence.Length > 0 ? data.actionSequence[0].animTrigger : data.animTrigger;
+            string newZone = data.actionSequence != null && data.actionSequence.Length > 0 ? data.actionSequence[0].zoneId : data.zoneId;
+
+            if (TryGetComponent<SitInteraction>(out var sit) && sit.IsSitting)
+            {
+                string currZone = _currentStepZoneId ?? _current?.zoneId;
+                if (!IsSitAction(newAnim) || newZone != currZone)
+                {
+                    sit.ForceReset();
+                }
+            }
+
             CleanupCurrent();
 
             if (data.walkSpeedMult > 0 && agent != null)
@@ -200,6 +189,7 @@ namespace Jailbreak.NPC
             _current = null;
             _sequenceSteps = null;
             _isLooping = false;
+            _waitingForStandUp = false;
         }
 
         // ─── Single Action Mode ───────────────────────────────────────────────
@@ -233,7 +223,19 @@ namespace Jailbreak.NPC
             _sequenceSteps = data.actionSequence;
             _sequenceIndex = 0;
             _current = data;
-            BeginStep(_sequenceSteps[0]);
+
+            // If we are still seated entering a new sequence (e.g., ApplyAssignment
+            // decided to keep us seated for a sit-continuation), only stand up
+            // when the first step is actually a non-sit action.
+            var first = _sequenceSteps[0];
+            if (TryGetComponent<SitInteraction>(out var sit) && sit.IsSitting && !IsSitAction(first.animTrigger))
+            {
+                sit.TryStandUp();
+                _waitingForStandUp = true;
+                return;
+            }
+
+            BeginStep(first);
         }
 
         private void UpdateSequence()
@@ -246,9 +248,21 @@ namespace Jailbreak.NPC
 
             var step = _sequenceSteps[_sequenceIndex];
 
+            // Holding the step until the stand-up animation fully finishes
+            // so the NavMeshAgent is back online before we try to move.
+            if (_waitingForStandUp)
+            {
+                bool stillSitting = TryGetComponent<SitInteraction>(out var sit) && sit.IsSitting;
+                if (stillSitting) return;
+
+                _waitingForStandUp = false;
+                BeginStep(step);
+                return;
+            }
+
             if (!_stepArrived)
             {
-                if (!agent.pathPending && agent.remainingDistance < arrivalThreshold)
+                if (agent != null && agent.isOnNavMesh && !agent.pathPending && agent.remainingDistance < arrivalThreshold)
                 {
                     _stepArrived = true;
                     OnStepArrived(step);
@@ -274,14 +288,23 @@ namespace Jailbreak.NPC
 
             if (!string.IsNullOrEmpty(step.zoneId) && zoneRegistry != null)
             {
-                var point = zoneRegistry.GetDeterministicPoint(step.zoneId, step.seed);
-                if (point.HasValue)
+                if (IsSitAction(step.animTrigger) || IsWalkToSeatAction(step.actionId))
                 {
-                    if (NavMesh.SamplePosition(point.Value, out var hit, 5f, NavMesh.AllAreas))
-                    { destination = hit.position; destSrc = "zone+navmesh"; }
-                    else { destination = point.Value; destSrc = "zone(no-navmesh)"; }
+                    var sitPoint = zoneRegistry.GetDeterministicSitPoint(step.zoneId, step.seed);
+                    if (sitPoint != null) { destination = sitPoint.transform.position; destSrc = "sit_point"; }
                 }
-                else destSrc = $"zone '{step.zoneId}' not registered";
+
+                if (!destination.HasValue)
+                {
+                    var point = zoneRegistry.GetDeterministicPoint(step.zoneId, step.seed);
+                    if (point.HasValue)
+                    {
+                        if (NavMesh.SamplePosition(point.Value, out var hit, 5f, NavMesh.AllAreas))
+                        { destination = hit.position; destSrc = "zone+navmesh"; }
+                        else { destination = point.Value; destSrc = "zone(no-navmesh)"; }
+                    }
+                    else destSrc = $"zone '{step.zoneId}' not registered";
+                }
             }
 
             if (!destination.HasValue && !string.IsNullOrEmpty(step.socialPartnerId) && _resolvePartnerTransform != null)
@@ -317,7 +340,7 @@ namespace Jailbreak.NPC
 
             if (step.duration > 0)
             {
-                PlayAnimation(step.animTrigger);
+                HandleArrivalAnimation(step.animTrigger, step.zoneId, step.seed);
             }
             else AdvanceSequence();
         }
@@ -325,8 +348,40 @@ namespace Jailbreak.NPC
         private void AdvanceSequence()
         {
             _sequenceIndex++;
-            if (_sequenceIndex >= _sequenceSteps.Length) OnSequenceComplete();
-            else BeginStep(_sequenceSteps[_sequenceIndex]);
+            if (_sequenceIndex >= _sequenceSteps.Length)
+            {
+                HandleEndOfSequenceStandUp();
+                OnSequenceComplete();
+                return;
+            }
+
+            var nextStep = _sequenceSteps[_sequenceIndex];
+
+            // If the NPC is still sitting from the previous step, make sure it
+            // finishes the stand-up animation BEFORE we kick off the next step.
+            // Skip only when the next step is another sit at the exact same zone
+            // (same chair) — in that case the animator just cross-fades in place.
+            if (TryGetComponent<SitInteraction>(out var sit) && sit.IsSitting)
+            {
+                bool nextIsSitSameZone = IsSitAction(nextStep.animTrigger)
+                                         && !string.IsNullOrEmpty(nextStep.zoneId)
+                                         && nextStep.zoneId == _currentStepZoneId;
+
+                if (!nextIsSitSameZone)
+                {
+                    sit.TryStandUp();
+                    _waitingForStandUp = true;
+                    return;
+                }
+            }
+
+            BeginStep(nextStep);
+        }
+
+        private void HandleEndOfSequenceStandUp()
+        {
+            if (TryGetComponent<SitInteraction>(out var sit) && sit.IsSitting)
+                sit.TryStandUp();
         }
 
         private void OnSequenceComplete()
@@ -368,7 +423,7 @@ namespace Jailbreak.NPC
 
             agent.ResetPath();
             agent.velocity = Vector3.zero;
-            PlayAnimation(_current.animTrigger);
+            HandleArrivalAnimation(_current.animTrigger, _current.zoneId, _current.seed);
         }
 
         private void OnActionComplete()
@@ -386,6 +441,12 @@ namespace Jailbreak.NPC
         private Vector3? ResolveFirstDestination(NPCAssignmentData data)
         {
             if (zoneRegistry == null) return null;
+
+            if ((IsSitAction(data.animTrigger) || IsWalkToSeatAction(data.actionId)) && !string.IsNullOrEmpty(data.zoneId))
+            {
+                var sitPoint = zoneRegistry.GetDeterministicSitPoint(data.zoneId, data.seed);
+                if (sitPoint != null) return sitPoint.transform.position;
+            }
 
             if (data.seedChain != null && data.seedChain.Length > 0)
             {
@@ -406,6 +467,53 @@ namespace Jailbreak.NPC
             }
 
             return null;
+        }
+
+        private bool IsSitAction(string trigger)
+        {
+            if (string.IsNullOrEmpty(trigger)) return false;
+            return trigger.StartsWith("sit_") || trigger == "read_book";
+        }
+
+        private bool IsWalkToSeatAction(string actionId)
+        {
+            return actionId != null && actionId.Contains("walk_to_seat");
+        }
+
+        private void HandleArrivalAnimation(string animTrigger, string zoneId, uint seed)
+        {
+            if (IsSitAction(animTrigger) && !string.IsNullOrEmpty(zoneId) && zoneRegistry != null)
+            {
+                var sitPoint = zoneRegistry.GetDeterministicSitPoint(zoneId, seed);
+                if (sitPoint != null)
+                {
+                    if (TryGetComponent<SitInteraction>(out var sit) && sit.IsSitting)
+                    {
+                        sit.stateSitDown = MapTriggerToStateName(animTrigger);
+                        if (sit.animator != null && sit.animator.HasState(0, Animator.StringToHash(sit.stateSitDown)))
+                            sit.animator.CrossFade(sit.stateSitDown, 0.25f);
+                        return;
+                    }
+
+                    if (sit == null)
+                    {
+                        sit = gameObject.AddComponent<SitInteraction>();
+                        sit.animator = animator;
+                        sit.navMeshAgent = agent;
+                        sit.stateSitDown = MapTriggerToStateName(animTrigger);
+                        sit.stateStandUp = "Idle";
+                    }
+                    else
+                    {
+                        sit.stateSitDown = MapTriggerToStateName(animTrigger);
+                    }
+                    
+                    sit.TrySitDown(sitPoint);
+                    return;
+                }
+            }
+
+            PlayAnimation(animTrigger);
         }
 
         // ─── Animator Map ───────────────────────────────────────────────────────

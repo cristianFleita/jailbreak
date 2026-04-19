@@ -37,7 +37,7 @@ namespace Jailbreak.NPC
             net.OnGameReconnectEvent += HandleGameReconnect;
 
             // Emergent behavior & mood events
-            net.OnNPCEmergentEvent   += HandleNPCEmergent;
+            // net.OnNPCEmergentEvent   += HandleNPCEmergent; // Removed
             net.OnNPCMoodShiftEvent  += HandleNPCMoodShift;
 
             // If game:start already fired before this scene loaded, spawn NPCs now
@@ -66,21 +66,22 @@ namespace Jailbreak.NPC
             net.OnGameStartEvent     -= HandleGameStart;
             net.OnNPCPositionsEvent  -= HandleNPCPositions;
             net.OnGameReconnectEvent -= HandleGameReconnect;
-            net.OnNPCEmergentEvent   -= HandleNPCEmergent;
+            // net.OnNPCEmergentEvent   -= HandleNPCEmergent; // Removed
             net.OnNPCMoodShiftEvent  -= HandleNPCMoodShift;
         }
 
         private void Update()
         {
-            // Lerp all NPC transforms toward their server targets
-            // SKIP NPCs that are being driven by NPCBehaviorController (NavMesh movement)
+            // Lerp all NPC transforms toward their server targets.
+            // Skip any NPC that is locally driven — NavMesh / SitInteraction
+            // are the source of truth once the NPC has a behavior assigned.
             foreach (var (id, t) in _npcs)
             {
                 if (t == null || !_npcTargets.TryGetValue(id, out var target)) continue;
 
-                // If the NPC has an active behavior assignment, NavMeshAgent owns its position
                 var behavior = t.GetComponent<NPCBehaviorController>();
-                if (behavior != null && behavior.IsNavigating) continue;
+                if (behavior != null && (behavior.IsBehaviorDriven || behavior.IsNavigating || behavior.IsSitting))
+                    continue;
 
                 t.position = Vector3.Lerp(t.position, target, NpcLerpSpeed * Time.deltaTime);
             }
@@ -119,18 +120,6 @@ namespace Jailbreak.NPC
         }
 
         // ─── Emergent Behavior & Mood Handlers ─────────────────────────────
-
-        private void HandleNPCEmergent(NPCEmergentData data)
-        {
-            if (!_npcs.TryGetValue(data.npcId, out var npcTransform)) return;
-
-            var behavior = npcTransform.GetComponent<NPCBehaviorController>();
-            if (behavior != null)
-            {
-                behavior.PlayEmergentAction(data.animTrigger, data.duration);
-                // Debug.Log($"[NPC] Emergent action: {data.npcId} → {data.actionId} ({data.mood})");
-            }
-        }
 
         private void HandleNPCMoodShift(NPCMoodShiftData data)
         {

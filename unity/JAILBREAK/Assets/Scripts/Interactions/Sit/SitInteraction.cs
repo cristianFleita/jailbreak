@@ -16,6 +16,7 @@ public class SitInteraction : MonoBehaviour
     [Header("References")]
     public Animator animator;
     public CharacterController characterController;
+    public UnityEngine.AI.NavMeshAgent navMeshAgent;
 
     [Header("Animation States")]
     public string stateSitDown          = "Sitting";
@@ -83,6 +84,9 @@ public class SitInteraction : MonoBehaviour
         if (characterController != null)
             characterController.enabled = true;
 
+        if (navMeshAgent != null)
+            navMeshAgent.enabled = true;
+
         if (animator != null)
         {
             animator.SetBool("isSitting", false);
@@ -91,6 +95,23 @@ public class SitInteraction : MonoBehaviour
     }
 
     // ─── Private implementation ───────────────────────────────────────────────
+
+    // Drops the current (sit-height) position down to a walkable floor.
+    // Tries NavMesh.SamplePosition first, then a physics raycast, then falls
+    // back to the sit point's base transform (without the height offset).
+    Vector3 ResolveGroundPosition(Vector3 current, SitPoint point)
+    {
+        if (UnityEngine.AI.NavMesh.SamplePosition(current, out var hit, 2f, UnityEngine.AI.NavMesh.AllAreas))
+            return hit.position;
+
+        if (Physics.Raycast(current + Vector3.up * 0.1f, Vector3.down, out var rayHit, 3f, ~0, QueryTriggerInteraction.Ignore))
+            return rayHit.point;
+
+        if (point != null)
+            return point.transform.position; // base (no sitHeightOffset)
+
+        return current;
+    }
 
     void SitDown(SitPoint point)
     {
@@ -102,6 +123,10 @@ public class SitInteraction : MonoBehaviour
         // Disable CharacterController so root-motion can drive the position.
         if (characterController != null)
             characterController.enabled = false;
+
+        // Disable NavMeshAgent for NPCs so it doesn't fight root motion/position snapping
+        if (navMeshAgent != null)
+            navMeshAgent.enabled = false;
 
         // Disable RemotePlayerSync on remote avatars to stop interpolation fighting
         var sync = GetComponent<Jailbreak.Player.RemotePlayerSync>();
@@ -115,8 +140,10 @@ public class SitInteraction : MonoBehaviour
         }
 
         // Snap to seat: for both local and remote avatars.
+        // Use yaw-only so inherited X/Z rotations on the SitPoint transform
+        // (e.g., gizmo-oriented sit points) don't tilt the character.
         transform.position = point.GetSitPosition();
-        transform.rotation = point.transform.rotation;
+        transform.rotation = Quaternion.Euler(0f, point.transform.eulerAngles.y, 0f);
 
         StartCoroutine(SitDownRoutine());
     }
@@ -131,6 +158,13 @@ public class SitInteraction : MonoBehaviour
 
         // Snappy wait to let the sit animation begin and settle
         yield return new WaitForSeconds(0.15f);
+
+        // SNAP EXACTLY TO AVOID FLOATING/ROOT MOTION ISSUES
+        if (currentSitPoint != null)
+        {
+            transform.position = currentSitPoint.GetSitPosition();
+            transform.rotation = Quaternion.Euler(0f, currentSitPoint.transform.eulerAngles.y, 0f);
+        }
 
         if (animator != null) animator.applyRootMotion = false;
         interactionLock.Release();
@@ -164,7 +198,9 @@ public class SitInteraction : MonoBehaviour
         // This avoids the 2-second timeout when the state name is missing.
         yield return new WaitForSeconds(0.15f);
 
-        Vector3 finalPosition = transform.position;
+        // Ground-snap so the character does not remain floating at seat height.
+        // Prefer NavMesh (reliable floor height); fall back to a raycast.
+        Vector3 finalPosition = ResolveGroundPosition(transform.position, currentSitPoint);
 
         isSitting    = false;
         isStandingUp = false;
@@ -179,6 +215,15 @@ public class SitInteraction : MonoBehaviour
             transform.position = finalPosition;
             yield return null;
             characterController.enabled = true;
+        }
+        else if (navMeshAgent != null)
+        {
+            if (UnityEngine.AI.NavMesh.SamplePosition(finalPosition, out var navHit, 2f, UnityEngine.AI.NavMesh.AllAreas))
+                transform.position = navHit.position;
+            else
+                transform.position = finalPosition;
+            yield return null;
+            navMeshAgent.enabled = true;
         }
 
         // Re-enable network interpolation on remote avatars

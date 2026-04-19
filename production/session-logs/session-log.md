@@ -930,3 +930,98 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260418_162737
+### Commits
+61ed457 fix: sit animation blend time
+76a9a87 chore: sit interaction - player + broadcast
+e81221c chore: replace waypoints for npc movement
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Scripts/Interactions/Sit/SitInteraction.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCNetworkSync.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260418_191437
+### Commits
+61ed457 fix: sit animation blend time
+76a9a87 chore: sit interaction - player + broadcast
+e81221c chore: replace waypoints for npc movement
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/Interactions/Sit/SitInteraction.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCNetworkSync.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260418_192025
+### Commits
+61ed457 fix: sit animation blend time
+76a9a87 chore: sit interaction - player + broadcast
+e81221c chore: replace waypoints for npc movement
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/Interactions/Sit/SitInteraction.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCNetworkSync.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260418_203937
+### Commits
+61ed457 fix: sit animation blend time
+76a9a87 chore: sit interaction - player + broadcast
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Chair.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Kitchen_1.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Sink.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/TableGroup.prefab
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/GameScene/NavMesh-NavMesh Surface.asset
+unity/JAILBREAK/Assets/Scripts/Interactions/Sit/SitInteraction.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCNetworkSync.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+unity/JAILBREAK/ProjectSettings/DynamicsManager.asset
+unity/JAILBREAK/ProjectSettings/NavMeshAreas.asset
+unity/JAILBREAK/ProjectSettings/TagManager.asset
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260418_213552
+### Commits
+61ed457 fix: sit animation blend time
+76a9a87 chore: sit interaction - player + broadcast
+---
+

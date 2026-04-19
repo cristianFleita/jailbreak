@@ -365,7 +365,8 @@ export class JailRoutineSystem {
       if (action.type === 'SOCIAL') {
         const partner = this.findPartner(npcIds, paired, npcId)
         if (partner) {
-          const seed    = generateSeed()
+          const isSit = action.animTrigger.startsWith('sit_') || action.animTrigger.startsWith('talk_seated') || action.actionId.includes('sit');
+          const seed    = isSit ? npcIds.indexOf(npcId) : generateSeed()
           const dur     = this.randomDuration(action)
           const prefix2 = usePrefix ? this.buildTransitionPrefix(partner) : []
 
@@ -400,7 +401,8 @@ export class JailRoutineSystem {
         }
       }
 
-      const seed     = generateSeed()
+      const isSit = action.animTrigger.startsWith('sit_') || action.animTrigger.startsWith('talk_seated') || action.actionId.includes('sit');
+      const seed     = isSit ? npcIds.indexOf(npcId) : generateSeed()
       const dur      = this.randomDuration(action)
       const mainStep: NPCActionStep = {
         actionId: action.actionId, animTrigger: action.animTrigger,
@@ -426,43 +428,53 @@ export class JailRoutineSystem {
     const shuffled = [...npcIds].sort(() => Math.random() - 0.5)
 
     for (const npcId of shuffled) {
-      if (paired.has(npcId)) continue
+      if (paired.has(npcId)) continue;
 
-      const walkSpeedMult = 0.85 + Math.random() * 0.30
-      const steps: NPCActionStep[] = [...this.buildTransitionPrefix(npcId)]
+      const walkSpeedMult = 0.85 + Math.random() * 0.30;
+      const steps: NPCActionStep[] = [...this.buildTransitionPrefix(npcId)];
 
-      if (Math.random() < 0.20) {
-        const partner = this.findPartner(shuffled, paired, npcId)
-        steps.push({
-          actionId: 'cafe_wait_outside_talk',
-          animTrigger: 'talk_standing',
-          zoneId: 'cafeteria', seed: generateSeed(),
-          duration: 6 + Math.random(),
-          socialPartnerId: partner ?? undefined,
-        })
+      const directSit = Math.random() < 0.30;
+      const seatSeed = shuffled.indexOf(npcId);
+
+      if (!directSit) {
+        if (Math.random() < 0.20) {
+          const partner = this.findPartner(shuffled, paired, npcId);
+          steps.push({
+            actionId: 'cafe_wait_outside_talk',
+            animTrigger: 'talk_standing',
+            zoneId: 'cafeteria', seed: generateSeed(),
+            duration: 6 + Math.random(),
+            socialPartnerId: partner ?? undefined,
+          });
+        }
+
+        steps.push({ actionId: 'cafe_walk_to_counter', animTrigger: 'Walking', zoneId: 'cafeteria_counter', seed: generateSeed(), duration: 0 });
+        steps.push({ actionId: 'cafe_grab_food', animTrigger: 'serve_self', zoneId: 'cafeteria_counter', seed: generateSeed(), duration: 4 + Math.random() * 2 });
       }
 
-      steps.push({ actionId: 'cafe_walk_to_counter', animTrigger: 'Walking', zoneId: 'cafeteria_counter', seed: generateSeed(), duration: 0 })
-      steps.push({ actionId: 'cafe_grab_food', animTrigger: 'serve_self', zoneId: 'cafeteria_counter', seed: generateSeed(), duration: 4 + Math.random() * 2 })
-      steps.push({ actionId: 'cafe_walk_to_seat', animTrigger: 'Walking', zoneId: 'cafeteria_seating', seed: generateSeed(), duration: 0 })
+      steps.push({ actionId: 'cafe_walk_to_seat', animTrigger: 'Walking', zoneId: 'cafeteria_seating', seed: seatSeed, duration: 0 });
 
-      const eatDuration = 10 + Math.random() * 5
+      let eatDuration = 10 + Math.random() * 5;
+      if (directSit) {
+        eatDuration += 15 + Math.random() * 20; // Sit for a longer time
+      }
+
       if (Math.random() < 0.40) {
-        const partner = this.findPartner(shuffled, paired, npcId)
+        const partner = this.findPartner(shuffled, paired, npcId);
         steps.push({
           actionId: 'cafe_sit_eat_talk', animTrigger: 'sit_eat_talk',
-          zoneId: 'cafeteria_seating', seed: generateSeed(), duration: eatDuration,
+          zoneId: 'cafeteria_seating', seed: seatSeed, duration: eatDuration,
           socialPartnerId: partner ?? undefined,
-        })
+        });
       } else {
         steps.push({
           actionId: 'cafe_sit_eat', animTrigger: 'sit_eat',
-          zoneId: 'cafeteria_seating', seed: generateSeed(), duration: eatDuration,
-        })
+          zoneId: 'cafeteria_seating', seed: seatSeed, duration: eatDuration,
+        });
       }
 
-      steps.push({ actionId: 'cafe_walk_to_trash', animTrigger: 'carry_tray', zoneId: 'cafeteria_trash', seed: generateSeed(), duration: 0 })
-      steps.push({ actionId: 'cafe_clear_tray', animTrigger: 'deposit_tray', zoneId: 'cafeteria_trash', seed: generateSeed(), duration: 3 + Math.random() * 2 })
+      steps.push({ actionId: 'cafe_walk_to_trash', animTrigger: 'carry_tray', zoneId: 'cafeteria_trash', seed: generateSeed(), duration: 0 });
+      steps.push({ actionId: 'cafe_clear_tray', animTrigger: 'deposit_tray', zoneId: 'cafeteria_trash', seed: generateSeed(), duration: 3 + Math.random() * 2 });
 
       if (Math.random() < 0.25) {
         const chatPartner = this.findPartner(shuffled, paired, npcId)
