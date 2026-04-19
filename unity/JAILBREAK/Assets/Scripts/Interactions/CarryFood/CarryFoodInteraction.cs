@@ -38,6 +38,12 @@ public class CarryFoodInteraction : MonoBehaviour
     [Tooltip("Seconds to wait after firing the pick trigger before the plate visual appears in the hand. Tune to match the animation beat.")]
     public float plateSpawnDelay = 0.6f;
 
+    [Tooltip("Trigger parameter fired when the player puts the plate down (e.g. at the sink). Leave empty to skip the put-down animation.")]
+    public string animTriggerPutDown = "PutDown";
+
+    [Tooltip("Seconds to wait after firing the put-down trigger before the plate visual is destroyed. Tune to match the animation beat.")]
+    public float plateDestroyDelay = 0.6f;
+
     /// <summary>Stable id of the item currently held (e.g. "food_plate"), or null.</summary>
     public string CarryingId { get; private set; }
 
@@ -51,6 +57,7 @@ public class CarryFoodInteraction : MonoBehaviour
     private Animator animator;
     private GameObject plateInstance;
     private Coroutine  pickUpRoutine;
+    private Coroutine  putDownRoutine;
 
     const string FoodPlateId = "food_plate";
 
@@ -74,11 +81,11 @@ public class CarryFoodInteraction : MonoBehaviour
         ApplyPickUp(FoodPlateId, playAnimation: true);
     }
 
-    /// <summary>Release the plate. No-op if not carrying.</summary>
+    /// <summary>Release the plate, playing the put-down animation if available. No-op if not carrying.</summary>
     public void TryDrop()
     {
         if (!IsCarrying) return;
-        ApplyDrop();
+        ApplyDrop(playAnimation: true);
     }
 
     /// <summary>
@@ -88,9 +95,9 @@ public class CarryFoodInteraction : MonoBehaviour
     public void SyncFromServer(string serverCarryingId)
     {
         bool shouldCarry = !string.IsNullOrEmpty(serverCarryingId);
-        // Reconnect path: skip the pick animation — just snap the plate into hand.
+        // Reconnect path: skip animations — just snap the plate in/out.
         if (shouldCarry && !IsCarrying)       ApplyPickUp(serverCarryingId, playAnimation: false);
-        else if (!shouldCarry && IsCarrying)  ApplyDrop();
+        else if (!shouldCarry && IsCarrying)  ApplyDrop(playAnimation: false);
     }
 
     /// <summary>Immediate reset with no animation. Safe to call from OnDisable.</summary>
@@ -100,6 +107,12 @@ public class CarryFoodInteraction : MonoBehaviour
         {
             StopCoroutine(pickUpRoutine);
             pickUpRoutine = null;
+        }
+
+        if (putDownRoutine != null)
+        {
+            StopCoroutine(putDownRoutine);
+            putDownRoutine = null;
         }
 
         if (plateInstance != null)
@@ -175,17 +188,48 @@ public class CarryFoodInteraction : MonoBehaviour
         return false;
     }
 
-    void ApplyDrop()
+    void ApplyDrop(bool playAnimation)
     {
+        // Clear carry state up-front so CanInteract gates re-open immediately.
         CarryingId = null;
 
+        if (animator != null && !string.IsNullOrEmpty(animBoolCarrying))
+            animator.SetBool(animBoolCarrying, false);
+
+        // Cancel a pending pickup attach so we don't spawn a plate we're about to destroy.
+        if (pickUpRoutine != null)
+        {
+            StopCoroutine(pickUpRoutine);
+            pickUpRoutine = null;
+        }
+
+        if (playAnimation && animator != null && !string.IsNullOrEmpty(animTriggerPutDown)
+            && HasAnimParam(animator, animTriggerPutDown, AnimatorControllerParameterType.Trigger))
+        {
+            animator.SetTrigger(animTriggerPutDown);
+
+            if (putDownRoutine != null) StopCoroutine(putDownRoutine);
+            putDownRoutine = StartCoroutine(DestroyPlateAfterDelay(plateDestroyDelay));
+        }
+        else
+        {
+            DestroyPlateNow();
+        }
+    }
+
+    IEnumerator DestroyPlateAfterDelay(float delay)
+    {
+        if (delay > 0f) yield return new WaitForSeconds(delay);
+        DestroyPlateNow();
+        putDownRoutine = null;
+    }
+
+    void DestroyPlateNow()
+    {
         if (plateInstance != null)
         {
             Destroy(plateInstance);
             plateInstance = null;
         }
-
-        if (animator != null && !string.IsNullOrEmpty(animBoolCarrying))
-            animator.SetBool(animBoolCarrying, false);
     }
 }

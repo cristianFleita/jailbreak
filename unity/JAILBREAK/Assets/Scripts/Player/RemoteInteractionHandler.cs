@@ -78,6 +78,15 @@ namespace Jailbreak.Player
                 return;
             }
 
+            // ── Sink drop ────────────────────────────────────────────────────
+            var sink = ni.GetComponent<SinkInteractable>();
+            if (sink != null && carryFoodInteraction != null)
+            {
+                sink.ApplyRemote(carryFoodInteraction, data.action);
+                Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
+                return;
+            }
+
             // ── Future interaction types: add branches here ──────────────────
 
             Debug.LogWarning($"[RemoteInteract] No handler for action '{data.action}' " +

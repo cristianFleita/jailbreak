@@ -1046,3 +1046,26 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260419_124624
+### Commits
+0b444fe chore: interact food counter npcs
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260419_125031
+### Commits
+0b444fe chore: interact food counter npcs
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/Interactions/CarryFood/CarryFoodInteraction.cs
+unity/JAILBREAK/Assets/Scripts/Player/RemoteInteractionHandler.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
