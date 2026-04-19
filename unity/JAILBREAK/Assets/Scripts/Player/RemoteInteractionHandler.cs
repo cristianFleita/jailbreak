@@ -87,6 +87,15 @@ namespace Jailbreak.Player
                 return;
             }
 
+            // ── Worktable start/stop ─────────────────────────────────────────
+            var worktable = ni.GetComponent<WorkTableInteractable>();
+            if (worktable != null)
+            {
+                worktable.ApplyRemote(transform, data.action);
+                Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
+                return;
+            }
+
             // ── Future interaction types: add branches here ──────────────────
 
             Debug.LogWarning($"[RemoteInteract] No handler for action '{data.action}' " +
