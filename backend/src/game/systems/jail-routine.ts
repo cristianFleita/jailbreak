@@ -426,73 +426,116 @@ export class JailRoutineSystem {
     const paired = new Set<string>()
 
     const shuffled = [...npcIds].sort(() => Math.random() - 0.5)
+    const n = shuffled.length
 
-    for (const npcId of shuffled) {
-      if (paired.has(npcId)) continue;
+    // Leave an 8s tail so every NPC finishes its sequence before phase end.
+    const phaseBudget = def.duration - 8
 
-      const walkSpeedMult = 0.85 + Math.random() * 0.30;
-      const steps: NPCActionStep[] = [...this.buildTransitionPrefix(npcId)];
+    // Stagger exit from cells: evenly distribute linger across NPCs so they
+    // don't all converge on the counter/sink at the same time.
+    const STAGGER_MAX = 25
 
-      const directSit = Math.random() < 0.30;
-      const seatSeed = shuffled.indexOf(npcId);
-      // Same seed for walk-to-counter and grab-food so both resolve to the
-      // exact same FoodCounterInteractable on every client (mirrors seatSeed
-      // for the sit/walk-to-seat pair).
-      const counterSeed = shuffled.indexOf(npcId);
-      // Same seed for walk-to-trash and clear-tray so the NPC walks to and
-      // deposits at the exact same SinkInteractable on every client.
-      const sinkSeed = shuffled.indexOf(npcId);
+    // Post-sink fillers: walk back to seat and loaf there until phase ends,
+    // instead of idling at the trash zone.
+    // animTrigger must start with 'sit_' so the Unity client's IsSitAction()
+    // routes the NPC to a deterministic chair instead of a random zone point.
+    const fillerPool = [
+      { actionId: 'free_cafe_sit_idle', animTrigger: 'sit_idle',      minDur: 10, maxDur: 18, social: false },
+      { actionId: 'free_cafe_sit_talk', animTrigger: 'sit_eat_talk',  minDur: 10, maxDur: 18, social: true  },
+      { actionId: 'cafe_sit_eat',       animTrigger: 'sit_eat',       minDur: 8,  maxDur: 14, social: false },
+    ]
+
+    for (let i = 0; i < n; i++) {
+      const npcId = shuffled[i]
+      if (paired.has(npcId)) continue
+
+      const walkSpeedMult = 0.85 + Math.random() * 0.30
+      const steps: NPCActionStep[] = []
+
+      const staggerBase = n > 1 ? (i / (n - 1)) * STAGGER_MAX : 0
+      const lingerTime  = Math.max(0, staggerBase + (Math.random() - 0.5) * 4)
+      if (lingerTime > 1.5) {
+        const idleAnims = ['idle', 'idle', 'idle', 'stretch', 'yawn']
+        steps.push({
+          actionId: 'linger_before_move',
+          animTrigger: idleAnims[Math.floor(Math.random() * idleAnims.length)],
+          duration: lingerTime,
+        })
+      }
+
+      const directSit   = Math.random() < 0.30
+      // Same seed for walk-to-counter/grab-food and walk-to-trash/clear-tray
+      // so both steps resolve to the exact same interactable on every client.
+      const seatSeed    = i
+      const counterSeed = i
+      const sinkSeed    = i
 
       if (!directSit) {
         if (Math.random() < 0.20) {
-          const partner = this.findPartner(shuffled, paired, npcId);
+          const partner = this.findPartner(shuffled, paired, npcId)
           steps.push({
-            actionId: 'cafe_wait_outside_talk',
-            animTrigger: 'talk_standing',
+            actionId: 'cafe_wait_outside_talk', animTrigger: 'talk_standing',
             zoneId: 'cafeteria', seed: generateSeed(),
             duration: 6 + Math.random(),
             socialPartnerId: partner ?? undefined,
-          });
+          })
         }
-
-        steps.push({ actionId: 'cafe_walk_to_counter', animTrigger: 'Walking', zoneId: 'cafeteria_counter', seed: counterSeed, duration: 0 });
-        steps.push({ actionId: 'cafe_grab_food', animTrigger: 'serve_self', zoneId: 'cafeteria_counter', seed: counterSeed, duration: 4 + Math.random() * 2 });
+        steps.push({ actionId: 'cafe_walk_to_counter', animTrigger: 'Walking',    zoneId: 'cafeteria_counter', seed: counterSeed, duration: 0 })
+        steps.push({ actionId: 'cafe_grab_food',       animTrigger: 'serve_self', zoneId: 'cafeteria_counter', seed: counterSeed, duration: 4 + Math.random() * 2 })
       }
 
-      steps.push({ actionId: 'cafe_walk_to_seat', animTrigger: 'Walking', zoneId: 'cafeteria_seating', seed: seatSeed, duration: 0 });
+      steps.push({ actionId: 'cafe_walk_to_seat', animTrigger: 'Walking', zoneId: 'cafeteria_seating', seed: seatSeed, duration: 0 })
 
-      let eatDuration = 10 + Math.random() * 5;
-      if (directSit) {
-        eatDuration += 15 + Math.random() * 20; // Sit for a longer time
-      }
+      const baseEat     = 28 + Math.random() * 14
+      const eatDuration = directSit ? baseEat + 8 + Math.random() * 8 : baseEat
 
       if (Math.random() < 0.40) {
-        const partner = this.findPartner(shuffled, paired, npcId);
+        const partner = this.findPartner(shuffled, paired, npcId)
         steps.push({
           actionId: 'cafe_sit_eat_talk', animTrigger: 'sit_eat_talk',
           zoneId: 'cafeteria_seating', seed: seatSeed, duration: eatDuration,
           socialPartnerId: partner ?? undefined,
-        });
+        })
       } else {
         steps.push({
           actionId: 'cafe_sit_eat', animTrigger: 'sit_eat',
           zoneId: 'cafeteria_seating', seed: seatSeed, duration: eatDuration,
-        });
-      }
-
-      steps.push({ actionId: 'cafe_walk_to_trash', animTrigger: 'carry_tray', zoneId: 'cafeteria_trash', seed: sinkSeed, duration: 0 });
-      steps.push({ actionId: 'cafe_clear_tray', animTrigger: 'deposit_tray', zoneId: 'cafeteria_trash', seed: sinkSeed, duration: 3 + Math.random() * 2 });
-
-      if (Math.random() < 0.25) {
-        const chatPartner = this.findPartner(shuffled, paired, npcId)
-        steps.push({
-          actionId: 'cafe_talk_after_trash', animTrigger: 'talk_standing',
-          zoneId: 'cafeteria_trash', seed: generateSeed(), duration: 6 + Math.random(),
-          socialPartnerId: chatPartner ?? undefined,
         })
       }
 
-      const totalDur = steps.reduce((s, st) => s + st.duration, 0) + 8
+      steps.push({ actionId: 'cafe_walk_to_trash', animTrigger: 'carry_tray',   zoneId: 'cafeteria_trash', seed: sinkSeed, duration: 0 })
+      steps.push({ actionId: 'cafe_clear_tray',    animTrigger: 'deposit_tray', zoneId: 'cafeteria_trash', seed: sinkSeed, duration: 3 + Math.random() * 2 })
+
+      let consumed = steps.reduce((s, st) => s + st.duration, 0)
+      if (consumed < phaseBudget - 12) {
+        steps.push({ actionId: 'cafe_walk_to_seat', animTrigger: 'Walking', zoneId: 'cafeteria_seating', seed: seatSeed, duration: 0 })
+
+        let fillerCount = 0
+        while (consumed < phaseBudget - 8 && fillerCount < 3) {
+          const filler    = fillerPool[Math.floor(Math.random() * fillerPool.length)]
+          const fillerDur = Math.min(
+            filler.minDur + Math.random() * (filler.maxDur - filler.minDur),
+            phaseBudget - consumed - 4,
+          )
+          if (fillerDur < 5) break
+
+          const partnerForFiller = filler.social
+            ? (this.findPartner(shuffled, paired, npcId) ?? undefined)
+            : undefined
+          steps.push({
+            actionId:        filler.actionId,
+            animTrigger:     filler.animTrigger,
+            zoneId:          'cafeteria_seating',
+            seed:            seatSeed,
+            duration:        fillerDur,
+            socialPartnerId: partnerForFiller,
+          })
+          consumed += fillerDur
+          fillerCount++
+        }
+      }
+
+      const totalDur = consumed + 8
       assignments.push({
         npcId, actionId: 'cafeteria_sequence', animTrigger: 'Idle',
         duration: Math.min(totalDur, def.duration),
