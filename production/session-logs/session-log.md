@@ -1035,3 +1035,14 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260419_015628
+### Commits
+6a56be6 chore: player food counter interact
+ba3ae43 chore: npcs action sit
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+

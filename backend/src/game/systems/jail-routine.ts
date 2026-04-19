@@ -435,6 +435,10 @@ export class JailRoutineSystem {
 
       const directSit = Math.random() < 0.30;
       const seatSeed = shuffled.indexOf(npcId);
+      // Same seed for walk-to-counter and grab-food so both resolve to the
+      // exact same FoodCounterInteractable on every client (mirrors seatSeed
+      // for the sit/walk-to-seat pair).
+      const counterSeed = shuffled.indexOf(npcId);
 
       if (!directSit) {
         if (Math.random() < 0.20) {
@@ -448,8 +452,8 @@ export class JailRoutineSystem {
           });
         }
 
-        steps.push({ actionId: 'cafe_walk_to_counter', animTrigger: 'Walking', zoneId: 'cafeteria_counter', seed: generateSeed(), duration: 0 });
-        steps.push({ actionId: 'cafe_grab_food', animTrigger: 'serve_self', zoneId: 'cafeteria_counter', seed: generateSeed(), duration: 4 + Math.random() * 2 });
+        steps.push({ actionId: 'cafe_walk_to_counter', animTrigger: 'Walking', zoneId: 'cafeteria_counter', seed: counterSeed, duration: 0 });
+        steps.push({ actionId: 'cafe_grab_food', animTrigger: 'serve_self', zoneId: 'cafeteria_counter', seed: counterSeed, duration: 4 + Math.random() * 2 });
       }
 
       steps.push({ actionId: 'cafe_walk_to_seat', animTrigger: 'Walking', zoneId: 'cafeteria_seating', seed: seatSeed, duration: 0 });

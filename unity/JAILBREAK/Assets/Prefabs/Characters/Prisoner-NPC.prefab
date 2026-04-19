@@ -215,6 +215,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5742666933800053897}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5833770110293013817}
   m_SourcePrefab: {fileID: 100100000, guid: 95f474a6999504cab8d278219818a844, type: 3}
 --- !u!1 &4896770664015057812 stripped
 GameObject:
@@ -334,3 +337,28 @@ MonoBehaviour:
   stateSitIdle: Sitting
   stateStandUp: SitToStand
   animationEndThreshold: 0.9
+--- !u!114 &5833770110293013817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4896770664015057812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95eb10f1f6e6b40a99606270e8bd4560, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarryFoodInteraction
+  handAttachPoint: {fileID: 6233008144420507917}
+  platePrefab: {fileID: 5007530494116154058, guid: 13f3eee2cd3644fec8a5b5b60baf4ff3, type: 3}
+  plateLocalPosition: {x: -0.51, y: 0.039, z: 0.239}
+  plateLocalEuler: {x: 90, y: 0, z: 0}
+  plateLocalScale: {x: 200, y: 200, z: 200}
+  animBoolCarrying: isCarrying
+  animTriggerPickUp: PickUp
+  plateSpawnDelay: 0.6
+--- !u!4 &6233008144420507917 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1852576806548013000, guid: 95f474a6999504cab8d278219818a844, type: 3}
+  m_PrefabInstance: {fileID: 5707673884898553541}
+  m_PrefabAsset: {fileID: 0}

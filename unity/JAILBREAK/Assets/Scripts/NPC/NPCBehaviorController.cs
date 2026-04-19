@@ -28,6 +28,12 @@ namespace Jailbreak.NPC
         [SerializeField] private float arrivalThreshold = 0.3f;
         [SerializeField] private float idleFallbackDelay = 3f;
 
+        [Header("Food Counter (used when this NPC picks up a plate)")]
+        [Tooltip("Right-hand bone the food plate is parented to. Mirrors CarryFoodInteraction.handAttachPoint on the player. Optional — the carry bool still flips without it.")]
+        [SerializeField] private Transform  npcHandAttachPoint;
+        [Tooltip("Plate prefab spawned in the NPC's hand at the cafeteria counter. Optional — animation still plays without it.")]
+        [SerializeField] private GameObject npcPlatePrefab;
+
         // ─── Current action state ─────────────────────────────────────────────
         public bool IsNavigating => _current != null || _sequenceSteps != null;
         public bool IsEmergent => _isPlayingEmergent;
@@ -294,6 +300,12 @@ namespace Jailbreak.NPC
                     if (sitPoint != null) { destination = sitPoint.transform.position; destSrc = "sit_point"; }
                 }
 
+                if (!destination.HasValue && (IsTakeFoodAction(step.animTrigger) || IsWalkToCounterAction(step.actionId)))
+                {
+                    var counter = zoneRegistry.GetDeterministicFoodCounter(step.zoneId, step.seed);
+                    if (counter != null) { destination = counter.transform.position; destSrc = "food_counter"; }
+                }
+
                 if (!destination.HasValue)
                 {
                     var point = zoneRegistry.GetDeterministicPoint(step.zoneId, step.seed);
@@ -448,6 +460,12 @@ namespace Jailbreak.NPC
                 if (sitPoint != null) return sitPoint.transform.position;
             }
 
+            if ((IsTakeFoodAction(data.animTrigger) || IsWalkToCounterAction(data.actionId)) && !string.IsNullOrEmpty(data.zoneId))
+            {
+                var counter = zoneRegistry.GetDeterministicFoodCounter(data.zoneId, data.seed);
+                if (counter != null) return counter.transform.position;
+            }
+
             if (data.seedChain != null && data.seedChain.Length > 0)
             {
                 var pt = zoneRegistry.GetDeterministicPoint(data.zoneId, data.seedChain[0]);
@@ -480,8 +498,42 @@ namespace Jailbreak.NPC
             return actionId != null && actionId.Contains("walk_to_seat");
         }
 
+        private bool IsTakeFoodAction(string trigger)
+        {
+            return trigger == "serve_self";
+        }
+
+        private bool IsLeaveFoodAction(string trigger)
+        {
+            return trigger == "deposit_tray";
+        }
+
+        private bool IsWalkToCounterAction(string actionId)
+        {
+            return actionId != null && (actionId.Contains("walk_to_counter") || actionId == "cafe_grab_food");
+        }
+
         private void HandleArrivalAnimation(string animTrigger, string zoneId, uint seed)
         {
+            if (IsTakeFoodAction(animTrigger))
+            {
+                var carry = EnsureCarryFoodInteraction();
+                if (carry != null && !carry.IsCarrying)
+                {
+                    carry.TryPickUp();
+                    return;
+                }
+            }
+
+            if (IsLeaveFoodAction(animTrigger))
+            {
+                var carry = GetComponent<CarryFoodInteraction>();
+                if (carry != null && carry.IsCarrying)
+                    carry.TryDrop();
+                PlayAnimation(animTrigger);
+                return;
+            }
+
             if (IsSitAction(animTrigger) && !string.IsNullOrEmpty(zoneId) && zoneRegistry != null)
             {
                 var sitPoint = zoneRegistry.GetDeterministicSitPoint(zoneId, seed);
@@ -514,6 +566,28 @@ namespace Jailbreak.NPC
             }
 
             PlayAnimation(animTrigger);
+        }
+
+        // ─── Food Carry Setup ──────────────────────────────────────────────────
+        // Auto-add a CarryFoodInteraction to the NPC the first time it reaches
+        // the cafeteria counter, mirroring how SitInteraction is added on demand.
+        // The plate visual still shows up only if npcHandAttachPoint + npcPlatePrefab
+        // are wired in the prefab inspector — without them the carry bool flips
+        // but no plate prop is spawned (CarryFoodInteraction handles this gracefully).
+        private CarryFoodInteraction EnsureCarryFoodInteraction()
+        {
+            var carry = GetComponent<CarryFoodInteraction>();
+            if (carry == null)
+            {
+                carry = gameObject.AddComponent<CarryFoodInteraction>();
+            }
+
+            if (carry.handAttachPoint == null && npcHandAttachPoint != null)
+                carry.handAttachPoint = npcHandAttachPoint;
+            if (carry.platePrefab == null && npcPlatePrefab != null)
+                carry.platePrefab = npcPlatePrefab;
+
+            return carry;
         }
 
         // ─── Animator Map ───────────────────────────────────────────────────────
