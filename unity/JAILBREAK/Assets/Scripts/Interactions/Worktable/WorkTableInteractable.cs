@@ -18,6 +18,13 @@ public class WorkTableInteractable : MonoBehaviour, IInteractable
     public ProgressBar progressBar;
     public string progressLabel = "Working...";
 
+    /// <summary>
+    /// Runtime reservation flag. Set to true by the actor that's currently
+    /// walking to / using this desk so another actor picks a different one.
+    /// Player-flow and NPC-flow both respect it (see <see cref="Jailbreak.NPC.ZoneRegistry.GetDeterministicWorkTable"/>).
+    /// </summary>
+    [System.NonSerialized] public bool isOccupied;
+
     public KeyCode InteractKey      => KeyCode.E;
     public string ActionLabel       => isActive ? "Stop" : "Work";
     public int Priority             => 10;

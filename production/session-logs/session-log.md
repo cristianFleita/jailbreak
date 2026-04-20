@@ -1101,3 +1101,78 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260420_001950
+### Commits
+faee0b5 chore: broadcast work table interactable
+01f328c chore: adjust desk prefab
+df55f2a chore: adjust work routine
+38dedc4 fix: adjust cafeteria phase times
+a5cf162 chore: set work zones
+85d21f0 chore: random walk/run for npcs
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260420_004126
+### Commits
+faee0b5 chore: broadcast work table interactable
+01f328c chore: adjust desk prefab
+df55f2a chore: adjust work routine
+38dedc4 fix: adjust cafeteria phase times
+a5cf162 chore: set work zones
+85d21f0 chore: random walk/run for npcs
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Scripts/Interactions/Worktable/WorkTableInteractable.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260420_010547
+### Commits
+faee0b5 chore: broadcast work table interactable
+01f328c chore: adjust desk prefab
+df55f2a chore: adjust work routine
+38dedc4 fix: adjust cafeteria phase times
+a5cf162 chore: set work zones
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260420_012722
+### Commits
+faee0b5 chore: broadcast work table interactable
+01f328c chore: adjust desk prefab
+df55f2a chore: adjust work routine
+38dedc4 fix: adjust cafeteria phase times
+a5cf162 chore: set work zones
+### Uncommitted Changes
+production/session-logs/compaction-log.txt
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Animations/ButtonPushing.anim
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Scripts/Interactions/Worktable/WorkTableInteractable.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+

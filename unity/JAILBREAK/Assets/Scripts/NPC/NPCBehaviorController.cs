@@ -90,6 +90,12 @@ namespace Jailbreak.NPC
         private float _baseSpeedVariance;
         private float _baseWalkMult;
 
+        // Desk reserved for the current work step. Set at destination resolution
+        // (BeginStep / ResolveFirstDestination) so a second NPC resolving the
+        // same zone+seed gets the NEXT free desk. Released on work-stop,
+        // reassignment, or destroy.
+        private WorkTableInteractable _reservedWorkTable;
+
         // ─── Emergent behavior state ──────────────────────────────────────────
         private bool   _isPlayingEmergent;
         private float  _emergentTimer;
@@ -152,7 +158,9 @@ namespace Jailbreak.NPC
 
             if (_current == null) return;
 
-            if (!_hasArrived && !agent.pathPending && agent.remainingDistance < arrivalThreshold)
+            if (!_hasArrived
+                && agent != null && agent.enabled && agent.isOnNavMesh
+                && !agent.pathPending && agent.remainingDistance < arrivalThreshold)
             {
                 _hasArrived = true;
                 OnReachedDestination();
@@ -206,6 +214,14 @@ namespace Jailbreak.NPC
                     sit.ForceReset();
                 }
             }
+
+            // If a new assignment comes in while we're walking to / working
+            // at a desk, stop + release the reservation unless the new step
+            // continues at the same desk zone. Covers both the "mid-work"
+            // and the "mid-walk (desk reserved, not yet working)" cases.
+            bool continuingSameWork = IsWorkTableAction(newAnim)
+                                      && newZone == (_currentStepZoneId ?? _current?.zoneId);
+            if (!continuingSameWork) StopWorkTableIfActive();
 
             CleanupCurrent();
 
@@ -394,6 +410,20 @@ namespace Jailbreak.NPC
                     if (sink != null) { destination = sink.transform.position; destSrc = "sink"; }
                 }
 
+                if (!destination.HasValue && IsWorkTableAction(step.animTrigger))
+                {
+                    var workTable = ReserveWorkTable(step.zoneId, step.seed);
+                    if (workTable != null)
+                    {
+                        destination = ResolveWorkTableDestination(workTable);
+                        destSrc = "work_table";
+                    }
+                    else
+                    {
+                        destSrc = "work_table_all_busy_fallback";
+                    }
+                }
+
                 if (!destination.HasValue)
                 {
                     var point = zoneRegistry.GetDeterministicPoint(step.zoneId, step.seed);
@@ -459,6 +489,20 @@ namespace Jailbreak.NPC
 
         private void AdvanceSequence()
         {
+            // If we were working / reserved on a desk during this step, stop
+            // the loop + release the reservation so the NavMeshAgent comes
+            // back online and another NPC can claim the desk. Skip when the
+            // next step is another work action at the same zone — we keep
+            // looping + reservation in place.
+            {
+                int peekIndex = _sequenceIndex + 1;
+                bool nextIsWorkSameZone = peekIndex < _sequenceSteps.Length
+                                          && IsWorkTableAction(_sequenceSteps[peekIndex].animTrigger)
+                                          && !string.IsNullOrEmpty(_sequenceSteps[peekIndex].zoneId)
+                                          && _sequenceSteps[peekIndex].zoneId == _currentStepZoneId;
+                if (!nextIsWorkSameZone) StopWorkTableIfActive();
+            }
+
             _sequenceIndex++;
             if (_sequenceIndex >= _sequenceSteps.Length)
             {
@@ -494,6 +538,8 @@ namespace Jailbreak.NPC
         {
             if (TryGetComponent<SitInteraction>(out var sit) && sit.IsSitting)
                 sit.TryStandUp();
+
+            StopWorkTableIfActive();
         }
 
         private void OnSequenceComplete()
@@ -541,9 +587,11 @@ namespace Jailbreak.NPC
 
         private void OnActionComplete()
         {
+            StopWorkTableIfActive();
+
             _isLooping = false;
             _current   = null;
-            if (agent.isOnNavMesh)
+            if (agent != null && agent.isOnNavMesh)
             {
                 agent.ResetPath();
                 agent.velocity = Vector3.zero;
@@ -571,6 +619,15 @@ namespace Jailbreak.NPC
             {
                 var sink = zoneRegistry.GetDeterministicSink(data.zoneId, data.seed);
                 if (sink != null) return sink.transform.position;
+            }
+
+            if (IsWorkTableAction(data.animTrigger) && !string.IsNullOrEmpty(data.zoneId))
+            {
+                var workTable = ReserveWorkTable(data.zoneId, data.seed);
+                if (workTable != null) return ResolveWorkTableDestination(workTable);
+                // No desk free → fall through to zone point lookups, so the NPC
+                // still walks SOMEWHERE in the workshop and the arrival handler
+                // can apply the talk/idle fallback on arrival.
             }
 
             if (data.seedChain != null && data.seedChain.Length > 0)
@@ -625,6 +682,21 @@ namespace Jailbreak.NPC
             return actionId != null && (actionId.Contains("walk_to_trash") || actionId == "cafe_clear_tray");
         }
 
+        private bool IsWorkTableAction(string trigger)
+        {
+            return trigger == "work_bench";
+        }
+
+        // Desks use the ProgressPointAction.actionPoint as the stand-at spot.
+        // Prefer that Transform so the walk destination lines up exactly with
+        // where the NPC will be snapped when starting the work loop.
+        private Vector3 ResolveWorkTableDestination(WorkTableInteractable workTable)
+        {
+            var pp = workTable.GetComponent<ProgressPointAction>();
+            var anchor = (pp != null && pp.actionPoint != null) ? pp.actionPoint : workTable.transform;
+            return anchor.position;
+        }
+
         private void HandleArrivalAnimation(string animTrigger, string zoneId, uint seed)
         {
             if (IsTakeFoodAction(animTrigger))
@@ -643,6 +715,31 @@ namespace Jailbreak.NPC
                 if (carry != null && carry.IsCarrying)
                     carry.TryDrop();
                 PlayAnimation(animTrigger);
+                return;
+            }
+
+            if (IsWorkTableAction(animTrigger) && !string.IsNullOrEmpty(zoneId) && zoneRegistry != null)
+            {
+                // Prefer the desk we already reserved during destination
+                // resolution; only re-reserve if for some reason we don't
+                // have one yet (e.g., single-action path). This prevents
+                // picking a *different* desk than the one we walked to.
+                var workTable = _reservedWorkTable ?? ReserveWorkTable(zoneId, seed);
+                if (workTable != null)
+                {
+                    var pp = workTable.GetComponent<ProgressPointAction>();
+                    var anchor = (pp != null && pp.actionPoint != null) ? pp.actionPoint : workTable.transform;
+
+                    var work = EnsureWorkTableInteraction();
+                    work.TryStartWork(anchor);
+                    return;
+                }
+
+                // Every desk in this zone is taken → fallback so the NPC
+                // doesn't just stand silent: play a standing-talk idle in
+                // place for the remainder of the step.
+                Debug.Log($"[NPC-CTRL] {name} all desks in '{zoneId}' occupied — falling back to talk_standing");
+                PlayAnimation("talk_standing");
                 return;
             }
 
@@ -678,6 +775,68 @@ namespace Jailbreak.NPC
             }
 
             PlayAnimation(animTrigger);
+        }
+
+        // ─── Work Table Setup ─────────────────────────────────────────────────
+        // Auto-add a WorkTableInteraction on the NPC the first time it reaches
+        // a workshop desk, mirroring how SitInteraction is added on demand.
+        // The character-side component owns the snap + animator bool + agent
+        // toggle. It intentionally does NOT drive the progress bar or
+        // broadcast player:action events — those belong to the local player's
+        // WorkTableInteractable flow. NPCs are synced via NPCNetworkSync.
+        private WorkTableInteraction EnsureWorkTableInteraction()
+        {
+            var work = GetComponent<WorkTableInteraction>();
+            if (work == null)
+                work = gameObject.AddComponent<WorkTableInteraction>();
+
+            if (work.animator == null)     work.animator     = animator;
+            if (work.navMeshAgent == null) work.navMeshAgent = agent;
+
+            return work;
+        }
+
+        private void StopWorkTableIfActive()
+        {
+            if (TryGetComponent<WorkTableInteraction>(out var work) && work.IsWorking)
+                work.TryStopWork();
+
+            ReleaseWorkTable();
+        }
+
+        /// <summary>
+        /// Reserves a free desk inside the given zone for this NPC. Marks it
+        /// occupied immediately so other NPCs resolving the same zone+seed
+        /// will walk to a different desk. Idempotent: if we already have a
+        /// reservation, return it.
+        /// </summary>
+        private WorkTableInteractable ReserveWorkTable(string zoneId, uint seed)
+        {
+            if (_reservedWorkTable != null) return _reservedWorkTable;
+            if (zoneRegistry == null) return null;
+
+            var table = zoneRegistry.GetDeterministicWorkTable(zoneId, seed);
+            if (table == null) return null;
+
+            table.isOccupied = true;
+            _reservedWorkTable = table;
+            return table;
+        }
+
+        private void ReleaseWorkTable()
+        {
+            if (_reservedWorkTable != null)
+            {
+                _reservedWorkTable.isOccupied = false;
+                _reservedWorkTable = null;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            // Release any reservation so despawned/disconnected NPCs don't
+            // leave the desk permanently marked as busy.
+            ReleaseWorkTable();
         }
 
         // ─── Food Carry Setup ──────────────────────────────────────────────────
