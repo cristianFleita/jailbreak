@@ -96,6 +96,11 @@ namespace Jailbreak.NPC
         // reassignment, or destroy.
         private WorkTableInteractable _reservedWorkTable;
 
+        // Cabinet reserved for the current inspect step. Mirrors _reservedWorkTable:
+        // set at destination resolution so a second NPC resolving the same zone+seed
+        // gets the NEXT free cabinet. Released on inspect-stop, reassignment, or destroy.
+        private WorkInspectCabinetsInteractable _reservedInspectCabinet;
+
         // ─── Emergent behavior state ──────────────────────────────────────────
         private bool   _isPlayingEmergent;
         private float  _emergentTimer;
@@ -222,6 +227,10 @@ namespace Jailbreak.NPC
             bool continuingSameWork = IsWorkTableAction(newAnim)
                                       && newZone == (_currentStepZoneId ?? _current?.zoneId);
             if (!continuingSameWork) StopWorkTableIfActive();
+
+            bool continuingSameInspect = IsInspectCabinetAction(newAnim)
+                                         && newZone == (_currentStepZoneId ?? _current?.zoneId);
+            if (!continuingSameInspect) StopInspectCabinetIfActive();
 
             CleanupCurrent();
 
@@ -424,6 +433,20 @@ namespace Jailbreak.NPC
                     }
                 }
 
+                if (!destination.HasValue && IsInspectCabinetAction(step.animTrigger))
+                {
+                    var cabinet = ReserveInspectCabinet(step.zoneId, step.seed);
+                    if (cabinet != null)
+                    {
+                        destination = ResolveInspectCabinetDestination(cabinet);
+                        destSrc = "inspect_cabinet";
+                    }
+                    else
+                    {
+                        destSrc = "inspect_cabinet_all_busy_fallback";
+                    }
+                }
+
                 if (!destination.HasValue)
                 {
                     var point = zoneRegistry.GetDeterministicPoint(step.zoneId, step.seed);
@@ -501,6 +524,12 @@ namespace Jailbreak.NPC
                                           && !string.IsNullOrEmpty(_sequenceSteps[peekIndex].zoneId)
                                           && _sequenceSteps[peekIndex].zoneId == _currentStepZoneId;
                 if (!nextIsWorkSameZone) StopWorkTableIfActive();
+
+                bool nextIsInspectSameZone = peekIndex < _sequenceSteps.Length
+                                             && IsInspectCabinetAction(_sequenceSteps[peekIndex].animTrigger)
+                                             && !string.IsNullOrEmpty(_sequenceSteps[peekIndex].zoneId)
+                                             && _sequenceSteps[peekIndex].zoneId == _currentStepZoneId;
+                if (!nextIsInspectSameZone) StopInspectCabinetIfActive();
             }
 
             _sequenceIndex++;
@@ -540,6 +569,7 @@ namespace Jailbreak.NPC
                 sit.TryStandUp();
 
             StopWorkTableIfActive();
+            StopInspectCabinetIfActive();
         }
 
         private void OnSequenceComplete()
@@ -630,6 +660,13 @@ namespace Jailbreak.NPC
                 // can apply the talk/idle fallback on arrival.
             }
 
+            if (IsInspectCabinetAction(data.animTrigger) && !string.IsNullOrEmpty(data.zoneId))
+            {
+                var cabinet = ReserveInspectCabinet(data.zoneId, data.seed);
+                if (cabinet != null) return ResolveInspectCabinetDestination(cabinet);
+                // No cabinet free → fall through to zone point lookups.
+            }
+
             if (data.seedChain != null && data.seedChain.Length > 0)
             {
                 var pt = zoneRegistry.GetDeterministicPoint(data.zoneId, data.seedChain[0]);
@@ -687,6 +724,11 @@ namespace Jailbreak.NPC
             return trigger == "work_bench";
         }
 
+        private bool IsInspectCabinetAction(string trigger)
+        {
+            return trigger == "inspect";
+        }
+
         // Desks use the ProgressPointAction.actionPoint as the stand-at spot.
         // Prefer that Transform so the walk destination lines up exactly with
         // where the NPC will be snapped when starting the work loop.
@@ -694,6 +736,14 @@ namespace Jailbreak.NPC
         {
             var pp = workTable.GetComponent<ProgressPointAction>();
             var anchor = (pp != null && pp.actionPoint != null) ? pp.actionPoint : workTable.transform;
+            return anchor.position;
+        }
+
+        // Cabinets use the same ProgressPointAction.actionPoint pattern as desks.
+        private Vector3 ResolveInspectCabinetDestination(WorkInspectCabinetsInteractable cabinet)
+        {
+            var pp = cabinet.GetComponent<ProgressPointAction>();
+            var anchor = (pp != null && pp.actionPoint != null) ? pp.actionPoint : cabinet.transform;
             return anchor.position;
         }
 
@@ -740,6 +790,24 @@ namespace Jailbreak.NPC
                 // place for the remainder of the step.
                 Debug.Log($"[NPC-CTRL] {name} all desks in '{zoneId}' occupied — falling back to talk_standing");
                 PlayAnimation("talk_standing");
+                return;
+            }
+
+            if (IsInspectCabinetAction(animTrigger) && !string.IsNullOrEmpty(zoneId) && zoneRegistry != null)
+            {
+                var cabinet = _reservedInspectCabinet ?? ReserveInspectCabinet(zoneId, seed);
+                if (cabinet != null)
+                {
+                    var pp = cabinet.GetComponent<ProgressPointAction>();
+                    var anchor = (pp != null && pp.actionPoint != null) ? pp.actionPoint : cabinet.transform;
+
+                    var inspect = EnsureWorkInspectCabinetsInteraction();
+                    inspect.TryStartInspect(anchor);
+                    return;
+                }
+
+                Debug.Log($"[NPC-CTRL] {name} all cabinets in '{zoneId}' occupied — falling back to look_around");
+                PlayAnimation("look_around");
                 return;
             }
 
@@ -832,11 +900,63 @@ namespace Jailbreak.NPC
             }
         }
 
+        // ─── Inspect Cabinet Setup ───────────────────────────────────────────
+        // Auto-add a WorkInspectCabinetsInteraction on the NPC the first time
+        // it reaches a cabinet, mirroring the worktable / sit on-demand pattern.
+
+        private WorkInspectCabinetsInteraction EnsureWorkInspectCabinetsInteraction()
+        {
+            var inspect = GetComponent<WorkInspectCabinetsInteraction>();
+            if (inspect == null)
+                inspect = gameObject.AddComponent<WorkInspectCabinetsInteraction>();
+
+            if (inspect.animator == null)     inspect.animator     = animator;
+            if (inspect.navMeshAgent == null) inspect.navMeshAgent = agent;
+
+            return inspect;
+        }
+
+        private void StopInspectCabinetIfActive()
+        {
+            if (TryGetComponent<WorkInspectCabinetsInteraction>(out var inspect) && inspect.IsInspecting)
+                inspect.TryStopInspect();
+
+            ReleaseInspectCabinet();
+        }
+
+        /// <summary>
+        /// Reserves a free cabinet inside the given zone for this NPC. Marks it
+        /// occupied immediately so other NPCs resolving the same zone+seed
+        /// walk to a different cabinet. Idempotent.
+        /// </summary>
+        private WorkInspectCabinetsInteractable ReserveInspectCabinet(string zoneId, uint seed)
+        {
+            if (_reservedInspectCabinet != null) return _reservedInspectCabinet;
+            if (zoneRegistry == null) return null;
+
+            var cabinet = zoneRegistry.GetDeterministicInspectCabinet(zoneId, seed);
+            if (cabinet == null) return null;
+
+            cabinet.isOccupied = true;
+            _reservedInspectCabinet = cabinet;
+            return cabinet;
+        }
+
+        private void ReleaseInspectCabinet()
+        {
+            if (_reservedInspectCabinet != null)
+            {
+                _reservedInspectCabinet.isOccupied = false;
+                _reservedInspectCabinet = null;
+            }
+        }
+
         private void OnDestroy()
         {
             // Release any reservation so despawned/disconnected NPCs don't
-            // leave the desk permanently marked as busy.
+            // leave the desk / cabinet permanently marked as busy.
             ReleaseWorkTable();
+            ReleaseInspectCabinet();
         }
 
         // ─── Food Carry Setup ──────────────────────────────────────────────────

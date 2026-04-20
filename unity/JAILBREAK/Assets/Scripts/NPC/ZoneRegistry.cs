@@ -182,6 +182,45 @@ namespace Jailbreak.NPC
         }
 
         /// <summary>
+        /// Returns a deterministic WorkInspectCabinetsInteractable inside the requested zone.
+        /// Mirrors GetDeterministicWorkTable (XZ-bounds scan + stable sort + seed index
+        /// with wrap-on-occupied), so NPCs sharing a zone pick different cabinets.
+        /// Returns null if every cabinet in the zone is occupied.
+        /// </summary>
+        public WorkInspectCabinetsInteractable GetDeterministicInspectCabinet(string zoneId, uint seed)
+        {
+            var col = GetZoneBounds(zoneId);
+            if (col == null) return null;
+
+            var b = col.bounds;
+            var all = FindObjectsOfType<WorkInspectCabinetsInteractable>();
+            var inZone = new List<WorkInspectCabinetsInteractable>();
+            foreach (var wc in all)
+            {
+                var p = wc.transform.position;
+                if (p.x >= b.min.x && p.x <= b.max.x && p.z >= b.min.z && p.z <= b.max.z)
+                    inZone.Add(wc);
+            }
+
+            if (inZone.Count == 0) return null;
+
+            inZone.Sort((a, b2) => {
+                int cmp = a.transform.position.x.CompareTo(b2.transform.position.x);
+                if (cmp == 0) cmp = a.transform.position.z.CompareTo(b2.transform.position.z);
+                return cmp;
+            });
+
+            int startIdx = (int)(seed % (uint)inZone.Count);
+            for (int i = 0; i < inZone.Count; i++)
+            {
+                int idx = (startIdx + i) % inZone.Count;
+                if (!inZone[idx].isOccupied) return inZone[idx];
+            }
+
+            return null; // All cabinets in this zone are busy.
+        }
+
+        /// <summary>
         /// Generates a deterministic random point inside the requested zone's bounds using Mulberry32.
         /// The point is generated on the XZ plane at the collider's center Y.
         /// Callers (e.g., NPCBehaviorController) should use NavMesh.SamplePosition to snap it to the floor.
