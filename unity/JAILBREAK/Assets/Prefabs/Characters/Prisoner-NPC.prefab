@@ -378,7 +378,7 @@ MonoBehaviour:
   navMeshAgent: {fileID: -5265632265596839312}
   characterController: {fileID: 0}
   animatorBoolName: isWorkingTable
-  animatorStateName: ButtonPushing
+  animatorStateName: Working
   idleStateName: Idle
 --- !u!4 &6233008144420507917 stripped
 Transform:
