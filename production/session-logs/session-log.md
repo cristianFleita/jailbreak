@@ -1176,3 +1176,14 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260420_105246
+### Commits
+1ff3476 fix: npc animation work table
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/Player/RemoteInteractionHandler.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+

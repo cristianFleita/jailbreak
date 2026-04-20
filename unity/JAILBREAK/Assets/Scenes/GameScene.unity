@@ -14773,6 +14773,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1762519276}
     m_Modifications:
+    - target: {fileID: 1853705715746168044, guid: ced1e5869d1db4b99b2dffbef3dfdbaa, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 6041158784667804652, guid: ced1e5869d1db4b99b2dffbef3dfdbaa, type: 3}
       propertyPath: m_LocalScale.x
       value: 120
@@ -17339,6 +17343,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1762519276}
     m_Modifications:
+    - target: {fileID: 1853705715746168044, guid: ced1e5869d1db4b99b2dffbef3dfdbaa, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 6041158784667804652, guid: ced1e5869d1db4b99b2dffbef3dfdbaa, type: 3}
       propertyPath: m_LocalScale.x
       value: 120

@@ -96,6 +96,15 @@ namespace Jailbreak.Player
                 return;
             }
 
+            // ── Cabinet inspect start/stop ───────────────────────────────────
+            var inspectCabinets = ni.GetComponent<WorkInspectCabinetsInteractable>();
+            if (inspectCabinets != null)
+            {
+                inspectCabinets.ApplyRemote(transform, data.action);
+                Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
+                return;
+            }
+
             // ── Future interaction types: add branches here ──────────────────
 
             Debug.LogWarning($"[RemoteInteract] No handler for action '{data.action}' " +
