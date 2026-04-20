@@ -34,6 +34,16 @@ namespace Jailbreak.NPC
         [Tooltip("Plate prefab spawned in the NPC's hand at the cafeteria counter. Optional — animation still plays without it.")]
         [SerializeField] private GameObject npcPlatePrefab;
 
+        [Header("Laundry Grab Clothes (used when this NPC rummages a pile)")]
+        [Tooltip("Hand bone the clothes bundle is parented to. Mirrors CarryClothesInteraction.handAttachPoint on the player. Optional — the carry bool still flips without it. Defaults to npcHandAttachPoint if left empty.")]
+        [SerializeField] private Transform  npcClothesHandAttachPoint;
+        [Tooltip("Clothes bundle prefab spawned in the NPC's hand when the grab loop completes. Optional — animation still plays without it.")]
+        [SerializeField] private GameObject npcClothesPrefab;
+        [Tooltip("Local-space offset applied to the clothes prefab once parented to the hand.")]
+        [SerializeField] private Vector3    npcClothesLocalPosition = new Vector3(-0.324f, 0f, 0.148f);
+        [SerializeField] private Vector3    npcClothesLocalEuler    = new Vector3(90f, -22.58f, 0f);
+        [SerializeField] private Vector3    npcClothesLocalScale    = new Vector3(30f, 30f, 30f);
+
         // ─── Current action state ─────────────────────────────────────────────
         public bool IsNavigating => _current != null || _sequenceSteps != null;
         public bool IsEmergent => _isPlayingEmergent;
@@ -100,6 +110,10 @@ namespace Jailbreak.NPC
         // set at destination resolution so a second NPC resolving the same zone+seed
         // gets the NEXT free cabinet. Released on inspect-stop, reassignment, or destroy.
         private WorkInspectCabinetsInteractable _reservedInspectCabinet;
+
+        // Laundry pile reserved for the current grab-clothes step. Same reservation
+        // pattern as the work-table / inspect-cabinet slots above.
+        private LaundryGrabClothesInteractable _reservedLaundryGrab;
 
         // ─── Emergent behavior state ──────────────────────────────────────────
         private bool   _isPlayingEmergent;
@@ -231,6 +245,16 @@ namespace Jailbreak.NPC
             bool continuingSameInspect = IsInspectCabinetAction(newAnim)
                                          && newZone == (_currentStepZoneId ?? _current?.zoneId);
             if (!continuingSameInspect) StopInspectCabinetIfActive();
+
+            // Release the pile reservation whenever we switch to a different zone,
+            // so the next NPC assigned to zone_laundry_pile can claim this slot.
+            // CarryClothesInteraction runs its own coroutine — no need to stop it.
+            string newActionId = data.actionSequence != null && data.actionSequence.Length > 0
+                ? data.actionSequence[0].actionId
+                : data.actionId;
+            bool continuingSameGrab = IsLaundryGrabClothesAction(newActionId)
+                                      && newZone == (_currentStepZoneId ?? _current?.zoneId);
+            if (!continuingSameGrab) ReleaseLaundryGrabClothes();
 
             CleanupCurrent();
 
@@ -447,6 +471,20 @@ namespace Jailbreak.NPC
                     }
                 }
 
+                if (!destination.HasValue && IsLaundryGrabClothesAction(step.actionId))
+                {
+                    var pile = ReserveLaundryGrabClothes(step.zoneId, step.seed);
+                    if (pile != null)
+                    {
+                        destination = ResolveLaundryGrabClothesDestination(pile);
+                        destSrc = "laundry_pile";
+                    }
+                    else
+                    {
+                        destSrc = "laundry_pile_all_busy_fallback";
+                    }
+                }
+
                 if (!destination.HasValue)
                 {
                     var point = zoneRegistry.GetDeterministicPoint(step.zoneId, step.seed);
@@ -505,7 +543,7 @@ namespace Jailbreak.NPC
 
             if (step.duration > 0)
             {
-                HandleArrivalAnimation(step.animTrigger, step.zoneId, step.seed);
+                HandleArrivalAnimation(step.animTrigger, step.zoneId, step.seed, step.actionId);
             }
             else AdvanceSequence();
         }
@@ -530,6 +568,12 @@ namespace Jailbreak.NPC
                                              && !string.IsNullOrEmpty(_sequenceSteps[peekIndex].zoneId)
                                              && _sequenceSteps[peekIndex].zoneId == _currentStepZoneId;
                 if (!nextIsInspectSameZone) StopInspectCabinetIfActive();
+
+                // CarryClothesInteraction's grab routine self-terminates when its
+                // own duration elapses (isSearching=false → bundle attached +
+                // isCarrying=true). Nothing to stop here. Release the pile slot
+                // so another NPC can pick it up on the next routine.
+                ReleaseLaundryGrabClothes();
             }
 
             _sequenceIndex++;
@@ -570,6 +614,7 @@ namespace Jailbreak.NPC
 
             StopWorkTableIfActive();
             StopInspectCabinetIfActive();
+            ReleaseLaundryGrabClothes();
         }
 
         private void OnSequenceComplete()
@@ -612,12 +657,13 @@ namespace Jailbreak.NPC
 
             agent.ResetPath();
             agent.velocity = Vector3.zero;
-            HandleArrivalAnimation(_current.animTrigger, _current.zoneId, _current.seed);
+            HandleArrivalAnimation(_current.animTrigger, _current.zoneId, _current.seed, _current.actionId);
         }
 
         private void OnActionComplete()
         {
             StopWorkTableIfActive();
+            ReleaseLaundryGrabClothes();
 
             _isLooping = false;
             _current   = null;
@@ -665,6 +711,13 @@ namespace Jailbreak.NPC
                 var cabinet = ReserveInspectCabinet(data.zoneId, data.seed);
                 if (cabinet != null) return ResolveInspectCabinetDestination(cabinet);
                 // No cabinet free → fall through to zone point lookups.
+            }
+
+            if (IsLaundryGrabClothesAction(data.actionId) && !string.IsNullOrEmpty(data.zoneId))
+            {
+                var pile = ReserveLaundryGrabClothes(data.zoneId, data.seed);
+                if (pile != null) return ResolveLaundryGrabClothesDestination(pile);
+                // No pile free → fall through to zone point lookups.
             }
 
             if (data.seedChain != null && data.seedChain.Length > 0)
@@ -729,6 +782,13 @@ namespace Jailbreak.NPC
             return trigger == "inspect";
         }
 
+        // Keyed on actionId (not animTrigger) because the laundry pile shares
+        // the "rummaging" animTrigger with serve_self and other inspect-style actions.
+        private bool IsLaundryGrabClothesAction(string actionId)
+        {
+            return actionId == "laundry_grab_clothes";
+        }
+
         // Desks use the ProgressPointAction.actionPoint as the stand-at spot.
         // Prefer that Transform so the walk destination lines up exactly with
         // where the NPC will be snapped when starting the work loop.
@@ -747,8 +807,49 @@ namespace Jailbreak.NPC
             return anchor.position;
         }
 
-        private void HandleArrivalAnimation(string animTrigger, string zoneId, uint seed)
+        private void HandleArrivalAnimation(string animTrigger, string zoneId, uint seed, string actionId = null)
         {
+            if (IsLaundryGrabClothesAction(actionId) && !string.IsNullOrEmpty(zoneId) && zoneRegistry != null)
+            {
+                // Only play the grab if we actually reserved a pile during destination
+                // resolution. The fallback path (all piles busy, or no pile in zone)
+                // lands the NPC on a random zone point — without this gate those NPCs
+                // would rummage mid-air far from any pile.
+                if (_reservedLaundryGrab == null)
+                {
+                    Debug.Log($"[NPC-CTRL] {name} laundry grab without reserved pile in '{zoneId}' — falling back to look_around");
+                    PlayAnimation("look_around");
+                    return;
+                }
+
+                // NavMeshAgent stops at the nearest navmesh point to actionPoint, which
+                // can sit 0.3–1m short of the pile. Warp exactly onto actionPoint
+                // (xz) and face its yaw so the NPC rummages at the pile, not near it.
+                // Warp keeps the agent enabled — no snap/lock like the worktable path.
+                var pp = _reservedLaundryGrab.GetComponent<ProgressPointAction>();
+                var anchor = (pp != null && pp.actionPoint != null)
+                    ? pp.actionPoint
+                    : _reservedLaundryGrab.transform;
+
+                if (agent != null && agent.isOnNavMesh)
+                {
+                    Vector3 warpTarget = new Vector3(anchor.position.x, transform.position.y, anchor.position.z);
+                    agent.Warp(warpTarget);
+                }
+                transform.rotation = Quaternion.Euler(0f, anchor.eulerAngles.y, 0f);
+
+                float grabDuration = (_sequenceSteps != null && _sequenceIndex < _sequenceSteps.Length)
+                    ? _sequenceSteps[_sequenceIndex].duration
+                    : (_current != null ? _current.duration : 3f);
+
+                var clothes = EnsureCarryClothesInteraction();
+                if (clothes != null && !clothes.IsCarrying)
+                {
+                    clothes.TryPickUpWithGrabAnimation(grabDuration);
+                    return;
+                }
+            }
+
             if (IsTakeFoodAction(animTrigger))
             {
                 var carry = EnsureCarryFoodInteraction();
@@ -951,12 +1052,79 @@ namespace Jailbreak.NPC
             }
         }
 
+        // ─── Laundry Grab Clothes Setup ──────────────────────────────────────
+        // No character-side helper component — the NPC plays the rummaging
+        // animation in place via CarryClothesInteraction.TryPickUpWithGrabAnimation,
+        // which mirrors CarryFoodInteraction.TryPickUp (trigger+delay, no snap /
+        // agent disable). The pile reservation below is still useful so multiple
+        // NPCs routed to the same zone+seed pick different piles.
+
+        private LaundryGrabClothesInteractable ReserveLaundryGrabClothes(string zoneId, uint seed)
+        {
+            if (_reservedLaundryGrab != null) return _reservedLaundryGrab;
+            if (zoneRegistry == null) return null;
+
+            var pile = zoneRegistry.GetDeterministicLaundryGrabClothes(zoneId, seed);
+            if (pile == null) return null;
+
+            pile.isOccupied = true;
+            _reservedLaundryGrab = pile;
+            return pile;
+        }
+
+        private void ReleaseLaundryGrabClothes()
+        {
+            if (_reservedLaundryGrab != null)
+            {
+                _reservedLaundryGrab.isOccupied = false;
+                _reservedLaundryGrab = null;
+            }
+        }
+
+        private Vector3 ResolveLaundryGrabClothesDestination(LaundryGrabClothesInteractable pile)
+        {
+            var pp = pile.GetComponent<ProgressPointAction>();
+            var anchor = (pp != null && pp.actionPoint != null) ? pp.actionPoint : pile.transform;
+            return anchor.position;
+        }
+
+        // ─── Clothes Carry Setup ─────────────────────────────────────────────
+        // Auto-add a CarryClothesInteraction to the NPC the first time it grabs
+        // a bundle, mirroring the food-carry on-demand setup. The clothes visual
+        // only appears if npcClothesPrefab + npcClothesHandAttachPoint (or the
+        // shared npcHandAttachPoint as a fallback) are wired in the prefab
+        // inspector — without them the carry bool flips but no prop is spawned
+        // (CarryClothesInteraction handles this gracefully).
+        private CarryClothesInteraction EnsureCarryClothesInteraction()
+        {
+            var carry = GetComponent<CarryClothesInteraction>();
+            if (carry == null)
+            {
+                carry = gameObject.AddComponent<CarryClothesInteraction>();
+            }
+
+            var hand = npcClothesHandAttachPoint != null ? npcClothesHandAttachPoint : npcHandAttachPoint;
+            if (carry.handAttachPoint == null && hand != null)
+                carry.handAttachPoint = hand;
+            if (carry.clothesPrefab == null && npcClothesPrefab != null)
+                carry.clothesPrefab = npcClothesPrefab;
+
+            // Apply the prefab-inspector offsets only if no inspector-level
+            // CarryClothesInteraction already set them (defaults are Vector3.zero).
+            if (carry.clothesLocalPosition == Vector3.zero) carry.clothesLocalPosition = npcClothesLocalPosition;
+            if (carry.clothesLocalEuler    == Vector3.zero) carry.clothesLocalEuler    = npcClothesLocalEuler;
+            if (carry.clothesLocalScale    == Vector3.one)  carry.clothesLocalScale    = npcClothesLocalScale;
+
+            return carry;
+        }
+
         private void OnDestroy()
         {
             // Release any reservation so despawned/disconnected NPCs don't
-            // leave the desk / cabinet permanently marked as busy.
+            // leave the desk / cabinet / pile permanently marked as busy.
             ReleaseWorkTable();
             ReleaseInspectCabinet();
+            ReleaseLaundryGrabClothes();
         }
 
         // ─── Food Carry Setup ──────────────────────────────────────────────────

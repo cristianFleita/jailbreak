@@ -224,6 +224,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1534855322877091403}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8417385758279075237}
   m_SourcePrefab: {fileID: 100100000, guid: 95f474a6999504cab8d278219818a844, type: 3}
 --- !u!1 &4896770664015057812 stripped
 GameObject:
@@ -401,6 +404,27 @@ MonoBehaviour:
   animatorBoolName: isWorkingTable
   animatorStateName: Working
   idleStateName: Idle
+--- !u!114 &8417385758279075237
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4896770664015057812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e2a7f1c93b04d8fae5c1b6d9e0f3a2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarryClothesInteraction
+  handAttachPoint: {fileID: 6233008144420507917}
+  clothesPrefab: {fileID: 7051908033841968754, guid: 40413f93a78ff4e5ca1692df5c78f828, type: 3}
+  clothesLocalPosition: {x: -0.324, y: 0, z: 0.148}
+  clothesLocalEuler: {x: 90, y: -22.58, z: 0}
+  clothesLocalScale: {x: 30, y: 30, z: 30}
+  animBoolCarrying: isCarrying
+  animBoolGrabbing: PickUp
+  animTriggerPutDown: PutDown
+  clothesDestroyDelay: 0.6
 --- !u!4 &6233008144420507917 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1852576806548013000, guid: 95f474a6999504cab8d278219818a844, type: 3}

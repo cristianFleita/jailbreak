@@ -34,6 +34,9 @@ public class CarryClothesInteraction : MonoBehaviour
     [Tooltip("Bool parameter flipped on/off to route to CarryingIdle / CarryingWalk states. Shares the same key as CarryFoodInteraction by design — only one carry is active at a time.")]
     public string animBoolCarrying = "isCarrying";
 
+    [Tooltip("Bool flipped on while the grab-clothes rummaging animation plays (NPC path — used by TryPickUpWithGrabAnimation). Matches the Character controller's 'Searching' state gate.")]
+    public string animBoolGrabbing = "isSearching";
+
     [Tooltip("Trigger fired when the player puts the bundle down. Leave empty to skip the put-down animation.")]
     public string animTriggerPutDown = "PutDown";
 
@@ -49,6 +52,7 @@ public class CarryClothesInteraction : MonoBehaviour
     private Animator animator;
     private GameObject clothesInstance;
     private Coroutine putDownRoutine;
+    private Coroutine grabRoutine;
 
     const string ClothesBundleId = "clothes_bundle";
 
@@ -70,6 +74,21 @@ public class CarryClothesInteraction : MonoBehaviour
     {
         if (IsCarrying) return;
         ApplyPickUp(ClothesBundleId);
+    }
+
+    /// <summary>
+    /// NPC path. Plays the rummaging loop (isSearching=true) for <paramref name="duration"/>
+    /// seconds, then clears the bool, attaches the clothes prefab in-hand, and flips
+    /// isCarrying. Mirrors <see cref="CarryFoodInteraction.TryPickUp"/>'s trigger+delay
+    /// flow — the NPC stays in place (no snap / agent disable), the animator transitions
+    /// via the Character controller's Searching state while the timer runs.
+    /// No-op if already carrying.
+    /// </summary>
+    public void TryPickUpWithGrabAnimation(float duration)
+    {
+        if (IsCarrying) return;
+        if (grabRoutine != null) StopCoroutine(grabRoutine);
+        grabRoutine = StartCoroutine(GrabAnimationRoutine(duration));
     }
 
     /// <summary>Release the bundle, playing the put-down animation if available. No-op if not carrying.</summary>
@@ -107,6 +126,12 @@ public class CarryClothesInteraction : MonoBehaviour
             putDownRoutine = null;
         }
 
+        if (grabRoutine != null)
+        {
+            StopCoroutine(grabRoutine);
+            grabRoutine = null;
+        }
+
         if (clothesInstance != null)
         {
             Destroy(clothesInstance);
@@ -115,8 +140,11 @@ public class CarryClothesInteraction : MonoBehaviour
 
         CarryingId = null;
 
-        if (animator != null && !string.IsNullOrEmpty(animBoolCarrying))
-            animator.SetBool(animBoolCarrying, false);
+        if (animator != null)
+        {
+            if (!string.IsNullOrEmpty(animBoolCarrying)) animator.SetBool(animBoolCarrying, false);
+            if (!string.IsNullOrEmpty(animBoolGrabbing)) animator.SetBool(animBoolGrabbing, false);
+        }
     }
 
     // ─── Private implementation ──────────────────────────────────────────────
@@ -173,6 +201,21 @@ public class CarryClothesInteraction : MonoBehaviour
         if (delay > 0f) yield return new WaitForSeconds(delay);
         DestroyClothesNow();
         putDownRoutine = null;
+    }
+
+    IEnumerator GrabAnimationRoutine(float duration)
+    {
+        if (animator != null && !string.IsNullOrEmpty(animBoolGrabbing))
+            animator.SetBool(animBoolGrabbing, true);
+
+        if (duration > 0f) yield return new WaitForSeconds(duration);
+
+        if (animator != null && !string.IsNullOrEmpty(animBoolGrabbing))
+            animator.SetBool(animBoolGrabbing, false);
+
+        grabRoutine = null;
+
+        ApplyPickUp(ClothesBundleId);
     }
 
     void DestroyClothesNow()
