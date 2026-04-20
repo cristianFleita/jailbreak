@@ -1200,3 +1200,16 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260420_114540
+### Commits
+df21df0 chore: npc inspect cabinet interaction
+4be49f4 chore: inspect cabinet player interaction
+1ff3476 fix: npc animation work table
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/Player/RemoteInteractionHandler.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+

@@ -225,6 +225,9 @@ namespace Jailbreak.Network
 
                     var carry = go.GetComponent<CarryFoodInteraction>();
                     if (carry != null) carry.SyncFromServer(p.carrying);
+
+                    var carryClothes = go.GetComponent<CarryClothesInteraction>();
+                    if (carryClothes != null) carryClothes.SyncFromServer(p.carrying);
                 }
             }
 
@@ -281,13 +284,17 @@ namespace Jailbreak.Network
 
         // ─── Helpers ─────────────────────────────────────────────────────────
 
-        // Cached reference to the local player's carry component. Located lazily
-        // because the local player prefab may spawn after the first player:state.
-        private CarryFoodInteraction _localCarry;
+        // Cached references to the local player's carry components. Located
+        // lazily because the local player prefab may spawn after the first
+        // player:state. Each component filters the incoming id to its own
+        // item type, so passing the same string to both is safe.
+        private CarryFoodInteraction    _localCarry;
+        private CarryClothesInteraction _localCarryClothes;
 
         /// <summary>
-        /// Applies the authoritative `carrying` value to the local player so the
-        /// plate visual survives player:state churn and F5 reconnects.
+        /// Applies the authoritative `carrying` value to the local player so
+        /// visual props (plate, clothes bundle) survive player:state churn
+        /// and F5 reconnects.
         /// </summary>
         private void SyncLocalCarrying(string serverCarrying)
         {
@@ -309,8 +316,25 @@ namespace Jailbreak.Network
                 }
             }
 
-            if (_localCarry != null)
-                _localCarry.SyncFromServer(serverCarrying);
+            if (_localCarryClothes == null)
+            {
+#if UNITY_2023_1_OR_NEWER
+                var allClothes = Object.FindObjectsByType<CarryClothesInteraction>(FindObjectsSortMode.None);
+#else
+                var allClothes = Object.FindObjectsOfType<CarryClothesInteraction>();
+#endif
+                foreach (var c in allClothes)
+                {
+                    if (c.GetComponent<InteractionManager>() != null)
+                    {
+                        _localCarryClothes = c;
+                        break;
+                    }
+                }
+            }
+
+            if (_localCarry != null)        _localCarry.SyncFromServer(serverCarrying);
+            if (_localCarryClothes != null) _localCarryClothes.SyncFromServer(serverCarrying);
         }
 
         private void SyncPlayerList(PlayerStateData[] incoming)

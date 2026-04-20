@@ -274,6 +274,10 @@ export function handlePlayerAction(context: PlayerActionContext): void {
     player.carrying = 'food_plate'
   } else if (action === 'leaveFood') {
     player.carrying = null
+  } else if (action === 'grabClothes') {
+    player.carrying = 'clothes_bundle'
+  } else if (action === 'leaveClothes') {
+    player.carrying = null
   }
 
   io.to(roomId).except(socketId).emit('player:action', {

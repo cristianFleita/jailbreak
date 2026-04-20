@@ -21,11 +21,13 @@ namespace Jailbreak.Player
 
         private SitInteraction sitInteraction;
         private CarryFoodInteraction carryFoodInteraction;
+        private CarryClothesInteraction carryClothesInteraction;
 
         void Awake()
         {
-            sitInteraction       = GetComponent<SitInteraction>();
-            carryFoodInteraction = GetComponent<CarryFoodInteraction>();
+            sitInteraction          = GetComponent<SitInteraction>();
+            carryFoodInteraction    = GetComponent<CarryFoodInteraction>();
+            carryClothesInteraction = GetComponent<CarryClothesInteraction>();
         }
 
         void OnEnable()
@@ -41,8 +43,9 @@ namespace Jailbreak.Player
 
             // Free any occupied seats if this remote player disconnects mid-sit.
             sitInteraction?.ForceReset();
-            // Drop any held prop so the plate prefab doesn't leak when the avatar despawns.
+            // Drop any held prop so the plate/clothes prefabs don't leak when the avatar despawns.
             carryFoodInteraction?.ForceReset();
+            carryClothesInteraction?.ForceReset();
         }
 
         // ─── Broadcast handler ────────────────────────────────────────────────
@@ -101,6 +104,15 @@ namespace Jailbreak.Player
             if (inspectCabinets != null)
             {
                 inspectCabinets.ApplyRemote(transform, data.action);
+                Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
+                return;
+            }
+
+            // ── Laundry grab-clothes start/stop/grab ─────────────────────────
+            var laundryGrab = ni.GetComponent<LaundryGrabClothesInteractable>();
+            if (laundryGrab != null)
+            {
+                laundryGrab.ApplyRemote(transform, carryClothesInteraction, data.action);
                 Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
                 return;
             }

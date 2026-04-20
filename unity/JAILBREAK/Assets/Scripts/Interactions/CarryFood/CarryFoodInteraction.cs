@@ -91,13 +91,17 @@ public class CarryFoodInteraction : MonoBehaviour
     /// <summary>
     /// Re-applies carrying state from an authoritative server value without
     /// broadcasting. Used on reconnect / late-join so the plate persists.
+    ///
+    /// Scoped to the <c>food_plate</c> id — other carry ids (e.g.
+    /// <c>clothes_bundle</c>) are owned by their own components and must not
+    /// trigger a plate attach here. A null / mismatching id while carrying
+    /// still drops the plate so stale props don't linger.
     /// </summary>
     public void SyncFromServer(string serverCarryingId)
     {
-        bool shouldCarry = !string.IsNullOrEmpty(serverCarryingId);
-        // Reconnect path: skip animations — just snap the plate in/out.
-        if (shouldCarry && !IsCarrying)       ApplyPickUp(serverCarryingId, playAnimation: false);
-        else if (!shouldCarry && IsCarrying)  ApplyDrop(playAnimation: false);
+        bool isFood = serverCarryingId == FoodPlateId;
+        if (isFood && !IsCarrying)       ApplyPickUp(FoodPlateId, playAnimation: false);
+        else if (!isFood && IsCarrying)  ApplyDrop(playAnimation: false);
     }
 
     /// <summary>Immediate reset with no animation. Safe to call from OnDisable.</summary>
