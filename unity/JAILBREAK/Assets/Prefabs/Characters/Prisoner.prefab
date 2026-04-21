@@ -393,6 +393,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7486451546775602965}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4288087845606116699}
   m_SourcePrefab: {fileID: 100100000, guid: 95f474a6999504cab8d278219818a844, type: 3}
 --- !u!1 &4896770664015057812 stripped
 GameObject:
@@ -605,8 +608,29 @@ MonoBehaviour:
   clothesLocalEuler: {x: 90, y: -22.58, z: 0}
   clothesLocalScale: {x: 30, y: 30, z: 30}
   animBoolCarrying: isCarrying
+  animBoolGrabbing: isSearching
   animTriggerPutDown: PutDown
   clothesDestroyDelay: 0.6
+--- !u!114 &4288087845606116699
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4896770664015057812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 079289496e3ab4ee5ab78e50718d9da3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarryFoldedClothesInteraction
+  handAttachPoint: {fileID: 6233008144420507917}
+  foldedClothesPrefab: {fileID: 4739903939972427789, guid: f3118fa1b87f64510909b835754ba248, type: 3}
+  foldedLocalPosition: {x: -0.183, y: 0.457, z: -0.167}
+  foldedLocalEuler: {x: 93.42, y: 47.6, z: 0}
+  foldedLocalScale: {x: 100, y: 100, z: 100}
+  animBoolCarrying: isCarrying
+  animTriggerPutDown: PutDown
+  foldedDestroyDelay: 0.6
 --- !u!4 &5241911055874754862 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 95f474a6999504cab8d278219818a844, type: 3}

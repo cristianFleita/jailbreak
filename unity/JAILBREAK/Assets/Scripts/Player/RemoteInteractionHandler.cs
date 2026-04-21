@@ -22,12 +22,14 @@ namespace Jailbreak.Player
         private SitInteraction sitInteraction;
         private CarryFoodInteraction carryFoodInteraction;
         private CarryClothesInteraction carryClothesInteraction;
+        private CarryFoldedClothesInteraction carryFoldedClothesInteraction;
 
         void Awake()
         {
-            sitInteraction          = GetComponent<SitInteraction>();
-            carryFoodInteraction    = GetComponent<CarryFoodInteraction>();
-            carryClothesInteraction = GetComponent<CarryClothesInteraction>();
+            sitInteraction                = GetComponent<SitInteraction>();
+            carryFoodInteraction          = GetComponent<CarryFoodInteraction>();
+            carryClothesInteraction       = GetComponent<CarryClothesInteraction>();
+            carryFoldedClothesInteraction = GetComponent<CarryFoldedClothesInteraction>();
         }
 
         void OnEnable()
@@ -46,6 +48,7 @@ namespace Jailbreak.Player
             // Drop any held prop so the plate/clothes prefabs don't leak when the avatar despawns.
             carryFoodInteraction?.ForceReset();
             carryClothesInteraction?.ForceReset();
+            carryFoldedClothesInteraction?.ForceReset();
         }
 
         // ─── Broadcast handler ────────────────────────────────────────────────
@@ -113,6 +116,15 @@ namespace Jailbreak.Player
             if (laundryGrab != null)
             {
                 laundryGrab.ApplyRemote(transform, carryClothesInteraction, data.action);
+                Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
+                return;
+            }
+
+            // ── Laundry load-washer start/stop/load ──────────────────────────
+            var laundryLoad = ni.GetComponent<LaundryLoadWasherInteractable>();
+            if (laundryLoad != null)
+            {
+                laundryLoad.ApplyRemote(transform, carryClothesInteraction, carryFoldedClothesInteraction, data.action);
                 Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
                 return;
             }

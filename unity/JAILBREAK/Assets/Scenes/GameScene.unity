@@ -310,7 +310,8 @@ PrefabInstance:
       value: WashingMachine (6)
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 2405918742676898885, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
@@ -1556,7 +1557,8 @@ PrefabInstance:
       value: WashingMachine (9)
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 2405918742676898885, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
@@ -2231,6 +2233,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1202818930}
     m_Modifications:
+    - target: {fileID: 2537356473813621600, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 8638392034039261061, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2465,7 +2471,8 @@ PrefabInstance:
       value: WashingMachine (8)
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 2405918742676898885, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
@@ -5594,6 +5601,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2023011201}
     m_Modifications:
+    - target: {fileID: 2537356473813621600, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 8638392034039261061, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -7599,6 +7610,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1202818930}
     m_Modifications:
+    - target: {fileID: 2537356473813621600, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 8638392034039261061, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -9396,6 +9411,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2023011201}
     m_Modifications:
+    - target: {fileID: 2537356473813621600, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 8638392034039261061, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -11290,6 +11309,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1202818930}
     m_Modifications:
+    - target: {fileID: 2537356473813621600, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 8638392034039261061, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -14108,7 +14131,8 @@ PrefabInstance:
       value: WashingMachine (3)
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 2405918742676898885, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
@@ -20327,6 +20351,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1202818930}
     m_Modifications:
+    - target: {fileID: 2537356473813621600, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 8638392034039261061, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -21700,7 +21728,8 @@ PrefabInstance:
       value: WashingMachine (6)
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 2405918742676898885, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
@@ -22163,7 +22192,8 @@ PrefabInstance:
       value: WashingMachine (9)
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 2405918742676898885, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
@@ -24725,6 +24755,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2023011201}
     m_Modifications:
+    - target: {fileID: 2537356473813621600, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 8638392034039261061, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -25059,6 +25093,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2023011201}
     m_Modifications:
+    - target: {fileID: 2537356473813621600, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 8638392034039261061, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -27469,7 +27507,8 @@ PrefabInstance:
       value: WashingMachine (8)
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 2405918742676898885, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
@@ -40201,7 +40240,8 @@ PrefabInstance:
       value: WashingMachine (3)
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 2405918742676898885, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b2acc08ad285b4c4390920266f13d4b6, type: 3}

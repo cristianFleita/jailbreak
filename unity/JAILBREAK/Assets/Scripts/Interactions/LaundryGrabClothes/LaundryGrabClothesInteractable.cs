@@ -39,6 +39,7 @@ public class LaundryGrabClothesInteractable : MonoBehaviour, IInteractable
         {
             var carries = FindLocalCarries();
             if (carries.clothes != null && carries.clothes.IsCarrying) return false;
+            if (carries.folded  != null && carries.folded.IsCarrying)  return false;
             if (carries.food    != null && carries.food.IsCarrying)    return false;
             return true;
         }
@@ -53,8 +54,9 @@ public class LaundryGrabClothesInteractable : MonoBehaviour, IInteractable
     private NetworkInteractable networkInteractable;
 
     // Cached per-scene — same trick as FoodCounter's CanInteract.
-    private CarryClothesInteraction cachedLocalClothes;
-    private CarryFoodInteraction    cachedLocalFood;
+    private CarryClothesInteraction       cachedLocalClothes;
+    private CarryFoldedClothesInteraction cachedLocalFolded;
+    private CarryFoodInteraction          cachedLocalFood;
 
     const string ActiveState = "GrabbingClothes";
 
@@ -192,7 +194,7 @@ public class LaundryGrabClothesInteractable : MonoBehaviour, IInteractable
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    (CarryClothesInteraction clothes, CarryFoodInteraction food) FindLocalCarries()
+    (CarryClothesInteraction clothes, CarryFoldedClothesInteraction folded, CarryFoodInteraction food) FindLocalCarries()
     {
         if (cachedLocalClothes == null)
         {
@@ -204,6 +206,19 @@ public class LaundryGrabClothesInteractable : MonoBehaviour, IInteractable
             foreach (var c in all)
             {
                 if (c.GetComponent<InteractionManager>() != null) { cachedLocalClothes = c; break; }
+            }
+        }
+
+        if (cachedLocalFolded == null)
+        {
+#if UNITY_2023_1_OR_NEWER
+            var all = Object.FindObjectsByType<CarryFoldedClothesInteraction>(FindObjectsSortMode.None);
+#else
+            var all = Object.FindObjectsOfType<CarryFoldedClothesInteraction>();
+#endif
+            foreach (var c in all)
+            {
+                if (c.GetComponent<InteractionManager>() != null) { cachedLocalFolded = c; break; }
             }
         }
 
@@ -220,7 +235,7 @@ public class LaundryGrabClothesInteractable : MonoBehaviour, IInteractable
             }
         }
 
-        return (cachedLocalClothes, cachedLocalFood);
+        return (cachedLocalClothes, cachedLocalFolded, cachedLocalFood);
     }
 
     void Broadcast(string action)

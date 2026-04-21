@@ -49,6 +49,13 @@ public class CarryClothesInteraction : MonoBehaviour
     /// <summary>True while the bundle is visually in the player's hand.</summary>
     public bool IsCarrying => !string.IsNullOrEmpty(CarryingId);
 
+    /// <summary>
+    /// When true, SyncFromServer will not re-create the clothes prop.
+    /// Set by LaundryLoadWasherInteractable to prevent the server state
+    /// from fighting the local ForceReset during the washer interaction.
+    /// </summary>
+    [System.NonSerialized] public bool SuppressSync;
+
     private Animator animator;
     private GameObject clothesInstance;
     private Coroutine putDownRoutine;
@@ -109,6 +116,11 @@ public class CarryClothesInteraction : MonoBehaviour
     /// </summary>
     public void SyncFromServer(string serverCarryingId)
     {
+        // The washer interactable sets SuppressSync=true while the player
+        // is loading the machine, so the server's stale carrying value
+        // doesn't re-instantiate the clothes prop we just destroyed.
+        if (SuppressSync) return;
+
         bool isClothes = serverCarryingId == ClothesBundleId;
         // ApplyPickUp already snaps the prop without a pick trigger (the
         // rummaging loop owns the grab animation) so it doubles as the
@@ -136,6 +148,24 @@ public class CarryClothesInteraction : MonoBehaviour
         {
             Destroy(clothesInstance);
             clothesInstance = null;
+        }
+
+        // Safety net: if the tracked clothesInstance reference was lost (e.g.
+        // overwritten by a SyncFromServer race), the visual clone may still
+        // live under handAttachPoint. Find it by matching the prefab name and
+        // destroy it — unlike destroying ALL children, this won't break
+        // skeleton bones that are also children of the hand bone.
+        if (handAttachPoint != null && clothesPrefab != null)
+        {
+            string prefabName = clothesPrefab.name;
+            for (int i = handAttachPoint.childCount - 1; i >= 0; i--)
+            {
+                var child = handAttachPoint.GetChild(i);
+                if (child.name.StartsWith(prefabName))
+                {
+                    Destroy(child.gameObject);
+                }
+            }
         }
 
         CarryingId = null;
