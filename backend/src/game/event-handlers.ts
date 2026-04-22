@@ -11,7 +11,6 @@ import {
   validatePlayerMovement,
   validateGuardCatch,
   validateInteractionDistance,
-  validatePayloadOwnership,
 } from './validation.js'
 import { getRoom } from './room-manager.js'
 import { GameManager } from './systems/game-manager.js'
@@ -38,6 +37,13 @@ export interface PlayerMoveContext {
  */
 let moveLogCounter = 0
 
+// Track last move timestamp and move count per player
+const lastMoveTimestamp = new Map<string, number>()
+const playerMoveCount = new Map<string, number>()
+
+// How many moves to skip speed validation for after spawn (grace period)
+const SPAWN_GRACE_MOVES = 5
+
 export function handlePlayerMove(context: PlayerMoveContext): void {
   const { io, roomId, room, socketId, payload } = context
 
@@ -52,25 +58,37 @@ export function handlePlayerMove(context: PlayerMoveContext): void {
     return
   }
 
-  // Ownership check
-  const ownerCheck = validatePayloadOwnership(payload.playerId, socketId)
-  if (!ownerCheck.valid) {
-    console.warn(`[MOVE] Ownership mismatch for ${socketId}: payload.playerId=${payload.playerId} socket.id=${socketId}`)
+  // Ownership check — payload.playerId must match the stable userId for this socket
+  if (payload.playerId !== player.userId) {
+    console.warn(`[MOVE] Ownership mismatch for ${socketId}: payload.playerId=${payload.playerId} player.userId=${player.userId}`)
     return
   }
 
-  // Movement validation
-  const moveCheck = validatePlayerMovement(
-    payload.position,
-    player.position,
-    room.config.tickInterval / 1000,
-    room.config
-  )
+  const moveNum = (playerMoveCount.get(socketId) ?? 0) + 1
+  playerMoveCount.set(socketId, moveNum)
 
-  if (!moveCheck.valid) {
-    console.warn(`[MOVE] ${socketId} rejected: ${moveCheck.reason} | new=(${payload.position?.x?.toFixed(2)},${payload.position?.y?.toFixed(2)},${payload.position?.z?.toFixed(2)}) old=(${player.position.x.toFixed(2)},${player.position.y.toFixed(2)},${player.position.z.toFixed(2)})`)
-    // Client will be corrected via next player:state broadcast
-    return
+  const now = Date.now()
+  const lastTime = lastMoveTimestamp.get(socketId) ?? now
+  const realDelta = Math.max((now - lastTime) / 1000, room.config.tickInterval / 1000)
+  lastMoveTimestamp.set(socketId, now)
+
+  // Skip speed validation for the first N moves (spawn grace period)
+  // Client may need a few frames to stabilize after teleport
+  if (moveNum <= SPAWN_GRACE_MOVES) {
+    console.log(`[MOVE] ${socketId} spawn grace move #${moveNum} accepted pos=(${payload.position?.x?.toFixed(2)},${payload.position?.y?.toFixed(2)},${payload.position?.z?.toFixed(2)})`)
+  } else {
+    // Movement validation with real time delta
+    const moveCheck = validatePlayerMovement(
+      payload.position,
+      player.position,
+      realDelta,
+      room.config
+    )
+
+    if (!moveCheck.valid) {
+      console.warn(`[MOVE] ${socketId} rejected: ${moveCheck.reason} | new=(${payload.position?.x?.toFixed(2)},${payload.position?.y?.toFixed(2)},${payload.position?.z?.toFixed(2)}) old=(${player.position.x.toFixed(2)},${player.position.y.toFixed(2)},${player.position.z.toFixed(2)}) dt=${realDelta.toFixed(2)}s`)
+      return
+    }
   }
 
   // Update state
@@ -91,6 +109,12 @@ export function handlePlayerMove(context: PlayerMoveContext): void {
   if (gameManager) {
     gameManager.onPlayerMove(socketId)
   }
+}
+
+/** Clean up tracking when a player leaves */
+export function clearPlayerMoveTracking(socketId: string): void {
+  lastMoveTimestamp.delete(socketId)
+  playerMoveCount.delete(socketId)
 }
 
 // ============================================================================
@@ -121,9 +145,9 @@ export function handlePlayerInteract(context: PlayerInteractContext): void {
     return
   }
 
-  // Ownership
-  if (playerId !== socketId) {
-    console.warn(`[INTERACT] Ownership mismatch for ${socketId}`)
+  // Ownership — playerId must match the stable userId for this socket
+  if (playerId !== player.userId) {
+    console.warn(`[INTERACT] Ownership mismatch for ${socketId}: playerId=${playerId} player.userId=${player.userId}`)
     return
   }
 
@@ -142,16 +166,16 @@ export function handlePlayerInteract(context: PlayerInteractContext): void {
     return
   }
 
-  // Dispatch by action type
+  // Dispatch by action type — use stable playerId (userId) not socketId
   switch (action) {
     case 'pickup':
-      handleItemPickup(io, roomId, room, socketId, objectId, item)
+      handleItemPickup(io, roomId, room, playerId, objectId, item)
       break
     case 'use':
-      handleItemUse(io, roomId, room, socketId, objectId, item)
+      handleItemUse(io, roomId, room, playerId, objectId, item)
       break
     case 'drop':
-      handleItemDrop(io, roomId, room, socketId, objectId, item)
+      handleItemDrop(io, roomId, room, playerId, objectId, item)
       break
   }
 }
@@ -213,6 +237,69 @@ function handleItemDrop(io: Server, roomId: string, room: GameRoom, playerId: st
 }
 
 // ============================================================================
+// player:action handler (animation / world-interaction broadcast)
+// ============================================================================
+
+export interface PlayerActionContext {
+  io: Server
+  roomId: string
+  room: GameRoom
+  socketId: string
+  objectId: string
+  action: string
+  timestamp: number
+}
+
+/**
+ * Handles generic world interactions that only need to be relayed so
+ * other clients can replay the animation on this player's avatar
+ * (sit/stand/etc). No item-inventory side effects — use player:interact
+ * for those.
+ *
+ * Exception: a short allowlist of actions mutates a small piece of PlayerState
+ * (e.g. `carrying`) so the visual prop survives reconnects.
+ */
+export function handlePlayerAction(context: PlayerActionContext): void {
+  const { io, roomId, room, socketId, objectId, action } = context
+
+  const player = room.state.players.get(socketId)
+  if (!player) return
+
+  if (!objectId || !action) return
+  if (objectId.length > 128 || action.length > 32) return
+
+  // Persist reconnect-safe side effects for known actions.
+  // Keep this list tight — purely-animation actions (sit/stand) stay stateless.
+  if (action === 'takeFood') {
+    player.carrying = 'food_plate'
+  } else if (action === 'leaveFood') {
+    player.carrying = null
+  } else if (action === 'grabClothes') {
+    player.carrying = 'clothes_bundle'
+  } else if (action === 'leaveClothes') {
+    player.carrying = null
+  } else if (action === 'startLoadWasher') {
+    // Player put clothes into the washer — nothing in hand during the loop.
+    player.carrying = null
+  } else if (action === 'stopLoadWasher') {
+    // Player cancelled mid-loop — the unfolded bundle is restored to hand.
+    player.carrying = 'clothes_bundle'
+  } else if (action === 'loadWasher') {
+    // Washer completed — folded clothes now in hand.
+    player.carrying = 'folded_clothes'
+  } else if (action === 'storeClothes') {
+    // Player stored the folded clothes on the shelf — nothing in hand.
+    player.carrying = null
+  }
+
+  io.to(roomId).except(socketId).emit('player:action', {
+    playerId: player.userId,
+    objectId,
+    action,
+  })
+}
+
+// ============================================================================
 // guard:catch handler (guard attempts to catch prisoner)
 // ============================================================================
 
@@ -238,7 +325,7 @@ export function handleGuardCatch(context: GuardCatchContext): void {
   const { io, roomId, room, socketId, guardId, targetId, timestamp } = context
 
   const guard = room.state.players.get(socketId)
-  const target = room.state.players.get(targetId)
+  const target = room.state.playersByUserId.get(targetId)
 
   if (!guard || !target) {
     console.warn(`[CATCH] Player not found (guard=${socketId}, target=${targetId})`)
@@ -311,7 +398,7 @@ export function handleGuardMark(context: GuardMarkContext): void {
   const { io, roomId, room, socketId, guardId, targetId } = context
 
   const guard = room.state.players.get(socketId)
-  const target = room.state.players.get(targetId)
+  const target = room.state.playersByUserId.get(targetId)
 
   if (!guard || !target) {
     console.warn(`[MARK] Player not found`)

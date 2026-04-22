@@ -189,7 +189,7 @@ namespace Jailbreak.UI
             var net = NetworkManager.Instance;
             bool iAmHost = net != null && net.IsHost;
 
-            _roomStatusLabel.text = $"PLAYERS ({players.Length}/8)";
+            _roomStatusLabel.text = $"PLAYERS ({players.Length}/4)";
 
             // Enable start button only if 2+ players
             if (_startGameBtn != null)

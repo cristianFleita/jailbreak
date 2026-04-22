@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class WebGLBuildScript
 {
-    [MenuItem("Build/Build WebGL")]
+    [MenuItem("Jailbreak/Build WebGL")]
     public static void BuildWebGL()
     {
         string outputPath = "../../web/public/unity-build";

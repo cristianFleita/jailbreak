@@ -48,7 +48,8 @@ namespace Jailbreak.Network
     [Serializable]
     public class PlayerStateData
     {
-        public string id;
+        public string id;     // player/user ID (stable across reconnects — same as userId)
+        public string userId; // persistent user ID (stable across reconnects)
         public string role;
         public SVector3 position;
         public SQuaternion rotation;
@@ -56,6 +57,8 @@ namespace Jailbreak.Network
         public string movementState;
         public bool isAlive;
         public float health;
+        public string spawnWaypointId; // e.g. "cell_door_exit_17" — resolve via WaypointRegistry
+        public string carrying;        // e.g. "food_plate" — null/empty means "nothing carried"
     }
 
     [Serializable]
@@ -66,6 +69,7 @@ namespace Jailbreak.Network
         public SVector3 position;
         public SQuaternion rotation;
         public string animState;
+        public string spawnWaypointId; // e.g. "cell_door_exit_03"
     }
 
     [Serializable]
@@ -120,6 +124,7 @@ namespace Jailbreak.Network
         public ItemStateData[] items;
         public PhaseData phase;
         public int tick;
+        public JailPhaseSnapshot jailPhase; // populated when jail routine is active
     }
 
     [Serializable]
@@ -277,5 +282,121 @@ namespace Jailbreak.Network
         public SQuaternion rotation;
         public SVector3 velocity;
         public string movementState;
+    }
+
+    [Serializable]
+    public class PlayerActionPayload
+    {
+        public string objectId;
+        public string action;
+    }
+
+    [Serializable]
+    public class PlayerActionBroadcast
+    {
+        public string playerId;
+        public string objectId;
+        public string action;
+    }
+
+    // ─── Jail Routine / NPC Phase System ─────────────────────────────────────
+    // Mirrors backend types.ts: NPCAssignment, PhaseJailStartPayload, etc.
+
+    /// <summary>A single step inside an ordered action sequence (cafeteria flow, Phase 1 chain).</summary>
+    [Serializable]
+    public class NPCActionStepData
+    {
+        public string actionId;
+        public string animTrigger;
+        public string zoneId;                // null = stay in place / use partner position
+        public uint   seed;                  // deterministic random point seed
+        public float  duration;              // 0 = walk-only (no dwell at destination)
+        public string socialPartnerId;       // null for solo steps
+    }
+
+    [Serializable]
+    public class NPCAssignmentData
+    {
+        public string   npcId;
+        public string   actionId;
+        public string   animTrigger;
+        public string   zoneId;               // null if using chain
+        public uint     seed;
+        public uint[]   seedChain;            // non-null for LOOPING chains
+        public float    duration;
+        public bool     loop;
+        public string   socialPartnerId;      // null for solo/idle
+        public string   subZone;              // null unless Phase 6
+        public float    walkSpeedMult;        // backend assigned walk speed var
+        public NPCActionStepData[] actionSequence; // ordered steps (cafeteria, Phase 1)
+    }
+
+    [Serializable]
+    public class PhaseJailStartPayload
+    {
+        public int                  phase;
+        public string               phaseName;
+        public float                duration;
+        public string               zone;
+        public NPCAssignmentData[]  npcAssignments;
+    }
+
+    [Serializable]
+    public class PhaseWarningPayload
+    {
+        public int    nextPhase;
+        public string nextPhaseName;
+        public float  warningInSeconds;
+    }
+
+    [Serializable]
+    public class NPCReassignPayload
+    {
+        public long                 timestamp;
+        public NPCAssignmentData[]  assignments;
+    }
+
+    [Serializable]
+    public class PhaseZoneCheckPayload
+    {
+        public string playerId;
+        public string currentZone;
+        public string expectedZone;
+        public int    phase;
+        public float  graceSeconds;
+    }
+
+    /// <summary>Included in game:reconnect when jail routine is active.</summary>
+    [Serializable]
+    public class JailPhaseSnapshot
+    {
+        public int                  phase;
+        public string               zone;
+        public NPCAssignmentData[]  npcAssignments;
+    }
+
+    // ─── NPC Personality & Emergent Behavior ─────────────────────────────
+
+    /// <summary>Emitted when an NPC triggers a spontaneous/emergent behavior.</summary>
+    [Serializable]
+    public class NPCEmergentData
+    {
+        public string npcId;
+        public string actionId;
+        public string animTrigger;
+        public string zoneId;
+        public uint   seed;
+        public float  duration;
+        public string targetNpcId;
+        public string mood;
+    }
+
+    /// <summary>Emitted when an NPC's mood visibly shifts (affects idle animation).</summary>
+    [Serializable]
+    public class NPCMoodShiftData
+    {
+        public string npcId;
+        public string newMood;
+        public string animHint;
     }
 }

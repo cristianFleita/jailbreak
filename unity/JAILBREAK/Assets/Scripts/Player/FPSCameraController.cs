@@ -5,12 +5,10 @@ namespace Jailbreak.Player
 {
     /// <summary>
     /// First-person camera controller (New Input System).
-    /// - Mouse X yaws the player body (parent).
-    /// - Mouse Y pitches only this camera (clamped ±80°).
+    /// - Mouse X/Y tracked as independent yaw/pitch floats.
+    /// - Camera uses WORLD rotation so the body can rotate freely
+    ///   to face movement direction without dragging the camera.
     /// - Eye height interpolates between stand (1.6m) and crouch (0.8m).
-    /// - Head bob responds to PlayerInputController.CurrentState.
-    /// - FOV set per role: guard = 80°, prisoner = 70°.
-    /// Attach to a Camera GO that is a direct child of the player capsule.
     /// </summary>
     public class FPSCameraController : MonoBehaviour
     {
@@ -27,15 +25,24 @@ namespace Jailbreak.Player
         public float prisonerFOV = 70f;
 
         [Header("Head Bob")]
+        public bool  headBobEnabled         = false;
         public float bobFrequency           = Mathf.PI * 2f;
         public float walkBobAmplitude       = 0.02f;
         public float sprintBobAmplitude     = 0.04f;
         public float crouchWalkBobAmplitude = 0.01f;
 
+        // ──────────────────────────── Public state ──────────────────────
+        /// <summary>
+        /// Camera yaw in degrees. Used by PlayerInputController to compute
+        /// movement direction relative to where the player is looking.
+        /// </summary>
+        public float Yaw => _yaw;
+
         // ──────────────────────────── Private ───────────────────────────
         private Camera _cam;
         private PlayerInputController _input;
         private float _pitch;
+        private float _yaw;
         private float _bobTimer;
 
         private void Awake()
@@ -43,20 +50,33 @@ namespace Jailbreak.Player
             _cam   = GetComponent<Camera>();
             _input = GetComponentInParent<PlayerInputController>();
 
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible   = false;
+            // Ensure the camera starts centered so it doesn't orbit
+            transform.localPosition = new Vector3(0f, standEyeHeight, 0f);
         }
 
         private void Start()
         {
             SetFOVForRole();
+            // Initialize yaw from the body's current facing so camera doesn't snap
+            if (_input != null)
+                _yaw = _input.transform.eulerAngles.y;
         }
 
         private void LateUpdate()
         {
+            // Don't process mouse/camera until input is enabled (player is positioned)
+            if (_input != null && !_input.InputEnabled) return;
+
+            // Lock cursor on first active frame
+            if (Cursor.lockState != CursorLockMode.Locked)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible   = false;
+            }
+
             ApplyMouseLook();
             ApplyEyeHeight();
-            ApplyHeadBob();
+            if (headBobEnabled) ApplyHeadBob();
         }
 
         private void SetFOVForRole()
@@ -75,22 +95,27 @@ namespace Jailbreak.Player
             float mouseX =  delta.x * sensitivity;
             float mouseY =  delta.y * sensitivity;
 
-            // Yaw: rotate player body
-            transform.parent.Rotate(0f, mouseX, 0f, Space.World);
-
-            // Pitch: rotate camera only, clamped
+            // Yaw and pitch are tracked as independent floats.
+            // The camera uses WORLD rotation so the body can rotate freely
+            // to face the movement direction without dragging the camera.
+            _yaw  += mouseX;
             _pitch -= mouseY;
             _pitch  = Mathf.Clamp(_pitch, -80f, 80f);
-            transform.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+
+            transform.rotation = Quaternion.Euler(_pitch, _yaw, 0f);
         }
 
         private void ApplyEyeHeight()
         {
             if (_input == null) return;
+
             float targetY = _input.IsCrouching ? crouchEyeHeight : standEyeHeight;
-            Vector3 lp = transform.localPosition;
-            lp.y = Mathf.Lerp(lp.y, targetY, 10f * Time.deltaTime);
-            transform.localPosition = lp;
+
+            // Position the camera at the player's feet + eye height.
+            // Since we use world rotation, local position still tracks correctly
+            // because the offset is purely vertical (no X/Z offset to orbit).
+            float currentY = Mathf.Lerp(transform.localPosition.y, targetY, 10f * Time.deltaTime);
+            transform.localPosition = new Vector3(0f, currentY, 0f);
         }
 
         private void ApplyHeadBob()

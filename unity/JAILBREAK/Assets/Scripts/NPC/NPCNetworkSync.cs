@@ -36,11 +36,23 @@ namespace Jailbreak.NPC
             net.OnNPCPositionsEvent  += HandleNPCPositions;
             net.OnGameReconnectEvent += HandleGameReconnect;
 
+            // Emergent behavior & mood events
+            // net.OnNPCEmergentEvent   += HandleNPCEmergent; // Removed
+            net.OnNPCMoodShiftEvent  += HandleNPCMoodShift;
+
             // If game:start already fired before this scene loaded, spawn NPCs now
-            if (net.State == ConnectionState.InGame && net.CachedGameStart?.npcs != null)
+            if (net.State == ConnectionState.InGame)
             {
-                Debug.Log("[NPC] Processing cached game:start NPCs");
-                HandleGameStart(net.CachedGameStart);
+                if (net.CachedGameStart?.npcs != null)
+                {
+                    Debug.Log("[NPC] Processing cached game:start NPCs");
+                    HandleGameStart(net.CachedGameStart);
+                }
+                else if (net.CachedGameReconnect?.npcs != null)
+                {
+                    Debug.Log("[NPC] Processing cached game:reconnect NPCs");
+                    HandleGameReconnect(net.CachedGameReconnect);
+                }
             }
 
             Debug.Log("[NPC] Initialized");
@@ -54,14 +66,22 @@ namespace Jailbreak.NPC
             net.OnGameStartEvent     -= HandleGameStart;
             net.OnNPCPositionsEvent  -= HandleNPCPositions;
             net.OnGameReconnectEvent -= HandleGameReconnect;
+            // net.OnNPCEmergentEvent   -= HandleNPCEmergent; // Removed
+            net.OnNPCMoodShiftEvent  -= HandleNPCMoodShift;
         }
 
         private void Update()
         {
-            // Lerp all NPC transforms toward their server targets
+            // Lerp all NPC transforms toward their server targets.
+            // Skip any NPC that is locally driven — NavMesh / SitInteraction
+            // are the source of truth once the NPC has a behavior assigned.
             foreach (var (id, t) in _npcs)
             {
                 if (t == null || !_npcTargets.TryGetValue(id, out var target)) continue;
+
+                var behavior = t.GetComponent<NPCBehaviorController>();
+                if (behavior != null && (behavior.IsBehaviorDriven || behavior.IsNavigating || behavior.IsSitting))
+                    continue;
 
                 t.position = Vector3.Lerp(t.position, target, NpcLerpSpeed * Time.deltaTime);
             }
@@ -96,6 +116,20 @@ namespace Jailbreak.NPC
             {
                 EnsureNPC(npc);
                 _npcTargets[npc.id] = npc.position.ToUnity();
+            }
+        }
+
+        // ─── Emergent Behavior & Mood Handlers ─────────────────────────────
+
+        private void HandleNPCMoodShift(NPCMoodShiftData data)
+        {
+            if (!_npcs.TryGetValue(data.npcId, out var npcTransform)) return;
+
+            var behavior = npcTransform.GetComponent<NPCBehaviorController>();
+            if (behavior != null)
+            {
+                behavior.ApplyMoodHint(data.animHint);
+                // Debug.Log($"[NPC] Mood shift: {data.npcId} → {data.newMood} (hint={data.animHint})");
             }
         }
 

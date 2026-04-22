@@ -1,0 +1,48 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="Container" style="flex-grow: 1; height: 100%; width: 100%; padding-top: 8px; padding-right: 8px; padding-bottom: 8px; padding-left: 8px;">
+        <ui:VisualElement name="Top" style="flex-grow: 1; flex-direction: row;">
+            <ui:VisualElement name="Left" style="flex-grow: 0; align-self: flex-start;">
+                <ui:VisualElement name="Fase" style="flex-grow: 0; background-image: url(&quot;project://database/Assets/Sprites/game-ui.png?fileID=-759116724&amp;guid=d43afdf6ae2424e0c8fe9e70da4d04db&amp;type=3#game-ui_0&quot;); margin-bottom: 5px; padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px; background-color: rgba(0, 0, 0, 0); -unity-background-image-tint-color: rgba(255, 255, 255, 0.85);">
+                    <ui:Label text="PHASE: WORK | WORKSHOP" name="FaseLbl" style="background-color: rgba(255, 255, 255, 0); color: rgb(255, 255, 255); padding-left: 6px; -unity-font-style: bold; padding-right: 14px; font-size: 12px;"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="Motin" style="flex-grow: 0; background-image: url(&quot;project://database/Assets/Sprites/game-ui.png?fileID=-548040407&amp;guid=d43afdf6ae2424e0c8fe9e70da4d04db&amp;type=3#game-ui_3&quot;); padding-top: 4px; padding-right: 8px; padding-bottom: 4px; padding-left: 8px; flex-direction: row; -unity-background-image-tint-color: rgba(255, 255, 255, 0.85); align-self: center; align-items: center;">
+                    <ui:Label text="RIOT" name="MotinTxt" style="color: rgb(255, 255, 255); -unity-font-style: bold; margin-right: 15px; font-size: 12px;"/>
+                    <ui:VisualElement name="MotinElement" style="flex-grow: 0; width: 16px; height: 24px; background-image: url(&quot;project://database/Assets/Sprites/game-ui.png?fileID=-656190187&amp;guid=d43afdf6ae2424e0c8fe9e70da4d04db&amp;type=3#game-ui_1&quot;); justify-content: center;"/>
+                    <ui:VisualElement name="MotinElement" style="flex-grow: 0; width: 16px; height: 24px; background-image: url(&quot;project://database/Assets/Sprites/game-ui.png?fileID=-656190187&amp;guid=d43afdf6ae2424e0c8fe9e70da4d04db&amp;type=3#game-ui_1&quot;);"/>
+                    <ui:VisualElement name="MotinElement" style="flex-grow: 0; width: 16px; height: 24px; background-image: url(&quot;project://database/Assets/Sprites/game-ui.png?fileID=-656190187&amp;guid=d43afdf6ae2424e0c8fe9e70da4d04db&amp;type=3#game-ui_1&quot;);"/>
+                    <ui:VisualElement name="MotinElement" style="flex-grow: 0; width: 16px; height: 24px; background-image: url(&quot;project://database/Assets/Sprites/game-ui.png?fileID=-656190187&amp;guid=d43afdf6ae2424e0c8fe9e70da4d04db&amp;type=3#game-ui_1&quot;);"/>
+                    <ui:VisualElement name="MotinElement" style="flex-grow: 0; width: 16px; height: 24px; background-image: url(&quot;project://database/Assets/Sprites/game-ui.png?fileID=206083648&amp;guid=d43afdf6ae2424e0c8fe9e70da4d04db&amp;type=3#game-ui_2&quot;);"/>
+                    <ui:VisualElement name="MotinElement" style="flex-grow: 0; width: 16px; height: 24px; background-image: url(&quot;project://database/Assets/Sprites/game-ui.png?fileID=206083648&amp;guid=d43afdf6ae2424e0c8fe9e70da4d04db&amp;type=3#game-ui_2&quot;);"/>
+                    <ui:VisualElement name="MotinElement" style="flex-grow: 0; width: 16px; height: 24px; background-image: url(&quot;project://database/Assets/Sprites/game-ui.png?fileID=206083648&amp;guid=d43afdf6ae2424e0c8fe9e70da4d04db&amp;type=3#game-ui_2&quot;);"/>
+                    <ui:VisualElement name="MotinElement" style="flex-grow: 0; width: 16px; height: 24px; background-image: url(&quot;project://database/Assets/Sprites/game-ui.png?fileID=206083648&amp;guid=d43afdf6ae2424e0c8fe9e70da4d04db&amp;type=3#game-ui_2&quot;);"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="Top-Middle" style="flex-grow: 1; width: 40%; align-items: center;">
+                <ui:VisualElement name="Time" style="flex-grow: 0; background-image: none; margin-bottom: 5px; padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px; background-color: rgba(0, 0, 0, 0.62); -unity-background-image-tint-color: rgba(255, 255, 255, 0.85);">
+                    <ui:Label text="2:12 PM" name="TimeLbl" style="background-color: rgba(255, 255, 255, 0); color: rgb(255, 255, 255); padding-left: 6px; -unity-font-style: bold; padding-right: 6px; font-size: 12px; margin-right: 2px; padding-top: 0; padding-bottom: 0;"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="Right" style="flex-grow: 1;">
+                <ui:VisualElement name="Minimap" style="flex-grow: 1;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="Middle" style="flex-grow: 1; height: 50%;"/>
+        <ui:VisualElement name="Bottom" style="flex-grow: 0; justify-content: center;">
+            <ui:VisualElement name="Inventory" style="flex-grow: 0; align-self: flex-start; background-color: rgba(0, 0, 0, 0.31); justify-content: center; align-items: center;">
+                <ui:Label text="INVENTORY" name="InventoryLbl" enable-rich-text="true" style="align-self: center; -unity-font-style: bold; color: rgb(255, 255, 255); -unity-text-align: upper-center;"/>
+                <ui:VisualElement name="InventorySlots" style="flex-grow: 0; flex-direction: row; border-left-color: rgba(0, 0, 0, 0); border-right-color: rgba(0, 0, 0, 0); border-top-color: rgba(0, 0, 0, 0); border-bottom-color: rgba(0, 0, 0, 0); width: auto; flex-wrap: wrap; max-width: 200px; justify-content: center;">
+                    <ui:VisualElement name="InventorySlot" style="flex-grow: 0; width: 32px; height: 32px; background-color: rgb(65, 65, 65); padding-right: 0; padding-bottom: 0; margin-right: 4px; margin-bottom: 4px; background-image: url(&quot;project://database/Assets/Sprites/AdjustableSpanner.png?fileID=21300000&amp;guid=2c793406fb9554e25a940412ef55a8a4&amp;type=3#AdjustableSpanner&quot;); -unity-background-image-tint-color: rgb(255, 255, 255);"/>
+                    <ui:VisualElement name="InventorySlot" style="flex-grow: 0; width: 32px; height: 32px; background-color: rgb(65, 65, 65); padding-right: 0; padding-bottom: 0; margin-right: 4px; margin-bottom: 4px; background-image: url(&quot;project://database/Assets/Sprites/Pliers.png?fileID=21300000&amp;guid=cfc404b65a83849d0b2a6b08dd27ca0a&amp;type=3#Pliers&quot;);"/>
+                    <ui:VisualElement name="InventorySlot" style="flex-grow: 0; width: 32px; height: 32px; background-color: rgb(65, 65, 65); padding-right: 0; padding-bottom: 0; margin-right: 4px; margin-bottom: 4px; background-image: url(&quot;project://database/Assets/Sprites/SecretPaper.png?fileID=21300000&amp;guid=68d9f21025aed4a41bd5bd2c252736f2&amp;type=3#SecretPaper&quot;);"/>
+                    <ui:VisualElement name="InventorySlot" style="flex-grow: 0; width: 32px; height: 32px; background-color: rgb(65, 65, 65); padding-right: 0; padding-bottom: 0; margin-right: 4px; margin-bottom: 4px;"/>
+                    <ui:VisualElement name="InventorySlot" style="flex-grow: 0; width: 32px; height: 32px; background-color: rgb(65, 65, 65); padding-right: 0; padding-bottom: 0; margin-right: 4px; margin-bottom: 4px;"/>
+                    <ui:VisualElement name="InventorySlot" style="flex-grow: 0; width: 32px; height: 32px; background-color: rgb(65, 65, 65); padding-right: 0; padding-bottom: 0; margin-right: 4px; margin-bottom: 4px;"/>
+                    <ui:VisualElement name="InventorySlot" style="flex-grow: 0; width: 32px; height: 32px; background-color: rgb(65, 65, 65); padding-right: 0; padding-bottom: 0; margin-right: 4px; margin-bottom: 4px;"/>
+                    <ui:VisualElement name="InventorySlot" style="flex-grow: 0; width: 32px; height: 32px; background-color: rgb(65, 65, 65); padding-right: 0; padding-bottom: 0; margin-right: 4px; margin-bottom: 4px;"/>
+                    <ui:VisualElement name="InventorySlot" style="flex-grow: 0; width: 32px; height: 32px; background-color: rgb(65, 65, 65); padding-right: 0; padding-bottom: 0; margin-right: 4px; margin-bottom: 4px;"/>
+                    <ui:VisualElement name="InventorySlot" style="flex-grow: 0; width: 32px; height: 32px; background-color: rgb(65, 65, 65); padding-right: 0; padding-bottom: 0; margin-right: 4px; margin-bottom: 4px;"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

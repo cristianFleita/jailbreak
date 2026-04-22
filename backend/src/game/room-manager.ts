@@ -30,12 +30,12 @@ export const defaultGameConfig: GameConfig = {
   anticheatSpeedMultiplier: 1.5, // speed multiplier for anti-cheat
   reconnectTimeout: 30, // 30 seconds to reconnect
   mapBounds: {
-    minX: -50,
-    maxX: 50,
-    minY: 0,
-    maxY: 20,
-    minZ: -50,
-    maxZ: 50,
+    minX: -300,
+    maxX: 300,
+    minY: -10,   // buffer for floating-point ground level
+    maxY: 100,
+    minZ: -300,
+    maxZ: 300,
   },
   maxPlayers: 4,
 }
@@ -141,10 +141,13 @@ export function buildRoomStatePayload(room: GameRoom): RoomStatePayload {
 
 /**
  * Finds a player's socketId by their userId within a room.
+ * Iterates the socket-keyed players map to return the actual socket ID.
  */
 export function findSocketByUserId(room: GameRoom, userId: string): string | undefined {
-  const player = room.state.playersByUserId.get(userId)
-  return player?.id // player.id is the socketId
+  for (const [socketId, player] of room.state.players) {
+    if (player.userId === userId) return socketId
+  }
+  return undefined
 }
 
 // ============================================================================
@@ -165,6 +168,34 @@ export function startGameLoop(io: Server, room: GameRoom): void {
   // Initialize game manager (all systems)
   const gameManager = new GameManager(room)
   ;(room as any).gameManager = gameManager
+
+  // ── Wire jail routine callbacks ──
+  gameManager.jailRoutine.onPhaseWarning = (payload) => {
+    io.to(state.id).emit('phase:warning', payload)
+    console.log(`[JAIL] Emitted phase:warning → Phase ${payload.nextPhase}`)
+  }
+  gameManager.jailRoutine.onPhaseStart = (payload) => {
+    io.to(state.id).emit('phase:start', payload)
+    console.log(`[JAIL] Emitted phase:start → Phase ${payload.phase} (${payload.phaseName})`)
+  }
+  gameManager.jailRoutine.onNPCReassign = (payload) => {
+    io.to(state.id).emit('npc:reassign', payload)
+  }
+  gameManager.jailRoutine.onZoneCheck = (playerId, payload) => {
+    io.to(playerId).emit('phase:zone_check', payload)
+  }
+
+  // Wire NPC personality system callbacks
+  const personality = gameManager.jailRoutine.getPersonalitySystem()
+  personality.onEmergentAction = (payload) => {
+    io.to(state.id).emit('npc:emergent', payload)
+  }
+  personality.onMoodShift = (payload) => {
+    io.to(state.id).emit('npc:mood_shift', payload)
+  }
+
+  // Jail routine is started by transitionToActive AFTER game:start is emitted,
+  // so clients have time to load GameScene and subscribe to phase:start.
 
   let npcBroadcastCounter = 0
   const npcBroadcastThreshold = config.tickRate / npcSendRate // emit NPC every N ticks
@@ -229,16 +260,24 @@ export function stopGameLoop(room: GameRoom): void {
 
 /**
  * Initializes NPCs for a room (called when game starts).
+ * NPC count is computed dynamically based on player count.
  */
-export function initializeNPCs(room: GameRoom, count: number = 20): void {
-  spawnNPCs(room.state, room.config, count)
-  console.log(`[ROOM] Spawned ${count} NPCs in "${room.state.id}"`)
+export function initializeNPCs(room: GameRoom): void {
+  spawnNPCs(room.state, room.config)
+  console.log(`[ROOM] Spawned ${room.state.npcs.size} NPCs in "${room.state.id}"`)
 }
 
 /**
  * Transitions a room from lobby to active game.
  * Only the host can trigger this.
  */
+/**
+ * Delay (ms) between emitting `game:start` and starting the jail routine.
+ * Clients need this window to load the GameScene and let JailRoutineManager
+ * subscribe to `phase:start` before the server fires the first one.
+ */
+const JAIL_ROUTINE_START_DELAY_MS = 2000
+
 export function transitionToActive(io: Server, room: GameRoom): void {
   if (room.state.status !== 'lobby') {
     console.warn(`Cannot transition room "${room.state.id}" from ${room.state.status} to active`)
@@ -257,6 +296,22 @@ export function transitionToActive(io: Server, room: GameRoom): void {
   })
 
   console.log(`[ROOM] "${room.state.id}" transitioned to ACTIVE`)
+
+  // Start the jail routine AFTER clients have time to load GameScene and
+  // register JailRoutineManager subscribers. Without this delay, the first
+  // phase:start is emitted before Unity's JailRoutineManager.Start() runs,
+  // so NPCs receive no assignments and stay idle.
+  const roomId = room.state.id
+  setTimeout(() => {
+    const current = activeRooms.get(roomId)
+    if (!current || current.state.status !== 'active') return
+    const gm = (current as any).gameManager as GameManager | undefined
+    if (!gm) {
+      console.warn(`[JAIL] Cannot start routine — gameManager missing for room "${roomId}"`)
+      return
+    }
+    gm.jailRoutine.start()
+  }, JAIL_ROUTINE_START_DELAY_MS)
 }
 
 // ============================================================================

@@ -1,0 +1,1683 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea3b6780b517a40058d12daa6d112ae6, type: 3}
+  m_Name: WaypointRegistry
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.NPC.WaypointRegistry
+  waypoints:
+  - waypointId: cell_door_exit_01
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_02
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_03
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_04
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_05
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_06
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_07
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_08
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_09
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_10
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_11
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_12
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_13
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_14
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_15
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_16
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_17
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_18
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_19
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cell_door_exit_20
+    waypointObject: {fileID: 0}
+    zone: celda
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 1
+    currentOccupants: 0
+  - waypointId: cafeteria_path_01
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 4
+    validPhases:
+    - 1
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_path_02
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 4
+    validPhases:
+    - 1
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_path_03
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 4
+    validPhases:
+    - 1
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_path_04
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 4
+    validPhases:
+    - 1
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_path_05
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 4
+    validPhases:
+    - 1
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_01
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_02
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_03
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_04
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_05
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_06
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_07
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_08
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_09
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_10
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_11
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_12
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_13
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_14
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_15
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_seat_16
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_counter_01
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_counter_02
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_counter_03
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_counter_04
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_counter_05
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_counter_06
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_line_01
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_line_02
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_line_03
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_line_04
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_line_05
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_line_06
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_line_07
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_line_08
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 4
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_tray_deposit_01
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_tray_deposit_02
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: cafeteria_tray_deposit_03
+    waypointObject: {fileID: 0}
+    zone: comedor
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 2
+    - 5
+    - 8
+    currentOccupants: 0
+  - waypointId: workshop_bench_01
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_bench_02
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_bench_03
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_bench_04
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_bench_05
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_bench_06
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_shelf_01
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_shelf_02
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_shelf_03
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_shelf_04
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_machine_01
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_machine_02
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_machine_03
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_machine_04
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_chat_spot_01
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_chat_spot_02
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: workshop_chat_spot_03
+    waypointObject: {fileID: 0}
+    zone: trabajo
+    subZone: taller
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 3
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_washer_01
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_washer_02
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_washer_03
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_washer_04
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_washer_05
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_washer_06
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_fold_01
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_fold_02
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_fold_03
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_fold_04
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_fold_05
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_fold_06
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_dryer_01
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_dryer_02
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_dryer_03
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: laundry_dryer_04
+    waypointObject: {fileID: 0}
+    zone: lavanderia
+    subZone: lavanderia
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 3
+    - 4
+    - 6
+    currentOccupants: 0
+  - waypointId: yard_perimeter_01
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_perimeter_02
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_perimeter_03
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_perimeter_04
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_perimeter_05
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_perimeter_06
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_perimeter_07
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_perimeter_08
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_bench_01
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_bench_02
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_bench_03
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_bench_04
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_bench_05
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_bench_06
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_bench_07
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_bench_08
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_exercise_area_01
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_exercise_area_02
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_exercise_area_03
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_exercise_area_04
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_conversation_spot_01
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_conversation_spot_02
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_conversation_spot_03
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_conversation_spot_04
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_conversation_spot_05
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_conversation_spot_06
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_card_table_01
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 4
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_card_table_02
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 4
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_wall_lean_01
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_wall_lean_02
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_wall_lean_03
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_wall_lean_04
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_wall_lean_05
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_wall_lean_06
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: yard_ball_spot
+    waypointObject: {fileID: 0}
+    zone: patio
+    subZone: patio
+    isExclusive: 0
+    maxOccupants: 2
+    validPhases:
+    - 4
+    currentOccupants: 0
+  - waypointId: cell_00_bed_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_00_bed_02
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_00_desk_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_00_window_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_01_bed_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_01_bed_02
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_01_desk_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_01_window_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_02_bed_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_02_bed_02
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_02_desk_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_02_window_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_03_bed_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_03_bed_02
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_03_desk_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_03_window_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_04_bed_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_04_bed_02
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_04_desk_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_04_window_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_05_bed_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_05_bed_02
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_05_desk_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_05_window_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_06_bed_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_06_bed_02
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_06_desk_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_06_window_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_07_bed_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_07_bed_02
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_07_desk_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_07_window_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_08_bed_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_08_bed_02
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_08_desk_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_08_window_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_09_bed_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_09_bed_02
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    - 9
+    currentOccupants: 0
+  - waypointId: cell_09_desk_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0
+  - waypointId: cell_09_window_01
+    waypointObject: {fileID: 0}
+    zone: celdas
+    subZone: 
+    isExclusive: 1
+    maxOccupants: 1
+    validPhases:
+    - 7
+    currentOccupants: 0

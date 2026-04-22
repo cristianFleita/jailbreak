@@ -24,7 +24,7 @@
             <!-- CREATE ROOM PANEL -->
             <ui:VisualElement name="create-section" class="main-panel" style="background-image: url(&quot;project://database/Assets/UI/Sprites/lobby-screen-spreadsheet.png?fileID=1553152341&amp;guid=06274fbf9d35d42d693f35b3152f8cf8&amp;type=3#lobby-screen-spreadsheet_2&quot;);">
                 <ui:VisualElement class="input-container">
-                    <ui:TextField name="room-name-field" value="[Type Room Name...]" class="input-field"/>
+                    <ui:TextField name="room-name-field" value="" class="input-field"/>
                 </ui:VisualElement>
                 <ui:Button name="create-room-btn" text="" class="action-btn" style="background-image: url(&quot;project://database/Assets/UI/Sprites/lobby-screen-spreadsheet.png?fileID=-1439668066&amp;guid=06274fbf9d35d42d693f35b3152f8cf8&amp;type=3#lobby-screen-spreadsheet_4&quot;);"/>
             </ui:VisualElement>
@@ -32,7 +32,7 @@
             <!-- JOIN ROOM PANEL -->
             <ui:VisualElement name="join-section" class="main-panel" style="background-image: url(&quot;project://database/Assets/UI/Sprites/lobby-screen-spreadsheet.png?fileID=655580970&amp;guid=06274fbf9d35d42d693f35b3152f8cf8&amp;type=3#lobby-screen-spreadsheet_3&quot;);">
                 <ui:VisualElement class="input-container">
-                    <ui:TextField name="room-id-field" value="[Type Room Name to Join...]" class="input-field"/>
+                    <ui:TextField name="room-id-field" value="" class="input-field"/>
                 </ui:VisualElement>
                 <ui:Button name="join-room-btn" text="" class="action-btn" style="background-image: url(&quot;project://database/Assets/UI/Sprites/lobby-screen-spreadsheet.png?fileID=-1054804021&amp;guid=06274fbf9d35d42d693f35b3152f8cf8&amp;type=3#lobby-screen-spreadsheet_5&quot;);"/>
             </ui:VisualElement>

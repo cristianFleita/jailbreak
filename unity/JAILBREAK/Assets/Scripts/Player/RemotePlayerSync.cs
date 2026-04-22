@@ -14,11 +14,15 @@ namespace Jailbreak.Player
 
         public string PlayerId { get; set; }
         public string Role { get; set; }
+        
+        // Expose the state arriving from the network so the Animator can read it
+        public string MovementState { get; private set; } = "idle";
 
         // ─── Called by GameStateManager when player:state arrives ────────────
 
         public void PushState(PlayerStateData data)
         {
+            MovementState = data.movementState;
             _buffer.Add((Time.time, data.position.ToUnity(), data.rotation.ToUnity()));
 
             // Prune old entries (keep last 500ms worth)

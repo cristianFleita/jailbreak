@@ -36,10 +36,11 @@ export function validatePlayerMovement(
   const dist = distance(newPosition, oldPosition)
   const speed = dist / deltaTime // units per second
 
-  // Max speed thresholds (tunable; these are conservative defaults)
-  const walkSpeed = 5.0 // units/sec
-  const sprintMultiplier = 1.5
-  const maxLegalSpeed = walkSpeed * sprintMultiplier * anticheatSpeedMultiplier
+  // Max speed thresholds — must match Unity's PlayerInputController speeds
+  // Unity: walkSpeed=3.5, sprintSpeed=5.5
+  const maxPlayerSpeed = 5.5 // sprint speed from Unity
+  const sprintMultiplier = 1.5 // tolerance buffer
+  const maxLegalSpeed = maxPlayerSpeed * sprintMultiplier * anticheatSpeedMultiplier
 
   if (speed > maxLegalSpeed) {
     return { valid: false, reason: `Speed ${speed.toFixed(2)} exceeds max ${maxLegalSpeed.toFixed(2)}` }

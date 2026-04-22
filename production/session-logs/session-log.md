@@ -623,3 +623,593 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260408_143236
+### Uncommitted Changes
+design/gdd/systems-index.md
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260410_020419
+### Uncommitted Changes
+.DS_Store
+backend/src/game/__tests__/validation.test.ts
+backend/src/game/event-handlers.ts
+backend/src/game/room-manager.ts
+backend/src/game/state.ts
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+design/gdd/rutina-fases-npc.md
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset.meta
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.cs
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Settings/DefaultVolumeProfile.asset
+unity/JAILBREAK/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260410_021522
+### Uncommitted Changes
+.DS_Store
+backend/src/game/__tests__/validation.test.ts
+backend/src/game/event-handlers.ts
+backend/src/game/room-manager.ts
+backend/src/game/state.ts
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset.meta
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.cs
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Settings/DefaultVolumeProfile.asset
+unity/JAILBREAK/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260410_022241
+### Uncommitted Changes
+.DS_Store
+backend/src/game/__tests__/validation.test.ts
+backend/src/game/event-handlers.ts
+backend/src/game/room-manager.ts
+backend/src/game/state.ts
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset.meta
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.cs
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Settings/DefaultVolumeProfile.asset
+unity/JAILBREAK/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260410_023351
+### Uncommitted Changes
+.DS_Store
+backend/src/game/__tests__/validation.test.ts
+backend/src/game/event-handlers.ts
+backend/src/game/room-manager.ts
+backend/src/game/state.ts
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset.meta
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.cs
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Settings/DefaultVolumeProfile.asset
+unity/JAILBREAK/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260410_024551
+### Uncommitted Changes
+.DS_Store
+backend/src/game/__tests__/validation.test.ts
+backend/src/game/event-handlers.ts
+backend/src/game/room-manager.ts
+backend/src/game/state.ts
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.asset.meta
+unity/JAILBREAK/Assets/Scripts/NPC/WaypointRegistry.cs
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerInputController.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Settings/DefaultVolumeProfile.asset
+unity/JAILBREAK/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260410_190828
+### Commits
+0a82a1c chore: wip map + spawn
+### Uncommitted Changes
+.DS_Store
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Player/FPSCameraController.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260413_191955
+### Commits
+09d78d4 chore: update guard spawn position
+8277bbb chore: wip movement adjust
+68a0890 chore: adjust npc spawn
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260414_002741
+### Commits
+a5e9766 chore: adjust npc movements
+07b5c6f chore: spawn positions
+09d78d4 chore: update guard spawn position
+8277bbb chore: wip movement adjust
+68a0890 chore: adjust npc spawn
+### Uncommitted Changes
+design/gdd/rutina-fases-npc.md
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260414_005810
+### Commits
+a5e9766 chore: adjust npc movements
+07b5c6f chore: spawn positions
+09d78d4 chore: update guard spawn position
+8277bbb chore: wip movement adjust
+68a0890 chore: adjust npc spawn
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/agent-audit.log
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260414_011009
+### Commits
+a5e9766 chore: adjust npc movements
+07b5c6f chore: spawn positions
+09d78d4 chore: update guard spawn position
+8277bbb chore: wip movement adjust
+68a0890 chore: adjust npc spawn
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/agent-audit.log
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WaypointRegistryGenerator.cs
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260414_110521
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/agent-audit.log
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WaypointRegistryGenerator.cs
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260414_110812
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+design/gdd/rutina-fases-npc.md
+production/session-logs/agent-audit.log
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WaypointRegistryGenerator.cs
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260414_111937
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+design/GDD.md
+design/gdd/rutina-fases-npc.md
+production/session-logs/agent-audit.log
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Editor/WaypointRegistryGenerator.cs
+unity/JAILBREAK/Assets/Scripts/NPC/JailRoutineManager.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260418_162737
+### Commits
+61ed457 fix: sit animation blend time
+76a9a87 chore: sit interaction - player + broadcast
+e81221c chore: replace waypoints for npc movement
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Scripts/Interactions/Sit/SitInteraction.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCNetworkSync.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260418_191437
+### Commits
+61ed457 fix: sit animation blend time
+76a9a87 chore: sit interaction - player + broadcast
+e81221c chore: replace waypoints for npc movement
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/Interactions/Sit/SitInteraction.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCNetworkSync.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260418_192025
+### Commits
+61ed457 fix: sit animation blend time
+76a9a87 chore: sit interaction - player + broadcast
+e81221c chore: replace waypoints for npc movement
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/Interactions/Sit/SitInteraction.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCNetworkSync.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260418_203937
+### Commits
+61ed457 fix: sit animation blend time
+76a9a87 chore: sit interaction - player + broadcast
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Chair.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Kitchen_1.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Sink.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/TableGroup.prefab
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/GameScene/NavMesh-NavMesh Surface.asset
+unity/JAILBREAK/Assets/Scripts/Interactions/Sit/SitInteraction.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCNetworkSync.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+unity/JAILBREAK/ProjectSettings/DynamicsManager.asset
+unity/JAILBREAK/ProjectSettings/NavMeshAreas.asset
+unity/JAILBREAK/ProjectSettings/TagManager.asset
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260418_213552
+### Commits
+61ed457 fix: sit animation blend time
+76a9a87 chore: sit interaction - player + broadcast
+---
+
+## Session End: 20260419_000945
+### Commits
+ba3ae43 chore: npcs action sit
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260419_015628
+### Commits
+6a56be6 chore: player food counter interact
+ba3ae43 chore: npcs action sit
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260419_124624
+### Commits
+0b444fe chore: interact food counter npcs
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260419_125031
+### Commits
+0b444fe chore: interact food counter npcs
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/Interactions/CarryFood/CarryFoodInteraction.cs
+unity/JAILBREAK/Assets/Scripts/Player/RemoteInteractionHandler.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260419_132325
+### Commits
+dd9c675 chore: sink interaction player
+0b444fe chore: interact food counter npcs
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260419_140050
+### Commits
+dd9c675 chore: sink interaction player
+0b444fe chore: interact food counter npcs
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Prefabs/Props/Sink.prefab
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scenes/GameScene/NavMesh-NavMesh Surface.asset
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260420_001950
+### Commits
+faee0b5 chore: broadcast work table interactable
+01f328c chore: adjust desk prefab
+df55f2a chore: adjust work routine
+38dedc4 fix: adjust cafeteria phase times
+a5cf162 chore: set work zones
+85d21f0 chore: random walk/run for npcs
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260420_004126
+### Commits
+faee0b5 chore: broadcast work table interactable
+01f328c chore: adjust desk prefab
+df55f2a chore: adjust work routine
+38dedc4 fix: adjust cafeteria phase times
+a5cf162 chore: set work zones
+85d21f0 chore: random walk/run for npcs
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Scripts/Interactions/Worktable/WorkTableInteractable.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260420_010547
+### Commits
+faee0b5 chore: broadcast work table interactable
+01f328c chore: adjust desk prefab
+df55f2a chore: adjust work routine
+38dedc4 fix: adjust cafeteria phase times
+a5cf162 chore: set work zones
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260420_012722
+### Commits
+faee0b5 chore: broadcast work table interactable
+01f328c chore: adjust desk prefab
+df55f2a chore: adjust work routine
+38dedc4 fix: adjust cafeteria phase times
+a5cf162 chore: set work zones
+### Uncommitted Changes
+production/session-logs/compaction-log.txt
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Animations/ButtonPushing.anim
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Scripts/Interactions/Worktable/WorkTableInteractable.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260420_105246
+### Commits
+1ff3476 fix: npc animation work table
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/Player/RemoteInteractionHandler.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260420_111755
+### Commits
+4be49f4 chore: inspect cabinet player interaction
+1ff3476 fix: npc animation work table
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+
+## Session End: 20260420_114540
+### Commits
+df21df0 chore: npc inspect cabinet interaction
+4be49f4 chore: inspect cabinet player interaction
+1ff3476 fix: npc animation work table
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/Player/RemoteInteractionHandler.cs
+web/public/unity-build/Build/unity-build.data
+web/public/unity-build/Build/unity-build.framework.js
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/Build/unity-build.wasm
+---
+

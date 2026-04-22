@@ -217,8 +217,8 @@ export interface IVictoryConditionSystem {
  * - Update position each tick
  */
 export interface INPCBehaviorSystem {
-  // Called by tick loop each tick to update all NPC positions
-  updateNPCPositions(): void
+  // Called by tick loop each tick to update all chasing NPC positions
+  updateChasingNPCsOnly(): void
 
   // Get NPC target position (for movement toward prey)
   getNPCTargetPosition(npcId: string): Vector3 | null

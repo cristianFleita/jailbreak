@@ -42,10 +42,12 @@ namespace Jailbreak.Network
         public bool            IsAuthenticated { get; private set; }
 
         /// <summary>
-        /// Cached game:start payload so late-loading scenes (GameScene) can
-        /// read it even after the event has already fired.
+        /// Cached payloads so late-loading scenes (GameScene) can
+        /// read them even after the events have already fired during loading.
         /// </summary>
         public GameStartPayload CachedGameStart { get; private set; }
+        public GameReconnectPayload CachedGameReconnect { get; private set; }
+        public PhaseJailStartPayload CachedPhaseJailStart { get; private set; }
 
         // ─── Events: Auth & Room Lobby ───────────────────────────────────────
         public event Action<AuthRegisteredPayload>    OnAuthRegisteredEvent;
@@ -72,8 +74,19 @@ namespace Jailbreak.Network
         public event Action<ChaseEndPayload>          OnChaseEndEvent;
         public event Action<ItemPickupPayload>        OnItemPickupEvent;
         public event Action<RiotAvailablePayload>     OnRiotAvailableEvent;
+        public event Action<PlayerActionBroadcast>    OnPlayerActionEvent;
         public event Action<GameEndPayload>           OnGameEndEvent;
         public event Action<ErrorPayload>             OnNetworkErrorEvent;
+
+        // ─── Events: Jail Routine / NPC Phase System ────────────────────────
+        public event Action<PhaseJailStartPayload>    OnPhaseJailStartEvent;
+        public event Action<PhaseWarningPayload>      OnPhaseWarningEvent;
+        public event Action<NPCReassignPayload>       OnNPCReassignEvent;
+        public event Action<PhaseZoneCheckPayload>    OnPhaseZoneCheckEvent;
+
+        // ─── Events: NPC Personality & Emergent Behavior ─────────────────
+        public event Action<NPCEmergentData>          OnNPCEmergentEvent;
+        public event Action<NPCMoodShiftData>         OnNPCMoodShiftEvent;
 
         // ─── Private ─────────────────────────────────────────────────────────
         private string _currentRoomId;
@@ -98,6 +111,7 @@ namespace Jailbreak.Network
         [DllImport("__Internal")] private static extern void   SocketSendGuardMark(string targetId);
         [DllImport("__Internal")] private static extern void   SocketSendGuardCatch(string targetId);
         [DllImport("__Internal")] private static extern void   SocketSendInteract(string objectId, string action);
+        [DllImport("__Internal")] private static extern void   SocketSendPlayerAction(string objectId, string action);
         [DllImport("__Internal")] private static extern void   SocketSendRiotActivate();
         [DllImport("__Internal")] private static extern void   SocketDisconnect();
         [DllImport("__Internal")] private static extern string SocketGetSavedUserId();
@@ -298,6 +312,21 @@ namespace Jailbreak.Network
 #endif
         }
 
+        /// <summary>
+        /// Broadcast an animation/interaction action (sit, stand, etc.) so
+        /// other players can replay it on their local view of this avatar.
+        /// </summary>
+        public void SendPlayerAction(string objectId, string action)
+        {
+            if (!IsInGame()) return;
+            if (string.IsNullOrEmpty(objectId) || string.IsNullOrEmpty(action)) return;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketSendPlayerAction(objectId, action);
+#else
+            _socket?.Emit("player:action", new { objectId, action });
+#endif
+        }
+
         public void SendRiotActivate()
         {
             if (!IsInGame()) return;
@@ -351,10 +380,7 @@ namespace Jailbreak.Network
                 if (data == null) return;
                 LocalUserId = data.userId;
                 LocalDisplayName = data.displayName;
-                
-                // FIXED: Actually assign the socket ID as the LocalPlayerId
-                LocalPlayerId = data.socketId; 
-                
+                LocalPlayerId = data.userId; // use stable userId so it survives reconnects
                 IsAuthenticated = true;
                 SetState(ConnectionState.Connected);
                 OnConnectedEvent?.Invoke();
@@ -474,7 +500,11 @@ namespace Jailbreak.Network
             {
                 SetState(ConnectionState.InGame);
                 var data = JsonUtility.FromJson<GameReconnectPayload>(json);
-                if (data != null) OnGameReconnectEvent?.Invoke(data);
+                if (data != null)
+                {
+                    CachedGameReconnect = data;
+                    OnGameReconnectEvent?.Invoke(data);
+                }
             });
         }
 
@@ -511,6 +541,71 @@ namespace Jailbreak.Network
             {
                 var data = JsonUtility.FromJson<RiotAvailablePayload>(json);
                 if (data != null) OnRiotAvailableEvent?.Invoke(data);
+            });
+        }
+
+        public void OnPlayerAction(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<PlayerActionBroadcast>(json);
+                if (data != null) OnPlayerActionEvent?.Invoke(data);
+            });
+        }
+
+        // ─── Jail Routine callbacks (WebGL SendMessage) ──────────────────────
+
+        public void OnPhaseJailStart(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<PhaseJailStartPayload>(json);
+                if (data != null) OnPhaseJailStartEvent?.Invoke(data);
+            });
+        }
+
+        public void OnPhaseWarning(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<PhaseWarningPayload>(json);
+                if (data != null) OnPhaseWarningEvent?.Invoke(data);
+            });
+        }
+
+        public void OnNPCReassign(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<NPCReassignPayload>(json);
+                if (data != null) OnNPCReassignEvent?.Invoke(data);
+            });
+        }
+
+        public void OnPhaseZoneCheck(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<PhaseZoneCheckPayload>(json);
+                if (data != null) OnPhaseZoneCheckEvent?.Invoke(data);
+            });
+        }
+
+        public void OnNPCEmergent(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<NPCEmergentData>(json);
+                if (data != null) OnNPCEmergentEvent?.Invoke(data);
+            });
+        }
+
+        public void OnNPCMoodShift(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<NPCMoodShiftData>(json);
+                if (data != null) OnNPCMoodShiftEvent?.Invoke(data);
             });
         }
 
@@ -595,10 +690,7 @@ namespace Jailbreak.Network
                 {
                     LocalUserId = data.userId;
                     LocalDisplayName = data.displayName;
-                    
-                    // FIXED: Actually assign the socket ID as the LocalPlayerId
-                    LocalPlayerId = data.socketId; 
-
+                    LocalPlayerId = data.userId; // use stable userId so it survives reconnects
                     IsAuthenticated = true;
                     PlayerPrefs.SetString("jailbreak_user_id",    data.userId);
                     PlayerPrefs.SetString("jailbreak_display_name", data.displayName);
@@ -711,7 +803,11 @@ namespace Jailbreak.Network
                 _mainThreadQueue.Enqueue(() =>
                 {
                     SetState(ConnectionState.InGame);
-                    if (data != null) OnGameReconnectEvent?.Invoke(data);
+                    if (data != null)
+                    {
+                        CachedGameReconnect = data;
+                        OnGameReconnectEvent?.Invoke(data);
+                    }
                 });
             });
 
@@ -719,6 +815,30 @@ namespace Jailbreak.Network
             SafeOn("guard:catch",     r => { var d = DeserializePayload<GuardCatchPayload>(r);   if (d != null) _mainThreadQueue.Enqueue(() => OnGuardCatchResultEvent?.Invoke(d)); });
             SafeOn("item:pickup",     r => { var d = DeserializePayload<ItemPickupPayload>(r);   if (d != null) _mainThreadQueue.Enqueue(() => OnItemPickupEvent?.Invoke(d)); });
             SafeOn("riot:available",  r => { var d = DeserializePayload<RiotAvailablePayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnRiotAvailableEvent?.Invoke(d)); });
+            SafeOn("player:action",   r => { var d = DeserializePayload<PlayerActionBroadcast>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnPlayerActionEvent?.Invoke(d)); });
+
+            // ── Jail Routine ────────────────────────────────────────────────
+            SafeOn("phase:start",     r =>
+            {
+                var d = DeserializePayload<PhaseJailStartPayload>(r);
+                if (d == null)
+                {
+                    Debug.LogError("[NET] phase:start deserialize returned null");
+                    return;
+                }
+                _mainThreadQueue.Enqueue(() =>
+                {
+                    CachedPhaseJailStart = d;
+                    int subs = OnPhaseJailStartEvent?.GetInvocationList()?.Length ?? 0;
+                    Debug.Log($"[NET] phase:start received — Phase {d.phase} ({d.phaseName}) assignments={d.npcAssignments?.Length ?? 0} subscribers={subs}");
+                    OnPhaseJailStartEvent?.Invoke(d);
+                });
+            });
+            SafeOn("phase:warning",   r => { var d = DeserializePayload<PhaseWarningPayload>(r);   if (d != null) _mainThreadQueue.Enqueue(() => OnPhaseWarningEvent?.Invoke(d)); });
+            SafeOn("npc:reassign",    r => { var d = DeserializePayload<NPCReassignPayload>(r);    if (d != null) _mainThreadQueue.Enqueue(() => OnNPCReassignEvent?.Invoke(d)); });
+            SafeOn("phase:zone_check",r => { var d = DeserializePayload<PhaseZoneCheckPayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnPhaseZoneCheckEvent?.Invoke(d)); });
+            SafeOn("npc:emergent",    r => { var d = DeserializePayload<NPCEmergentData>(r);       if (d != null) _mainThreadQueue.Enqueue(() => OnNPCEmergentEvent?.Invoke(d)); });
+            SafeOn("npc:mood_shift",  r => { var d = DeserializePayload<NPCMoodShiftData>(r);      if (d != null) _mainThreadQueue.Enqueue(() => OnNPCMoodShiftEvent?.Invoke(d)); });
 
             SafeOn("game:error", r =>
             {

@@ -34,11 +34,10 @@ mergeInto(LibraryManager.library, {
    * goName = Unity GameObject that will receive SendMessage callbacks.
    */
   SocketConnect: function(goNamePtr, displayNamePtr) {
-    var goName      = UTF8ToString(goNamePtr);
-    var displayName = UTF8ToString(displayNamePtr);
+    var goName = UTF8ToString(goNamePtr);
+    // displayNamePtr kept for ABI compatibility but name is now generated server-side
 
-    window._jbGoName      = goName;
-    window._jbDisplayName = displayName;
+    window._jbGoName = goName;
 
     function doConnect() {
       if (window._jbSocket) {
@@ -62,10 +61,9 @@ mergeInto(LibraryManager.library, {
 
       window._jbSocket.on('connect', function () {
         console.log('[SocketBridge] Connected:', window._jbSocket.id);
-        // Authenticate immediately
+        // Authenticate — display name is generated server-side
         window._jbSocket.emit('auth:register', {
           userId: savedUserId,
-          displayName: displayName,
         });
       });
 
@@ -158,9 +156,38 @@ mergeInto(LibraryManager.library, {
         window.unityInstance.SendMessage(window._jbGoName, 'OnRiotAvailable', JSON.stringify(data));
       });
 
+      window._jbSocket.on('player:action', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnPlayerAction', JSON.stringify(data));
+      });
+
       window._jbSocket.on('game:error', function (data) {
         window.unityInstance.SendMessage(window._jbGoName, 'OnNetworkError', JSON.stringify(data));
       });
+
+      window._jbSocket.on('phase:start', function (data) {                                                                                                     
+        window.unityInstance.SendMessage(window._jbGoName, 'OnPhaseJailStart', JSON.stringify(data));                                                            
+      });                                                                                                                                                        
+      
+      window._jbSocket.on('phase:warning', function (data) {                                                                                                     
+        window.unityInstance.SendMessage(window._jbGoName, 'OnPhaseWarning', JSON.stringify(data));
+      });                                                                                                                                                        
+      
+      window._jbSocket.on('npc:reassign', function (data) {                                                                                                      
+        window.unityInstance.SendMessage(window._jbGoName, 'OnNPCReassign', JSON.stringify(data));
+      });                                                                                                                                                        
+      
+      window._jbSocket.on('phase:zone_check', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnPhaseZoneCheck', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('npc:emergent', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnNPCEmergent', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('npc:mood_shift', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnNPCMoodShift', JSON.stringify(data));
+      });
+
     } // end doConnect
 
     // Load socket.io from CDN if the global `io` isn't available yet
@@ -249,6 +276,13 @@ mergeInto(LibraryManager.library, {
     var action   = UTF8ToString(actionPtr);
     if (window._jbSocket && window._jbSocket.connected)
       window._jbSocket.emit('player:interact', { objectId: objectId, action: action });
+  },
+
+  SocketSendPlayerAction: function(objectIdPtr, actionPtr) {
+    var objectId = UTF8ToString(objectIdPtr);
+    var action   = UTF8ToString(actionPtr);
+    if (window._jbSocket && window._jbSocket.connected)
+      window._jbSocket.emit('player:action', { objectId: objectId, action: action });
   },
 
   SocketSendRiotActivate: function() {
