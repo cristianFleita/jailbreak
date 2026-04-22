@@ -260,6 +260,45 @@ namespace Jailbreak.NPC
         }
 
         /// <summary>
+        /// Returns a deterministic LaundryLoadWasherInteractable inside the requested zone.
+        /// Mirrors GetDeterministicWorkTable (XZ-bounds scan + stable sort + seed index
+        /// with wrap-on-occupied), so NPCs sharing a zone pick different washers.
+        /// Returns null if every washer in the zone is occupied.
+        /// </summary>
+        public LaundryLoadWasherInteractable GetDeterministicLaundryLoadWasher(string zoneId, uint seed)
+        {
+            var col = GetZoneBounds(zoneId);
+            if (col == null) return null;
+
+            var b = col.bounds;
+            var all = FindObjectsOfType<LaundryLoadWasherInteractable>();
+            var inZone = new List<LaundryLoadWasherInteractable>();
+            foreach (var lw in all)
+            {
+                var p = lw.transform.position;
+                if (p.x >= b.min.x && p.x <= b.max.x && p.z >= b.min.z && p.z <= b.max.z)
+                    inZone.Add(lw);
+            }
+
+            if (inZone.Count == 0) return null;
+
+            inZone.Sort((a, b2) => {
+                int cmp = a.transform.position.x.CompareTo(b2.transform.position.x);
+                if (cmp == 0) cmp = a.transform.position.z.CompareTo(b2.transform.position.z);
+                return cmp;
+            });
+
+            int startIdx = (int)(seed % (uint)inZone.Count);
+            for (int i = 0; i < inZone.Count; i++)
+            {
+                int idx = (startIdx + i) % inZone.Count;
+                if (!inZone[idx].isOccupied) return inZone[idx];
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Generates a deterministic random point inside the requested zone's bounds using Mulberry32.
         /// The point is generated on the XZ plane at the collider's center Y.
         /// Callers (e.g., NPCBehaviorController) should use NavMesh.SamplePosition to snap it to the floor.
