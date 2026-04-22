@@ -1,19 +1,19 @@
 # Movimiento FPS
 
 > **Status**: Designed
-> **Author**: Cris + Claude
-> **Last Updated**: 2026-04-06
+> **Author**: Cris + Claude + Codex
+> **Last Updated**: 2026-04-22
 > **Implements Pillar**: Tensión asimétrica
 
 ## Overview
 
-El sistema de Movimiento FPS controla toda la locomoción y orientación de cámara de los jugadores (presos y guardia) en primera persona. El jugador interactúa con él de forma activa y constante — es el canal principal de input del juego. Sin este sistema no hay gameplay: no podés patrullar, perseguir, escapar, recoger objetos ni mezclarte entre NPCs. Es el sistema Foundation del que dependen 7 sistemas downstream.
+El sistema de Movimiento FPS controla toda la locomoción y orientación de cámara de los jugadores (presos y guardia) en primera persona. El jugador interactúa con él de forma activa y constante — es el canal principal de input del juego. Sin este sistema no hay gameplay: no podés patrullar, acercarte a un sospechoso, escapar, recoger objetos ni mezclarte entre NPCs. Es el sistema Foundation del que dependen 7 sistemas downstream.
 
 ## Player Fantasy
 
 **Presos:** Sentirte vulnerable y expuesto. El FOV estrecho (70°) te obliga a girar la cabeza para ver qué hay detrás tuyo — no sabés si el guardia está a tus espaldas. Cada esquina es un momento de tensión. Cuando corrés, sabés que estás generando ruido y atención, pero a veces no tenés otra opción.
 
-**Guardia:** Sentirte en control del espacio pero abrumado por la cantidad de presos. Tu FOV más amplio (80°) te da mejor visión, pero 20 personas idénticas se mueven frente a vos y cualquiera podría ser un jugador. Cuando perseguís a alguien, la adrenalina sube porque sabés que si te equivocás, pagás caro.
+**Guardia:** Sentirte en control del espacio pero abrumado por la cantidad de presos. Tu FOV más amplio (80°) te da mejor visión, pero 20 personas idénticas se mueven frente a vos y cualquiera podría ser un jugador. Cuando te acercás para completar una captura por foco, la adrenalina sube porque sabés que si te equivocás, pagás caro.
 
 **Referencia:** El movimiento debe sentirse como un FPS táctico lento (más Alien: Isolation que Call of Duty). No es ágil ni fluido — es pesado, deliberado. Cada paso tiene peso.
 
@@ -46,7 +46,7 @@ El sistema de Movimiento FPS controla toda la locomoción y orientación de cám
 
 | Sistema | Dirección | Interfaz |
 |---------|-----------|----------|
-| **Persecución (2)** | ← recibe | Aplica `guard_sprint_multiplier` (1.20x) o `prisoner_sprint_multiplier` (1.15x) a la velocidad de sprint durante persecución activa |
+| **Captura por Foco (2)** | → provee | Expone `player.position`, `player.forward`, `player.isMoving`, `player.isSprinting` para verificar rango, visión y estabilidad del foco |
 | **Camuflaje (3)** | → provee | Expone `player.position`, `player.zone`, `player.isMoving`, `player.isSprinting` |
 | **Inventario (5)** | → provee | Expone `player.position` y `player.forward` para raycast de interacción (recogida de objetos) |
 | **Mecánicas Molestia (8)** | ← recibe | Recibe stun/tropiezo: velocidad → 0 por N segundos, rotación bloqueada |
@@ -57,7 +57,7 @@ El sistema de Movimiento FPS controla toda la locomoción y orientación de cám
 ## Formulas
 
 ```
-velocidad_final = velocidad_base[estado] × multiplicador_persecución × multiplicador_stun
+velocidad_final = velocidad_base[estado] × multiplicador_stun
 
 Donde:
   velocidad_base[Idle]       = 0.0 m/s
@@ -66,7 +66,6 @@ Donde:
   velocidad_base[Crouch]     = 0.0 m/s
   velocidad_base[CrouchWalk] = walk_speed × crouch_speed_multiplier  (default: 3.5 × 0.5 = 1.75 m/s)
 
-  multiplicador_persecución  = 1.0 (normal) | guard_sprint_multiplier (1.20) | prisoner_sprint_multiplier (1.15)
   multiplicador_stun         = 1.0 (normal) | 0.0 (stunned)
 
 head_bob_y = sin(tiempo × velocidad_base[estado] × bob_frequency) × bob_amplitude[estado]
@@ -106,7 +105,7 @@ audio_range[estado]:
 
 | Sistema | Tipo | Dirección | Interfaz específica |
 |---------|------|-----------|-------------------|
-| Persecución (2) | Hard | ← recibe | Modifica `sprint_multiplier` durante chase activo |
+| Captura por Foco (2) | Hard | → provee | `player.position`, `player.forward`, `player.isMoving`, `player.isSprinting` para validación de foco y rango |
 | Camuflaje (3) | Hard | → provee | `player.position`, `player.zone`, `player.isMoving`, `player.isSprinting`, `player.isCrouching` |
 | Inventario (5) | Hard | → provee | `player.position`, `player.forward` (raycast interacción) |
 | Mecánicas Molestia (8) | Soft | ← recibe | Aplica stun: `SetStun(duration)` → velocidad 0, rotación bloqueada |
@@ -122,7 +121,7 @@ audio_range[estado]:
 | Knob | Default | Rango seguro | Si muy bajo | Si muy alto | Interactúa con |
 |------|---------|-------------|-------------|-------------|----------------|
 | `walk_speed` | 3.5 m/s | 2.5–4.5 m/s | Sluggish, difícil llegar a zonas a tiempo | NPCs quedan atrás, se nota que sos jugador | `sprint_multiplier`, audio ranges |
-| `sprint_multiplier` | 1.57x (→5.5 m/s) | 1.3–2.0x | Sprint casi igual que caminar, inútil para escapar | Demasiado rápido, imposible de atrapar | `guard/prisoner_sprint_multiplier` |
+| `sprint_multiplier` | 1.57x (→5.5 m/s) | 1.3–2.0x | Sprint casi igual que caminar, inútil para escapar | Demasiado rápido, imposible de leer y alcanzar | audio ranges |
 | `crouch_speed_multiplier` | 0.5x (→1.75 m/s) | 0.3–0.7x | Agacharse inútil para moverse | Sin penalización suficiente | `walk_speed` |
 | `crouch_height_multiplier` | 0.6x (→1.08m) | 0.5–0.7x | Demasiado bajo, clips con objetos | Apenas se nota la diferencia | Colisión con muebles |
 | `mouse_sensitivity` | 2.0 | 0.1–10.0 | Muy lento, frustrante | Incontrolable | — |
