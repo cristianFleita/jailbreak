@@ -297,6 +297,44 @@ namespace Jailbreak.NPC
 
             return null;
         }
+        /// <summary>
+        /// Returns a deterministic LaundryStoreClothesInteractable inside the requested zone.
+        /// Mirrors GetDeterministicWorkTable (XZ-bounds scan + stable sort + seed index
+        /// with wrap-on-occupied), so NPCs sharing a zone pick different shelves.
+        /// Returns null if every shelf in the zone is occupied.
+        /// </summary>
+        public LaundryStoreClothesInteractable GetDeterministicLaundryStoreClothes(string zoneId, uint seed)
+        {
+            var col = GetZoneBounds(zoneId);
+            if (col == null) return null;
+
+            var b = col.bounds;
+            var all = FindObjectsOfType<LaundryStoreClothesInteractable>();
+            var inZone = new List<LaundryStoreClothesInteractable>();
+            foreach (var ls in all)
+            {
+                var p = ls.transform.position;
+                if (p.x >= b.min.x && p.x <= b.max.x && p.z >= b.min.z && p.z <= b.max.z)
+                    inZone.Add(ls);
+            }
+
+            if (inZone.Count == 0) return null;
+
+            inZone.Sort((a, b2) => {
+                int cmp = a.transform.position.x.CompareTo(b2.transform.position.x);
+                if (cmp == 0) cmp = a.transform.position.z.CompareTo(b2.transform.position.z);
+                return cmp;
+            });
+
+            int startIdx = (int)(seed % (uint)inZone.Count);
+            for (int i = 0; i < inZone.Count; i++)
+            {
+                int idx = (startIdx + i) % inZone.Count;
+                if (!inZone[idx].isOccupied) return inZone[idx];
+            }
+
+            return null;
+        }
 
         /// <summary>
         /// Generates a deterministic random point inside the requested zone's bounds using Mulberry32.

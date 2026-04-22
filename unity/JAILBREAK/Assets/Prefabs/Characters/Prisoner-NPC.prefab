@@ -233,6 +233,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3377414242959016314}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 270875628309322976}
   m_SourcePrefab: {fileID: 100100000, guid: 95f474a6999504cab8d278219818a844, type: 3}
 --- !u!1 &4896770664015057812 stripped
 GameObject:
@@ -469,6 +472,24 @@ MonoBehaviour:
   animBoolCarrying: isCarrying
   animTriggerPutDown: PutDown
   foldedDestroyDelay: 0.6
+--- !u!114 &270875628309322976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4896770664015057812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0492e4dc3533247e1b680acf3a80c214, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LaundryStoreClothesInteraction
+  animator: {fileID: 8499304390062826147}
+  navMeshAgent: {fileID: -5265632265596839312}
+  characterController: {fileID: 0}
+  animatorBoolName: isWorkingTable
+  animatorStateName: Working
+  idleStateName: Idle
 --- !u!4 &6233008144420507917 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1852576806548013000, guid: 95f474a6999504cab8d278219818a844, type: 3}

@@ -126,6 +126,9 @@ namespace Jailbreak.NPC
         // Washing machine reserved for the current load-washer step.
         private LaundryLoadWasherInteractable _reservedLaundryWasher;
 
+        // Shelf reserved for the current store-clothes step.
+        private LaundryStoreClothesInteractable _reservedLaundryStore;
+
         // ─── Emergent behavior state ──────────────────────────────────────────
         private bool   _isPlayingEmergent;
         private float  _emergentTimer;
@@ -510,6 +513,20 @@ namespace Jailbreak.NPC
                     }
                 }
 
+                if (!destination.HasValue && IsLaundryStoreClothesAction(step.actionId))
+                {
+                    var shelf = ReserveLaundryStore(step.zoneId, step.seed);
+                    if (shelf != null)
+                    {
+                        destination = ResolveLaundryStoreDestination(shelf);
+                        destSrc = "laundry_shelf";
+                    }
+                    else
+                    {
+                        destSrc = "laundry_shelf_all_busy_fallback";
+                    }
+                }
+
                 if (!destination.HasValue)
                 {
                     var point = zoneRegistry.GetDeterministicPoint(step.zoneId, step.seed);
@@ -600,6 +617,12 @@ namespace Jailbreak.NPC
                                              && _sequenceSteps[peekIndex].zoneId == _currentStepZoneId;
                 if (!nextIsWasherSameZone) StopLaundryWasherIfActive();
 
+                bool nextIsStoreSameZone = peekIndex < _sequenceSteps.Length
+                                             && IsLaundryStoreClothesAction(_sequenceSteps[peekIndex].actionId)
+                                             && !string.IsNullOrEmpty(_sequenceSteps[peekIndex].zoneId)
+                                             && _sequenceSteps[peekIndex].zoneId == _currentStepZoneId;
+                if (!nextIsStoreSameZone) StopLaundryStoreIfActive();
+
                 // CarryClothesInteraction's grab routine self-terminates when its
                 // own duration elapses (isSearching=false → bundle attached +
                 // isCarrying=true). Nothing to stop here. Release the pile slot
@@ -646,6 +669,7 @@ namespace Jailbreak.NPC
             StopWorkTableIfActive();
             StopInspectCabinetIfActive();
             StopLaundryWasherIfActive();
+            StopLaundryStoreIfActive();
             ReleaseLaundryGrabClothes();
         }
 
@@ -696,6 +720,7 @@ namespace Jailbreak.NPC
         {
             StopWorkTableIfActive();
             StopLaundryWasherIfActive();
+            StopLaundryStoreIfActive();
             ReleaseLaundryGrabClothes();
 
             _isLooping = false;
@@ -758,6 +783,13 @@ namespace Jailbreak.NPC
                 var washer = ReserveLaundryWasher(data.zoneId, data.seed);
                 if (washer != null) return ResolveLaundryWasherDestination(washer);
                 // No washer free → fall through to zone point lookups.
+            }
+
+            if (IsLaundryStoreClothesAction(data.actionId) && !string.IsNullOrEmpty(data.zoneId))
+            {
+                var shelf = ReserveLaundryStore(data.zoneId, data.seed);
+                if (shelf != null) return ResolveLaundryStoreDestination(shelf);
+                // No shelf free → fall through to zone point lookups.
             }
 
             if (data.seedChain != null && data.seedChain.Length > 0)
@@ -832,6 +864,11 @@ namespace Jailbreak.NPC
         private bool IsLaundryLoadWasherAction(string actionId)
         {
             return actionId == "laundry_load_washer";
+        }
+
+        private bool IsLaundryStoreClothesAction(string actionId)
+        {
+            return actionId == "laundry_store_clothes";
         }
 
         // Desks use the ProgressPointAction.actionPoint as the stand-at spot.
@@ -953,6 +990,24 @@ namespace Jailbreak.NPC
                 }
 
                 Debug.Log($"[NPC-CTRL] {name} all washers in '{zoneId}' occupied — falling back to look_around");
+                PlayAnimation("look_around");
+                return;
+            }
+
+            if (IsLaundryStoreClothesAction(actionId) && !string.IsNullOrEmpty(zoneId) && zoneRegistry != null)
+            {
+                var shelf = _reservedLaundryStore ?? ReserveLaundryStore(zoneId, seed);
+                if (shelf != null)
+                {
+                    var pp = shelf.GetComponent<ProgressPointAction>();
+                    var anchor = (pp != null && pp.actionPoint != null) ? pp.actionPoint : shelf.transform;
+
+                    var store = EnsureLaundryStoreClothesInteraction();
+                    store.TryStartWork(anchor);
+                    return;
+                }
+
+                Debug.Log($"[NPC-CTRL] {name} all shelves in '{zoneId}' occupied — falling back to look_around");
                 PlayAnimation("look_around");
                 return;
             }
@@ -1205,6 +1260,60 @@ namespace Jailbreak.NPC
             return anchor.position;
         }
 
+        // ─── Laundry Store Clothes Setup ─────────────────────────────────────
+
+        private LaundryStoreClothesInteraction EnsureLaundryStoreClothesInteraction()
+        {
+            var store = GetComponent<LaundryStoreClothesInteraction>();
+            if (store == null)
+                store = gameObject.AddComponent<LaundryStoreClothesInteraction>();
+
+            if (store.animator == null)     store.animator     = animator;
+            if (store.navMeshAgent == null) store.navMeshAgent = agent;
+
+            // Ensure CarryFoldedClothesInteraction exists so StopWork can ForceReset it
+            EnsureCarryFoldedClothesInteraction();
+
+            return store;
+        }
+
+        private void StopLaundryStoreIfActive()
+        {
+            if (TryGetComponent<LaundryStoreClothesInteraction>(out var store) && store.IsWorking)
+                store.TryStopWork();
+
+            ReleaseLaundryStore();
+        }
+
+        private LaundryStoreClothesInteractable ReserveLaundryStore(string zoneId, uint seed)
+        {
+            if (_reservedLaundryStore != null) return _reservedLaundryStore;
+            if (zoneRegistry == null) return null;
+
+            var shelf = zoneRegistry.GetDeterministicLaundryStoreClothes(zoneId, seed);
+            if (shelf == null) return null;
+
+            shelf.isOccupied = true;
+            _reservedLaundryStore = shelf;
+            return shelf;
+        }
+
+        private void ReleaseLaundryStore()
+        {
+            if (_reservedLaundryStore != null)
+            {
+                _reservedLaundryStore.isOccupied = false;
+                _reservedLaundryStore = null;
+            }
+        }
+
+        private Vector3 ResolveLaundryStoreDestination(LaundryStoreClothesInteractable shelf)
+        {
+            var pp = shelf.GetComponent<ProgressPointAction>();
+            var anchor = (pp != null && pp.actionPoint != null) ? pp.actionPoint : shelf.transform;
+            return anchor.position;
+        }
+
         // ─── Clothes Carry Setup ─────────────────────────────────────────────
         // Auto-add a CarryClothesInteraction to the NPC the first time it grabs
         // a bundle, mirroring the food-carry on-demand setup. The clothes visual
@@ -1266,6 +1375,7 @@ namespace Jailbreak.NPC
             ReleaseInspectCabinet();
             ReleaseLaundryGrabClothes();
             ReleaseLaundryWasher();
+            ReleaseLaundryStore();
         }
 
         // ─── Food Carry Setup ──────────────────────────────────────────────────
