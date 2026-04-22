@@ -129,6 +129,15 @@ namespace Jailbreak.Player
                 return;
             }
 
+            // ── Laundry store-clothes start/stop/store ──────────────────────
+            var laundryStore = ni.GetComponent<LaundryStoreClothesInteractable>();
+            if (laundryStore != null)
+            {
+                laundryStore.ApplyRemote(transform, carryFoldedClothesInteraction, data.action);
+                Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
+                return;
+            }
+
             // ── Future interaction types: add branches here ──────────────────
 
             Debug.LogWarning($"[RemoteInteract] No handler for action '{data.action}' " +

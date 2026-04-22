@@ -278,15 +278,18 @@ export function handlePlayerAction(context: PlayerActionContext): void {
     player.carrying = 'clothes_bundle'
   } else if (action === 'leaveClothes') {
     player.carrying = null
-  } else if (action === 'startLoadWasher' || action === 'loadWasher') {
-    // Player put the clothes into the washer — clear the carrying state
-    // so player:state ticks stop reporting clothes_bundle.
-    // startLoadWasher: clothes visually removed at loop start.
-    // loadWasher:      loop completed — folded clothes now attached instead.
+  } else if (action === 'startLoadWasher') {
+    // Player put clothes into the washer — nothing in hand during the loop.
     player.carrying = null
   } else if (action === 'stopLoadWasher') {
     // Player cancelled mid-loop — the unfolded bundle is restored to hand.
     player.carrying = 'clothes_bundle'
+  } else if (action === 'loadWasher') {
+    // Washer completed — folded clothes now in hand.
+    player.carrying = 'folded_clothes'
+  } else if (action === 'storeClothes') {
+    // Player stored the folded clothes on the shelf — nothing in hand.
+    player.carrying = null
   }
 
   io.to(roomId).except(socketId).emit('player:action', {

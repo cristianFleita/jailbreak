@@ -290,11 +290,12 @@ namespace Jailbreak.Network
         // item type, so passing the same string to both is safe.
         private CarryFoodInteraction    _localCarry;
         private CarryClothesInteraction _localCarryClothes;
+        private CarryFoldedClothesInteraction _localCarryFolded;
 
         /// <summary>
         /// Applies the authoritative `carrying` value to the local player so
-        /// visual props (plate, clothes bundle) survive player:state churn
-        /// and F5 reconnects.
+        /// visual props (plate, clothes bundle, folded clothes) survive
+        /// player:state churn and F5 reconnects.
         /// </summary>
         private void SyncLocalCarrying(string serverCarrying)
         {
@@ -333,8 +334,27 @@ namespace Jailbreak.Network
                 }
             }
 
+            if (_localCarryFolded == null)
+            {
+#if UNITY_2023_1_OR_NEWER
+                var allFolded = Object.FindObjectsByType<CarryFoldedClothesInteraction>(FindObjectsSortMode.None);
+#else
+                var allFolded = Object.FindObjectsOfType<CarryFoldedClothesInteraction>();
+#endif
+                foreach (var c in allFolded)
+                {
+                    if (c.GetComponent<InteractionManager>() != null
+                        || c.transform.root.GetComponentInChildren<InteractionManager>() != null)
+                    {
+                        _localCarryFolded = c;
+                        break;
+                    }
+                }
+            }
+
             if (_localCarry != null)        _localCarry.SyncFromServer(serverCarrying);
             if (_localCarryClothes != null) _localCarryClothes.SyncFromServer(serverCarrying);
+            if (_localCarryFolded != null)  _localCarryFolded.SyncFromServer(serverCarrying);
         }
 
         private void SyncPlayerList(PlayerStateData[] incoming)

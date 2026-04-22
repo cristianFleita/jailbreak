@@ -1174,6 +1174,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1317276641}
     m_Modifications:
+    - target: {fileID: 390753163174783718, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 8634597190986787827, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
       propertyPath: m_Name
       value: LinenShelf (1)
@@ -12290,6 +12294,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1317276641}
     m_Modifications:
+    - target: {fileID: 390753163174783718, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 8634597190986787827, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
       propertyPath: m_Name
       value: LinenShelf (5)
@@ -17243,68 +17251,6 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
   m_PrefabInstance: {fileID: 889516527}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &890302522
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1317276641}
-    m_Modifications:
-    - target: {fileID: 8634597190986787827, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_Name
-      value: LinenShelf
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.460001
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.93
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -5.84
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
---- !u!4 &890302523 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-  m_PrefabInstance: {fileID: 890302522}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &895156834
 GameObject:
@@ -22742,6 +22688,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1317276641}
     m_Modifications:
+    - target: {fileID: 390753163174783718, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 8634597190986787827, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
       propertyPath: m_Name
       value: LinenShelf (4)
@@ -23726,68 +23676,6 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
   m_PrefabInstance: {fileID: 1197139846}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &1197668046
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1317276641}
-    m_Modifications:
-    - target: {fileID: 8634597190986787827, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_Name
-      value: LinenShelf (2)
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 4.119999
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 5.92
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
---- !u!4 &1197668047 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8980055375800316233, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
-  m_PrefabInstance: {fileID: 1197668046}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1199754261
 PrefabInstance:
@@ -25788,12 +25676,10 @@ Transform:
   - {fileID: 1202818930}
   - {fileID: 958629551}
   - {fileID: 1523416155}
-  - {fileID: 890302523}
   - {fileID: 53416659}
   - {fileID: 1403738864}
   - {fileID: 1148549355}
   - {fileID: 609373047}
-  - {fileID: 1197668047}
   - {fileID: 106050425}
   - {fileID: 1187303543}
   - {fileID: 1952642611}
@@ -27587,6 +27473,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1317276641}
     m_Modifications:
+    - target: {fileID: 390753163174783718, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     - target: {fileID: 8634597190986787827, guid: 50509a80a79654bbe8840d76617fcc93, type: 3}
       propertyPath: m_Name
       value: LinenShelf (3)
