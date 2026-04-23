@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2916847795313606520
+--- !u!1 &1445953495349588205
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,64 +8,41 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 171179030621861404}
-  - component: {fileID: 2089052260233778862}
-  - component: {fileID: 7144459110269872923}
-  - component: {fileID: 4688391173239418628}
+  - component: {fileID: 1592382471611324964}
+  - component: {fileID: 5946648880955372419}
+  - component: {fileID: 6138300590937021926}
+  - component: {fileID: 6977178797847773460}
+  - component: {fileID: 5576066832628821850}
+  - component: {fileID: 5609489466222367356}
   m_Layer: 6
-  m_Name: interactable
+  m_Name: Interact
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
---- !u!4 &171179030621861404
+--- !u!4 &1592382471611324964
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2916847795313606520}
+  m_GameObject: {fileID: 1445953495349588205}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: 0.7071068, z: 0.7071068, w: 0}
+  m_LocalPosition: {x: 0, y: -0.00517, z: -0}
+  m_LocalScale: {x: 0.49999988, y: 0.49999985, z: 0.49999985}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1400375666952812337}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2089052260233778862
-MonoBehaviour:
+  m_LocalEulerAnglesHint: {x: -90, y: 90, z: 90}
+--- !u!135 &5946648880955372419
+SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2916847795313606520}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b4a6e0a11cce4f4aa8baa6a0d5a1b11a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NetworkInteractable
-  networkId: 
---- !u!114 &7144459110269872923
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2916847795313606520}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 597e1a109d99442d4b42eea040f852c4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FoodCounterInteractable
---- !u!65 &4688391173239418628
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2916847795313606520}
+  m_GameObject: {fileID: 1445953495349588205}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -78,8 +55,67 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.018477615, y: 0.0026261555, z: 0.0060689943}
-  m_Center: {x: 0.0003685037, y: -0.0027594238, z: -0.000054838063}
+  m_Radius: 0.008
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &6138300590937021926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1445953495349588205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c447f42c2e7f4f2ca7d001c974060b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProgressAction
+  animatorBoolName: isWorkingTable
+  duration: 5
+  resetOnStop: 0
+  onComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  progress: 0
+--- !u!114 &6977178797847773460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1445953495349588205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 562f8f9128ac847ae9ca6eca4cc2b2d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorkTableAction
+  actionPoint: {fileID: 1592382471611324964}
+--- !u!114 &5576066832628821850
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1445953495349588205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4a6e0a11cce4f4aa8baa6a0d5a1b11a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkInteractable
+  networkId: 
+--- !u!114 &5609489466222367356
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1445953495349588205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 597e1a109d99442d4b42eea040f852c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FoodCounterInteractable
+  progressBar: {fileID: 0}
+  progressLabel: Taking food...
 --- !u!1001 &1505780360786464986
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -161,7 +197,7 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 513d97144f8bd45cdadcb1d339fcbe64, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 171179030621861404}
+      addedObject: {fileID: 1592382471611324964}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 513d97144f8bd45cdadcb1d339fcbe64, type: 3}
       insertIndex: -1

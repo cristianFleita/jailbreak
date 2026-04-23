@@ -290,6 +290,12 @@ mergeInto(LibraryManager.library, {
       window._jbSocket.emit('riot:activate');
   },
 
+  SocketSendNPCSyncState: function(jsonPtr) {
+    var json = UTF8ToString(jsonPtr);
+    if (window._jbSocket && window._jbSocket.connected)
+      window._jbSocket.emit('npc:sync_state', json);
+  },
+
   SocketDisconnect: function() {
     if (window._jbSocket) {
       window._jbSocket.disconnect();

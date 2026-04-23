@@ -53,6 +53,8 @@ public class CarryFoodInteraction : MonoBehaviour
     /// <summary>True while the one-shot pick-up animation is playing (between trigger fire and plate attach).</summary>
     public bool IsPickingUp => pickUpRoutine != null;
 
+    [System.NonSerialized] public bool SuppressSync;
+
     // Optional — null on remote avatars.
     private Animator animator;
     private GameObject plateInstance;
@@ -99,6 +101,7 @@ public class CarryFoodInteraction : MonoBehaviour
     /// </summary>
     public void SyncFromServer(string serverCarryingId)
     {
+        if (SuppressSync) return;
         bool isFood = serverCarryingId == FoodPlateId;
         if (isFood && !IsCarrying)       ApplyPickUp(FoodPlateId, playAnimation: false);
         else if (!isFood && IsCarrying)  ApplyDrop(playAnimation: false);

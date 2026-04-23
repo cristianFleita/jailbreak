@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 
 const BUILD_PATH = "/unity-build/Build";
 const LOADER_FILE = `${BUILD_PATH}/unity-build.loader.js`;
-const DATA_FILE = `${BUILD_PATH}/unity-build.data`;
-const FRAMEWORK_FILE = `${BUILD_PATH}/unity-build.framework.js`;
-const WASM_FILE = `${BUILD_PATH}/unity-build.wasm`;
+const DATA_FILE = `${BUILD_PATH}/unity-build.data.unityweb`;
+const FRAMEWORK_FILE = `${BUILD_PATH}/unity-build.framework.js.unityweb`;
+const WASM_FILE = `${BUILD_PATH}/unity-build.wasm.unityweb`;
 
 declare global {
   interface Window {

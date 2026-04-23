@@ -1,10 +1,11 @@
+using System.Collections;
 using Jailbreak.Network;
 using UnityEngine;
 
 /// <summary>
 /// The cafeteria sink. When a prisoner carrying a food plate presses E next
-/// to it, they drop the plate: the held prop is destroyed and the player
-/// returns to non-carrying animations.
+/// to it, they begin a progress interaction. Once completed, they drop the plate:
+/// the held prop is destroyed and the player returns to non-carrying animations.
 ///
 /// Mirrors <see cref="FoodCounterInteractable"/> — inverse gating: this
 /// interactable is only available while the local player IS carrying.
@@ -12,70 +13,151 @@ using UnityEngine;
 /// Broadcasts via <see cref="NetworkInteractable"/> so remote clients
 /// replay the put-down animation on this player's avatar.
 /// </summary>
+[RequireComponent(typeof(ProgressPointAction))]
 [RequireComponent(typeof(NetworkInteractable))]
 public class SinkInteractable : MonoBehaviour, IInteractable
 {
+    [Header("UI")]
+    public ProgressBar progressBar;
+    public string progressLabel = "Leaving food...";
+
+    [System.NonSerialized] public bool isOccupied;
+
     public KeyCode InteractKey => KeyCode.E;
-    public int Priority        => 10;
+    public string ActionLabel => isActive ? "Stop" : "Leave food";
+    public int Priority => 10;
     public Transform Transform => transform;
+    public string[] AllowedInStates => new[] { ActiveState };
 
-    /// <summary>Null = universally available (not gated by state tags).</summary>
-    public string[] AllowedInStates => null;
-
-    public string ActionLabel => "Leave food";
-
-    /// <summary>Only available when the local player is currently carrying a plate.</summary>
     public bool CanInteract
     {
         get
         {
+            if (isActive) return true;
             var carry = FindLocalCarryFood();
             if (carry == null) return false;
             return carry.IsCarrying;
         }
     }
 
+    public const string ActionStartLeaveFood = "startLeaveFood";
+    public const string ActionStopLeaveFood = "stopLeaveFood";
     public const string ActionLeaveFood = "leaveFood";
 
+    private bool isActive;
+    private ProgressPointAction progressPointAction;
     private NetworkInteractable networkInteractable;
     private CarryFoodInteraction cachedLocalCarry;
-
+    
+    const string ActiveState = "LeavingFood";
+    
     void Awake()
     {
+        progressPointAction = GetComponent<ProgressPointAction>();
         networkInteractable = GetComponent<NetworkInteractable>();
     }
 
-    // ─── Interaction entry points ────────────────────────────────────────────
-
-    /// <summary>Called by InteractionManager on the local player.</summary>
     public void OnInteract(Collider source)
     {
-        CarryFoodInteraction carry = source.GetComponentInParent<CarryFoodInteraction>();
-        if (carry == null)
+        var root = source.transform.root;
+        var animator = root.GetComponentInChildren<Animator>();
+        var cc = root.GetComponentInChildren<CharacterController>();
+        var manager = root.GetComponentInChildren<InteractionManager>();
+        var carry = root.GetComponentInChildren<CarryFoodInteraction>();
+
+        if (animator == null) return;
+        
+        if (!isActive)
         {
-            Debug.LogWarning("[Sink] Interactor has no CarryFoodInteraction — ignoring.");
-            return;
+            if (carry == null || !carry.IsCarrying) return;
         }
-        if (!carry.IsCarrying) return; // guard against double-press races
 
-        carry.TryDrop();
-        Broadcast(ActionLeaveFood);
+        if (!isActive)
+            StartCoroutine(PlayerRoutine(animator, cc, manager, root, carry));
+        else
+            progressPointAction.Stop();
     }
 
-    /// <summary>Replays the action on a remote avatar (called by RemoteInteractionHandler).</summary>
-    public void ApplyRemote(CarryFoodInteraction carry, string action)
+    IEnumerator PlayerRoutine(Animator animator, CharacterController cc, InteractionManager manager, Transform player, CarryFoodInteraction carry)
     {
-        if (carry == null) return;
+        isActive = true;
+        cc.enabled = false;
+        manager.PushState(ActiveState);
+        progressBar?.Show(progressLabel, progressPointAction.ProgressAction.progress);
+        
+        Broadcast(ActionStartLeaveFood);
 
-        if (action == ActionLeaveFood) carry.TryDrop();
+        yield return progressPointAction.Execute(animator, player, onStop: () =>
+        {
+            bool completed = progressPointAction.ProgressAction.IsComplete;
+            isActive = false;
+            cc.enabled = true;
+            manager.PopState(ActiveState);
+            progressBar?.Hide();
+
+            if (completed)
+            {
+                Broadcast(ActionLeaveFood);
+                if (carry != null && carry.IsCarrying)
+                {
+                    carry.SuppressSync = true;
+                    // We don't want a drop animation after a progress bar loop!
+                    carry.ForceReset();
+                    StartCoroutine(DelayedUnsuppressSync(carry));
+                }
+                progressPointAction.ProgressAction.progress = 0f;
+            }
+            else
+            {
+                Broadcast(ActionStopLeaveFood);
+            }
+        });
     }
 
-    // ─── Helpers ─────────────────────────────────────────────────────────────
+    void Update()
+    {
+        if (!isActive) return;
+        progressBar?.UpdateProgress(progressPointAction.ProgressAction.progress);
+    }
+    
+    public void ApplyRemote(Transform remoteRoot, CarryFoodInteraction carry, string action)
+    {
+        if (remoteRoot == null) return;
+        var animator = remoteRoot.GetComponentInChildren<Animator>();
+        if (animator == null) return;
 
-    /// <summary>
-    /// Locate the local player's CarryFoodInteraction once. Cached so we don't
-    /// FindObjectOfType per frame from CanInteract.
-    /// </summary>
+        string boolName = progressPointAction.ProgressAction.animatorBoolName;
+        var sync = remoteRoot.GetComponent<Jailbreak.Player.RemotePlayerSync>();
+
+        if (action == ActionStartLeaveFood)
+        {
+            if (progressPointAction.actionPoint != null)
+            {
+                remoteRoot.position = new Vector3(progressPointAction.actionPoint.position.x, remoteRoot.position.y, progressPointAction.actionPoint.position.z);
+                remoteRoot.rotation = progressPointAction.actionPoint.rotation;
+            }
+            if (sync != null) sync.enabled = false;
+            if (!string.IsNullOrEmpty(boolName)) animator.SetBool(boolName, true);
+        }
+        else if (action == ActionStopLeaveFood)
+        {
+            if (!string.IsNullOrEmpty(boolName)) animator.SetBool(boolName, false);
+            if (sync != null) sync.enabled = true;
+        }
+        else if (action == ActionLeaveFood)
+        {
+            if (!string.IsNullOrEmpty(boolName)) animator.SetBool(boolName, false);
+            if (sync != null) sync.enabled = true;
+            if (carry != null && carry.IsCarrying) carry.ForceReset();
+        }
+    }
+
+    IEnumerator DelayedUnsuppressSync(CarryFoodInteraction carry)
+    {
+        yield return new WaitForSeconds(0.5f);
+        if (carry != null) carry.SuppressSync = false;
+    }
+
     CarryFoodInteraction FindLocalCarryFood()
     {
         if (cachedLocalCarry != null) return cachedLocalCarry;
@@ -87,8 +169,7 @@ public class SinkInteractable : MonoBehaviour, IInteractable
 #endif
         foreach (var c in all)
         {
-            // Local player is the one with an InteractionManager (remotes get it stripped).
-            if (c.GetComponent<InteractionManager>() != null)
+            if (c.GetComponentInChildren<InteractionManager>() != null || c.transform.root.GetComponentInChildren<InteractionManager>() != null)
             {
                 cachedLocalCarry = c;
                 return c;

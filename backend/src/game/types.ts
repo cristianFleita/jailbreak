@@ -69,6 +69,8 @@ export interface NPCState {
   animState: 'idle' | 'walking' | 'chasing' | 'searching'
   lastBroadcastPosition: Vector3 // for delta compression
   spawnWaypointId?: string // e.g. "cell_door_exit_07" — Unity resolves to world position
+  currentSequenceIndex?: number // fast-forward index for F5 reconnect
+  currentActionId?: string      // action name currently executing
 }
 
 // ============================================================================
@@ -143,6 +145,18 @@ export interface GuardMarkPayload {
 
 export interface RiotActivatePayload {
   prisonerId: string
+}
+
+export interface NPCStateSync {
+  npcId: string
+  position: Vector3
+  rotation: Rotation
+  currentSequenceIndex: number
+  currentActionId: string
+}
+
+export interface NPCSyncStatePayload {
+  npcs: NPCStateSync[]
 }
 
 // ============================================================================
