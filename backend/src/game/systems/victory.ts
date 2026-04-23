@@ -10,6 +10,7 @@
 import { GameRoomState } from '../types.js'
 import { EscapeRouteSystem } from './escape-routes.js'
 import { PhaseSystem } from './phases.js'
+import { PenaltySystem } from './penalties.js'
 
 export interface VictoryResult {
   winner: 'prisoners' | 'guards' | null
@@ -20,7 +21,8 @@ export class VictoryConditionSystem {
   constructor(
     private state: GameRoomState,
     private escapeSystem: EscapeRouteSystem,
-    private phaseSystem: PhaseSystem
+    private phaseSystem: PhaseSystem,
+    private penaltySystem: PenaltySystem
   ) {}
 
   /**
@@ -28,6 +30,11 @@ export class VictoryConditionSystem {
    * Called every tick.
    */
   checkVictoryConditions(): VictoryResult {
+    // Check if guard has too many errors (3 errors)
+    if (this.penaltySystem.isRiotAvailable()) {
+      return { winner: 'prisoners', reason: 'guard_too_many_errors' }
+    }
+
     // Check guards win: all prisoners dead/caught
     const allPrisonersCaught = this.checkAllPrisonersCaught()
     if (allPrisonersCaught) {

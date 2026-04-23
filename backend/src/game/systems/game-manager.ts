@@ -38,7 +38,7 @@ export class GameManager {
     this.inventory = new InventorySystem(state)
     this.escapeRoutes = new EscapeRouteSystem(state)
     this.phases = new PhaseSystem(state)
-    this.victory = new VictoryConditionSystem(state, this.escapeRoutes, this.phases)
+    this.victory = new VictoryConditionSystem(state, this.escapeRoutes, this.phases, this.penalty)
     this.jailRoutine = new JailRoutineSystem(state)
 
     console.log('[GAME-MANAGER] Initialized all systems')
@@ -108,11 +108,15 @@ export class GameManager {
   }
 
   /**
-   * Called when guard catches a prisoner (via guard:catch event).
-   * Ends pursuit.
+   * Called when guard catches a prisoner or NPC (via guard:catch event).
+   * Ends pursuit or records penalty.
    */
-  onGuardCatch(prisonerPlayerId: string): void {
-    this.pursuit.endPursuit(prisonerPlayerId, 'caught')
+  onGuardCatch(guardPlayerId: string, targetId: string, isPlayer: boolean): void {
+    if (isPlayer) {
+      this.pursuit.endPursuit(targetId, 'caught')
+    } else {
+      this.penalty.recordGuardError(guardPlayerId, 'false_catch')
+    }
   }
 
   /**

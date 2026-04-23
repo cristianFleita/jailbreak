@@ -174,6 +174,11 @@ namespace Jailbreak.NPC
 
             go.name = $"NPC_{data.id}_{data.type}";
 
+            var identity = go.GetComponent<NPCIdentity>();
+            if (identity == null) identity = go.AddComponent<NPCIdentity>();
+            identity.NpcId = data.id;
+            identity.NpcType = data.type;
+
             _npcs[data.id] = go.transform;
             _npcTargets[data.id] = data.position.ToUnity();
 
