@@ -42,3 +42,31 @@ Implement state sync as **authoritative server** with **client-side prediction**
 ---
 
 ## (More decisions to be added as they're made...)
+
+## ADR-002: Ruta 1 Ventilacion Industrial — MVP Cooperativo con HUD Compartido
+
+**Status**: Designed
+**Date**: 2026-04-23
+
+### Decision
+
+Implementar la primera ruta de escape como una ruta cooperativa de ventilacion con:
+- Inventario de presos de 2 slots.
+- Pinzas y llave inglesa pesada como herramientas criticas; la llave ocupa 1 slot y aplica -5% velocidad.
+- Plano electrico en Oficina del Guardia que revela el fusible correcto a todos los presos, no al guardia.
+- Progreso compartido de Ruta 1 en HUD solo para presos.
+- Guardia informado solo por senales observables del mundo: ventilador detenido, apagones, rechinido y reja abierta.
+- Dos spawns posibles por herramienta critica y respawn backup anti-softlock.
+- Segundo preso acelera la rejilla en MVP; reduccion de ruido y QTEs quedan para post-MVP polish.
+
+### Why
+
+La ruta necesita comunicar progreso cooperativo sin depender de voz externa ni revelar informacion injusta al guardia. El HUD compartido mantiene a los presos coordinados; las senales ambientales mantienen la asimetria y le dan al guardia formas justas de deducir que la fuga esta avanzando.
+
+### Implications
+
+- Backend debe modelar estado de ruta por pasos, no solo "items collected".
+- Unity HUD de presos necesita un tracker compacto de Ruta 1.
+- Eventos de progreso deben filtrar informacion por rol.
+- Sistema de inventario debe respetar 2 slots para presos en gameplay.
+- Implementacion MVP evita QTEs y reduccion dinamica de ruido para reducir scope de game jam.

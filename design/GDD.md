@@ -253,15 +253,20 @@ Además, el ~40% de los NPCs toma un **desvío por pasillo** antes de llegar a s
 
 > **Tipo:** Cooperativa (2–3 jugadores recomendados)  
 > **Zonas clave:** Taller, Sala de Electricidad, Oficina del Guardia  
+> **Spec técnica:** `design/gdd/ruta-1-ventilacion-industrial.md`
 
 **Concepto:** El conducto de ventilación del Taller es lo suficientemente grande para escapar, pero está bloqueado por una pesada rejilla atornillada y un ventilador industrial mortal que está encendido. Los presos deben encontrar las herramientas, identificar y cortar el suministro eléctrico correcto en la otra punta de la prisión, y desatornillar la reja haciendo el menor ruido posible.
+
+**Objetivo MVP:** implementar una ruta cooperativa completa, sincronizada y robusta contra softlocks. La reducción de ruido por cooperación queda como polish; para el MVP, el segundo preso solo acelera la barra de la rejilla.
 
 **Fase 1 — Recolección de herramientas:**
 
 | Objeto | Ubicación | Mecánica | Efecto en inventario |
 |--------|-----------|----------|---------------------|
-| **Pinzas (cizallas)** | Taller — banco de trabajo o cajón (spawn aleatorio) | Interacción rápida (3 seg) | Ocupa 1 slot |
-| **Llave inglesa pesada** | Sala de Electricidad — tablero de herramientas o caja (spawn aleatorio) | Interacción rápida (3 seg) | Ocupa 1 slot. **Preso camina 5% más lento** mientras la lleva |
+| **Pinzas (cizallas)** | Taller — banco de trabajo o cajón | Interacción rápida (3 seg) | Ocupa 1 slot |
+| **Llave inglesa pesada** | Sala de Electricidad — tablero de herramientas o caja | Interacción rápida (3 seg) | Ocupa 1 slot. **Preso camina 5% más lento** mientras la lleva |
+
+**Regla anti-softlock:** cada herramienta crítica tiene 2 spawns posibles: 1 principal y 1 backup. Solo puede existir 1 copia activa de cada herramienta por partida. Si la herramienta queda en el suelo durante demasiado tiempo o en una posición inválida, reaparece en su spawn backup. Si un preso es capturado, sus objetos caen al suelo y pueden ser recuperados por otros presos.
 
 **Fase 2 — Sabotaje eléctrico (puzzle de tensión):**
 
@@ -269,23 +274,18 @@ Un preso debe ir a la Sala de Electricidad con las **Pinzas** para cortar el cab
 
 - **El problema:** Hay un servidor eléctrico con 4 cajas de fusibles (cables gruesos) etiquetadas 1, 2, 3 y 4. Solo una apaga el ventilador del Taller.
 - **La pista (plano eléctrico):** La información de qué fusible apaga el Taller está oculta en la **Oficina del Guardia**. El preso debe infiltrarse e interactuar con archivadores/cajones para encontrarla (el mueble exacto cambia aleatoriamente en cada partida). Interacción de **1 seg** — es un "hit and run" táctico.
-- **Mecánica de corte (DbD style):**
-  - El preso interactúa con el cable correcto usando las Pinzas.
-  - **Barra de progreso:** 15 seg netos.
-  - **QTEs (Skill Checks):** Aparecen círculos de timing en pantalla.
-    - **Acierto perfecto:** +5% de progreso bonus.
-    - **Fallo:** Descarga eléctrica. Animación interrumpida (stun 2 seg), pierde 10% de progreso, suena un **CHISPAZO** audible a 15m (alerta al guardia).
-- **Riesgo de equivocarse:** Si corta el cable equivocado (ej. el de las celdas o el comedor), el ventilador **NO** se apaga. En su lugar, se apagan las luces de esa otra zona, generando pánico en los NPCs y dándole al guardia una alerta exacta de sabotaje en la Sala de Electricidad.
+- Al leer el plano, todos los presos reciben el dato compartido: **"Taller = Fusible N"**. El guardia no recibe esta información.
+- El preso interactúa con el cable correcto usando las Pinzas. Si corta un fusible incorrecto, se genera un apagón breve en otra zona y una señal de alerta ambiental para el guardia.
+- **Barra de progreso:** 15 seg netos.
 
 **Fase 3 — Fuerza bruta silenciosa (desatornillar la rejilla):**
 
 Con el ventilador apagado (las aspas se detienen, el ruido de fondo del Taller cesa), los presos van a la rejilla con la **Llave Inglesa Pesada**.
 
-- **Mecánica de fuerza (DbD style):**
-  - Barra de progreso: **25 seg** para 1 solo jugador.
-  - Animación: El personaje hace fuerza con todo el cuerpo. Rechinido de metal constante.
-  - **QTEs:** Si falla, la llave se zafa y golpea la rejilla. Suena un **¡CLANG!** audible a 25m y la barra retrocede **15%**.
-- **Cooperación (acelerador):** Si un segundo preso se acerca a la rejilla sin objetos e interactúa, entra en animación de "sostener la reja y amortiguar el ruido". Esto **acelera el progreso 50%** (baja a ~12 seg) y **reduce la frecuencia** de los QTEs.
+- Barra de progreso: **25 seg** para 1 solo jugador.
+- Animación: El personaje hace fuerza con todo el cuerpo. Rechinido de metal constante.
+- **Cooperación (acelerador MVP):** Si un segundo preso se acerca a la rejilla e interactúa, entra en animación de "sostener la reja". Esto **acelera el progreso 50%** (baja a ~12 seg).
+- **Polish post-MVP:** el segundo preso también amortigua el ruido para reducir la distancia audible del rechinido.
 - **Interrupción:** Si el guardia se acerca, pueden soltar la interacción al instante. La barra de progreso decae lentamente **(-1%/seg)** mientras nadie trabaja.
 
 **Fase 4 — La fuga (ventana de vulnerabilidad):**
@@ -296,11 +296,24 @@ Una vez la barra llega a 100%, la reja cae al piso (ruido moderado).
 - **Duración:** 4 seg de animación ininterrumpible.
 - **Peligro final:** Durante estos 4 seg la hitbox del preso sigue en la sala. Si el guardia entra en ese preciso instante, puede atraparlo de las piernas y sacarlo del conducto. Una vez terminada la animación, el preso es inmune, desaparece y **gana**.
 
+**Comunicación cooperativa y HUD de presos:**
+
+Los presos comparten un progreso discreto de Ruta 1 para evitar depender de voz externa o adivinanzas. Este HUD no revela identidades ni posiciones exactas.
+
+| Estado | HUD presos | Señal de mundo | Visible para guardia |
+|--------|------------|----------------|----------------------|
+| Plano no encontrado | `Ruta 1: Plano ?` | Ninguna | No |
+| Plano leído | `Fusible Taller: N` | Breve papel/ícono en inventario mental compartido | No |
+| Ventilador activo | `Ventilador: ON` | Ventilador girando + ruido constante en Taller | Sí, si está cerca o por cámara |
+| Ventilador apagado | `Ventilador: OFF` | Aspas detenidas + cesa ruido de fondo | Sí, si lo percibe |
+| Rejilla en progreso | Barra `Rejilla: X%` | Rejilla visualmente suelta + rechinido local | Sí, si inspecciona o escucha cerca |
+| Rejilla abierta | `Conducto abierto` | Reja caída, hueco interactuable | Sí, si ve la zona |
+
 **Flujo ideal de ejemplo:**
 
 1. **Preso A** se infiltra en la Oficina del Guardia, revisa un archivador (1s) → descubre: "Taller = Fusible 3". Luego, en fase de Trabajo, roba las Pinzas en el Taller.
 2. **Preso B** roba la Llave Inglesa en la Sala de Electricidad durante Hora libre (aprovechando que hay tráfico de NPCs moviéndose entre zonas).
-3. **Preso A** se cuela en la Sala de Electricidad, corta el Fusible 3, completa QTEs → apaga el ventilador.
+3. **Preso A** se cuela en la Sala de Electricidad, corta el Fusible 3 → apaga el ventilador.
 4. Ambos se reúnen en el Taller (ej. durante Hora libre, aprovechando que está más vacío). B desatornilla la rejilla mientras A sostiene. Completan la barra y escapan.
 
 **Contramedidas del guardia:**
@@ -342,7 +355,7 @@ Los presos preparan un dummy para cubrir la ausencia de uno de ellos, sobornan a
 | **Tipo** | Cooperativa (2–3 presos) | Individual (1 preso) | Cooperativa (3 presos) |
 | **Objetos** | 2 + pista | 3 | 3 |
 | **Cuándo se puede escapar** | Cualquier fase | Luces apagadas | Cena |
-| **Mayor riesgo** | QTEs ruidosos + infiltrar Oficina | Gestión de inventario (3 objetos, 2 slots) | Robar horario de oficina + inspección del catre |
+| **Mayor riesgo** | Infiltrar Oficina + ruido de sabotaje/rejilla | Gestión de inventario (3 objetos, 2 slots) | Robar horario de oficina + inspección del catre |
 | **Escapa** | Todos los presos en la rejilla | Solo 1 preso | Solo 1 preso (los otros cubren) |
 | **Contramedida del guardia** | Ruido de ventilador cesa + CLANG audible | Escuchar excavación / ver tierra en el patio | Inspeccionar catre de cerca / revisar el carro |
 
@@ -488,14 +501,15 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 ```
 Oficina guardia (leer plano eléctrico, 1s) → descubrir qué fusible apaga el Taller
 Taller (robar pinzas, 3s) + Sala de electricidad (robar llave inglesa, 3s) →
-Sala de electricidad (cortar fusible correcto con pinzas, 15s + QTEs) → ventilador se apaga →
-Taller (desatornillar rejilla con llave inglesa, 25s solo / 12s cooperativo + QTEs) →
+Sala de electricidad (cortar fusible correcto con pinzas, 15s) → ventilador se apaga →
+Taller (desatornillar rejilla con llave inglesa, 25s solo / 12s cooperativo) →
 Taller (trepar al conducto, 4s animación) → Exterior
 ```
 - **Objetos requeridos:** 2 (pinzas + llave inglesa). Pista separada (plano eléctrico).
 - **Jugadores recomendados:** 2–3.
 - **Cuándo se puede ejecutar:** Cualquier fase — el riesgo es el ruido y el tiempo expuesto.
 - **Tiempo de escape final:** 4 seg (trepar al conducto).
+- **Spec técnica:** `design/gdd/ruta-1-ventilacion-industrial.md`.
 
 #### Ruta 2 — Túnel (Individual)
 ```

@@ -66,3 +66,11 @@
 
 ### 2026-04-06 (follow-up)
 - Backend manual scripts: `test-client.js` and `test-4clients.js` now use `import { io } from 'socket.io-client'` so they run under `"type": "module"` (replacing `require`, which is invalid in ESM).
+
+### 2026-04-23
+- **Game Design — Ruta 1 Ventilacion Industrial**:
+  - Updated `design/GDD.md` section 5.2 with MVP decisions for the cooperative ventilation route.
+  - Added technical implementation spec at `design/gdd/ruta-1-ventilacion-industrial.md`.
+  - Documented shared prisoner HUD, role-filtered events, route data model, anti-softlock item rules, tuning knobs, edge cases, and acceptance criteria.
+  - Recorded ADR-002 in `memory/decisions.md`.
+  - Confirmed local models/Ollama will not be used for this documentation work.
