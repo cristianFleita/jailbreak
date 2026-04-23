@@ -61,6 +61,9 @@ namespace Jailbreak.NPC
         // NPCNetworkSync should stop lerping toward stale backend targets.
         public bool IsBehaviorDriven => _hasEverReceivedAssignment;
 
+        public int CurrentSequenceIndex => _sequenceIndex;
+        public string CurrentActionId => _current?.actionId;
+
         // True while a SitInteraction on this NPC is active (settled OR standing up).
         public bool IsSitting
         {
@@ -190,6 +193,14 @@ namespace Jailbreak.NPC
             }
 
             if (_current == null) return;
+
+            if (_waitingForAgent)
+            {
+                if (agent == null || !agent.isOnNavMesh) return;
+                _waitingForAgent = false;
+                StartSingleAction(_current);
+                return;
+            }
 
             if (!_hasArrived
                 && agent != null && agent.enabled && agent.isOnNavMesh
@@ -345,15 +356,31 @@ namespace Jailbreak.NPC
             var destination = ResolveFirstDestination(data);
             if (destination.HasValue)
             {
-                if (agent == null || !agent.isOnNavMesh) return;
-                agent.SetDestination(destination.Value);
-                _initialDistance = 0f;
-                PlayAnimation(_isRunning ? "run" : "walk");
+                if (agent != null && agent.isOnNavMesh)
+                {
+                    agent.SetDestination(destination.Value);
+                    _initialDistance = 0f;
+                    PlayAnimation(_isRunning ? "run" : "walk");
+                }
+                else
+                {
+                    _waitingForAgent = true;
+                }
             }
             else
             {
                 _hasArrived = true;
                 PlayAnimation(data.animTrigger);
+            }
+        }
+
+        private void UpdateSingleAction()
+        {
+            if (_waitingForAgent)
+            {
+                if (agent == null || !agent.isOnNavMesh) return;
+                _waitingForAgent = false;
+                StartSingleAction(_current);
             }
         }
 

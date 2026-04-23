@@ -118,6 +118,44 @@ export function clearPlayerMoveTracking(socketId: string): void {
 }
 
 // ============================================================================
+// npc:sync_state handler (from Host)
+// ============================================================================
+
+export interface NPCSyncStateContext {
+  io: Server
+  roomId: string
+  room: GameRoom
+  socketId: string
+  payload: import('./types.js').NPCSyncStatePayload
+}
+
+/**
+ * Handles periodic NPC state synchronization from the Host client.
+ * Updates the server's authoritative positions and current action indices
+ * so that reconnecting clients can fast-forward NPC animations and spawn
+ * them at the correct mid-action coordinates.
+ */
+export function handleNPCSyncState(context: NPCSyncStateContext): void {
+  const { room, socketId, payload } = context
+
+  const player = room.state.players.get(socketId)
+  // Only accept syncs from the Host
+  if (!player || player.userId !== room.state.hostUserId) return
+
+  if (!payload.npcs) return
+
+  for (const sync of payload.npcs) {
+    const npc = room.state.npcs.get(sync.npcId)
+    if (npc) {
+      npc.position = sync.position
+      npc.rotation = sync.rotation
+      npc.currentSequenceIndex = sync.currentSequenceIndex
+      npc.currentActionId = sync.currentActionId
+    }
+  }
+}
+
+// ============================================================================
 // player:interact handler (pickup/use/drop items)
 // ============================================================================
 

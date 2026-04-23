@@ -260,7 +260,40 @@ export class JailRoutineSystem {
   getCurrentZone(): string { return this.getPhaseDef(this.currentPhase)?.zone ?? 'unknown' }
 
   buildReconnectAssignments(): NPCAssignment[] {
-    return Array.from(this.npcAssignments.values())
+    const elapsedPhase = (Date.now() - this.phaseStartedAt) / 1000
+
+    return Array.from(this.npcAssignments.values()).map(a => {
+      const state = this.state.npcs.get(a.npcId)
+      
+      // Fast-forward sequence if we have an authoritative current index from the host
+      if (state?.currentSequenceIndex !== undefined && a.actionSequence) {
+        let sumPrevious = 0
+        for (let i = 0; i < state.currentSequenceIndex; i++) {
+          sumPrevious += a.actionSequence[i].duration
+        }
+
+        const timeInCurrentStep = elapsedPhase - sumPrevious
+        const sliced = a.actionSequence.slice(state.currentSequenceIndex)
+        
+        // Adjust the duration of the current step (which is now sliced[0])
+        if (sliced.length > 0) {
+          const adjustedStep = { ...sliced[0] }
+          adjustedStep.duration = Math.max(0, adjustedStep.duration - timeInCurrentStep)
+          sliced[0] = adjustedStep
+        }
+
+        return { ...a, actionSequence: sliced }
+      }
+      else {
+        // Single action - fast forward using the backend's explicit timer
+        const remaining = this.npcTimers.get(a.npcId)
+        if (remaining !== undefined) {
+          return { ...a, duration: remaining }
+        }
+      }
+      
+      return a
+    })
   }
 
   private checkPhaseTimer(): void {

@@ -399,4 +399,20 @@ namespace Jailbreak.Network
         public string newMood;
         public string animHint;
     }
+
+    [Serializable]
+    public class NPCStateSync
+    {
+        public string npcId;
+        public SVector3 position;
+        public SQuaternion rotation;
+        public int currentSequenceIndex;
+        public string currentActionId;
+    }
+
+    [Serializable]
+    public class NPCSyncStatePayload
+    {
+        public NPCStateSync[] npcs;
+    }
 }

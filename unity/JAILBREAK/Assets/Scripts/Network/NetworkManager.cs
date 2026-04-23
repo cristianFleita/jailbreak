@@ -113,6 +113,7 @@ namespace Jailbreak.Network
         [DllImport("__Internal")] private static extern void   SocketSendInteract(string objectId, string action);
         [DllImport("__Internal")] private static extern void   SocketSendPlayerAction(string objectId, string action);
         [DllImport("__Internal")] private static extern void   SocketSendRiotActivate();
+        [DllImport("__Internal")] private static extern void   SocketSendNPCSyncState(string json);
         [DllImport("__Internal")] private static extern void   SocketDisconnect();
         [DllImport("__Internal")] private static extern string SocketGetSavedUserId();
         [DllImport("__Internal")] private static extern string SocketGetSavedDisplayName();
@@ -334,6 +335,17 @@ namespace Jailbreak.Network
             SocketSendRiotActivate();
 #else
             _socket?.Emit("riot:activate");
+#endif
+        }
+
+        public void SendNPCSyncState(NPCSyncStatePayload payload)
+        {
+            if (!IsInGame() || !IsHost) return;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketSendNPCSyncState(JsonUtility.ToJson(payload));
+#else
+            try { _socket.EmitStringAsJSON("npc:sync_state", JsonUtility.ToJson(payload)); }
+            catch (Exception ex) { Debug.LogError($"[NET] SendNPCSyncState: {ex}"); }
 #endif
         }
 

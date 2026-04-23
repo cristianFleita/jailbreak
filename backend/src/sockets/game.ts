@@ -25,6 +25,7 @@ import {
   handleGuardMark,
   handleRiotActivate,
   checkGameEndCondition,
+  handleNPCSyncState,
 } from '../game/event-handlers.js'
 import {
   markPlayerDisconnected,
@@ -258,11 +259,6 @@ export function setupGameSockets(io: Server) {
             return
           }
 
-          if (room.state.status !== 'lobby') {
-            socket.emit('game:error', { code: 'GAME_IN_PROGRESS', message: 'Game already in progress' })
-            return
-          }
-
           if (room.state.players.size >= room.config.maxPlayers) {
             socket.emit('game:error', { code: 'ROOM_FULL', message: 'Room is full' })
             return
@@ -298,6 +294,11 @@ export function setupGameSockets(io: Server) {
               userId: user.userId,
               players: buildRoomPlayersPayload(room),
             })
+            return
+          }
+
+          if (room.state.status !== 'lobby') {
+            socket.emit('game:error', { code: 'GAME_IN_PROGRESS', message: 'Game already in progress' })
             return
           }
 
@@ -602,6 +603,29 @@ export function setupGameSockets(io: Server) {
         })
       } catch (err) {
         console.error(`[ERROR] riot:activate: ${err}`)
+      }
+    })
+
+    // ==================================================================
+    // GAMEPLAY: npc:sync_state (from Host to sync NPC positions)
+    // ==================================================================
+    socket.on('npc:sync_state', (payloadStr: string) => {
+      if (!currentRoomId) return
+
+      try {
+        const room = getRoom(currentRoomId)
+        if (!room || room.state.status !== 'active') return
+
+        const payload = JSON.parse(payloadStr)
+        handleNPCSyncState({
+          io,
+          roomId: currentRoomId,
+          room,
+          socketId: socket.id,
+          payload,
+        })
+      } catch (err) {
+        console.error(`[ERROR] npc:sync_state: ${err}`)
       }
     })
 

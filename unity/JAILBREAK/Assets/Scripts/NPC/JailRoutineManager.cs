@@ -72,6 +72,14 @@ namespace Jailbreak.NPC
                 Debug.Log("[JAIL] Processing cached phase:start payload");
                 HandlePhaseStart(net.CachedPhaseJailStart);
             }
+
+            // Likewise, if we are reconnecting (F5 reload), process the cached
+            // game:reconnect payload so NPCs resume their current actions.
+            if (net.State == ConnectionState.InGame && net.CachedGameReconnect?.jailPhase != null)
+            {
+                Debug.Log("[JAIL] Processing cached game:reconnect payload");
+                HandleReconnect(net.CachedGameReconnect);
+            }
         }
 
         private void OnDestroy()
@@ -147,12 +155,15 @@ namespace Jailbreak.NPC
             PhaseDuration    = 0f; // duration not included in snapshot
             PhaseElapsed     = 0f;
 
-            // No waypoint occupants to reset anymore
+            Debug.Log($"[JAIL-DEBUG] Handling Reconnect! Phase={CurrentJailPhase} Zone={CurrentZone} Assignments={data.jailPhase.npcAssignments?.Length ?? 0}");
 
             if (data.jailPhase.npcAssignments != null)
             {
                 foreach (var assignment in data.jailPhase.npcAssignments)
+                {
+                    Debug.Log($"[JAIL-DEBUG] Received assignment for {assignment.npcId} -> {assignment.actionId} (duration: {assignment.duration})");
                     ApplyAssignment(assignment);
+                }
             }
 
             Debug.Log($"[JAIL] Reconnect restored phase {data.jailPhase.phase} zone={data.jailPhase.zone} with {data.jailPhase.npcAssignments?.Length ?? 0} NPC assignments");
@@ -217,7 +228,10 @@ namespace Jailbreak.NPC
             // Add NPCBehaviorController if missing
             var ctrl = npcGo.GetComponent<NPCBehaviorController>();
             if (ctrl == null)
+            {
+                Debug.Log($"[JAIL-DEBUG] Controller missing for {npcId}, adding it.");
                 ctrl = npcGo.AddComponent<NPCBehaviorController>();
+            }
 
             _controllers[npcId] = ctrl;
             return ctrl;
@@ -225,21 +239,17 @@ namespace Jailbreak.NPC
 
         private GameObject FindNPCGameObject(string npcId)
         {
-            // Search in NPCNetworkSync's child transforms
-            if (npcNetworkSync != null)
+            var sync = FindObjectOfType<NPCNetworkSync>();
+            if (sync != null)
             {
-                for (int i = 0; i < npcNetworkSync.transform.childCount; i++)
-                {
-                    var child = npcNetworkSync.transform.GetChild(i);
-                    // NPCNetworkSync names them "NPC_{id}_{type}"
-                    if (child.name.Contains(npcId))
-                        return child.gameObject;
-                }
+                var go = sync.GetNPC(npcId);
+                if (go != null) return go;
             }
 
-            // Fallback: find by name in scene
-            var found = GameObject.Find($"NPC_{npcId}");
-            return found;
+            var fallback = GameObject.Find($"NPC_{npcId}_helper");
+            if (fallback == null) fallback = GameObject.Find($"NPC_{npcId}_prisoner");
+            if (fallback == null) fallback = GameObject.Find($"NPC_{npcId}_guard");
+            return fallback;
         }
     }
 }

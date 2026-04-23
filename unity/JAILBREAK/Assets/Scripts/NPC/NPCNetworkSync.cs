@@ -8,9 +8,9 @@ namespace Jailbreak.NPC
     /// Manages a pool of NPC GameObjects.
     /// Attach to an empty "NPCPool" GameObject in the scene.
     ///
-    /// NPCs are spawned as placeholder capsules (red=guard, blue=helper).
     /// Replace the default spawn logic with proper prefabs later.
     /// </summary>
+    [DefaultExecutionOrder(-50)]
     public class NPCNetworkSync : MonoBehaviour
     {
         [Header("NPC Prefab (optional — defaults to colored capsule)")]
@@ -70,8 +70,23 @@ namespace Jailbreak.NPC
             net.OnNPCMoodShiftEvent  -= HandleNPCMoodShift;
         }
 
+        private float _syncTimer;
+
         private void Update()
         {
+            var net = NetworkManager.Instance;
+            bool isHost = net != null && net.IsHost && net.State == ConnectionState.InGame;
+
+            if (isHost)
+            {
+                _syncTimer -= Time.deltaTime;
+                if (_syncTimer <= 0f)
+                {
+                    _syncTimer = 1.0f; // sync every 1 second
+                    SendNPCSyncs(net);
+                }
+            }
+
             // Lerp all NPC transforms toward their server targets.
             // Skip any NPC that is locally driven — NavMesh / SitInteraction
             // are the source of truth once the NPC has a behavior assigned.
@@ -84,6 +99,35 @@ namespace Jailbreak.NPC
                     continue;
 
                 t.position = Vector3.Lerp(t.position, target, NpcLerpSpeed * Time.deltaTime);
+            }
+        }
+
+        private void SendNPCSyncs(NetworkManager net)
+        {
+            var payload = new NPCSyncStatePayload();
+            var syncList = new List<NPCStateSync>();
+
+            foreach (var (id, t) in _npcs)
+            {
+                if (t == null) continue;
+                var behavior = t.GetComponent<NPCBehaviorController>();
+                if (behavior != null && behavior.IsBehaviorDriven)
+                {
+                    syncList.Add(new NPCStateSync
+                    {
+                        npcId = id,
+                        position = SVector3.FromUnity(t.position),
+                        rotation = SQuaternion.FromUnity(t.rotation),
+                        currentSequenceIndex = behavior.CurrentSequenceIndex,
+                        currentActionId = behavior.CurrentActionId ?? ""
+                    });
+                }
+            }
+
+            if (syncList.Count > 0)
+            {
+                payload.npcs = syncList.ToArray();
+                net.SendNPCSyncState(payload);
             }
         }
 
@@ -172,6 +216,11 @@ namespace Jailbreak.NPC
                 }
             }
 
+            if (UnityEngine.AI.NavMesh.SamplePosition(go.transform.position, out var hit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
+            {
+                go.transform.position = hit.position;
+            }
+
             go.name = $"NPC_{data.id}_{data.type}";
 
             var identity = go.GetComponent<NPCIdentity>();
@@ -195,6 +244,13 @@ namespace Jailbreak.NPC
             _npcs.Clear();
             _npcTargets.Clear();
             Debug.Log("[NPC] Despawned all NPCs");
+        }
+
+        public GameObject GetNPC(string npcId)
+        {
+            if (_npcs.TryGetValue(npcId, out var t) && t != null)
+                return t.gameObject;
+            return null;
         }
     }
 }
