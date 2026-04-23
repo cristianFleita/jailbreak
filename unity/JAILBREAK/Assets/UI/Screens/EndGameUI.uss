@@ -1,0 +1,82 @@
+.screen-root {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background-color: rgb(10, 10, 12);
+    align-items: center;
+    justify-content: center;
+}
+
+.result-panel {
+    width: 80%;
+    max-width: 600px;
+    padding: 60px 40px;
+    align-items: center;
+    background-color: rgb(15, 15, 18);
+    border-top-width: 4px;
+    border-top-color: rgb(180, 50, 255);
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.result-icon {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 30px;
+    -unity-background-scale-mode: scale-to-fit;
+    background-color: transparent;
+}
+
+.icon-prisoners {
+    background-image: url("project://database/Assets/UI/Sprites/endGameLogos.png?fileID=167688412&guid=feb26286c91394817b8eb724d20ce9ee&type=3#endGameLogos_0");
+}
+
+.icon-guards {
+    background-image: url("project://database/Assets/UI/Sprites/endGameLogos.png?fileID=416985266&guid=feb26286c91394817b8eb724d20ce9ee&type=3#endGameLogos_1");
+}
+
+#ResultTitle {
+    font-size: 52px;
+    -unity-font-style: bold;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+    -unity-text-align: middle-center;
+    color: rgb(255, 255, 255);
+}
+
+#ResultDescription {
+    font-size: 22px;
+    color: rgb(170, 175, 180);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    margin-bottom: 50px;
+    width: 90%;
+}
+
+#ReturnButton {
+    width: 250px;
+    height: 60px;
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: rgb(220, 220, 220);
+    background-color: transparent;
+    border-width: 2px;
+    border-color: rgb(80, 80, 80);
+    border-radius: 4px;
+    transition-duration: 0.1s;
+}
+
+#ReturnButton:hover {
+    scale: 1.05;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgb(255, 255, 255);
+    border-color: rgb(150, 150, 150);
+}
+
+#ReturnButton:active {
+    scale: 0.95;
+}

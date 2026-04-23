@@ -1,0 +1,20 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Screens/EndGameUI.uss" />
+    
+    <ui:VisualElement name="root" class="screen-root">
+        
+        <ui:VisualElement class="result-panel">
+            
+            <!-- Icon class gets set by C# script -->
+            <ui:VisualElement name="ResultIcon" class="result-icon" />
+            
+            <ui:Label name="ResultTitle" text="VICTORY" />
+            
+            <ui:Label name="ResultDescription" text="You and the other prisoners successfully outsmarted the guard!" />
+            
+            <ui:Button name="ReturnButton" text="RETURN TO LOBBY" />
+            
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

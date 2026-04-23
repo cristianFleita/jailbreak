@@ -14,7 +14,7 @@ import {
 } from './types.js'
 import { createGameRoomState, advanceTick, computeNPCDelta, spawnNPCs, startGame, endGame } from './state.js'
 import { GameManager } from './systems/game-manager.js'
-import { getUser } from './user-identity.js'
+import { getUser, setUserStatus } from './user-identity.js'
 
 /**
  * Default game configuration (tuning knobs from design doc).
@@ -216,6 +216,20 @@ export function startGameLoop(io: Server, room: GameRoom): void {
         })
 
         stopGameLoop(room)
+
+        // Update status for all players and clear their currentRoomId
+        for (const [sid, p] of state.players) {
+          setUserStatus(p.userId, 'idle')
+          const targetSocket = io.sockets.sockets.get(sid)
+          if (targetSocket) {
+            targetSocket.data.currentRoomId = null
+          }
+        }
+        
+        // Force all sockets out of the room
+        io.in(state.id).socketsLeave(state.id)
+        
+        destroyRoom(state.id)
         return
       }
 

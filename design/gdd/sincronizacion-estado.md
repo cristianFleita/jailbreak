@@ -1,8 +1,8 @@
 # Sincronización de Estado
 
 > **Status**: Designed
-> **Author**: Cris + Claude
-> **Last Updated**: 2026-04-06
+> **Author**: Cris + Claude + Codex
+> **Last Updated**: 2026-04-22
 > **Implements Pillar**: Infraestructura invisible (el juego debe sentirse local aunque sea online)
 
 ## Decisión Arquitectónica
@@ -29,7 +29,7 @@ Este sistema es **infraestructura que no se nota**. La fantasía del jugador no 
 3. **Tick rate** — El servidor procesa y emite estado a 20 ticks/seg (cada 50ms). Los clientes envían input cada 50ms. Los renders corren a 60 FPS con interpolación entre ticks.
 4. **Interpolación de otros jugadores** — Los otros jugadores se renderizan con ~100ms de delay (2 ticks) para tener siempre dos posiciones entre las que interpolar suavemente.
 5. **Delta compression de NPCs** — Los NPCs solo envían posición si cambiaron >0.1m desde el último tick. El servidor envía un array con solo los NPCs que se movieron. Los clientes guardan el último estado conocido de cada NPC.
-6. **Eventos autoritativos** — Acciones de gameplay (guard:mark, player:interact, riot:activate) se envían al servidor. El servidor valida y emite el resultado a todos. Los clientes NO aplican el resultado localmente hasta recibir confirmación del servidor.
+6. **Eventos autoritativos** — Acciones de gameplay (`guard:catch`, `player:interact`, `riot:activate`) se envían al servidor. El servidor valida y emite el resultado a todos. Los clientes NO aplican el resultado final localmente hasta recibir confirmación del servidor.
 7. **Rooms de Socket.io** — Cada partida vive en su propia room con ID único. Los mensajes solo se emiten a los clientes de esa room. El servidor mantiene el estado completo de la partida en memoria durante la partida.
 
 ### States and Transitions (conexión del cliente)
@@ -49,12 +49,11 @@ Este sistema es **infraestructura que no se nota**. La fantasía del jugador no 
 |--------|-----------|-----------|---------|-------------------|
 | `player:move` | Cliente → Servidor | Cada 50ms | `{ playerId, position, rotation, velocity, movementState }` | Velocidad máxima, bounds del mapa |
 | `player:interact` | Cliente → Servidor | On-demand | `{ playerId, objectId, action }` | Objeto existe, jugador en rango (≤2m), objeto disponible |
-| `guard:mark` | Cliente → Servidor | On-demand | `{ guardId, targetId }` | Guardia existe, target existe, no en error cooldown |
-| `guard:catch` | Servidor → Todos | On-demand | `{ guardId, targetId, success, isPlayer }` | — |
+| `guard:catch` | Cliente → Servidor | On-demand | `{ entityId, entityType }` | Guardia existe, target existe, target en rango válido |
+| `guard:catch:result` | Servidor → Todos | On-demand | `{ guardId, entityId, success, isPlayer }` | — |
+| `catch:failed` | Servidor → Guardia | On-demand | `{ reason }` | — |
 | `phase:change` | Servidor → Todos | Cada ~90–120s | `{ phase, phaseName, duration, activeZone }` | — |
 | `npc:positions` | Servidor → Todos | Cada 200ms | `{ npcs: [{ id, position, rotation, animState }] }` (solo delta) | — |
-| `chase:start` | Servidor → Target | On-demand | `{ guardId, targetId }` | — |
-| `chase:end` | Servidor → Todos | On-demand | `{ reason: 'caught'|'lost'|'timeout' }` | — |
 | `escape:progress` | Servidor → Todos | On-demand | `{ route, itemsCollected, itemsNeeded, completedBy }` | — |
 | `game:end` | Servidor → Todos | On-demand | `{ winner: 'prisoners'|'guard', reason }` | — |
 | `riot:available` | Servidor → Presos | On-demand | `{ errorsCount: 3 }` | — |
@@ -68,7 +67,7 @@ Este sistema es **infraestructura que no se nota**. La fantasía del jugador no 
 | Sistema | Dirección | Qué recibe / provee |
 |---------|-----------|-------------------|
 | **Movimiento FPS (1)** | ← recibe input, → provee corrección | `player:move` cada 50ms; devuelve posición autoritativa para reconciliación rubber-band |
-| **Persecución (2)** | ↔ | Recibe `guard:mark`; emite `chase:start`, `chase:end`, `guard:catch` |
+| **Captura por Foco (2)** | ↔ | Recibe `guard:catch`; emite `guard:catch:result`, `catch:failed` |
 | **Inventario (5)** | ↔ | Recibe `player:interact` (recoger/usar); emite `item:pickup`, `item:use` |
 | **Rutas de Escape (6)** | ↔ | Recibe acciones de escape; emite `escape:progress`, `game:end` |
 | **Rutina/Fases (4)** | → provee | Emite `phase:change` a todos según timer del servidor |
@@ -111,7 +110,7 @@ Total estimado = ~4 KB/s por cliente (≈32 Kbps) — bien dentro de límites ra
 | Caso | Qué pasa | Resolución |
 |------|----------|------------|
 | **Lag spike >500ms** | Client prediction diverge mucho, rubber-band notorio | Si diff ≥ 1m → teleport. Mostrar indicador de conexión pobre en HUD. |
-| **Guardia señala en el mismo frame que el preso se camufla** | Race condition: cliente del guardia ve el target, servidor ya lo marcó como camuflado | Servidor valida en su tick: si el target cumple camuflaje ese tick → persecución nunca inicia. No es un error. |
+| **Guardia completa el foco local pero el target ya salió de rango en servidor** | Race condition por latencia entre cliente y servidor | El servidor rechaza con `catch:failed`. El cliente limpia el foco y sigue la partida. |
 | **Dos jugadores recogen el mismo objeto simultáneamente** | Ambos clientes predicen el pickup, servidor solo asigna uno | Servidor asigna al primero (timestamp del mensaje). El segundo recibe "ítem ya tomado" y su inventario se revierte. |
 | **Servidor cae durante la partida** | Todos los clientes pierden conexión simultáneamente | Todos van a Reconnecting. Si el servidor no vuelve en 30s → Disconnected. La partida se pierde. |
 | **Jugador envía `player:move` con velocidad imposible** | Velocidad > `walk_speed × sprint_multiplier × 1.5` (umbral anti-cheat) | Servidor ignora el mensaje, usa última posición válida. El cliente es corregido por rubber-band en el siguiente tick. |
@@ -124,8 +123,8 @@ Total estimado = ~4 KB/s por cliente (≈32 Kbps) — bien dentro de límites ra
 | Sistema | Tipo | Dirección | Interfaz específica |
 |---------|------|-----------|-------------------|
 | Movimiento FPS (1) | Hard | ↔ | Recibe `{ position, rotation, velocity, movementState }` cada 50ms; devuelve posición autoritativa |
-| Persecución (2) | Hard | ↔ | Recibe `guard:mark`; emite `chase:start/end`, `guard:catch` |
-| Camuflaje (3) | Hard | → provee | Emite estado de camuflaje del preso al validar `chase:start` |
+| Captura por Foco (2) | Hard | ↔ | Recibe `guard:catch`; emite `guard:catch:result`, `catch:failed` |
+| Camuflaje (3) | Hard | → provee | Aporta contexto posicional y visual para que el cliente del guardia pueda perder foco o no llegar a rango |
 | Rutina/Fases (4) | Hard | → provee | Emite `phase:change` según timer interno del servidor |
 | Inventario (5) | Hard | ↔ | Recibe `player:interact`; emite `item:pickup/use` |
 | Rutas de Escape (6) | Hard | ↔ | Recibe acciones de escape; emite `escape:progress`, contribuye a `game:end` |
@@ -170,7 +169,7 @@ Total estimado = ~4 KB/s por cliente (≈32 Kbps) — bien dentro de límites ra
 | AC-4 | Delta compression de NPCs funciona correctamente | Solo se envían NPCs que se movieron >0.1m. Clientes mantienen estado correcto entre ticks. |
 | AC-5 | Rubber-band no visible en condiciones normales (<150ms RTT) | Con ping simulado de 100ms, movimiento del jugador local se ve suave |
 | AC-6 | Rubber-band teleporta correctamente en lag extremo | Simular lag spike de 1s → jugador teletransporta a posición correcta |
-| AC-7 | `guard:catch` requiere validación de distancia server-side | Intentar captura a 10m → servidor rechaza. A 1.5m → servidor acepta. |
+| AC-7 | `guard:catch` requiere validación de distancia server-side | Intentar captura a 10m → servidor rechaza. A 2.0m o menos → servidor acepta. |
 | AC-8 | Dos clientes recogen el mismo ítem simultáneamente: solo uno lo obtiene | Dos clientes interactúan con el mismo ítem en el mismo tick → uno lo obtiene, el otro recibe rechazo |
 | AC-9 | Bandwidth ≤ 5 KB/s por cliente en partida normal | Monitorear en partida de 4 jugadores activos + 20 NPCs moviéndose |
 | AC-10 | Servidor Node.js ≤ 20% CPU en Render free tier (partida de 4) | Profiler Node.js o métricas de Render durante partida de prueba |

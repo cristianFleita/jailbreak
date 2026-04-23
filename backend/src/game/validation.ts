@@ -80,7 +80,7 @@ export function validateGuardCatch(
   guardPosition: Vector3,
   targetPosition: Vector3,
   targetMovementState: 'idle' | 'walking' | 'sprinting' | 'camuflaged',
-  catchRange: number = 1.5
+  catchRange: number = 2.0
 ): { valid: boolean; reason?: string } {
   // Can't catch a camuflaged player
   if (targetMovementState === 'camuflaged') {

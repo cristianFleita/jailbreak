@@ -233,7 +233,7 @@ Con check cada ~8s y probabilidad tipica de 10-20%:
 - **Room Manager** (`room-manager.ts`): Wirea los callbacks de `onEmergentAction` y `onMoodShift` para emitir por socket.
 
 ### Sistemas que dependen de este:
-- **Pursuit System** (`pursuit.ts`): Puede consultar mood de un NPC para decidir si un NPC asiste en una persecucion (NPCs nervous son menos propensos).
+- **Capture / Guard Pressure System**: Puede consultar mood de un NPC para decidir si un NPC se queda quieto, se aparta o interfiere visualmente cuando el guardia intenta cerrar una captura por foco.
 - **Victory Conditions**: Las acciones anti-guard contribuyen al riot meter.
 - **UI/HUD**: El mood hint permite que el UI muestre indicadores sutiles del estado emocional (futuro).
 

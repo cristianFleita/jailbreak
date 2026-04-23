@@ -577,14 +577,6 @@ export function setupGameSockets(io: Server) {
           timestamp: Date.now(),
         })
 
-        const endCondition = checkGameEndCondition(room)
-        if (endCondition.winner) {
-          io.to(currentRoomId).emit('game:end', {
-            winner: endCondition.winner,
-            reason: endCondition.reason,
-          })
-          console.log(`[GAME-END] Winner: ${endCondition.winner}, reason: ${endCondition.reason}`)
-        }
       } catch (err) {
         console.error(`[ERROR] guard:catch: ${err}`)
       }

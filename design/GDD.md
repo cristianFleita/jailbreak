@@ -1,7 +1,7 @@
 # JAILBREAK — Game Design Document
 
-**Version:** 1.2  
-**Fecha:** 14 de abril de 2026  
+**Version:** 1.3  
+**Fecha:** 21 de abril de 2026  
 **Plataforma:** PC (Unity WebGL)  
 **Jugadores:** 2–4 online  
 **Motor:** Unity 6 LTS  
@@ -13,20 +13,20 @@
 
 > *"Un preso entre muchos. Un guardia que no sabe cuál. Y solo unos segundos para volver a mezclarse."*
 
-**Jailbreak** es un juego multijugador asimétrico en primera persona ambientado en una prisión estilo Alcatraz. Uno a tres jugadores son **presos infiltrados** entre decenas de NPCs idénticos que deben cooperar para escapar sin ser detectados. Un jugador es el **guardia** que debe identificarlos observando comportamientos sospechosos y atraparlos físicamente.
+**Jailbreak** es un juego multijugador asimétrico en primera persona ambientado en una prisión estilo Alcatraz. Uno a tres jugadores son **presos infiltrados** entre decenas de NPCs idénticos que deben cooperar para escapar sin ser detectados. Un jugador es el **guardia** que debe identificarlos observando comportamientos sospechosos, acercarse lo suficiente y capturarlos correctamente.
 
 ### 1.1 Pilares de Diseño
 
 | Pilar | Descripción | Se manifiesta en... |
 |-------|-------------|---------------------|
-| **Tensión asimétrica** | Cada rol experimenta una tensión diferente: los presos temen ser descubiertos, el guardia teme equivocarse | Sistema de persecución con penalización por errores |
+| **Tensión asimétrica** | Cada rol experimenta una tensión diferente: los presos temen ser descubiertos, el guardia teme equivocarse | Sistema de captura por foco con penalización por errores |
 | **Engaño social** | Mezclarse con NPCs es la mecánica central de supervivencia, no el combate | Camuflaje basado en rutina + proximidad a NPCs |
 | **Cooperación bajo presión** | Los presos deben coordinarse sin comunicación obvia mientras evitan detección | Rutas de escape que requieren contribuciones de todos |
 | **Humor emergente** | Los momentos más memorables nacen de errores de ambos bandos | Mecánicas de molestia, penalizaciones del guardia, animaciones de NPCs |
 
 ### 1.2 Elevator Pitch
 
-*"Spy Party meets The Escapists en primera persona — uno persigue, los demás se esconden a plena vista."*
+*"Spy Party meets The Escapists en primera persona — uno observa y atrapa, los demás se esconden a plena vista."*
 
 ### 1.3 Público Objetivo
 
@@ -39,8 +39,8 @@
 
 | Capa | Elementos |
 |------|-----------|
-| **Mechanics** | Persecución física, sistema de rutina/fases, inventario limitado, camuflaje por posición, errores con penalización |
-| **Dynamics** | Dilema del guardia (¿es jugador o NPC?), ventanas de oportunidad cuando un compañero es perseguido, planificación emergente de ruta de escape |
+| **Mechanics** | Captura por foco, sistema de rutina/fases, inventario limitado, camuflaje por posición, errores con penalización |
+| **Dynamics** | Dilema del guardia (¿es jugador o NPC?), ventanas de oportunidad cuando el guardia se compromete a corta distancia, planificación emergente de ruta de escape |
 | **Aesthetics** | Tensión, descubrimiento, humor, fellowship (cooperación) |
 
 ---
@@ -53,7 +53,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │  Seguir rutina → Recoger objetos → Cooperar en escape       │
 │       ↑                                          ↓          │
-│  Camuflarse ← Escapar persecución ← Ser detectado          │
+│  Volver a rutina ← Romper foco / alejarse ← Ser enfocado   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -62,9 +62,9 @@
 1. **Seguir rutina** — Estar en la zona correcta según la fase actual. Imitar comportamiento de NPCs (caminar, sentarse, comer). Desviarse genera sospecha visual.
 2. **Recoger objetos** — Aprovechar momentos seguros para tomar ítems de escape. Máximo 2 slots de inventario. Los objetos son visibles brevemente al recogerlos.
 3. **Cooperar en escape** — Cada ruta de escape necesita 3 ítems/acciones de diferentes jugadores. Comunicación vía señales en el juego (golpes en pared, tos).
-4. **Ser detectado** — El guardia señala al preso. Aparece indicador de alerta en pantalla.
-5. **Escapar persecución** — Correr, usar mecánicas de molestia, buscar ruta de evasión.
-6. **Camuflarse** — Volver a zona correcta, mezclarse entre 3+ NPCs, comportarse normal. El guardia pierde el rastro.
+4. **Ser enfocado** — El guardia logra acercarse y sostener la mira sobre el preso durante un instante corto para intentar capturarlo.
+5. **Romper foco / alejarse** — Ganar distancia, cortar línea de visión o usar el tráfico de NPCs para impedir que el guardia complete la captura.
+6. **Volver a rutina** — Retomar comportamiento creíble dentro de la fase actual. El guardia pierde la oportunidad y debe volver a leer la situación.
 
 **Tiempo por ciclo completo:** ~2–3 minutos (una fase de rutina).
 
@@ -72,19 +72,19 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Observar → Detectar sospechoso → Perseguir físicamente     │
+│  Observar → Acercarse → Fijar foco → Capturar              │
 │       ↑                                          ↓          │
-│  Reintentar ← Perder rastro / Atrapar                      │
+│  Repatrullar ← Foco roto / Error / Captura                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 **Detalle por paso:**
 
 1. **Observar** — Patrullar zonas, revisar cámaras de seguridad, escuchar sonidos sospechosos. Buscar: personas en zona incorrecta, movimiento errático, interacción con objetos prohibidos.
-2. **Detectar sospechoso** — Señalar a una persona (tecla/click). Esto activa modo persecución.
-3. **Perseguir físicamente** — Correr hacia el señalado. No puede atrapar a distancia. Debe llegar a rango de contacto (1.5m).
-4. **Atrapar** — Si alcanza al preso → captura exitosa. Si señaló a un NPC → penalización.
-5. **Perder rastro** — Si el preso se camufla → persecución termina. El guardia vuelve a observar.
+2. **Acercarse** — Reducir la distancia sin delatar demasiado la intención. El guardia necesita quedar a rango corto.
+3. **Fijar foco** — Mantener el input de captura sobre un personaje visible durante ~0.5 seg para evitar misclicks.
+4. **Capturar** — Si el foco se completa sobre un preso jugador → captura exitosa. Si era un NPC → penalización por error.
+5. **Repatrullar** — Si el foco se rompe antes de completarse, el guardia debe reposicionarse y volver a intentarlo.
 
 ### 2.3 Condiciones de Fin de Partida
 
@@ -101,46 +101,47 @@ La partida simula **un solo día** en la prisión (06:00 → 00:00 hora ficticia
 
 ---
 
-## 3. Mecánica Central — Sistema de Persecución
+## 3. Mecánica Central — Sistema de Captura por Foco
 
-Esta es la mecánica core que diferencia a Jailbreak. No hay medidor de sospecha pasivo: el guardia debe **actuar físicamente**, lo que genera tensión, errores y humor.
+Esta es la mecánica core que diferencia a Jailbreak. No hay medidor de sospecha pasivo: el guardia debe **observar, acercarse y sostener un foco corto de captura** sobre un sospechoso. La tensión no viene de una persecución larga estilo slasher, sino de lograr ese medio segundo decisivo sin equivocarse.
 
-### 3.1 Flujo de Persecución (Detalle Técnico)
+### 3.1 Flujo de Captura por Foco (Detalle Técnico)
 
 ```
 ESTADO: PATRULLA (guardia)
   │
-  ├─ Guardia presiona [SEÑALAR] apuntando a un personaje
+  ├─ Guardia se acerca a ≤ 2.0m de un personaje visible
+  ├─ Mantiene [CAPTURAR] sobre el mismo target durante 0.5 seg
   │
   ▼
-ESTADO: PERSECUCIÓN ACTIVA
+ESTADO: FOCO DE CAPTURA
   │
-  ├─ Duración máxima: 15 segundos
-  ├─ Guardia: velocidad +20% (sprint de persecución)
-  ├─ Preso señalado: recibe alerta visual + sonora
-  ├─ Otros presos: NO reciben alerta (deben darse cuenta solos)
+  ├─ SI el objetivo sale de rango > 2.0m:
+  │     └─ Foco se cancela → vuelve a PATRULLA
   │
-  ├─ SI guardia llega a rango ≤ 1.5m del señalado:
-  │     ├─ SI es jugador preso → CAPTURA (preso eliminado)
-  │     └─ SI es NPC → ERROR (penalización al guardia)
+  ├─ SI el guardia pierde línea de visión:
+  │     └─ Foco se cancela → vuelve a PATRULLA
   │
-  ├─ SI pasan 15 seg sin captura:
-  │     └─ Persecución termina → vuelve a PATRULLA
+  ├─ SI el guardia suelta el input o cambia de target:
+  │     └─ Foco se cancela → vuelve a PATRULLA
   │
-  └─ SI preso cumple condición de camuflaje:
-        └─ Persecución termina → vuelve a PATRULLA
+  └─ SI el foco llega a 0.5 seg:
+        ├─ SI es jugador preso → CAPTURA (preso eliminado)
+        └─ SI es NPC → ERROR (penalización al guardia)
 ```
 
-### 3.2 Condiciones de Camuflaje (Perder el Rastro)
+### 3.2 Cómo los Presos Evitan la Captura
 
 | Acción del preso | Efecto | Implementación |
 |------------------|--------|----------------|
-| Volver a la zona correcta de la fase actual | Guardia pierde marcador visual del preso | Verificar zona del preso vs. zona de fase activa |
-| Mezclarse físicamente entre 3+ NPCs | Guardia no puede distinguir cuál es | Raycast desde guardia; si hay 3+ personajes en radio de 3m alrededor del preso, se pierde |
-| Cambiar de piso o zona alejada | Persecución se resetea si guardia no llega en 10 seg | Verificar distancia > 25m o cambio de NavMesh area |
-| Tirar objeto al guardia | Guardia tropieza, preso gana 3–4 seg de ventaja | Animación de tropiezo + stun temporal del guardia |
+| Mantener distancia | El guardia no puede iniciar captura | Verificar rango > 2.0m |
+| Cortar línea de visión | El foco se rompe inmediatamente | Requiere visión continua del target durante el foco |
+| Moverse entre NPCs / cuerpos | Obliga al guardia a estabilizar el aim y evita misclicks limpios | Raycast local del guardia + colisiones visibles |
+| Usar una distracción o molestia | Dificulta que el guardia llegue a rango o sostenga el foco | Integrar con objetos de distracción o micro-stun si llegan al MVP |
 
-### 3.3 Errores del Guardia (Señalar NPC Inocente)
+**Nota de diseño:** la defensa principal del preso no es una persecución larga, sino impedir que el guardia llegue a rango y complete el foco de captura.
+
+### 3.3 Errores del Guardia (Capturar NPC Inocente)
 
 | Error N° | Penalización | Duración | Implementación |
 |----------|-------------|----------|----------------|
@@ -149,18 +150,15 @@ ESTADO: PERSECUCIÓN ACTIVA
 | 3er error | Tensión de motín al máximo — presos pueden activar motín manualmente | Permanente | Flag global `riot_available = true` |
 | Motín activado | Todos los NPCs rodean al guardia. Pantalla de derrota | Fin de partida | Todos los NPCs convergen en posición del guardia |
 
-**Nota de diseño:** El guardia tiene exactamente 3 oportunidades de error. Esto genera un dilema constante: *¿estoy lo suficientemente seguro para señalar, o espero y arriesgo que escapen?*
+**Nota de diseño:** romper el foco nunca penaliza al guardia. El error existe recién cuando completa una captura sobre un inocente. Esto evita castigar los intentos fallidos por posicionamiento, pero mantiene el dilema al momento de resolver.
 
 ### 3.4 Parámetros de Balance (Tweakeables)
 
 | Parámetro | Valor inicial | Rango de ajuste | Notas |
 |-----------|--------------|-----------------|-------|
-| `chase_duration_max` | 15 seg | 10–20 seg | Tiempo máximo de persecución activa |
-| `guard_sprint_multiplier` | 1.20x | 1.10–1.35x | Velocidad extra del guardia en persecución |
-| `prisoner_sprint_multiplier` | 1.15x | 1.05–1.25x | Velocidad extra del preso huyendo |
-| `camouflage_npc_count` | 3 | 2–5 | NPCs necesarios cerca para camuflarse |
-| `camouflage_radius` | 3.0m | 2.0–5.0m | Radio para contar NPCs cercanos |
-| `catch_range` | 1.5m | 1.0–2.5m | Distancia para capturar |
+| `capture_focus_time` | 0.5 seg | 0.3–0.8 seg | Tiempo de foco necesario para resolver la captura |
+| `capture_range` | 2.0m | 1.5–2.5m | Distancia máxima para iniciar y sostener captura |
+| `capture_focus_break_tolerance` | 0.1 seg | 0.0–0.2 seg | Tolerancia opcional para jitter de cámara/target |
 | `guard_error_penalty_1_duration` | 60 seg | 30–90 seg | Duración del NPC enojado siguiendo |
 | `guard_error_penalty_2_duration` | 120 seg | 60–180 seg | Duración del bloqueo de zona |
 | `stumble_stun_duration` | 3.5 seg | 2.0–5.0 seg | Duración del tropiezo por objeto lanzado |
@@ -568,7 +566,7 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 
 | Elemento | Presos (jugadores + NPCs) | Guardia |
 |----------|---------------------------|---------|
-| Uniforme | Gris Alcatraz, número en el pecho | Marrón oscuro, gorra |
+| Uniforme | Gris Alcatraz, sin número legible durante gameplay | Marrón oscuro, gorra |
 | Distinción visual | **Ninguna** entre jugadores y NPCs (intencional) | Único — siempre visible |
 | Identificación aliada | Ícono discreto sobre compañeros presos cuando están a <5m | — |
 | Accesorio nocturno | — | Linterna en mano |
@@ -592,7 +590,7 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 | Ambiente prisión | Eco metálico, murmullos lejanos, puertas de metal | Alta |
 | Pasos | Diferenciados por superficie (concreto, metal, tierra) | Alta |
 | Silbato de fase | Marca el cambio de fase — fuerte, reconocible | Alta |
-| Alarma de persecución | Sonido tenso cuando el guardia señala (solo para el preso señalado) | Alta |
+| Pulso de foco | Sonido tenso breve mientras el guardia sostiene foco de captura sobre ti (opcional MVP) | Media |
 
 ### 11.2 Audio 3D (Gameplay)
 
@@ -629,7 +627,7 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 │  ◆ ◇                                        │  ← Inventario (2 slots)
 │  [E] Recoger                                 │  ← Prompt contextual
 │                                              │
-│  ○ ○ ●                  ⚠ PERSECUCIÓN ⚠     │  ← Progreso escape (3 piezas)
+│  ○ ○ ●                                        │  ← Progreso escape (3 piezas)
 │  Compañeros: ← →                             │  ← Posición aliados (periférica)
 └──────────────────────────────────────────────┘
 ```
@@ -639,7 +637,6 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 | Fase actual + timer | Top-center | Nombre de la fase + tiempo restante |
 | Inventario | Bottom-left | 2 slots con ícono del objeto (◆ = ocupado, ◇ = vacío) |
 | Prompt contextual | Bottom-center | "[E] Recoger" / "[Q] Usar" cuando hay interacción disponible |
-| Alerta de persecución | Bottom-right | Aparece solo cuando el guardia te señaló. Rojo pulsante. |
 | Progreso de escape | Bottom-left (sobre inventario) | Círculos: ○ = falta, ● = conseguido. 3 por ruta. |
 | Posición de aliados | Bordes de pantalla | Flechas direccionales indicando dónde están los compañeros |
 
@@ -651,10 +648,10 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 │                                     [CAM] ▣  │  ← Feed de cámaras (miniatura)
 │                                     [CAM] ▣  │
 │                                              │
-│                     ◎                        │  ← Crosshair de señalamiento
+│                     ◎                        │  ← Crosshair de captura
 │                                              │
 │                                              │
-│  Errores: ✕ ○ ○                              │  ← Contador de errores (máx 3)
+│  Errores: ✕ ○ ○        [Hold Click] Capturar │  ← Contador de errores + prompt
 │  Tensión motín: ██░░░░                       │  ← Barra de tensión
 │  [TAB] Cámaras                               │  ← Prompt de cámaras
 │  ⚡ Alerta: Zona Taller — alguien fuera      │  ← Alerta de comportamiento
@@ -665,9 +662,10 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 |----------|----------|-------------|
 | Fase actual + timer | Top-center | Igual que presos |
 | Mini-cámaras | Top-right | 4 thumbnails pequeños de las cámaras |
-| Crosshair de señalamiento | Center | Más grande que el de presos, indica "puedo señalar" |
+| Crosshair de captura | Center | Más grande que el de presos; muestra progreso radial cuando hay target válido |
 | Contador de errores | Bottom-left | Cruces rojas por cada error (máx 3) |
 | Barra de tensión de motín | Bottom-left | Sube con errores. Al máximo, presos pueden activar motín |
+| Prompt de captura | Bottom-center | "[Hold Click] Capturar" cuando hay target válido a rango |
 | Prompt de cámaras | Bottom-center | "[TAB] Cámaras" |
 | Alertas de comportamiento | Bottom-right | Notificaciones: "Zona X — alguien fuera de rutina" (sin identidad) |
 
@@ -697,7 +695,7 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 | Agacharse | C (toggle) | x | | |
 | Interactuar / Recoger | E | x | | |
 | Usar objeto | Q | | x | |
-| Señalar sospechoso | Click izq. | | | x |
+| Capturar sospechoso (mantener 0.5s) | Click izq. | | | x |
 | Modo cámaras | TAB | | | x |
 | Señal (golpe/tos) | F | | x | |
 | Activar motín | M (hold 3 seg) | | x (solo si disponible) | |
@@ -738,7 +736,7 @@ Unity maneja **toda** la lógica del juego: lobby, partida, resultados, revancha
 | Posición de NPCs | **Servidor** | Consistencia para todos los clientes |
 | Timer de fases | **Servidor** | Sincronización exacta |
 | Inventario | **Servidor** | Evitar item duplication |
-| Persecución (señalar/atrapar) | **Servidor** | Validación de distancia server-side |
+| Captura por foco | **Servidor** (con foco local para selección visible) | Validación de distancia, identidad y resolución |
 | Cámaras | **Cliente del guardia** (notifica servidor) | Baja latencia para toggle |
 | Movimiento input | **Cliente** (enviado al servidor) | Input prediction |
 
@@ -748,12 +746,11 @@ Unity maneja **toda** la lógica del juego: lobby, partida, resultados, revancha
 |--------|-----------|---------|
 | `player:move` | Cliente → Servidor | `{ position, rotation, velocity }` |
 | `player:interact` | Cliente → Servidor | `{ objectId, action }` |
-| `guard:mark` | Cliente → Servidor | `{ targetId }` |
-| `guard:catch` | Servidor → Todos | `{ guardId, prisonerId, success }` |
+| `guard:catch` | Cliente → Servidor | `{ entityId, entityType }` |
+| `guard:catch:result` | Servidor → Todos | `{ guardId, entityId, success, isPlayer }` |
+| `catch:failed` | Servidor → Guardia | `{ reason }` |
 | `phase:change` | Servidor → Todos | `{ phase, duration, zone }` |
 | `npc:positions` | Servidor → Todos | `{ npcs: [{ id, pos, rot, anim }] }` (delta compressed) |
-| `chase:start` | Servidor → Presos | `{ targetId }` (solo al señalado) |
-| `chase:end` | Servidor → Todos | `{ reason: 'caught' | 'lost' | 'timeout' }` |
 | `escape:progress` | Servidor → Presos | `{ route, items_collected, items_needed }` |
 | `game:end` | Servidor → Todos | `{ winner: 'prisoners' | 'guard', reason }` |
 | `riot:available` | Servidor → Presos | `{}` |
@@ -858,13 +855,13 @@ Siempre **20 personajes en total** para mantener consistencia visual y de perfor
 
 | Tarea | Prioridad | Estimación | Dependencias |
 |-------|-----------|------------|-------------|
-| Sistema de persecución (señalar → correr → atrapar/perder) | P0 | 2 días | Movimiento FPS |
-| Lógica de camuflaje (zona correcta + entre NPCs = perder rastro) | P0 | 1 día | Persecución + NPCs |
+| Sistema de captura por foco (acercarse → sostener 0.5s → resolver) | P0 | 2 días | Movimiento FPS |
+| Lógica de evasión corta (distancia + romper foco) | P0 | 1 día | Captura + NPCs |
 | Sistema de inventario (recoger, guardar, usar objetos) | P0 | 1.5 días | — |
 | 1 ruta de escape completa (conducto de ventilación — cooperativa) | P0 | 2 días | Inventario + Mapa |
-| Penalizaciones por errores del guardia (NPC enojado, zona bloqueada, motín) | P1 | 1 día | Persecución |
+| Penalizaciones por errores del guardia (NPC enojado, zona bloqueada, motín) | P1 | 1 día | Captura por foco |
 | Mecánicas de molestia (jabón, tirar comida) | P1 | 0.5 día | Inventario |
-| Condiciones de victoria/derrota | P0 | 1 día | Persecución + Escape |
+| Condiciones de victoria/derrota | P0 | 1 día | Captura + Escape |
 | **Entregable:** Partida jugable completa con 1 ruta de escape | | | |
 
 ### Semana 3 — Polish + Segunda Ruta (Días 15–21)
@@ -883,7 +880,7 @@ Siempre **20 personajes en total** para mantener consistencia visual y de perfor
 
 | Tarea | Prioridad | Estimación | Dependencias |
 |-------|-----------|------------|-------------|
-| Balance de tiempos y dificultad de persecución | P0 | 1 día | Playtesting |
+| Balance de tiempos y dificultad de captura por foco | P0 | 1 día | Playtesting |
 | Bug fixing multiplayer | P0 | 1 día | — |
 | Deploy a Vercel + Render | P0 | 0.5 día | — |
 | Pantallas de inicio, resultados y revancha | P1 | 0.5 día | — |
@@ -907,11 +904,11 @@ Siempre **20 personajes en total** para mantener consistencia visual y de perfor
 |--------|-------------|---------|------------|
 | Sincronización NPCs en multiplayer | Alta | Alto | NPCs simulados en servidor, clientes interpolan posiciones. Delta compression. |
 | Performance WebGL con 20+ NPCs | Media | Alto | LOD agresivo, animaciones simples (max 3 por estado), frustum culling, occlusion culling. |
-| Balance persecución (fácil/difícil) | Alta | Alto | Playtesting desde semana 2. Todos los parámetros de persecución son tweakeables (ver sección 3.4). |
+| Balance captura por foco (fácil/difícil) | Alta | Alto | Playtesting desde semana 2. Todos los parámetros del sistema son tweakeables (ver sección 3.4). |
 | Scope creep | Alta | Medio | Priorizar 1 ruta funcional antes de agregar la segunda. Scope cuts definidos. |
 | Bugs Socket.io en partidas de 4 | Media | Medio | Testear con 2 jugadores primero, escalar de a uno. Reconexión automática (30 seg). |
 | WebGL build pesado | Media | Medio | Texturas comprimidas, asset bundles, streaming de assets. Target: <50MB initial load. |
-| Latencia alta en persecuciones | Media | Alto | Server-authoritative con client prediction. Compensación de lag en detección de captura. |
+| Latencia alta en capturas | Media | Alto | El foco se resuelve del lado cliente para el feel; el servidor valida rango e identidad antes de confirmar el resultado. |
 
 ---
 
@@ -933,8 +930,9 @@ Siempre **20 personajes en total** para mantener consistencia visual y de perfor
 |---------|-----------|
 | **Fase** | Período de tiempo dentro de la jornada (inicio, desayuno, trabajo, etc.) |
 | **Rutina** | Comportamiento esperado de un preso/NPC durante una fase específica |
-| **Señalar** | Acción del guardia para marcar a alguien como sospechoso e iniciar persecución |
-| **Camuflaje** | Acción de mezclarse con NPCs o volver a la rutina para perder al guardia |
+| **Captura por foco** | Acción del guardia de mantener la mira e input sobre un personaje cercano durante un breve tiempo para intentar atraparlo |
+| **Foco** | Tiempo continuo de apuntado requerido para que la captura se resuelva |
+| **Camuflaje** | Acción de mezclarse con NPCs o volver a la rutina para impedir que el guardia llegue a rango o complete el foco |
 | **Motín** | Condición de victoria de los presos que se activa tras 3 errores del guardia |
 | **Ruta de escape** | Secuencia de objetos y acciones que los presos deben completar para escapar |
 | **Delta compression** | Enviar solo los cambios de posición de NPCs, no las posiciones completas |
@@ -942,4 +940,4 @@ Siempre **20 personajes en total** para mantener consistencia visual y de perfor
 
 ---
 
-*GDD v1.0 — Documento vivo. Prioridad absoluta: que sea divertido con 2 jugadores desde el día 1.*
+*GDD v1.3 — Documento vivo. Prioridad absoluta: que sea divertido con 2 jugadores desde el día 1.*

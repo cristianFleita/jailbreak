@@ -325,53 +325,54 @@ export function handleGuardCatch(context: GuardCatchContext): void {
   const { io, roomId, room, socketId, guardId, targetId, timestamp } = context
 
   const guard = room.state.players.get(socketId)
-  const target = room.state.playersByUserId.get(targetId)
-
-  if (!guard || !target) {
-    console.warn(`[CATCH] Player not found (guard=${socketId}, target=${targetId})`)
+  if (!guard || guard.role !== 'guard') {
+    console.warn(`[CATCH] ${socketId} is not a valid guard`)
     return
   }
 
-  if (guard.role !== 'guard') {
-    console.warn(`[CATCH] ${socketId} is not a guard`)
+  const targetPlayer = room.state.playersByUserId.get(targetId)
+  const targetNpc = room.state.npcs.get(targetId)
+
+  if (!targetPlayer && !targetNpc) {
+    console.warn(`[CATCH] Target ${targetId} not found`)
+    io.to(socketId).emit('catch:failed', { reason: 'Target not found' })
     return
   }
 
-  if (!target.isAlive) {
+  const isPlayer = !!targetPlayer
+  const targetPosition = isPlayer ? targetPlayer.position : targetNpc!.position
+  const targetMovementState = isPlayer ? targetPlayer.movementState : 'idle'
+
+  if (isPlayer && !targetPlayer!.isAlive) {
     console.warn(`[CATCH] Target ${targetId} is already caught/dead`)
+    io.to(socketId).emit('catch:failed', { reason: 'Target already dead' })
     return
   }
 
-  // Distance validation
-  const catchCheck = validateGuardCatch(
-    guard.position,
-    target.position,
-    target.movementState,
-    1.5 // catch range in meters
-  )
+  // Distance validation is now handled entirely on the Unity client during the 0.5s focus.
+  // We skip backend distance checks because NPC positions are simulated in Unity (NavMesh) 
+  // and their backend positions are stale, leading to false out-of-range rejections.
 
-  if (!catchCheck.valid) {
-    console.log(`[CATCH] Attempt failed: ${catchCheck.reason}`)
-    io.to(socketId).emit('catch:failed', { reason: catchCheck.reason })
-    return
+  // Catch is valid - could be player or NPC
+  if (isPlayer) {
+    targetPlayer!.isAlive = false
+    console.log(`[CATCH] Guard ${guard.id} caught prisoner ${targetPlayer!.id}`)
+  } else {
+    console.log(`[CATCH] Guard ${guard.id} mistakenly caught NPC ${targetNpc!.id}`)
+    // Need to trigger error in guard penalties here, maybe via gameManager
   }
-
-  // Catch is valid
-  target.isAlive = false
 
   io.to(roomId).emit('guard:catch', {
     guardId: guard.id,
-    targetId: target.id,
+    targetId: targetId,
     success: true,
-    isPlayer: true,
+    isPlayer: isPlayer,
   })
-
-  console.log(`[CATCH] Guard ${guard.id} caught prisoner ${target.id}`)
 
   // Notify game manager
   const gameManager = (room as any).gameManager as GameManager
   if (gameManager) {
-    gameManager.onGuardCatch(targetId)
+    gameManager.onGuardCatch(guard.id, targetId, isPlayer)
   }
 }
 

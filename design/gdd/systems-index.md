@@ -13,7 +13,7 @@
 | # | Sistema | Descripción | Origen | Prioridad |
 |---|---------|-------------|--------|-----------|
 | 1 | Movimiento FPS | Movimiento en primera persona, sprint, colisión con entorno | Explícito | MVP |
-| 2 | Sistema de Persecución | Señalar → perseguir → atrapar/perder rastro, con timer y estados | Explícito | MVP |
+| 2 | Sistema de Captura por Foco | Acercarse → sostener foco → capturar o cometer error | Explícito | MVP |
 | 3 | Sistema de Camuflaje | Perder al guardia: zona correcta, NPCs cercanos, cambio de área | Explícito | MVP |
 | 4 | Sistema de Rutina/Fases | Timer de fases, transiciones, silbato, zonas activas por fase | Explícito | MVP |
 | 5 | Sistema de Inventario | 2 slots, recoger, usar, soltar al ser capturado | Explícito | MVP |
@@ -51,7 +51,7 @@
 
 | # | Sistema | Descripción | Origen | Prioridad |
 |---|---------|-------------|--------|-----------|
-| 20 | HUD Presos | Fase, timer, inventario, alerta persecución, progreso escape, aliados — Unity UI | Explícito | VS |
+| 20 | HUD Presos | Fase, timer, inventario, progreso escape, aliados — Unity UI | Explícito | VS |
 | 21 | HUD Guardia | Fase, timer, mini-cámaras, errores, tensión motín, alertas — Unity UI | Explícito | VS |
 | 22 | Pantallas de UI | Menú, lobby, asignación rol, captura, victoria/derrota, revancha — Unity UI | Explícito | Alpha |
 
@@ -95,7 +95,7 @@
 ### Capa 2 — Feature (depende de Core)
 
 ```
-[2] Persecución         ← [1], [12], [18]
+[2] Captura por Foco    ← [1], [12], [18]
 [3] Camuflaje           ← [1], [13], [4]
 [7] Crafting Simple     ← [5]
 [8] Mecánicas Molestia  ← [5], [1]
@@ -172,7 +172,7 @@
 | Movimiento FPS (1) | 7 sistemas | **Crítico** — sin esto no hay juego |
 | Rutina/Fases (4) | 7 sistemas | **Crítico** — estructura temporal de toda la partida |
 | Sincronización (18) | 5 sistemas | **Crítico** — sin esto no hay multiplayer |
-| NPC State Machine (12) | 5 sistemas | Alto — afecta persecución, penalizaciones, motín |
+| NPC State Machine (12) | 5 sistemas | Alto — afecta captura, penalizaciones, motín |
 | Inventario (5) | 5 sistemas | Alto — afecta escape, crafting, molestias |
 
 ---
@@ -198,7 +198,7 @@ Orden de implementación combinando dependencias + prioridad MVP-first:
 | Orden | Sistema | Capa | Est. |
 |-------|---------|------|------|
 | 6 | Inventario (5) | Core | 1.5 días |
-| 7 | Persecución (2) | Feature | 2 días |
+| 7 | Captura por Foco (2) | Feature | 2 días |
 | 8 | Camuflaje (3) | Feature | 1 día |
 | 9 | Crafting Simple (7) | Feature | 0.5 día |
 | 10 | Rutas de Escape — Ruta 1: Ventilación (6) | Compuesto | 2 días |
@@ -243,7 +243,7 @@ Orden de implementación combinando dependencias + prioridad MVP-first:
 | # | Sistema | Estado | GDD | Sprint |
 |---|---------|--------|-----|--------|
 | 1 | Movimiento FPS | Designed | [movimiento-fps.md](movimiento-fps.md) | S1 |
-| 2 | Persecución | Not Started | — | S2 |
+| 2 | Captura por Foco | Designed | [sistema-captura-por-foco.md](sistema-captura-por-foco.md) | S2 |
 | 3 | Camuflaje | Not Started | — | S2 |
 | 4 | Rutina/Fases | Designed | [rutina-fases-npc.md](rutina-fases-npc.md) | S1 |
 | 5 | Inventario | Not Started | — | S2 |
@@ -279,4 +279,4 @@ Orden de implementación combinando dependencias + prioridad MVP-first:
 | Cortar segundo | Ruta 3: Carro de Ropa (6) + NPC Soborno (14) | Bajo — 2 rutas son suficientes |
 | Cortar segundo | Iluminación Dinámica (26) | Medio — pierde atmósfera nocturna |
 | No cortar | Cámaras de Seguridad (15) | Alto — herramienta clave del guardia |
-| No cortar | Persecución (2) | Crítico — es la mecánica central |
+| No cortar | Captura por Foco (2) | Crítico — es la mecánica central |
