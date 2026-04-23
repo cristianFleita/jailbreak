@@ -79,7 +79,7 @@ namespace Jailbreak.Player
             var foodCounter = ni.GetComponent<FoodCounterInteractable>();
             if (foodCounter != null && carryFoodInteraction != null)
             {
-                foodCounter.ApplyRemote(carryFoodInteraction, data.action);
+                foodCounter.ApplyRemote(transform, carryFoodInteraction, data.action);
                 Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
                 return;
             }
@@ -88,7 +88,7 @@ namespace Jailbreak.Player
             var sink = ni.GetComponent<SinkInteractable>();
             if (sink != null && carryFoodInteraction != null)
             {
-                sink.ApplyRemote(carryFoodInteraction, data.action);
+                sink.ApplyRemote(transform, carryFoodInteraction, data.action);
                 Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
                 return;
             }

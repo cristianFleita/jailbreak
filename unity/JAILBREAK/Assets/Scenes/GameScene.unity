@@ -24577,6 +24577,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7252994456800625525, guid: 1dca8dd7d96c94803b435cce00ffd9b2, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -37583,6 +37587,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Kitchen_1
       objectReference: {fileID: 0}
+    - target: {fileID: 5609489466222367356, guid: b5507f584dfb24d63a43e0994c78df9f, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

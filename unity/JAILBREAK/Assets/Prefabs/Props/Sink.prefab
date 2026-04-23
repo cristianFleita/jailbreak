@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &7979044692835262148
+--- !u!1 &2923260923888140941
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,39 +8,41 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6209639859262377926}
-  - component: {fileID: 5941040365160188229}
-  - component: {fileID: 5064932073844197236}
-  - component: {fileID: 9034441638282830664}
+  - component: {fileID: 3715966689313481079}
+  - component: {fileID: 3823962908833687620}
+  - component: {fileID: 7116098962609315387}
+  - component: {fileID: 8855622623134774731}
+  - component: {fileID: 2721881730280421574}
+  - component: {fileID: 7252994456800625525}
   m_Layer: 6
-  m_Name: Interactable
+  m_Name: Interact
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
---- !u!4 &6209639859262377926
+--- !u!4 &3715966689313481079
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7979044692835262148}
+  m_GameObject: {fileID: 2923260923888140941}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.0013, z: -0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: 0.70710677, z: 0.7071069, w: 0}
+  m_LocalPosition: {x: 0, y: -0.0035618325, z: 0}
+  m_LocalScale: {x: 0.34447154, y: 0.34447128, z: 0.3444716}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3117330899580283256}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &5941040365160188229
-BoxCollider:
+  m_LocalEulerAnglesHint: {x: -90, y: 90, z: 90}
+--- !u!135 &3823962908833687620
+SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7979044692835262148}
+  m_GameObject: {fileID: 2923260923888140941}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -53,33 +55,67 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.0074763554, y: 0.0024549733, z: 0.003239995}
-  m_Center: {x: 0.00023887523, y: -0.0009947944, z: 0.00095752504}
---- !u!114 &5064932073844197236
+  m_Radius: 0.008
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7116098962609315387
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7979044692835262148}
+  m_GameObject: {fileID: 2923260923888140941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c447f42c2e7f4f2ca7d001c974060b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProgressAction
+  animatorBoolName: isWorkingTable
+  duration: 4
+  resetOnStop: 0
+  onComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  progress: 0
+--- !u!114 &8855622623134774731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2923260923888140941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 562f8f9128ac847ae9ca6eca4cc2b2d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorkTableAction
+  actionPoint: {fileID: 3715966689313481079}
+--- !u!114 &2721881730280421574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2923260923888140941}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b4a6e0a11cce4f4aa8baa6a0d5a1b11a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkInteractable
   networkId: 
---- !u!114 &9034441638282830664
+--- !u!114 &7252994456800625525
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7979044692835262148}
+  m_GameObject: {fileID: 2923260923888140941}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0baba8efe7f34b73a109f7d4db5b0d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SinkInteractable
+  progressBar: {fileID: 0}
+  progressLabel: Leaving food...
 --- !u!1001 &3226902330702663315
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -153,7 +189,7 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2bb0a4e6957ea433fa3836dfbb8fe7e2, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6209639859262377926}
+      addedObject: {fileID: 3715966689313481079}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2bb0a4e6957ea433fa3836dfbb8fe7e2, type: 3}
       insertIndex: -1

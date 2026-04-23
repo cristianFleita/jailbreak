@@ -504,7 +504,7 @@ export class JailRoutineSystem {
           })
         }
         steps.push({ actionId: 'cafe_walk_to_counter', animTrigger: 'Walking',    zoneId: 'cafeteria_counter', seed: counterSeed, duration: 0 })
-        steps.push({ actionId: 'cafe_grab_food',       animTrigger: 'serve_self', zoneId: 'cafeteria_counter', seed: counterSeed, duration: 4 + Math.random() * 2 })
+        steps.push({ actionId: 'cafe_grab_food',       animTrigger: 'serve_self', zoneId: 'cafeteria_counter', seed: counterSeed, duration: 5 })
       }
 
       steps.push({ actionId: 'cafe_walk_to_seat', animTrigger: 'Walking', zoneId: 'cafeteria_seating', seed: seatSeed, duration: 0 })
@@ -527,7 +527,7 @@ export class JailRoutineSystem {
       }
 
       steps.push({ actionId: 'cafe_walk_to_trash', animTrigger: 'carry_tray',   zoneId: 'cafeteria_trash', seed: sinkSeed, duration: 0 })
-      steps.push({ actionId: 'cafe_clear_tray',    animTrigger: 'deposit_tray', zoneId: 'cafeteria_trash', seed: sinkSeed, duration: 3 + Math.random() * 2 })
+      steps.push({ actionId: 'cafe_clear_tray',    animTrigger: 'deposit_tray', zoneId: 'cafeteria_trash', seed: sinkSeed, duration: 4 })
 
       let consumed = steps.reduce((s, st) => s + st.duration, 0)
       if (consumed < phaseBudget - 12) {

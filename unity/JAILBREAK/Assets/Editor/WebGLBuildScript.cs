@@ -8,6 +8,9 @@ public class WebGLBuildScript
     {
         string outputPath = "../../web/public/unity-build";
         
+        PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
+        PlayerSettings.WebGL.decompressionFallback = true;
+        
         BuildPlayerOptions opts = new BuildPlayerOptions
         {
             scenes = new[]
