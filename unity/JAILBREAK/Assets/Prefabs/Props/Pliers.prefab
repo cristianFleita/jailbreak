@@ -68,8 +68,142 @@ PrefabInstance:
       propertyPath: m_Name
       value: Pliers
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: db1e140ef8c684d9b9485ea62b9c3af4, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db1e140ef8c684d9b9485ea62b9c3af4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8252382209687537386}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db1e140ef8c684d9b9485ea62b9c3af4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7245516974087944757}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db1e140ef8c684d9b9485ea62b9c3af4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3054123662434214346}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db1e140ef8c684d9b9485ea62b9c3af4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1331810026285582529}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db1e140ef8c684d9b9485ea62b9c3af4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7427891074021784443}
   m_SourcePrefab: {fileID: 100100000, guid: db1e140ef8c684d9b9485ea62b9c3af4, type: 3}
+--- !u!1 &409235672718471057 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: db1e140ef8c684d9b9485ea62b9c3af4, type: 3}
+  m_PrefabInstance: {fileID: 679072112085848768}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &8252382209687537386
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 409235672718471057}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.02454126, y: 0.013128878, z: 0.00547466}
+  m_Center: {x: -0.00055807753, y: 0.00070931466, z: 0.001462622}
+--- !u!54 &7245516974087944757
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 409235672718471057}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 112
+  m_CollisionDetection: 0
+--- !u!114 &3054123662434214346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 409235672718471057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb49f436e42604281b863ba20167ecc0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PickableItem
+  holdPositionOffset: {x: 0, y: 0, z: 0}
+  holdRotationOffset: {x: 0, y: 0, z: 0}
+  throwSpawnOffset: 0.6
+  landedSpeedThreshold: 1
+  onPickedUp:
+    m_PersistentCalls:
+      m_Calls: []
+  onThrown:
+    m_PersistentCalls:
+      m_Calls: []
+  onStoredInInventory:
+    m_PersistentCalls:
+      m_Calls: []
+  onConsumed:
+    m_PersistentCalls:
+      m_Calls: []
+  onHitWhileThrown:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1331810026285582529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 409235672718471057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86ef72487a78440da82d504b599a02e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PickUpInteractable
+  actionLabel: Pick Up
+  priority: 10
+  interactKey: 101
+  allowedInStates: []
+  holdPointName: mixamorig:RightHandIndex1
+--- !u!114 &7427891074021784443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 409235672718471057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 684de12568fcd4fc3830a6a7d3e1b009, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ThrowHitHandler
+  stunDuration: 3
+  animationVar: IsStunned
