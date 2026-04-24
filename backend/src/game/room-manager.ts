@@ -10,11 +10,12 @@
 import { Server } from 'socket.io'
 import {
   GameRoom, GameRoomState, GameConfig, NPCPositionUpdate, PlayerStateUpdate,
-  RoomStatePayload, PlayerRole,
+  RoomStatePayload, PlayerRole, EscapeRouteSelectedPayload,
 } from './types.js'
 import { createGameRoomState, advanceTick, computeNPCDelta, spawnNPCs, startGame, endGame } from './state.js'
 import { GameManager } from './systems/game-manager.js'
 import { getUser, setUserStatus } from './user-identity.js'
+import { initializeRouteState } from './routes/route-registry.js'
 
 /**
  * Default game configuration (tuning knobs from design doc).
@@ -299,8 +300,20 @@ export function transitionToActive(io: Server, room: GameRoom): void {
   }
 
   startGame(room.state)
+
+  // Randomize the selected route's authoritative state (desk/server, etc.)
+  // now that players are locked in but before NPC spawn / loop / broadcasts.
+  initializeRouteState(room.state)
+
   initializeNPCs(room)
   startGameLoop(io, room)
+
+  // Notify all clients which escape route is active. Sent BEFORE game:start
+  // so Unity can cache activeRouteId before any route UI renders.
+  const routePayload: EscapeRouteSelectedPayload = {
+    activeRouteId: room.state.activeRouteId,
+  }
+  io.to(room.state.id).emit('escape:route:selected', routePayload)
 
   // Notify all clients that game started
   io.to(room.state.id).emit('game:start', {

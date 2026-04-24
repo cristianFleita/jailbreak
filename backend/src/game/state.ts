@@ -4,11 +4,16 @@
  */
 
 import { GameRoomState, GameConfig, PlayerState, NPCState, ItemState, Vector3 } from './types.js'
+import { selectActiveRoute } from './routes/route-registry.js'
 
 /**
  * Creates an empty game room state ready for players to join.
  */
 export function createGameRoomState(roomId: string, hostUserId: string, config: GameConfig): GameRoomState {
+  // Selector-based route architecture. MVP registers only route1_ventilation.
+  // Route authoritative state (route1) is initialized on game start by
+  // room-manager.transitionToActive, so lobby reconnects don't hold stale
+  // randomized desk/server IDs.
   return {
     id: roomId,
     hostUserId,
@@ -25,6 +30,8 @@ export function createGameRoomState(roomId: string, hostUserId: string, config: 
     },
     tick: 0,
     createdAt: Date.now(),
+    activeRouteId: selectActiveRoute(),
+    spawnAreas: new Map(),
   }
 }
 
@@ -96,6 +103,11 @@ export function addPlayer(
     movementState: 'idle',
     isAlive: true,
     carrying: null,
+    // Authoritative inventory starts empty; slot count is set to 2 for
+    // prisoners when Phase B wires pickup/store handlers. Guards keep
+    // the array length of 0 (no inventory UI).
+    heldItemId: null,
+    inventorySlots: [],
   }
 
   state.players.set(playerId, player)
@@ -127,12 +139,17 @@ export function assignRandomRoles(state: GameRoomState): void {
       // Guard spawns at dedicated guard post
       players[i].position = { ...GUARD_SPAWN.position }
       players[i].spawnWaypointId = GUARD_SPAWN.id
+      players[i].inventorySlots = []            // guard has no inventory UI
+      players[i].heldItemId = null
     } else {
       // Prisoners spawn at random cell doors (any of the 20)
       const slot = shuffledSpawns[spawnIndex]
       players[i].position = { ...slot.position }
       players[i].spawnWaypointId = slot.id
       spawnIndex++
+      // Prisoners get 2 authoritative inventory slots (Ruta 1 contract)
+      players[i].inventorySlots = [null, null]
+      players[i].heldItemId = null
     }
   }
 

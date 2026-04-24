@@ -3,7 +3,6 @@
 > **Status**: Backlog operativo para implementacion
 > **Fuente**: `design/gdd/ruta-1-implementation-plan.md`
 > **Spec**: `design/gdd/ruta-1-ventilacion-industrial.md`
-> **Nota**: El nombre del archivo se conserva por compatibilidad, pero el contenido cubre Fases A-F.
 > **Last Updated**: 2026-04-24
 
 ---

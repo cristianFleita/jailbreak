@@ -120,6 +120,12 @@ export function setupGameSockets(io: Server) {
             setUserStatus(profile.userId, 'in-game', profile.currentRoomId)
 
             {
+              // Emit the active route BEFORE game:reconnect so Unity can cache
+              // activeRouteId before any route UI hydrates from the snapshot.
+              socket.emit('escape:route:selected', {
+                activeRouteId: roomForReconnect.state.activeRouteId,
+              })
+
               const gm = (roomForReconnect as any).gameManager
               socket.emit('game:reconnect', {
                 players: Array.from(roomForReconnect.state.players.values()),
@@ -127,6 +133,7 @@ export function setupGameSockets(io: Server) {
                 items: Array.from(roomForReconnect.state.items.values()),
                 phase: roomForReconnect.state.phase,
                 tick: roomForReconnect.state.tick,
+                activeRouteId: roomForReconnect.state.activeRouteId,
                 jailPhase: gm?.jailRoutine ? {
                   phase:          gm.jailRoutine.getCurrentJailPhase(),
                   zone:           gm.jailRoutine.getCurrentZone(),
@@ -275,6 +282,10 @@ export function setupGameSockets(io: Server) {
             setUserStatus(user.userId, 'in-game', payload.roomId)
 
             {
+              socket.emit('escape:route:selected', {
+                activeRouteId: room.state.activeRouteId,
+              })
+
               const gm2 = (room as any).gameManager
               socket.emit('game:reconnect', {
                 players: Array.from(room.state.players.values()),
@@ -282,6 +293,7 @@ export function setupGameSockets(io: Server) {
                 items: Array.from(room.state.items.values()),
                 phase: room.state.phase,
                 tick: room.state.tick,
+                activeRouteId: room.state.activeRouteId,
                 jailPhase: gm2?.jailRoutine ? {
                   phase:          gm2.jailRoutine.getCurrentJailPhase(),
                   zone:           gm2.jailRoutine.getCurrentZone(),

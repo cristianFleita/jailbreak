@@ -59,6 +59,25 @@ namespace Jailbreak.Network
         public float health;
         public string spawnWaypointId; // e.g. "cell_door_exit_17" — resolve via WaypointRegistry
         public string carrying;        // e.g. "food_plate" — null/empty means "nothing carried"
+
+        // ── Authoritative inventory (Ruta 1 / Phase A contract) ──────────
+        // heldItemId: stable item id currently in hand (e.g. "route1_wrench").
+        // inventorySlots: fixed-length (2 for prisoners). Null entries are empty.
+        // Both are set by backend; Unity treats them as read-only truth.
+        public string heldItemId;
+        public InventorySlotData[] inventorySlots;
+    }
+
+    /// <summary>
+    /// Authoritative inventory slot contents. Mirrors backend InventorySlotSync.
+    /// A null array entry represents an empty slot.
+    /// </summary>
+    [Serializable]
+    public class InventorySlotData
+    {
+        public string itemId;    // e.g. "route1_cutters", "route1_wrench"
+        public string itemType;  // e.g. "route_tool"
+        public string iconId;    // optional HUD icon hint
     }
 
     [Serializable]
@@ -124,6 +143,7 @@ namespace Jailbreak.Network
         public ItemStateData[] items;
         public PhaseData phase;
         public int tick;
+        public string activeRouteId;        // "route1_ventilation" in MVP
         public JailPhaseSnapshot jailPhase; // populated when jail routine is active
     }
 
@@ -414,5 +434,125 @@ namespace Jailbreak.Network
     public class NPCSyncStatePayload
     {
         public NPCStateSync[] npcs;
+    }
+
+    // ─── Escape Route System (Ruta 1 / Phase A contract) ────────────────────
+    // Mirrors backend types.ts. MVP registers only `route1_ventilation`.
+
+    /// <summary>
+    /// Emitted on game start AND on reconnect so clients know which route is
+    /// active before any route UI renders. MVP value is always
+    /// "route1_ventilation".
+    /// </summary>
+    [Serializable]
+    public class EscapeRouteSelectedPayload
+    {
+        public string activeRouteId;
+    }
+
+    /// <summary>
+    /// Single in-progress interaction (clue search, server sabotage, vent
+    /// unscrew, escape climb). Progress is 0..1.
+    /// </summary>
+    [Serializable]
+    public class Route1ActiveInteractionData
+    {
+        public string   objectId;
+        public string   action;
+        public string   startedByUserId;
+        public string[] helperUserIds;
+        public float    progress;
+    }
+
+    /// <summary>
+    /// Ruta 1 checklist + progress snapshot pushed to prisoners only.
+    /// Guard audience never receives this event.
+    ///
+    /// correctServerId is populated only when clueFound = true.
+    /// missions values are "locked" | "available" | "in_progress" | "complete".
+    /// </summary>
+    [Serializable]
+    public class EscapeRoute1StatePayload
+    {
+        public string   routeId;
+        public Route1Missions missions;
+        public bool     clueFound;
+        public string   correctServerId;   // null/empty unless clueFound
+        public bool     serverDisabled;
+        public VentProgressEntry[] ventProgress;  // serialized from ventProgressById dictionary
+        public string[] openVentIds;
+        public Route1ActiveInteractionData[] activeInteractions;
+        public string[] escapingPlayerIds;
+        public string[] escapedPlayerIds;
+        public long     updatedAt;
+    }
+
+    /// <summary>
+    /// Ruta 1 mission checklist. Each field is a status string:
+    /// "locked" | "available" | "in_progress" | "complete".
+    /// Names match the backend Route1MissionId enum so JsonUtility maps them
+    /// directly from the JSON object the server emits.
+    /// </summary>
+    [Serializable]
+    public class Route1Missions
+    {
+        public string find_cutters;
+        public string find_clue;
+        public string disable_server;
+        public string find_wrench;
+        public string open_vent;
+        public string escape;
+    }
+
+    /// <summary>
+    /// One vent's progress. Emitted as an array because JsonUtility cannot
+    /// deserialize Record&lt;string, number&gt; dictionaries directly.
+    /// Phase D is responsible for translating backend ventProgressById to
+    /// this array on the way out.
+    /// </summary>
+    [Serializable]
+    public class VentProgressEntry
+    {
+        public string ventId;
+        public float  progress;
+    }
+
+    /// <summary>
+    /// Observable world cues pushed to the guard (alarms, metal noise, etc.).
+    /// Never includes correct server ID — guard infers from observation.
+    /// cue ∈ { server_wrong_alarm, server_correct_power_off,
+    ///          vent_unscrew_noise, vent_opened }.
+    /// </summary>
+    [Serializable]
+    public class WorldCuePayload
+    {
+        public string   cue;
+        public string   zone;
+        public SVector3 position;
+    }
+
+    /// <summary>
+    /// Public props state visible to everyone (ventilation on/off, open vents).
+    /// </summary>
+    [Serializable]
+    public class WorldStatePayload
+    {
+        public bool     ventilationPowered;
+        public string[] openVentIds;
+    }
+
+    /// <summary>
+    /// Authoritative broadcast of a single item's lifecycle state.
+    /// state ∈ { spawned, held, stored, dropped, respawning }.
+    /// </summary>
+    [Serializable]
+    public class ItemStateBroadcastPayload
+    {
+        public string   itemId;
+        public string   itemType;
+        public string   state;
+        public string   holderUserId;
+        public string   spawnAreaId;
+        public SVector3 position;
     }
 }
