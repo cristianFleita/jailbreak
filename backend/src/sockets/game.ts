@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io'
 import {
-  PlayerMovePayload, Vector3,
+  NPCSyncStatePayload, PlayerInteractAction, PlayerMovePayload, Vector3,
   AuthRegisterPayload, RoomCreatePayload, RoomJoinPayload, RoomKickPayload,
 } from '../game/types.js'
 import {
@@ -30,8 +30,13 @@ import {
 import {
   markPlayerDisconnected,
   restorePlayerConnection,
+  consumeExpiredDisconnectedSlot,
   clearRoomSlots,
 } from '../game/reconnection.js'
+import {
+  dropCriticalRouteItemsForPlayer,
+  emitAllRouteItemStatesToSocket,
+} from '../game/systems/route-inventory.js'
 import {
   registerUser,
   getUserBySocket,
@@ -125,6 +130,7 @@ export function setupGameSockets(io: Server) {
               socket.emit('escape:route:selected', {
                 activeRouteId: roomForReconnect.state.activeRouteId,
               })
+              emitAllRouteItemStatesToSocket(io, socket.id, roomForReconnect.state)
 
               const gm = (roomForReconnect as any).gameManager
               socket.emit('game:reconnect', {
@@ -285,6 +291,7 @@ export function setupGameSockets(io: Server) {
               socket.emit('escape:route:selected', {
                 activeRouteId: room.state.activeRouteId,
               })
+              emitAllRouteItemStatesToSocket(io, socket.id, room.state)
 
               const gm2 = (room as any).gameManager
               socket.emit('game:reconnect', {
@@ -523,7 +530,7 @@ export function setupGameSockets(io: Server) {
     // ==================================================================
     // GAMEPLAY: player:interact
     // ==================================================================
-    socket.on('player:interact', ({ objectId, action }: { objectId: string; action: 'pickup' | 'use' | 'drop' }) => {
+    socket.on('player:interact', ({ objectId, action }: { objectId: string; action: PlayerInteractAction }) => {
       if (!currentRoomId) return
 
       try {
@@ -621,14 +628,17 @@ export function setupGameSockets(io: Server) {
     // ==================================================================
     // GAMEPLAY: npc:sync_state (from Host to sync NPC positions)
     // ==================================================================
-    socket.on('npc:sync_state', (payloadStr: string) => {
+    socket.on('npc:sync_state', (payloadRaw: string | NPCSyncStatePayload) => {
       if (!currentRoomId) return
 
       try {
         const room = getRoom(currentRoomId)
         if (!room || room.state.status !== 'active') return
 
-        const payload = JSON.parse(payloadStr)
+        const payload = typeof payloadRaw === 'string'
+          ? JSON.parse(payloadRaw) as NPCSyncStatePayload
+          : payloadRaw
+
         handleNPCSyncState({
           io,
           roomId: currentRoomId,
@@ -681,7 +691,14 @@ function handleLeaveRoom(
 
     // During an active game: save reconnection slot then remove the stale socket entry
     if (gameIsActive) {
-      markPlayerDisconnected(roomId, player, room.config.reconnectTimeout)
+      if (reason === 'left') {
+        dropCriticalRouteItemsForPlayer(io, roomId, room.state, player, player.position)
+        setUserStatus(userId, 'idle')
+      } else {
+        markPlayerDisconnected(roomId, player, room.config.reconnectTimeout)
+        scheduleDisconnectedCriticalItemRelease(io, roomId, userId, room.config.reconnectTimeout)
+      }
+
       removePlayer(room.state, socket.id)
       clearPlayerMoveTracking(socket.id)
       socket.leave(roomId)
@@ -693,7 +710,7 @@ function handleLeaveRoom(
         players: buildRoomPlayersPayload(room),
       })
 
-      console.log(`[ROOM] ${isHost ? 'Host' : 'Player'} ${userId} disconnected from active game "${roomId}" — slot reserved`)
+      console.log(`[ROOM] ${isHost ? 'Host' : 'Player'} ${userId} ${reason} active game "${roomId}"${reason === 'disconnected' ? ' — slot reserved' : ''}`)
       return
     }
 
@@ -748,4 +765,37 @@ function handleLeaveRoom(
   } catch (err) {
     console.error(`[ERROR] handleLeaveRoom: ${err}`)
   }
+}
+
+function scheduleDisconnectedCriticalItemRelease(
+  io: Server,
+  roomId: string,
+  userId: string,
+  reconnectTimeoutSeconds: number
+): void {
+  setTimeout(() => {
+    try {
+      const expiredPlayer = consumeExpiredDisconnectedSlot(roomId, userId)
+      if (!expiredPlayer) return
+
+      const room = getRoom(roomId)
+      if (!room || room.state.status !== 'active') return
+
+      const dropped = dropCriticalRouteItemsForPlayer(
+        io,
+        roomId,
+        room.state,
+        expiredPlayer,
+        expiredPlayer.position
+      )
+
+      setUserStatus(userId, 'idle')
+
+      if (dropped.length > 0) {
+        console.log(`[RECONNECT] Released expired critical route tools for ${userId}: ${dropped.join(', ')}`)
+      }
+    } catch (err) {
+      console.error(`[ERROR] scheduleDisconnectedCriticalItemRelease: ${err}`)
+    }
+  }, reconnectTimeoutSeconds * 1000 + 100)
 }

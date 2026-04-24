@@ -11,6 +11,7 @@
 
 import { ActiveRouteId, GameRoomState } from '../types.js'
 import { createRoute1State } from './route1/state.js'
+import { ensureItemState } from '../systems/route-inventory.js'
 
 /**
  * A route definition is a pure initializer: it mutates a freshly-created
@@ -27,6 +28,12 @@ const REGISTRY: RouteDefinition[] = [
     id: 'route1_ventilation',
     init: (state) => {
       state.route1 = createRoute1State()
+      // Seed authoritative lifecycle for the two critical route tools.
+      // Positions are placeholders (0,0,0) until Phase C spawn areas override
+      // them via item:state updates. Pickup validation tolerates placeholder
+      // positions; Unity is the source of proximity in this phase.
+      ensureItemState(state, 'route1_cutters', 'route_tool')
+      ensureItemState(state, 'route1_wrench', 'route_tool')
     },
   },
   // Route 2 — TODO (not implementable in MVP)

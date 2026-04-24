@@ -19,12 +19,12 @@ public class InventoryInput : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(nextKey))
+        if (InputSystemKey.WasPressedThisFrame(nextKey))
         {
             inventory.SelectNext();
             TryEquipSelected();
         }
-        else if (Input.GetKeyDown(previousKey))
+        else if (InputSystemKey.WasPressedThisFrame(previousKey))
         {
             inventory.SelectPrevious();
             TryEquipSelected();
@@ -33,13 +33,17 @@ public class InventoryInput : MonoBehaviour
     
     private void TryEquipSelected()
     {
-        if (!inventory.HasItemAt(inventory.SelectedIndex)) 
+        var selected = inventory.GetAt(inventory.SelectedIndex);
+        if (selected == null)
         {
             if (heldInput.HasItem) {
                 heldInput.ForceStore(); 
             }
             return;
         }
+
+        if (selected.GetComponent<NetworkRoutePickable>() != null)
+            return;
 
         if (heldInput.HasItem)
         {
@@ -51,6 +55,9 @@ public class InventoryInput : MonoBehaviour
             {
                 heldInput.ForceStore();
             }
+
+            if (heldInput.HasItem)
+                return;
         }
 
         var newItem = inventory.TakeSelected();

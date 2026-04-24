@@ -17,18 +17,21 @@ public class PickUpInteractable : MonoBehaviour, IInteractable
     public string    ActionLabel     => actionLabel;
     public int       Priority        => priority;
     public Transform Transform       => transform;
-    public bool      CanInteract     => !pickable.IsHeld;
+    public bool      CanInteract     => routePickable == null && !pickable.IsHeld;
     public string[]  AllowedInStates => allowedInStates;
 
     private PickableItem pickable;
+    private NetworkRoutePickable routePickable;
 
     void Awake()
     {
         pickable = GetComponent<PickableItem>();
+        routePickable = GetComponent<NetworkRoutePickable>();
     }
 
     public void OnInteract(Collider source)
     {
+        if (routePickable != null) return;
         if (pickable.IsHeld) return;
 
         var root = source.transform.root;

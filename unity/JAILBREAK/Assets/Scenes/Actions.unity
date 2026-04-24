@@ -245,17 +245,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f39c487b68b334ca29a95ec586b10794, type: 3}
---- !u!114 &159552978 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2743910222365266886, guid: d1fbb20efa3224dfcb5a21c07738346a, type: 3}
-  m_PrefabInstance: {fileID: 1764897908}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2a2a9e7beaf94f02bbf087a84303231, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HeldItemInput
 --- !u!1 &161526216
 GameObject:
   m_ObjectHideFlags: 0
@@ -618,6 +607,130 @@ MonoBehaviour:
   container: {fileID: 270898978}
   fillImage: {fileID: 161526218}
   labelText: {fileID: 729673181}
+--- !u!1001 &292231689
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4896770664015057812, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      propertyPath: m_Name
+      value: Prisoner 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4896770664015057812, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5241911055874754862, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5241911055874754862, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5241911055874754862, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5241911055874754862, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5241911055874754862, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5241911055874754862, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5241911055874754862, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5241911055874754862, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5241911055874754862, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5241911055874754862, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6836199365319283087, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 292231694}
+  m_SourcePrefab: {fileID: 100100000, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+--- !u!114 &292231690 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2219500680917294588, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+  m_PrefabInstance: {fileID: 292231689}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d268673175c94d719876a17a454d987, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryInput
+--- !u!114 &292231691 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1408992931922567262, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+  m_PrefabInstance: {fileID: 292231689}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecae2cedef55e4a65aca2d10a321952b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemInventory
+--- !u!114 &292231692 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2743910222365266886, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+  m_PrefabInstance: {fileID: 292231689}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2a2a9e7beaf94f02bbf087a84303231, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HeldItemInput
+--- !u!1 &292231693 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6836199365319283087, guid: b8881baaf15004d4f991ef6e3db89fae, type: 3}
+  m_PrefabInstance: {fileID: 292231689}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &292231694
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 292231693}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 087e7ec39e4b6490f85de2c7c7c0b514, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Player.FPSCameraController
+  sensitivity: 0.15
+  standEyeHeight: 1.6
+  crouchEyeHeight: 0.8
+  guardFOV: 80
+  prisonerFOV: 70
+  headBobEnabled: 0
+  bobFrequency: 6.2831855
+  walkBobAmplitude: 0.02
+  sprintBobAmplitude: 0.04
+  crouchWalkBobAmplitude: 0.01
 --- !u!1 &307986517
 GameObject:
   m_ObjectHideFlags: 0
@@ -720,7 +833,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4896770664015057812, guid: d1fbb20efa3224dfcb5a21c07738346a, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5241911055874754862, guid: d1fbb20efa3224dfcb5a21c07738346a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -825,6 +938,8 @@ MonoBehaviour:
     m_Bits: 64
   prompt: {fileID: 1841942302}
   arrowPrefab: {fileID: 0}
+  debugDetection: 1
+  debugLogInterval: 0.75
 --- !u!114 &431420014
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -846,7 +961,7 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
-  cameraTransform: {fileID: 1098366538}
+  cameraTransform: {fileID: 0}
   animator: {fileID: 431420012}
 --- !u!1001 &463387477
 PrefabInstance:
@@ -1202,11 +1317,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 729673179}
   m_CullTransparentMesh: 1
---- !u!4 &1098366538 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3108107992956792997, guid: d1fbb20efa3224dfcb5a21c07738346a, type: 3}
-  m_PrefabInstance: {fileID: 1764897908}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1123759349
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1464,7 +1574,7 @@ PrefabInstance:
     - target: {fileID: 6533872996912039920, guid: 08b554ae5aee54848a20b9c8e517fb82, type: 3}
       propertyPath: cameraTransform
       value: 
-      objectReference: {fileID: 1098366538}
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2017,9 +2127,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04a85f159d9e24a81849198cd93bf578, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventoryHUD
-  inventory: {fileID: 1764897910}
-  heldInput: {fileID: 159552978}
-  inventoryInput: {fileID: 1764897909}
+  inventory: {fileID: 292231691}
+  heldInput: {fileID: 292231692}
+  inventoryInput: {fileID: 292231690}
   inventoryText: {fileID: 1139483208}
   heldActionsText: {fileID: 211392460}
 --- !u!1 &1685828348
@@ -2154,6 +2264,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Prisoner
       objectReference: {fileID: 0}
+    - target: {fileID: 4896770664015057812, guid: d1fbb20efa3224dfcb5a21c07738346a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5241911055874754862, guid: d1fbb20efa3224dfcb5a21c07738346a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.383
@@ -2199,28 +2313,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d1fbb20efa3224dfcb5a21c07738346a, type: 3}
---- !u!114 &1764897909 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2219500680917294588, guid: d1fbb20efa3224dfcb5a21c07738346a, type: 3}
-  m_PrefabInstance: {fileID: 1764897908}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6d268673175c94d719876a17a454d987, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InventoryInput
---- !u!114 &1764897910 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1408992931922567262, guid: d1fbb20efa3224dfcb5a21c07738346a, type: 3}
-  m_PrefabInstance: {fileID: 1764897908}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ecae2cedef55e4a65aca2d10a321952b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ItemInventory
 --- !u!1001 &1789575953
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2645,3 +2737,4 @@ SceneRoots:
   - {fileID: 1345071464}
   - {fileID: 1123759349}
   - {fileID: 1975329623}
+  - {fileID: 292231689}

@@ -16,6 +16,7 @@ import { createGameRoomState, advanceTick, computeNPCDelta, spawnNPCs, startGame
 import { GameManager } from './systems/game-manager.js'
 import { getUser, setUserStatus } from './user-identity.js'
 import { initializeRouteState } from './routes/route-registry.js'
+import { broadcastAllRouteItemStates } from './systems/route-inventory.js'
 
 /**
  * Default game configuration (tuning knobs from design doc).
@@ -314,6 +315,7 @@ export function transitionToActive(io: Server, room: GameRoom): void {
     activeRouteId: room.state.activeRouteId,
   }
   io.to(room.state.id).emit('escape:route:selected', routePayload)
+  broadcastAllRouteItemStates(io, room.state.id, room.state)
 
   // Notify all clients that game started
   io.to(room.state.id).emit('game:start', {

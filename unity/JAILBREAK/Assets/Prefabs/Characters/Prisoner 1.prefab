@@ -679,6 +679,8 @@ MonoBehaviour:
     m_Bits: 64
   prompt: {fileID: 0}
   arrowPrefab: {fileID: 0}
+  debugDetection: 1
+  debugLogInterval: 0.75
 --- !u!114 &1408992931922567262
 MonoBehaviour:
   m_ObjectHideFlags: 0

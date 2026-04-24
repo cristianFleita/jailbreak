@@ -78,6 +78,28 @@ export function restorePlayerConnection(
 }
 
 /**
+ * Consumes and returns an expired slot for softlock cleanup. The socket layer
+ * uses this after the reconnect timeout to release critical route tools.
+ */
+export function consumeExpiredDisconnectedSlot(
+  roomId: string,
+  playerId: string,
+  now: number = Date.now()
+): PlayerState | null {
+  const slots = disconnectedSlots.get(roomId)
+  if (!slots || !slots.has(playerId)) return null
+
+  const slot = slots.get(playerId)!
+  if (now <= slot.expiresAt) return null
+
+  slots.delete(playerId)
+  if (slots.size === 0) disconnectedSlots.delete(roomId)
+
+  console.log(`[RECONNECT] Slot expired for ${playerId} in room ${roomId}`)
+  return slot.playerState
+}
+
+/**
  * Cleans up expired slots for a room.
  * Called periodically or when last player leaves.
  */

@@ -314,10 +314,23 @@ export interface PlayerMovePayload {
   movementState: MovementState
 }
 
+/**
+ * Union of every `player:interact` action the server accepts.
+ * Legacy molestia items use 'pickup' | 'use' | 'drop' (see handleItemPickup).
+ * Route tools use 'item.pickup' | 'item.store' (authoritative hand/slots).
+ * Route missions (Phase D) will add 'route1.*' start/stop actions.
+ */
+export type PlayerInteractAction =
+  | 'pickup'
+  | 'use'
+  | 'drop'
+  | 'item.pickup'
+  | 'item.store'
+
 export interface PlayerInteractPayload {
   playerId: string
   objectId: string
-  action: 'pickup' | 'use' | 'drop'
+  action: PlayerInteractAction
 }
 
 export interface GuardMarkPayload {

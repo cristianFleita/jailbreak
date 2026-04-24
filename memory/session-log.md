@@ -107,3 +107,30 @@
   - Replaced `design/gdd/ruta-1-fases-b-e-tareas.md` with task-level work items for the new phases while keeping the filename for compatibility.
   - Updated `design/GDD.md` escape, map, HUD, audio, networking, roadmap, and scope-cut sections to remove old fusible/route2/route3 implementation details.
   - Recorded ADR-006 in `memory/decisions.md`; ADR-006 supersedes older Ruta 1 concrete details.
+- **Unity/Network Specialist — Ruta 1 Phase B implementation**:
+  - Implemented authoritative `item.pickup` / `item.store` handling for `route1_cutters` and `route1_wrench`, storing ownership by `userId` in `heldItemId` and 2-slot `inventorySlots`.
+  - Added `item:state` lifecycle broadcasts for pickup, store, initial route item hydration, reconnect hydration, capture drops, explicit leave drops, and reconnect-timeout recovery.
+  - Added Unity `NetworkRoutePickable` wrapper for route tools; local hand/store visuals now wait for backend confirmation.
+  - Updated route tool prefabs: `AdjustableSpanner.prefab` = `route1_wrench`, `Pliers.prefab` = `route1_cutters`, both with stable `NetworkInteractable.networkId`.
+  - Preserved legacy local pickable behavior for non-route props while blocking voluntary throw/drop for route tools.
+  - Verified backend TypeScript with bundled Node and ran `route-selector.test.ts` successfully.
+  - Recorded ADR-007 in `memory/decisions.md`.
+- **Unity Specialist — Input System compatibility hotfix**:
+  - Fixed `InventoryInput` crash caused by `UnityEngine.Input.GetKeyDown` while the project uses the Input System package.
+  - Added `InputSystemKey` helper to preserve existing inspector `KeyCode` fields while reading through `Keyboard.current` / `Mouse.current`.
+  - Updated `InventoryInput`, `HeldItemInput`, and legacy `PlayerMovement` to avoid all legacy `UnityEngine.Input` reads.
+  - Verified with `rg` that no `Input.GetKey*`, `Input.GetAxis*`, or `Input.GetButton*` calls remain under `Assets/Scripts`.
+- **Unity Specialist — Route pickable prompt fix**:
+  - Fixed route tool prompts not appearing when `AdjustableSpanner.prefab` / `Pliers.prefab` carry both legacy `PickUpInteractable` and `NetworkRoutePickable`.
+  - `InteractionManager` now evaluates all `IInteractable` components on a hit collider instead of only the first one returned by Unity.
+  - Added throttled `InteractionManager` detection logs and `NetworkRoutePickable` pickup/state logs for debugging prompt, arrow, and backend confirmation flow.
+  - Enabled debug flags on `Prisoner 1.prefab`, `AdjustableSpanner.prefab`, and `Pliers.prefab` for current playtesting.
+- **Network Programmer — Route pickup log cleanup + NPC sync payload fix**:
+  - Stopped route-tool `item.pickup` from calling legacy `GameManager.onItemPickup`; collecting route progress now waits for the proper route/store flow instead of logging `[INVENTORY]` / `[ESCAPE]` immediately on hand pickup.
+  - Routed stale legacy `pickup` actions for critical route tools back through the authoritative route pickup path so older components cannot trigger legacy inventory side effects.
+  - Updated `npc:sync_state` socket handling to accept either a JSON string or an already-parsed object payload from Unity/socket.io, fixing repeated `"[object Object]" is not valid JSON` errors.
+  - Verified backend TypeScript with bundled Node and reran `route-selector.test.ts` successfully.
+- **Unity Specialist — Held pickable Rigidbody fix**:
+  - Fixed networked route tools falling from the hand after pickup by keeping held pickables in a dedicated held physics state.
+  - `PickableItem.SetHeldVisible()` now enables renderers, disables colliders, zeroes dynamic velocity, sets `isKinematic = true`, keeps gravity checked, and freezes rotation while held.
+  - `NetworkRoutePickable.ApplyLocalHeld()` no longer calls world visibility for held tools, preventing `SetWorldVisible(true)` from turning the Rigidbody dynamic after backend `item:state` refreshes.

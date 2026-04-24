@@ -44,9 +44,7 @@ public class PickableItem : MonoBehaviour, IPickable
     {
         held           = true;
         wasThrown      = false;
-        rb.isKinematic = true;
-
-        SetAllCollidersEnabled(false);
+        SetHeldVisible();
 
         ownerCC = holdPoint.root.GetComponent<CharacterController>();
 
@@ -55,6 +53,12 @@ public class PickableItem : MonoBehaviour, IPickable
         transform.localRotation = Quaternion.Euler(holdRotationOffset);
 
         onPickedUp.Invoke(holdPoint);
+    }
+
+    public void SetHeldVisible()
+    {
+        SetRenderersEnabled(true);
+        ApplyHeldPhysicsState();
     }
 
     public void OnThrown(Vector3 direction, float force)
@@ -84,15 +88,47 @@ public class PickableItem : MonoBehaviour, IPickable
 
     public void OnStoredInInventory()
     {
+        OnStoredInInventory(true);
+    }
+
+    public void OnStoredInInventory(bool deactivateGameObject)
+    {
         held            = false;
         wasThrown       = false;
         ownerCC         = null;
+        rb.isKinematic  = true;
         rb.constraints  = originalConstraints;
         rb.useGravity   = true;
  
         transform.SetParent(null); 
-        gameObject.SetActive(false);
+        if (deactivateGameObject)
+            gameObject.SetActive(false);
+        else
+            SetWorldVisible(false);
+
         onStoredInInventory.Invoke();
+    }
+
+    public void SetWorldVisible(bool value)
+    {
+        SetAllCollidersEnabled(value);
+        SetRenderersEnabled(value);
+
+        rb.constraints = originalConstraints;
+
+        if (value)
+        {
+            rb.isKinematic = false;
+            rb.useGravity = true;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+        else
+        {
+            ClearDynamicVelocity();
+            rb.isKinematic = true;
+            rb.useGravity = false;
+        }
     }
 
     public void OnConsumed()
@@ -125,5 +161,27 @@ public class PickableItem : MonoBehaviour, IPickable
     {
         foreach (var c in GetComponentsInChildren<Collider>(true))
             c.enabled = value;
+    }
+
+    private void SetRenderersEnabled(bool value)
+    {
+        foreach (var r in GetComponentsInChildren<Renderer>(true))
+            r.enabled = value;
+    }
+
+    private void ApplyHeldPhysicsState()
+    {
+        SetAllCollidersEnabled(false);
+        ClearDynamicVelocity();
+        rb.isKinematic  = true;
+        rb.useGravity   = true;
+        rb.constraints  = RigidbodyConstraints.FreezeRotation;
+    }
+
+    private void ClearDynamicVelocity()
+    {
+        if (rb.isKinematic) return;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
     }
 }

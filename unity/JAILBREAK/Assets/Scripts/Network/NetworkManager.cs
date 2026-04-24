@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
@@ -99,6 +100,7 @@ namespace Jailbreak.Network
         public EscapeRouteSelectedPayload CachedEscapeRouteSelected { get; private set; }
         public EscapeRoute1StatePayload   CachedEscapeRoute1State   { get; private set; }
         public WorldStatePayload          CachedWorldState          { get; private set; }
+        public Dictionary<string, ItemStateBroadcastPayload> CachedItemStates { get; } = new();
 
         // ─── Private ─────────────────────────────────────────────────────────
         private string _currentRoomId;
@@ -682,7 +684,9 @@ namespace Jailbreak.Network
             _mainThreadQueue.Enqueue(() =>
             {
                 var data = JsonUtility.FromJson<ItemStateBroadcastPayload>(json);
-                if (data != null) OnItemStateEvent?.Invoke(data);
+                if (data == null) return;
+                CachedItemStates[data.itemId] = data;
+                OnItemStateEvent?.Invoke(data);
             });
         }
 
@@ -949,7 +953,16 @@ namespace Jailbreak.Network
                     OnWorldStateEvent?.Invoke(d);
                 });
             });
-            SafeOn("item:state",  r => { var d = DeserializePayload<ItemStateBroadcastPayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnItemStateEvent?.Invoke(d)); });
+            SafeOn("item:state",  r =>
+            {
+                var d = DeserializePayload<ItemStateBroadcastPayload>(r);
+                if (d != null)
+                    _mainThreadQueue.Enqueue(() =>
+                    {
+                        CachedItemStates[d.itemId] = d;
+                        OnItemStateEvent?.Invoke(d);
+                    });
+            });
 
             SafeOn("game:error", r =>
             {

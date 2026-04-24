@@ -1306,3 +1306,27 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260424_115302
+### Uncommitted Changes
+backend/src/game/event-handlers.ts
+backend/src/game/reconnection.ts
+backend/src/game/room-manager.ts
+backend/src/game/routes/route-registry.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+memory/decisions.md
+memory/session-log.md
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/AdjustableSpanner.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Pliers.prefab
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/Input/HeldItemInput.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/Inventory/InventoryInput.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/Inventory/ItemInventory.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/PickUpInteractable.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/PickableItem.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkManager.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

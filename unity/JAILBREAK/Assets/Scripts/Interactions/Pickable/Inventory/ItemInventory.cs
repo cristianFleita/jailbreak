@@ -48,6 +48,35 @@ public class ItemInventory : MonoBehaviour
 
     public PickableItem TakeSelected() => TakeAt(selectedIndex);
 
+    public PickableItem GetAt(int index)
+    {
+        if (index < 0 || index >= slots.Length) return null;
+        return slots[index];
+    }
+
+    public bool Contains(PickableItem item)
+    {
+        if (item == null) return false;
+        foreach (var slot in slots)
+            if (slot == item) return true;
+        return false;
+    }
+
+    public bool TryRemove(PickableItem item)
+    {
+        if (item == null) return false;
+
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] != item) continue;
+            slots[i] = null;
+            onItemRemoved.Invoke(i, item);
+            return true;
+        }
+
+        return false;
+    }
+
     public bool HasItemAt(int index)
     {
         if (index < 0 || index >= slots.Length) return false;

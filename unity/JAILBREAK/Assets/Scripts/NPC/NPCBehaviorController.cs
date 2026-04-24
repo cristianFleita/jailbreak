@@ -573,7 +573,7 @@ namespace Jailbreak.NPC
                 if (partnerTransform != null) { destination = partnerTransform.position; destSrc = "partner"; }
             }
 
-            Debug.Log($"[NPC-CTRL] {name} BeginStep {_sequenceIndex + 1}/{_sequenceSteps.Length} action={step.actionId} anim={step.animTrigger} zone={step.zoneId ?? "-"} dur={step.duration:F1}s dest={destSrc}");
+            // Debug.Log($"[NPC-CTRL] {name} BeginStep {_sequenceIndex + 1}/{_sequenceSteps.Length} action={step.actionId} anim={step.animTrigger} zone={step.zoneId ?? "-"} dur={step.duration:F1}s dest={destSrc}");
 
             if (destination.HasValue)
             {
@@ -926,7 +926,7 @@ namespace Jailbreak.NPC
                 // would rummage mid-air far from any pile.
                 if (_reservedLaundryGrab == null)
                 {
-                    Debug.Log($"[NPC-CTRL] {name} laundry grab without reserved pile in '{zoneId}' — falling back to look_around");
+                    // Debug.Log($"[NPC-CTRL] {name} laundry grab without reserved pile in '{zoneId}' — falling back to look_around");
                     PlayAnimation("look_around");
                     return;
                 }
@@ -998,7 +998,7 @@ namespace Jailbreak.NPC
                 // Every desk in this zone is taken → fallback so the NPC
                 // doesn't just stand silent: play a standing-talk idle in
                 // place for the remainder of the step.
-                Debug.Log($"[NPC-CTRL] {name} all desks in '{zoneId}' occupied — falling back to talk_standing");
+                // Debug.Log($"[NPC-CTRL] {name} all desks in '{zoneId}' occupied — falling back to talk_standing");
                 PlayAnimation("talk_standing");
                 return;
             }
@@ -1016,7 +1016,7 @@ namespace Jailbreak.NPC
                     return;
                 }
 
-                Debug.Log($"[NPC-CTRL] {name} all washers in '{zoneId}' occupied — falling back to look_around");
+                // Debug.Log($"[NPC-CTRL] {name} all washers in '{zoneId}' occupied — falling back to look_around");
                 PlayAnimation("look_around");
                 return;
             }
@@ -1034,7 +1034,7 @@ namespace Jailbreak.NPC
                     return;
                 }
 
-                Debug.Log($"[NPC-CTRL] {name} all shelves in '{zoneId}' occupied — falling back to look_around");
+                // Debug.Log($"[NPC-CTRL] {name} all shelves in '{zoneId}' occupied — falling back to look_around");
                 PlayAnimation("look_around");
                 return;
             }
@@ -1052,7 +1052,7 @@ namespace Jailbreak.NPC
                     return;
                 }
 
-                Debug.Log($"[NPC-CTRL] {name} all cabinets in '{zoneId}' occupied — falling back to look_around");
+                // Debug.Log($"[NPC-CTRL] {name} all cabinets in '{zoneId}' occupied — falling back to look_around");
                 PlayAnimation("look_around");
                 return;
             }
@@ -1432,7 +1432,7 @@ namespace Jailbreak.NPC
         {
             if (animator == null)
             {
-                Debug.LogWarning($"[NPC-CTRL] {name} PlayAnimation('{backendTrigger}') skipped — animator is NULL");
+                // Debug.LogWarning($"[NPC-CTRL] {name} PlayAnimation('{backendTrigger}') skipped — animator is NULL");
                 return;
             }
             if (string.IsNullOrEmpty(backendTrigger)) return;
@@ -1443,7 +1443,7 @@ namespace Jailbreak.NPC
                 try { animator.CrossFade(stateName, 0.25f); }
                 catch (System.Exception ex)
                 {
-                    Debug.LogWarning($"[NPC-CTRL] {name} CrossFade('{stateName}') failed: {ex.Message}");
+                    // Debug.LogWarning($"[NPC-CTRL] {name} CrossFade('{stateName}') failed: {ex.Message}");
                 }
             }
             else

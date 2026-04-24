@@ -69,9 +69,17 @@ public class HeldItemInput : MonoBehaviour
 
         if (heldItem == null) return;
 
-        if (Input.GetKeyDown(throwKey))
+        var routePickable = heldItem.GetComponent<NetworkRoutePickable>();
+        if (routePickable != null)
+        {
+            if (InputSystemKey.WasPressedThisFrame(storeKey))
+                routePickable.RequestStore();
+            return;
+        }
+
+        if (InputSystemKey.WasPressedThisFrame(throwKey))
             Throw();
-        else if (Input.GetKeyDown(storeKey))
+        else if (InputSystemKey.WasPressedThisFrame(storeKey))
             TryStore();
     }
 
@@ -88,6 +96,12 @@ public class HeldItemInput : MonoBehaviour
     public void ForceStore()
     {
         if (heldItem == null) return;
+        var routePickable = heldItem.GetComponent<NetworkRoutePickable>();
+        if (routePickable != null)
+        {
+            routePickable.RequestStore();
+            return;
+        }
         if (inventory == null || inventory.IsFull()) return;
 
         var item = heldItem;
@@ -99,6 +113,9 @@ public class HeldItemInput : MonoBehaviour
 
     public void Throw()
     {
+        if (heldItem == null) return;
+        if (heldItem.GetComponent<NetworkRoutePickable>() != null) return;
+
         var item = heldItem;
         var direction = ResolveThrowDirection();
 
@@ -110,6 +127,11 @@ public class HeldItemInput : MonoBehaviour
 
     private void TryStore()
     {
+        if (heldItem != null && heldItem.GetComponent<NetworkRoutePickable>() != null)
+        {
+            heldItem.GetComponent<NetworkRoutePickable>().RequestStore();
+            return;
+        }
         if (inventory == null || inventory.IsFull()) return;
 
         var item = heldItem;

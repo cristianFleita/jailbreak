@@ -174,3 +174,74 @@ Los documentos anteriores mezclaban fusibles, escritorios/cajones, duraciones y 
 - `design/GDD.md`, `ruta-1-ventilacion-industrial.md`, `ruta-1-implementation-plan.md` y `ruta-1-fases-b-e-tareas.md` deben tratar ADR-006 como fuente vigente.
 - ADR-002/ADR-005 quedan historicos y supersedidos para detalles concretos de Ruta 1.
 - Implementacion debe priorizar selector de ruta + inventario autoritativo + spawn areas antes del state machine de Ruta 1.
+
+---
+
+## ADR-007: Ruta 1 Fase B — Herramientas Criticas con Mano/Slots Autoritativos
+
+**Status**: Implemented
+**Date**: 2026-04-24
+
+### Decision
+
+Implementar Fase B con el backend como fuente de verdad para las herramientas criticas de Ruta 1:
+- `item.pickup` mueve `route1_cutters` / `route1_wrench` a `PlayerState.heldItemId`.
+- `item.store` mueve el item en mano al primer slot libre de `PlayerState.inventorySlots`.
+- Los presos tienen 2 slots; el guardia mantiene inventario vacio.
+- Unity solo parenta/guarda visualmente una herramienta despues de recibir `item:state` / `player:state`.
+- `route1_cutters` y `route1_wrench` no se pueden tirar voluntariamente.
+- Captura, abandono explicito o expiracion del timeout de reconexion devuelven herramientas criticas al mundo como `dropped`.
+
+### Why
+
+Evita duplicados entre clientes, resuelve carreras de pickup desde el servidor y mantiene la ruta recuperable si un preso desaparece con una herramienta necesaria. La ventana de reconexion conserva F5 sin softlock permanente.
+
+### Implications
+
+- Prefabs de herramientas de ruta deben tener `NetworkInteractable.networkId` igual al `itemId` estable.
+- `AdjustableSpanner.prefab` representa `route1_wrench`; `Pliers.prefab` representa `route1_cutters`.
+- El wrapper Unity `NetworkRoutePickable` reemplaza el pickup local puro solo para herramientas de ruta; props legacy siguen usando `PickUpInteractable`.
+- Hasta Fase C, el backend puede omitir el rango si el item aun tiene posicion placeholder; cuando existan spawn areas, la validacion de distancia usa la posicion autoritativa.
+
+---
+
+## ADR-008: Ruta 1 — Separar Pickup en Mano de Progreso Legacy
+
+**Status**: Implemented
+**Date**: 2026-04-24
+
+### Decision
+
+`item.pickup` para herramientas criticas de Ruta 1 solo actualiza la mano autoritativa y emite `item:state`. No debe llamar `GameManager.onItemPickup` ni alimentar el inventario/progreso legacy. Si un cliente viejo manda `pickup` para una herramienta critica, el backend lo redirige al flujo autoritativo. El progreso de escape debe avanzar en los pasos propios de Ruta 1, no en el pickup visual de la herramienta.
+
+El socket `npc:sync_state` acepta payload JSON string o payload object para tolerar diferencias entre clientes Unity/socket.io.
+
+### Why
+
+Evita logs y side effects duplicados (`[PICKUP]`, `[INVENTORY]`, `[ESCAPE]`) al tomar una herramienta, y elimina errores de parsing cuando Unity ya envia objetos parseados.
+
+### Implications
+
+- En pickup de `route1_wrench` / `route1_cutters` el log esperado es solo `[PICKUP] ... to hand`.
+- En store el log esperado sigue siendo `[STORE] ... stored ... in slot N`.
+- Si aparece `[ESCAPE] collected item route1_*` durante pickup, hay una llamada legacy nueva que debe removerse.
+
+---
+
+## ADR-009: Pickables — Estado Fisico Separado para Mano vs Mundo
+
+**Status**: Implemented
+**Date**: 2026-04-24
+
+### Decision
+
+Los pickables tienen un estado fisico explicito para "en mano": renderers visibles, colliders apagados, `Rigidbody.isKinematic = true`, gravity activada y rotacion congelada. El estado "visible en mundo" sigue siendo separado y puede activar fisica dinamica.
+
+### Why
+
+Un item de Ruta 1 puede recibir varios `item:state` mientras ya esta parentado a la mano. Usar visibilidad de mundo para refrescar un item held reactivaba fisica dinamica y el objeto caia al piso aunque siguiera bajo el hueso de la mano en la jerarquia.
+
+### Implications
+
+- `NetworkRoutePickable` debe usar el estado held, no `SetWorldVisible(true)`, cuando el holder local coincide.
+- Los items en mano deben verse como el inspector esperado: kinematic activo, gravity activa, rotacion congelada.
