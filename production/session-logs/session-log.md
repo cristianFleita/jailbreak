@@ -1222,3 +1222,87 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260423_183059
+### Commits
+cf43d93 chore: route 1 spec
+34ed0a4 Merge pull request #7 from cristianFleita/fix-errors
+eeae6b3 fix: reconnect + add laundry machine collider
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Animations/ButtonPushing.anim
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard(1).prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard(1).prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner(1).prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner(1).prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Props/AdjustableSpanner.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Container.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Pliers.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Spoon.prefab
+unity/JAILBREAK/Assets/Scenes/Actions.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Packages/manifest.json
+unity/JAILBREAK/Packages/packages-lock.json
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260423_183838
+### Commits
+cf43d93 chore: route 1 spec
+34ed0a4 Merge pull request #7 from cristianFleita/fix-errors
+eeae6b3 fix: reconnect + add laundry machine collider
+### Uncommitted Changes
+design/GDD.md
+design/gdd/npc-autonomy-personality.md
+design/gdd/rutina-fases-npc.md
+design/gdd/systems-index.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Animations/ButtonPushing.anim
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard(1).prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard(1).prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner(1).prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner(1).prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Props/AdjustableSpanner.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Container.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Pliers.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Spoon.prefab
+unity/JAILBREAK/Assets/Scenes/Actions.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Packages/manifest.json
+unity/JAILBREAK/Packages/packages-lock.json
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260423_191439
+### Commits
+cf43d93 chore: route 1 spec
+34ed0a4 Merge pull request #7 from cristianFleita/fix-errors
+eeae6b3 fix: reconnect + add laundry machine collider
+### Uncommitted Changes
+design/GDD.md
+design/gdd/npc-autonomy-personality.md
+design/gdd/rutina-fases-npc.md
+design/gdd/systems-index.md
+memory/decisions.md
+memory/session-log.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Animations/ButtonPushing.anim
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard(1).prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard(1).prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner(1).prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner(1).prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Props/AdjustableSpanner.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Container.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Pliers.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Spoon.prefab
+unity/JAILBREAK/Assets/Scenes/Actions.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Packages/manifest.json
+unity/JAILBREAK/Packages/packages-lock.json
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

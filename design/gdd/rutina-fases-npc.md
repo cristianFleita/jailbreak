@@ -39,14 +39,14 @@ La novedad arquitectónica central es el **sistema de libre albedrío**: dentro 
 | #   | Fase           | Hora ficticia | Duración real | Zona                                    | Sub-zonas                          |
 | --- | -------------- | ------------- | ------------- | --------------------------------------- | ---------------------------------- |
 | 1   | Inicio         | 06:00         | 30 s          | Celda                                   | —                                  |
-| 2   | Desayuno       | 07:00         | 90 s          | Comedor                                 | —                                  |
+| 2   | Desayuno       | 06:30         | 90 s          | Comedor                                 | —                                  |
 | 3   | Trabajo        | 08:00         | 90 s          | Taller / Lavandería                     | Taller, Lavandería                 |
-| 4   | Hora libre     | 10:00         | 120 s         | Libre (patio/comedor/lavandería/celdas) | Patio, Comedor, Lavandería, Celdas |
-| 5   | Almuerzo       | 12:00         | 90 s          | Comedor                                 | — (mismo que Desayuno)             |
-| 6   | Trabajo        | 14:00         | 120 s         | Taller / Lavandería                     | Taller, Lavandería                 |
-| 7   | Hora libre     | 16:00         | 90 s          | Libre (patio/comedor/lavandería/celdas) | Patio, Comedor, Lavandería, Celdas |
-| 8   | Cena           | 18:00         | 90 s          | Comedor                                 | — (mismo que Desayuno)             |
-| 9   | Luces apagadas | 22:00         | 120 s         | Celdas                                  | —                                  |
+| 4   | Hora libre     | 09:30         | 120 s         | Libre (patio/comedor/lavandería/celdas) | Patio, Comedor, Lavandería, Celdas |
+| 5   | Almuerzo       | 11:30         | 90 s          | Comedor                                 | — (mismo que Desayuno)             |
+| 6   | Trabajo        | 13:00         | 120 s         | Taller / Lavandería                     | Taller, Lavandería                 |
+| 7   | Hora libre     | 15:00         | 90 s          | Libre (patio/comedor/lavandería/celdas) | Patio, Comedor, Lavandería, Celdas |
+| 8   | Cena           | 16:30         | 90 s          | Comedor                                 | — (mismo que Desayuno)             |
+| 9   | Encierro / Recuento final | 18:00 → 00:00 | 90 s | Celdas | — |
 
 
 **Reglas de transición:**
@@ -253,14 +253,15 @@ Cada acción define:
 | `laundry_store_clothes`  | IDLE    | Opening            | `zone_laundry_shelf`| 100    | 3–5s     | 3° obligatorio |
 | `laundry_talk_coworker`  | SOCIAL  | Talk_Standing      | `zone_laundry_chat` | 30     | 8–15s    | Opcional       |
 
-**Sub-zona: Celdas** *(descanso)*
+**Sub-zona: Celdas** *(descanso visible)*
 
-> Cada NPC que elige esta sub-zona vuelve a su celda asignada. Solo accede a los waypoints de su propia celda.
+> Cada NPC que elige esta sub-zona vuelve a su celda asignada. Las celdas tienen frente de barrotes, asi que el guardia puede leer la postura general desde el pasillo sin entrar. La idea no es esconder NPCs dentro de cajas cerradas, sino generar lectura social clara y barata de producir.
 
-| ActionId       | Type | Animation    | WaypointTag    | Weight | Duration |
-| -------------- | ---- | ------------ | -------------- | ------ | -------- |
-| `cell_lie_bed` | IDLE | Lie_Down     | `cell_XX_bed`_ | 60     | 20–60s   |
-| `cell_sit_bed` | IDLE | Sit_Bed_Edge | `cell_XX_bed`_ | 40     | 15–40s   |
+| ActionId              | Type | Animation    | WaypointTag    | Weight | Duration |
+| --------------------- | ---- | ------------ | -------------- | ------ | -------- |
+| `cell_sit_bed`        | IDLE | Sit_Bed_Edge | `cell_XX_bed`_ | 40     | 15–35s   |
+| `cell_read_book`      | IDLE | Read_Book    | `cell_XX_bed`_ | 35     | 20–45s   |
+| `cell_watch_corridor` | IDLE | Idle_Window  | `cell_XX_bed`_ | 25     | 10–25s   |
 
 
 ---
@@ -282,15 +283,16 @@ Cada acción define:
 
 ---
 
-#### Fase 9 — Luces Apagadas | Celdas
+#### Fase 9 — Encierro / Recuento final | Celdas
 
-> Fase más restrictiva. Sin interacciones sociales. El guardia (jugador) patrulla con linterna.
+> Fase final breve. Sin interacciones sociales. Todos los NPCs vuelven a su celda, se acomodan y quedan visibles desde el pasillo para el recuento. La tension viene de leer siluetas y ausencias, no de perseguir gente en oscuridad total.
 
 
-| ActionId       | Type | Animation | WaypointTag    | Weight | Duration                  |
-| -------------- | ---- | --------- | -------------- | ------ | ------------------------- |
-| `lights_sleep` | IDLE | Sleep     | `cell_XX_bed`_ | 75     | duración total de la fase |
-| `lights_toss`  | IDLE | Toss_Turn | `cell_XX_bed`_ | 25     | 5–12s → vuelve a sleep    |
+| ActionId                  | Type | Animation    | WaypointTag    | Weight | Duration                         |
+| ------------------------- | ---- | ------------ | -------------- | ------ | -------------------------------- |
+| `count_settle_bed`        | IDLE | Sit_Bed_Edge | `cell_XX_bed`_ | 25     | 4–10s                            |
+| `count_sleep_silhouette`  | IDLE | Sleep        | `cell_XX_bed`_ | 65     | duración total o resto de la fase |
+| `count_toss_turn`         | IDLE | Toss_Turn    | `cell_XX_bed`_ | 10     | 4–8s → vuelve a sleep            |
 
 
 ---
@@ -562,7 +564,7 @@ Cada REASSIGN_INTERVAL segundos (default 20s):
 
 Restricciones:
   - No asignar waypoints exclusivos ya ocupados
-  - En Fase 9 (Luces apagadas): solo acciones IDLE del pool de la fase
+  - En Fase 9 (Encierro / Recuento final): solo acciones IDLE del pool de la fase; sin SOCIAL ni cambios de sub-zona
   - En Fase 1 (Inicio): solo acciones del pool de inicio
   - Sub-zona de Trabajo: NPC no cambia de sub-zona durante la fase
   - Sub-zona de Hora libre: NPC SÍ puede cambiar de sub-zona vía reassign (genera tráfico que camufla jugadores)
@@ -635,9 +637,9 @@ slot_count = 20
 | Sincronización de Estado (#18)  | Hard | ← usa     | Emite `phase:start`, `phase:warning`, `npc:reassign` via Socket.io rooms                                                                           |
 | NPC State Machine (#12)         | Hard | → provee  | El estado del NPC (IDLE/TRANSITION/ANGRY/HOSTILE) puede interrumpir acciones de rutina. Un NPC en estado HOSTILE ignora sus assignments de rutina. |
 | Camuflaje (#3)                  | Hard | → provee  | Expone `currentPhase` y `activeZone` para que el sistema de camuflaje valide si el jugador está en la zona correcta                                |
-| Condiciones de Victoria (#11)   | Soft | → informa | `phase:start` de Fase 9 puede ser condición de escape (oscuridad = oportunidad). El sistema de victoria lee la fase activa.                        |
-| Iluminación Dinámica (#25)      | Soft | → dispara | Cada `phase:start` triggerea un cambio de iluminación (luz día/noche, intensidad por zona)                                                         |
-| Audio Ambiente (#24)            | Soft | → dispara | Cada `phase:start` triggerea un cambio de música/ambiente (eco comedor, ruido taller, silencio nocturno)                                           |
+| Condiciones de Victoria (#11)   | Soft | → informa | `phase:start` de Fase 9 abre la ventana final de escape via celda/recuento. El sistema de victoria lee la fase activa.                             |
+| Iluminación Dinámica (#25)      | Soft | → dispara | Cada `phase:start` triggerea un cambio de iluminación. En Fase 9 se baja la luz del pasillo y se mantienen siluetas legibles en celdas.            |
+| Audio Ambiente (#24)            | Soft | → dispara | Cada `phase:start` triggerea un cambio de música/ambiente (eco comedor, ruido taller, quietud tensa del recuento final)                            |
 | HUD Presos (#20)                | Soft | → provee  | Expone fase actual, nombre y timer para el HUD                                                                                                     |
 | HUD Guardia (#21)               | Soft | → provee  | Expone fase actual y zona activa para el HUD del guardia                                                                                           |
 | Alertas de Comportamiento (#16) | Soft | → dispara | Si un jugador está en zona incorrecta, este sistema notifica a #16 para que evalúe si alertar al guardia                                           |
@@ -684,7 +686,7 @@ Este sistema depende de #18 (Sync) para emitir eventos. El GDD de #18 debe actua
 | AC-6  | `npc:reassign` actualiza solo los NPCs mencionados; los demás continúan su acción                             | Emitir reassign para 3 NPCs → solo esos 3 cambian destino, los 16 restantes no se interrumpen           |
 | AC-7  | Bandwidth de NPCs ≤ 50 B/s promedio en partida normal (excluye phase transitions)                             | Wireshark/Network Profiler Unity durante 2 minutos de Fase 4 → medir bytes/s de mensajes `npc:`*        |
 | AC-8  | Un cliente que reconecta mid-partida recibe los assignments actuales y los NPCs quedan consistentes           | Desconectar cliente en Fase 3, reconectar en Fase 4 → NPCs en posiciones correctas, sin NPCs "fantasma" |
-| AC-9  | En Fase 9, ningún NPC ejecuta una acción SOCIAL                                                               | Loggear todas las acciones asignadas en Fase 9 → ninguna tiene `socialPartnerId`                        |
+| AC-9  | En Fase 9, ningún NPC ejecuta una acción SOCIAL y la mayoría termina visible en su catre                       | Loggear todas las acciones asignadas en Fase 9 → ninguna tiene `socialPartnerId` y >=70% usa `count_sleep_silhouette` en los ultimos 30s |
 | AC-10 | Los jugadores prisioneros reciben `phase:zone_check` si están en zona incorrecta 5s después de `phase:start`  | Jugador permanece en comedor cuando empieza Fase 4 (patio) → recibe warning a los 5s                    |
 | AC-11 | Los NPCs de Fase 6 (Trabajo) permanecen en su sub-zona asignada toda la fase                                  | Observar visualmente que los NPCs de taller no navegan a lavandería durante la fase                     |
 | AC-12 | En Fases 4 y 7 (Hora libre), los NPCs cambian de sub-zona vía reassign generando tráfico entre zonas         | Observar que al menos 3 NPCs cambian de sub-zona durante una fase de hora libre completa                |
@@ -986,4 +988,3 @@ Este sistema depende de #18 (Sync) para emitir eventos. El GDD de #18 debe actua
 | `WP_Patio` | patio | 35 | 4, 7 |
 | `WP_Celdas_Interior` | celdas | 20 | 4, 7, 9 |
 | **Total** | | **177** | |
-

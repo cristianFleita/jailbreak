@@ -74,3 +74,36 @@
   - Documented shared prisoner HUD, role-filtered events, route data model, anti-softlock item rules, tuning knobs, edge cases, and acceptance criteria.
   - Recorded ADR-002 in `memory/decisions.md`.
   - Confirmed local models/Ollama will not be used for this documentation work.
+- **Game Design — Celdas + Recuento Final**:
+  - Updated `design/GDD.md` to replace "Luces apagadas" with `Encierro / Recuento final`, shorten Phase 9 to 90s, and redefine the endgame around visible cell inspection.
+  - Updated `design/gdd/rutina-fases-npc.md` to make free-time cell behavior readable from the corridor and to convert Phase 9 into a visible count/silhouette phase.
+  - Updated `design/gdd/systems-index.md` and `design/gdd/npc-autonomy-personality.md` so supporting docs match the new cell-front/barred layout and final-count fantasy.
+  - Recorded ADR-003 in `memory/decisions.md`.
+- **Unity/Network Programmer — Ruta 1 Fase A continuation**:
+  - Wired `InventorySystem` into `event-handlers.ts` for `item.pickup` / `item.drop`, emitting `item:pickup`, `item:drop`, and `item:state`.
+  - Added capture drop handling so held inventory returns to the world when a prisoner is caught.
+  - Updated socket action typing to `InteractAction` and preserved legacy `pickup`/`drop` aliases.
+  - Added Unity network payloads for authoritative inventory and item lifecycle state.
+  - Added WebGL/Editor listeners for `item:drop` and `item:state`.
+  - Added `NetworkedItemRegistry` and `NetworkedPickupInteractable` to support server-confirmed local pickup and remote item replay.
+  - Verified backend TypeScript with bundled Node because local Homebrew Node is missing ICU dylib.
+- **Unity/Network Programmer — Ruta 1 Fase A spawn init**:
+  - Added Unity-to-backend item spawn registration via `item:register-spawns`.
+  - Backend now initializes `route1_cutters` and `route1_wrench` from scene-authored spawn markers and emits active `item:state`.
+  - `NetworkedItemRegistry` now supports multiple spawn copies per item (`itemId` + `spawnId`) and hides inactive copies.
+  - `GameStateManager` registers local scene spawns shortly after GameScene starts and applies item snapshots/state updates.
+  - Verified backend TypeScript and `game-manager.test.ts` using bundled Node.
+- **Unity/Network Specialist — Ruta 1 Fases B-E task breakdown**:
+  - Read `memory/progress.md` and `design/gdd/ruta-1-implementation-plan.md`.
+  - Created `design/gdd/ruta-1-fases-b-e-tareas.md` with assignment-ready tickets from Phase B through Phase E.
+  - Captured current Phase A baseline as verification work instead of duplicating implementation tasks.
+  - Split follow-up work across backend/network, Unity network payloads, route interactables, UI Toolkit HUD, world cues, edge cases, QA, balance, and performance.
+  - Recorded ADR-005 in `memory/decisions.md`.
+
+### 2026-04-24
+- **Unity/Network Specialist — Ruta 1 docs reset to MVP spec**:
+  - Rewrote `design/gdd/ruta-1-ventilacion-industrial.md` as the current source of truth for `route1_ventilation`.
+  - Replaced `design/gdd/ruta-1-implementation-plan.md` with phases A-F: route selector, authoritative inventory, spawn areas, Route1System, Unity interactables, HUD/QA.
+  - Replaced `design/gdd/ruta-1-fases-b-e-tareas.md` with task-level work items for the new phases while keeping the filename for compatibility.
+  - Updated `design/GDD.md` escape, map, HUD, audio, networking, roadmap, and scope-cut sections to remove old fusible/route2/route3 implementation details.
+  - Recorded ADR-006 in `memory/decisions.md`; ADR-006 supersedes older Ruta 1 concrete details.

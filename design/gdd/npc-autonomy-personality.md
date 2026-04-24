@@ -135,7 +135,7 @@ Acciones agregadas al catalogo de fases 4 y 7 (hora libre):
 | yard_argue_loud    | patio | SOCIAL | argue        | 3         | 6-12s       |
 | yard_sit_floor     | patio | IDLE   | sit_floor    | 4         | 12-30s      |
 | cell_read_book     | celdas| IDLE   | read_book    | 20        | 15-40s      |
-| cell_idle_window   | celdas| IDLE   | idle_window  | 15        | 10-30s      |
+| cell_watch_corridor| celdas| IDLE   | idle_window  | 15        | 10-30s      |
 
 ### 3.6 Preferencias Sociales
 
@@ -415,9 +415,9 @@ Cada fila es un trigger que el backend puede enviar. Usa esta tabla para configu
 
 | Backend trigger   | Animator State | Usado en                        |
 |-------------------|----------------|---------------------------------|
-| `lie_down`        | `LyingDown`    | Fase 4/7 celdas                 |
-| `toss_turn`       | `LyingDown`    | Fase 9 luces apagadas           |
-| `sleep`           | `LayingPose`   | Fase 9 luces apagadas           |
+| `lie_down`        | `LyingDown`    | Transicion corta de Fase 9 antes del recuento |
+| `toss_turn`       | `LyingDown`    | Fase 9 encierro / recuento final |
+| `sleep`           | `LayingPose`   | Fase 9 encierro / recuento final |
 
 ### Prioridad de implementacion
 

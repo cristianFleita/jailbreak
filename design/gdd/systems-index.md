@@ -66,7 +66,7 @@
 
 | # | Sistema | Descripción | Origen | Prioridad |
 |---|---------|-------------|--------|-----------|
-| 25 | Iluminación Dinámica | Cambio de luz por fase, linterna nocturna, apagón por interruptor | Implícito | Alpha |
+| 25 | Iluminación Dinámica | Cambio de luz por fase, recuento final con siluetas legibles, apagón por interruptor | Implícito | Alpha |
 
 > **Nota:** Unity-React Bridge fue eliminado como sistema. React es solo un wrapper/iframe sin lógica. Unity maneja todo: lobby, gameplay, UI, resultados. La conexión Socket.io es directa desde Unity al backend via plugin C#.
 
@@ -277,6 +277,6 @@ Orden de implementación combinando dependencias + prioridad MVP-first:
 | Cortar primero | Reconexión (19) | Bajo — pueden reconectarse manualmente |
 | Cortar primero | Audio Ambiente (24) | Bajo — juego funciona sin música |
 | Cortar segundo | Ruta 3: Carro de Ropa (6) + NPC Soborno (14) | Bajo — 2 rutas son suficientes |
-| Cortar segundo | Iluminación Dinámica (26) | Medio — pierde atmósfera nocturna |
+| Cortar segundo | Iluminación Dinámica (26) | Medio — pierde dramatismo y lectura visual del recuento final |
 | No cortar | Cámaras de Seguridad (15) | Alto — herramienta clave del guardia |
 | No cortar | Captura por Foco (2) | Crítico — es la mecánica central |
