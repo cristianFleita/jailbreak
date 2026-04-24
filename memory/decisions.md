@@ -245,3 +245,31 @@ Un item de Ruta 1 puede recibir varios `item:state` mientras ya esta parentado a
 
 - `NetworkRoutePickable` debe usar el estado held, no `SetWorldVisible(true)`, cuando el holder local coincide.
 - Los items en mano deben verse como el inspector esperado: kinematic activo, gravity activa, rotacion congelada.
+
+---
+
+## ADR-010: Ruta 1 Fase C — Spawn Areas Backend-Driven
+
+**Status**: Implemented
+**Date**: 2026-04-24
+
+### Decision
+
+La ubicacion inicial de `route1_cutters` y `route1_wrench` es decidida por el backend a partir de spawn areas authored en Unity.
+
+- Unity marca cada spawn point con el MonoBehaviour `RouteSpawnArea` (`spawnAreaId`, `zoneId`, `allowedItemIds[]`, posicion).
+- Al iniciar la partida (cuando el backend emite `escape:route:selected`), el host escanea los `RouteSpawnArea` de la escena y envia `route:register_spawn_areas` con todos los candidatos validos. Los demas clientes no envian nada.
+- El backend valida cada entrada, bloquea la registracion por sala (primer envio valido gana), elige una spawn area por item critico, guarda `spawnAreaId` + `position` en `ItemState` y emite `item:state` a todos.
+- `RouteItemRegistry` instancia el prefab correspondiente cuando recibe un `item:state` con posicion autoritativa; adopta instancias pre-colocadas con el mismo `itemId` para permitir hot-reload.
+- Anti-softlock: si un preso desconecta/expira o es capturado con una herramienta critica, el backend dropea el item y agenda `scheduleCriticalItemRespawn` a 45s. Pickup valido cancela el timer.
+
+### Why
+
+Evita que la escena dicte posiciones fijas por sesion, mantiene el contrato de item:state como unica fuente de verdad, y garantiza recuperabilidad de la ruta incluso si una herramienta queda inaccesible.
+
+### Implications
+
+- Todos los clientes deben poder resolver el prefab por `itemId` a traves de `RouteItemRegistry.itemPrefabs`; escenas sin registry o con prefabs no mapeados no renderizan las herramientas.
+- `route:register_spawn_areas` es host-only. Clientes no-host ignoran el envio.
+- La validacion de distancia de pickup (en el backend) ahora usa la posicion autoritativa una vez placed; antes del placement el item permanece en estado `spawned` con posicion placeholder y no debe ser pickable.
+- Un re-envio por el mismo host (por ejemplo, tras reload de escena) es no-op mientras la sala siga locked.

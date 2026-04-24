@@ -296,13 +296,17 @@ export function dropCriticalRouteItemsForPlayer(
   roomId: string,
   state: GameRoomState,
   player: PlayerState,
-  position: Vector3 = player.position
+  position: Vector3 = player.position,
+  onItemDropped?: (itemId: RouteItemId) => void
 ): string[] {
   const itemIds = takeCriticalRouteItems(player)
 
   for (const itemId of itemIds) {
     const item = dropItemAt(state, itemId, position)
-    if (item) broadcastItemState(io, roomId, item)
+    if (item) {
+      broadcastItemState(io, roomId, item)
+      onItemDropped?.(itemId as RouteItemId)
+    }
   }
 
   return itemIds

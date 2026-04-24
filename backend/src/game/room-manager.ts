@@ -17,6 +17,7 @@ import { GameManager } from './systems/game-manager.js'
 import { getUser, setUserStatus } from './user-identity.js'
 import { initializeRouteState } from './routes/route-registry.js'
 import { broadcastAllRouteItemStates } from './systems/route-inventory.js'
+import { clearSpawnAreaRegistration } from './systems/spawn-areas.js'
 
 /**
  * Default game configuration (tuning knobs from design doc).
@@ -101,6 +102,9 @@ export function destroyRoom(roomId: string): void {
   // Stop all intervals
   if (room.tickLoopInterval) clearInterval(room.tickLoopInterval)
   if (room.phaseLoopInterval) clearInterval(room.phaseLoopInterval)
+
+  // Drop any pending spawn-area respawn timers for this room.
+  clearSpawnAreaRegistration(roomId)
 
   activeRooms.delete(roomId)
   console.log(`[ROOM] Destroyed room "${roomId}"`)

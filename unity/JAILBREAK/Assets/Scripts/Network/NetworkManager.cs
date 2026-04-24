@@ -128,6 +128,7 @@ namespace Jailbreak.Network
         [DllImport("__Internal")] private static extern void   SocketSendPlayerAction(string objectId, string action);
         [DllImport("__Internal")] private static extern void   SocketSendRiotActivate();
         [DllImport("__Internal")] private static extern void   SocketSendNPCSyncState(string json);
+        [DllImport("__Internal")] private static extern void   SocketSendRegisterSpawnAreas(string json);
         [DllImport("__Internal")] private static extern void   SocketDisconnect();
         [DllImport("__Internal")] private static extern string SocketGetSavedUserId();
         [DllImport("__Internal")] private static extern string SocketGetSavedDisplayName();
@@ -360,6 +361,27 @@ namespace Jailbreak.Network
 #else
             try { _socket.EmitStringAsJSON("npc:sync_state", JsonUtility.ToJson(payload)); }
             catch (Exception ex) { Debug.LogError($"[NET] SendNPCSyncState: {ex}"); }
+#endif
+        }
+
+        /// <summary>
+        /// Host-only: registers scene-authored route spawn areas with the
+        /// backend. The backend picks one area per critical item and emits
+        /// item:state with authoritative positions (Phase C-02).
+        /// </summary>
+        public void SendRegisterSpawnAreas(RegisterSpawnAreasPayload payload)
+        {
+            if (!IsInGame() || !IsHost) return;
+            if (payload == null || payload.areas == null || payload.areas.Length == 0)
+            {
+                Debug.LogWarning("[NET] SendRegisterSpawnAreas: empty payload, skipping");
+                return;
+            }
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketSendRegisterSpawnAreas(JsonUtility.ToJson(payload));
+#else
+            try { _socket.EmitStringAsJSON("route:register_spawn_areas", JsonUtility.ToJson(payload)); }
+            catch (Exception ex) { Debug.LogError($"[NET] SendRegisterSpawnAreas: {ex}"); }
 #endif
         }
 

@@ -55,6 +55,17 @@
 - ✅ **Test suite ready to run**
 - ✅ **Ready for full QA & debugging**
 
+## Ruta 1 — Phase C (Spawn Areas Backend-Driven):
+- [x] Backend: `backend/src/game/systems/spawn-areas.ts` (register / place / respawn + anti-softlock timers)
+- [x] Backend: `route:register_spawn_areas` socket handler (host-only)
+- [x] Backend: pickup cancels pending respawn timer; capture/leave/disc schedules one
+- [x] Backend: room destroy cleans registration + timers
+- [x] Backend tests: 12 passing in `spawn-areas.test.ts`
+- [x] Unity: `RouteSpawnArea.cs` component (scene marker)
+- [x] Unity: `RouteItemRegistry.cs` (scans scene, sends registration, instantiates prefabs on item:state)
+- [x] Unity: `NetworkManager.SendRegisterSpawnAreas` + jslib binding + DTOs
+- [x] ADR-010 recorded in `memory/decisions.md`
+
 ## Backlog:
 - [ ] Unit tests (state, validation, room-manager)
 - [ ] Integration tests (game-loop, socket-events)

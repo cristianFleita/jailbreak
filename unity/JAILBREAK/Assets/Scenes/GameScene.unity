@@ -1787,6 +1787,41 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 12.197593, y: 1, z: 11.334212}
   m_Center: {x: 0.27120352, y: 0, z: 0.31260347}
+--- !u!1 &92679796
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 92679797}
+  m_Layer: 0
+  m_Name: SpawnAreas
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &92679797
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 92679796}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1348013224}
+  - {fileID: 1736450973}
+  - {fileID: 1035710812}
+  - {fileID: 989798976}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &97258268
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19733,6 +19768,55 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
   m_PrefabInstance: {fileID: 989703825}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &989798975
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 989798976}
+  - component: {fileID: 989798977}
+  m_Layer: 0
+  m_Name: workshop_wrench_slot (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &989798976
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 989798975}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.946, y: 1.164, z: -33.714}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 92679797}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &989798977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 989798975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f4a1d6c2b3e4a77b9c5de8a4f52c901, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Interactions.Pickable.RouteSpawnArea
+  spawnAreaId: workshop_wrench_slot
+  zoneId: workshop
+  allowedItemIds:
+  - route1_wrench
+  spawnPoint: {fileID: 0}
 --- !u!1 &993050529
 GameObject:
   m_ObjectHideFlags: 0
@@ -20537,6 +20621,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1604998955}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1035710811
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1035710812}
+  - component: {fileID: 1035710813}
+  m_Layer: 0
+  m_Name: workshop_wrench_slot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1035710812
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1035710811}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.366, y: 1.164, z: -33.714}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 92679797}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1035710813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1035710811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f4a1d6c2b3e4a77b9c5de8a4f52c901, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Interactions.Pickable.RouteSpawnArea
+  spawnAreaId: workshop_wrench_slot
+  zoneId: workshop
+  allowedItemIds:
+  - route1_wrench
+  spawnPoint: {fileID: 0}
 --- !u!1001 &1047355086
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -26386,6 +26519,55 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1490056637099714114, guid: 0b2306476c3ec413998097601ae0c5cd, type: 3}
   m_PrefabInstance: {fileID: 1342234882}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1348013223
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1348013224}
+  - component: {fileID: 1348013225}
+  m_Layer: 0
+  m_Name: SpawnArea_Laundry_Cutters
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1348013224
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1348013223}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -23.41, y: 0.034, z: 26.847}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 92679797}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1348013225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1348013223}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f4a1d6c2b3e4a77b9c5de8a4f52c901, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Interactions.Pickable.RouteSpawnArea
+  spawnAreaId: SpawnArea_Laundry_Cutters
+  zoneId: laundry
+  allowedItemIds:
+  - route1_cutters
+  spawnPoint: {fileID: 0}
 --- !u!1001 &1350200103
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31120,6 +31302,58 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
   m_PrefabInstance: {fileID: 1621707991}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1624026473
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1624026475}
+  - component: {fileID: 1624026474}
+  m_Layer: 0
+  m_Name: RouteItemRegistry
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1624026474
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1624026473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c29b1d4e8a14a69a731b24fe9adf813, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Interactions.Pickable.RouteItemRegistry
+  itemPrefabs:
+  - itemId: route1_cutters
+    prefab: {fileID: 409235672718471057, guid: c6922dbe8005f4a36bb1fc31a28ecc33, type: 3}
+  - itemId: route1_wrench
+    prefab: {fileID: 5027419353655981081, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
+  scanDelaySeconds: 0.25
+  continuousRescan: 0
+  debugLogs: 1
+--- !u!4 &1624026475
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1624026473}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1632495502
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32869,6 +33103,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 336016850}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+--- !u!1 &1736450972
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1736450973}
+  - component: {fileID: 1736450974}
+  m_Layer: 0
+  m_Name: SpawnArea_Laundry_Cutters (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1736450973
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1736450972}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -28.83, y: 0.034, z: 20.76}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 92679797}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1736450974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1736450972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f4a1d6c2b3e4a77b9c5de8a4f52c901, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Interactions.Pickable.RouteSpawnArea
+  spawnAreaId: SpawnArea_Laundry_Cutters
+  zoneId: laundry
+  allowedItemIds:
+  - route1_cutters
+  spawnPoint: {fileID: 0}
 --- !u!1 &1739737714
 GameObject:
   m_ObjectHideFlags: 0
@@ -35065,63 +35348,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7395197817446777617, guid: 51bd4af9b1fd1405ab499aedcfd92959, type: 3}
   m_PrefabInstance: {fileID: 1832325754}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &1835769961
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 5027419353655981081, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
-      propertyPath: m_Name
-      value: AdjustableSpanner
-      objectReference: {fileID: 0}
-    - target: {fileID: 5660791534696984227, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -5.009409
-      objectReference: {fileID: 0}
-    - target: {fileID: 5660791534696984227, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.102
-      objectReference: {fileID: 0}
-    - target: {fileID: 5660791534696984227, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -16.045479
-      objectReference: {fileID: 0}
-    - target: {fileID: 5660791534696984227, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5660791534696984227, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5660791534696984227, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5660791534696984227, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5660791534696984227, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5660791534696984227, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5660791534696984227, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
 --- !u!1001 &1843938361
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -40871,4 +41097,5 @@ SceneRoots:
   - {fileID: 1454078410}
   - {fileID: 1244957765}
   - {fileID: 186642569}
-  - {fileID: 1835769961}
+  - {fileID: 1624026475}
+  - {fileID: 92679797}

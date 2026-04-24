@@ -28,6 +28,13 @@ import {
   pickupToHand,
   storeHeldItem,
 } from './systems/route-inventory.js'
+import {
+  cancelPendingRespawn,
+  placeCriticalItemsInSpawnAreas,
+  registerSpawnAreas,
+  scheduleCriticalItemRespawn,
+} from './systems/spawn-areas.js'
+import type { RegisterSpawnAreasPayload, RouteItemId } from './types.js'
 
 // ============================================================================
 // player:move handler
@@ -310,6 +317,9 @@ function handleRouteItemPickup(
     return
   }
 
+  // Pickup cancels any pending anti-softlock respawn for this item.
+  cancelPendingRespawn(roomId, stableItemId)
+
   broadcastItemState(io, roomId, result.item)
   console.log(`[PICKUP] ${player.userId} picked up ${stableItemId} to hand`)
 }
@@ -398,6 +408,65 @@ function handleItemDrop(io: Server, roomId: string, room: GameRoom, playerId: st
   })
 
   console.log(`[DROP] ${playerId} dropped ${itemId}`)
+}
+
+// ============================================================================
+// route:register_spawn_areas handler (host-only, Phase C-02)
+// ============================================================================
+
+export interface RegisterSpawnAreasContext {
+  io: Server
+  roomId: string
+  room: GameRoom
+  socketId: string
+  payload: RegisterSpawnAreasPayload
+}
+
+/**
+ * Host registers every scene-authored spawn area for the current GameScene.
+ * The backend validates each entry, stores them, and picks one valid spawn
+ * area per critical route item. `item:state` is broadcast for each placed
+ * item so every client repositions its pickable prefab.
+ */
+export function handleRegisterSpawnAreas(context: RegisterSpawnAreasContext): void {
+  const { io, roomId, room, socketId, payload } = context
+
+  const player = room.state.players.get(socketId)
+  if (!player || player.userId !== room.state.hostUserId) {
+    console.warn(`[SPAWN] Non-host ${socketId} tried to register spawn areas`)
+    return
+  }
+
+  const result = registerSpawnAreas(room.state, payload)
+
+  if (result.skipped) {
+    console.log(`[SPAWN] "${roomId}" already has spawn areas — ignoring re-registration`)
+    return
+  }
+
+  if (result.accepted.length === 0) {
+    console.warn(
+      `[SPAWN] "${roomId}" registration produced zero valid areas. Rejections: ${result.rejected.join(' | ') || 'none'}`
+    )
+    io.to(socketId).emit('game:error', {
+      message: 'Spawn area registration rejected — no valid areas',
+    })
+    return
+  }
+
+  console.log(
+    `[SPAWN] "${roomId}" registered ${result.accepted.length} spawn areas (rejected ${result.rejected.length})`
+  )
+  if (result.rejected.length > 0) {
+    console.warn(`[SPAWN] Rejections: ${result.rejected.join(' | ')}`)
+  }
+
+  const placed = placeCriticalItemsInSpawnAreas(io, roomId, room.state)
+  if (placed.length === 0) {
+    console.warn(
+      `[SPAWN] No critical items were placed — check allowedItemIds on the registered areas`
+    )
+  }
 }
 
 // ============================================================================
@@ -520,7 +589,14 @@ export function handleGuardCatch(context: GuardCatchContext): void {
   // Catch is valid - could be player or NPC
   if (isPlayer) {
     targetPlayer!.isAlive = false
-    dropCriticalRouteItemsForPlayer(io, roomId, room.state, targetPlayer!, targetPlayer!.position)
+    dropCriticalRouteItemsForPlayer(
+      io,
+      roomId,
+      room.state,
+      targetPlayer!,
+      targetPlayer!.position,
+      (itemId) => scheduleCriticalItemRespawn(io, roomId, room.state, itemId as RouteItemId)
+    )
     console.log(`[CATCH] Guard ${guard.id} caught prisoner ${targetPlayer!.id}`)
   } else {
     console.log(`[CATCH] Guard ${guard.id} mistakenly caught NPC ${targetNpc!.id}`)

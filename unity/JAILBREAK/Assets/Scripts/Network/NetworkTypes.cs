@@ -555,4 +555,28 @@ namespace Jailbreak.Network
         public string   spawnAreaId;
         public SVector3 position;
     }
+
+    /// <summary>
+    /// One spawn area sent up to the backend so it can decide where a
+    /// route-critical item appears (Phase C-01 / C-02).
+    /// </summary>
+    [Serializable]
+    public class RouteSpawnAreaData
+    {
+        public string   spawnAreaId;
+        public string   zoneId;
+        public SVector3 position;
+        public string[] allowedItemIds;
+    }
+
+    /// <summary>
+    /// Host-only client-to-server payload emitted once per match after the
+    /// GameScene has loaded. Backend validates, stores and picks one valid
+    /// area per critical item, then broadcasts <c>item:state</c> updates.
+    /// </summary>
+    [Serializable]
+    public class RegisterSpawnAreasPayload
+    {
+        public RouteSpawnAreaData[] areas;
+    }
 }

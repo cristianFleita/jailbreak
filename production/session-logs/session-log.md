@@ -1330,3 +1330,22 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260424_190329
+### Commits
+4a3943e chore: phase B, pickable + inventory
+### Uncommitted Changes
+backend/src/game/event-handlers.ts
+backend/src/game/room-manager.ts
+backend/src/game/systems/route-inventory.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+memory/decisions.md
+memory/progress.md
+unity/JAILBREAK/Assets/Plugins/SocketBridge.jslib
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/Network/NetworkManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

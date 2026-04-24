@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io'
 import {
   NPCSyncStatePayload, PlayerInteractAction, PlayerMovePayload, Vector3,
   AuthRegisterPayload, RoomCreatePayload, RoomJoinPayload, RoomKickPayload,
+  RegisterSpawnAreasPayload,
 } from '../game/types.js'
 import {
   createRoom,
@@ -26,6 +27,7 @@ import {
   handleRiotActivate,
   checkGameEndCondition,
   handleNPCSyncState,
+  handleRegisterSpawnAreas,
 } from '../game/event-handlers.js'
 import {
   markPlayerDisconnected,
@@ -37,6 +39,11 @@ import {
   dropCriticalRouteItemsForPlayer,
   emitAllRouteItemStatesToSocket,
 } from '../game/systems/route-inventory.js'
+import {
+  clearSpawnAreaRegistration,
+  scheduleCriticalItemRespawn,
+} from '../game/systems/spawn-areas.js'
+import type { RouteItemId } from '../game/types.js'
 import {
   registerUser,
   getUserBySocket,
@@ -626,6 +633,32 @@ export function setupGameSockets(io: Server) {
     })
 
     // ==================================================================
+    // GAMEPLAY: route:register_spawn_areas (host-only; Phase C-02)
+    // ==================================================================
+    socket.on('route:register_spawn_areas', (payloadRaw: string | RegisterSpawnAreasPayload) => {
+      if (!currentRoomId) return
+
+      try {
+        const room = getRoom(currentRoomId)
+        if (!room || room.state.status !== 'active') return
+
+        const payload = typeof payloadRaw === 'string'
+          ? JSON.parse(payloadRaw) as RegisterSpawnAreasPayload
+          : payloadRaw
+
+        handleRegisterSpawnAreas({
+          io,
+          roomId: currentRoomId,
+          room,
+          socketId: socket.id,
+          payload,
+        })
+      } catch (err) {
+        console.error(`[ERROR] route:register_spawn_areas: ${err}`)
+      }
+    })
+
+    // ==================================================================
     // GAMEPLAY: npc:sync_state (from Host to sync NPC positions)
     // ==================================================================
     socket.on('npc:sync_state', (payloadRaw: string | NPCSyncStatePayload) => {
@@ -692,7 +725,14 @@ function handleLeaveRoom(
     // During an active game: save reconnection slot then remove the stale socket entry
     if (gameIsActive) {
       if (reason === 'left') {
-        dropCriticalRouteItemsForPlayer(io, roomId, room.state, player, player.position)
+        dropCriticalRouteItemsForPlayer(
+          io,
+          roomId,
+          room.state,
+          player,
+          player.position,
+          (itemId) => scheduleCriticalItemRespawn(io, roomId, room.state, itemId as RouteItemId)
+        )
         setUserStatus(userId, 'idle')
       } else {
         markPlayerDisconnected(roomId, player, room.config.reconnectTimeout)
@@ -744,6 +784,7 @@ function handleLeaveRoom(
 
       stopGameLoop(room)
       clearRoomSlots(roomId)
+      clearSpawnAreaRegistration(roomId)
       destroyRoom(roomId)
       return
     }
@@ -760,6 +801,7 @@ function handleLeaveRoom(
       console.log(`[ROOM] "${roomId}" is empty, destroying`)
       stopGameLoop(room)
       clearRoomSlots(roomId)
+      clearSpawnAreaRegistration(roomId)
       destroyRoom(roomId)
     }
   } catch (err) {
@@ -786,7 +828,8 @@ function scheduleDisconnectedCriticalItemRelease(
         roomId,
         room.state,
         expiredPlayer,
-        expiredPlayer.position
+        expiredPlayer.position,
+        (itemId) => scheduleCriticalItemRespawn(io, roomId, room.state, itemId as RouteItemId)
       )
 
       setUserStatus(userId, 'idle')

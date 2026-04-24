@@ -317,6 +317,17 @@ mergeInto(LibraryManager.library, {
       window._jbSocket.emit('npc:sync_state', json);
   },
 
+  SocketSendRegisterSpawnAreas: function(jsonPtr) {
+    var json = UTF8ToString(jsonPtr);
+    if (window._jbSocket && window._jbSocket.connected) {
+      try {
+        window._jbSocket.emit('route:register_spawn_areas', JSON.parse(json));
+      } catch (e) {
+        console.error('[SocketBridge] SendRegisterSpawnAreas parse error:', e);
+      }
+    }
+  },
+
   SocketDisconnect: function() {
     if (window._jbSocket) {
       window._jbSocket.disconnect();

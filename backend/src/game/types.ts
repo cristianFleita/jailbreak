@@ -224,6 +224,15 @@ export interface SpawnAreaRegistration {
   allowedItemIds: RouteItemId[]
 }
 
+/**
+ * Client → server: host registers every scene-authored spawn area once the
+ * GameScene has loaded. Backend uses the list to choose one spawn area per
+ * critical route item (Phase C-02).
+ */
+export interface RegisterSpawnAreasPayload {
+  areas: SpawnAreaRegistration[]
+}
+
 // ============================================================================
 // Escape Route — Socket Payloads
 // ============================================================================
