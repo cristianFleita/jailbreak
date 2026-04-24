@@ -232,6 +232,14 @@ export function handlePlayerInteract(context: PlayerInteractContext): void {
     return
   }
 
+  // Phase D — Route 1 mission interactions. The Route1System owns all
+  // validation (object id, inventory gates, mission flags) and broadcasting;
+  // we just dispatch.
+  if (action.startsWith('route1.')) {
+    handleRoute1Action(io, room, socketId, player, objectId, action)
+    return
+  }
+
   if (action === 'drop' && isCriticalRouteItem(stableObjectItemId)) {
     console.warn(`[DROP] ${player.userId} attempted to drop critical route tool ${stableObjectItemId}`)
     io.to(socketId).emit('game:error', { message: 'Critical route tools cannot be dropped' })
@@ -321,7 +329,52 @@ function handleRouteItemPickup(
   cancelPendingRespawn(roomId, stableItemId)
 
   broadcastItemState(io, roomId, result.item)
+  notifyRoute1InventoryChanged(room)
   console.log(`[PICKUP] ${player.userId} picked up ${stableItemId} to hand`)
+}
+
+function handleRoute1Action(
+  io: Server,
+  room: GameRoom,
+  socketId: string,
+  player: PlayerState,
+  objectId: string,
+  action: PlayerInteractAction
+): void {
+  const gm = (room as any).gameManager as GameManager | undefined
+  if (!gm || !gm.route1) {
+    console.warn(`[ROUTE1] gameManager.route1 missing — dropping ${action}`)
+    return
+  }
+  const r1 = gm.route1
+  let result: { ok: boolean; reason?: string } = { ok: true }
+
+  switch (action) {
+    case 'route1.search_clue.start':
+      result = r1.startSearchClue(player, objectId); break
+    case 'route1.search_clue.stop':
+      result = r1.stopSearchClue(player, objectId); break
+    case 'route1.disable_server.start':
+      result = r1.startDisableServer(player, objectId); break
+    case 'route1.disable_server.stop':
+      result = r1.stopDisableServer(player, objectId); break
+    case 'route1.open_vent.start':
+      result = r1.startOpenVent(player, objectId); break
+    case 'route1.open_vent.stop':
+      result = r1.stopOpenVent(player, objectId); break
+    case 'route1.escape.start':
+      result = r1.startEscape(player, objectId); break
+    case 'route1.escape.stop':
+      result = r1.stopEscape(player, objectId); break
+    default:
+      console.warn(`[ROUTE1] Unhandled action ${action}`)
+      return
+  }
+
+  if (!result.ok) {
+    console.warn(`[ROUTE1] ${player.userId} ${action} on ${objectId} rejected: ${result.reason}`)
+    io.to(socketId).emit('game:error', { message: result.reason })
+  }
 }
 
 function handleRouteItemStore(
@@ -351,7 +404,13 @@ function handleRouteItemStore(
   }
 
   broadcastItemState(io, roomId, result.item)
+  notifyRoute1InventoryChanged(room)
   console.log(`[STORE] ${player.userId} stored ${result.item.itemId ?? result.item.id} in slot ${result.slotIndex}`)
+}
+
+function notifyRoute1InventoryChanged(room: GameRoom): void {
+  const gm = (room as any).gameManager as GameManager | undefined
+  gm?.route1?.notifyInventoryChanged()
 }
 
 function handleItemPickup(io: Server, roomId: string, room: GameRoom, playerId: string, itemId: string, item: any): void {
@@ -589,7 +648,7 @@ export function handleGuardCatch(context: GuardCatchContext): void {
   // Catch is valid - could be player or NPC
   if (isPlayer) {
     targetPlayer!.isAlive = false
-    dropCriticalRouteItemsForPlayer(
+    const droppedItems = dropCriticalRouteItemsForPlayer(
       io,
       roomId,
       room.state,
@@ -597,6 +656,12 @@ export function handleGuardCatch(context: GuardCatchContext): void {
       targetPlayer!.position,
       (itemId) => scheduleCriticalItemRespawn(io, roomId, room.state, itemId as RouteItemId)
     )
+    // Cancel any in-flight route1 interaction (clue search, sabotage, vent
+    // open, ESCAPE) the captured prisoner had, then refresh route1 so missions
+    // reflect the inventory drops.
+    const gm = (room as any).gameManager as GameManager | undefined
+    gm?.route1?.cancelPlayerInteractions(targetPlayer!.userId)
+    if (droppedItems.length > 0) gm?.route1?.notifyInventoryChanged()
     console.log(`[CATCH] Guard ${guard.id} caught prisoner ${targetPlayer!.id}`)
   } else {
     console.log(`[CATCH] Guard ${guard.id} mistakenly caught NPC ${targetNpc!.id}`)

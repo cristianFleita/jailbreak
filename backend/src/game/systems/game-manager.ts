@@ -14,6 +14,7 @@ import { EscapeRouteSystem } from './escape-routes.js'
 import { PhaseSystem } from './phases.js'
 import { VictoryConditionSystem } from './victory.js'
 import { JailRoutineSystem } from './jail-routine.js'
+import { Route1System } from './route1-system.js'
 
 export class GameManager {
   // All systems
@@ -26,6 +27,7 @@ export class GameManager {
   phases: PhaseSystem
   victory: VictoryConditionSystem
   jailRoutine: JailRoutineSystem
+  route1: Route1System
 
   constructor(private room: GameRoom) {
     const state = room.state
@@ -40,6 +42,7 @@ export class GameManager {
     this.phases = new PhaseSystem(state)
     this.victory = new VictoryConditionSystem(state, this.escapeRoutes, this.phases, this.penalty)
     this.jailRoutine = new JailRoutineSystem(state)
+    this.route1 = new Route1System(state)
 
     console.log('[GAME-MANAGER] Initialized all systems')
   }
@@ -70,6 +73,9 @@ export class GameManager {
         }
       }
     }
+
+    // ========== Route 1 (mission interactions: clue, server, vent, escape) ==========
+    this.route1.tick(tickDelta)
 
     // ========== Jail Routine (NPC Phase System) ==========
     this.jailRoutine.update(tickDelta)

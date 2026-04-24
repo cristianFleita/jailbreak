@@ -140,6 +140,14 @@ export function setupGameSockets(io: Server) {
               emitAllRouteItemStatesToSocket(io, socket.id, roomForReconnect.state)
 
               const gm = (roomForReconnect as any).gameManager
+              // Re-emit Route 1 snapshot so the reconnected client rebuilds
+              // its checklist + world props without waiting for the next tick.
+              if (gm?.route1) {
+                if (reconnectResult.playerState?.role === 'prisoner') {
+                  socket.emit('escape:route1:state', gm.route1.buildPrisonerStatePayload())
+                }
+                socket.emit('world:state', gm.route1.buildWorldStatePayload())
+              }
               socket.emit('game:reconnect', {
                 players: Array.from(roomForReconnect.state.players.values()),
                 npcs: Array.from(roomForReconnect.state.npcs.values()),
@@ -301,6 +309,12 @@ export function setupGameSockets(io: Server) {
               emitAllRouteItemStatesToSocket(io, socket.id, room.state)
 
               const gm2 = (room as any).gameManager
+              if (gm2?.route1) {
+                if (reconnectResult.playerState?.role === 'prisoner') {
+                  socket.emit('escape:route1:state', gm2.route1.buildPrisonerStatePayload())
+                }
+                socket.emit('world:state', gm2.route1.buildWorldStatePayload())
+              }
               socket.emit('game:reconnect', {
                 players: Array.from(room.state.players.values()),
                 npcs: Array.from(room.state.npcs.values()),
@@ -724,6 +738,12 @@ function handleLeaveRoom(
 
     // During an active game: save reconnection slot then remove the stale socket entry
     if (gameIsActive) {
+      // Whatever route1 action this player was doing must end immediately —
+      // their socket is gone, the world cannot rely on a `*.stop` that will
+      // never arrive (see Phase D anti-griefing requirement).
+      const gmLeave = (room as any).gameManager
+      gmLeave?.route1?.cancelPlayerInteractions(userId)
+
       if (reason === 'left') {
         dropCriticalRouteItemsForPlayer(
           io,
@@ -733,6 +753,7 @@ function handleLeaveRoom(
           player.position,
           (itemId) => scheduleCriticalItemRespawn(io, roomId, room.state, itemId as RouteItemId)
         )
+        gmLeave?.route1?.notifyInventoryChanged()
         setUserStatus(userId, 'idle')
       } else {
         markPlayerDisconnected(roomId, player, room.config.reconnectTimeout)
@@ -831,6 +852,9 @@ function scheduleDisconnectedCriticalItemRelease(
         expiredPlayer.position,
         (itemId) => scheduleCriticalItemRespawn(io, roomId, room.state, itemId as RouteItemId)
       )
+
+      const gmExpire = (room as any).gameManager
+      if (dropped.length > 0) gmExpire?.route1?.notifyInventoryChanged()
 
       setUserStatus(userId, 'idle')
 

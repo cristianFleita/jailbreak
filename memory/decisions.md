@@ -273,3 +273,40 @@ Evita que la escena dicte posiciones fijas por sesion, mantiene el contrato de i
 - `route:register_spawn_areas` es host-only. Clientes no-host ignoran el envio.
 - La validacion de distancia de pickup (en el backend) ahora usa la posicion autoritativa una vez placed; antes del placement el item permanece en estado `spawned` con posicion placeholder y no debe ser pickable.
 - Un re-envio por el mismo host (por ejemplo, tras reload de escena) es no-op mientras la sala siga locked.
+
+---
+
+## ADR-011: Ruta 1 Fase D — Route1System backend autoritativo
+
+**Status**: Implemented
+**Date**: 2026-04-24
+
+### Decision
+
+Toda la logica de misiones de Ruta 1 vive en `Route1System` (`backend/src/game/systems/route1-system.ts`), construido por `GameManager` y ticked desde el game loop. El cliente Unity solo dispara start/stop por `player:interact`; el backend valida gates, avanza progreso por dt y resuelve completion.
+
+- Acciones soportadas: `route1.search_clue.start/stop`, `route1.disable_server.start/stop`, `route1.open_vent.start/stop`, `route1.escape.start/stop`.
+- Validacion: rol prisoner + alive, IDs en pools canonicos (`GUARD_DESK_IDS`, `SERVER_IDS`, `VENT_IDS`), gate de inventario por `playerHasItem` (mano o slot).
+- Un jugador solo puede tener una interaccion activa a la vez; un nuevo `start` reemplaza la anterior. Excepcion: helpers en `open_vent` se anaden al `helperUserIds` del initiator.
+- `open_vent` persiste su progreso en `ventProgressById[ventId]` aunque el initiator detenga; un restart resume desde el progreso guardado. El initiator necesita llave francesa; los helpers no.
+- Tasa de progreso de `open_vent`: solo = `1 / ventOpenSecondsSingle`, con >=1 helper = `1 / ventOpenSecondsCoop`.
+- `escape` usa key `route1.escape:${ventId}:${userId}`; multiples presos pueden escapar por el mismo conducto en paralelo.
+- Captura del guardia llama a `cancelPlayerInteractions(userId)` y elimina al preso de `escapingPlayerIds`. Tambien se cancela en disconnect/leave (active game) y al expirar la ventana de reconnect.
+- Mision checklist (`find_cutters`, `find_clue`, `disable_server`, `find_wrench`, `open_vent`, `escape`) se recomputa desde inventario + flags despues de cada cambio (`notifyInventoryChanged()` desde event-handlers).
+- Broadcasts: `escape:route1:state` solo a sockets prisoner (filtra `correctServerId` salvo cuando `clueFound`); `world:state` publico (`ventilationPowered`, `openVentIds`); `world:cue` solo a guardia (`server_wrong_alarm`, `server_correct_power_off`, `vent_opened`). Wired como callbacks en `room-manager.startGameLoop`.
+- Reconnect re-emite `escape:route1:state` (a presos) y `world:state` (a todos) usando `Route1System.buildPrisonerStatePayload()` / `buildWorldStatePayload()`.
+- Victory: `VictoryConditionSystem` chequea `state.route1.escapedPlayerIds.length > 0` ANTES de cualquier otra condicion y emite `game:end { winner: 'prisoners', reason: 'escape_route' }`.
+
+### Why
+
+- Mantiene autoridad pura: client envia intencion, server resuelve. Distancia/rango es delegada a Unity (igual que `guard:catch`) porque el backend no tiene posicion del prop.
+- Persistir `ventProgressById` desacopla el estado del conducto del jugador concreto que lo trabaja, permitiendo que un nuevo initiator retome la misma barra y que el HUD muestre progreso compartido.
+- Filtrar `correctServerId` en el payload prisoner-only evita que el guardia pueda inferir el servidor leyendo trafico de socket o re-emitidos en reconnect.
+- Cancelar interacciones en captura/disconnect cierra el caso "escape se cancela si el preso es capturado durante la trepada de 5s" sin un check separado en el guard catch path.
+
+### Implications
+
+- Cualquier nuevo input de Ruta 1 debe pasar por `Route1System` para que la checklist + broadcasts queden coherentes.
+- Cambios en inventario que afectan el gate (`find_cutters`, `find_wrench`, `disable_server`, `open_vent`) deben llamar a `notifyInventoryChanged()`. Hoy lo hacen pickup, store, drop por captura, drop por leave y drop por expiracion de reconnect.
+- Las posiciones de cue (`world:cue.position`) hoy van vacias; cuando Unity registre props en el backend (futuro) se podra rellenar.
+- 36 tests nuevos en `__tests__/route1-system.test.ts` cubren AC-5..AC-13. AC-1..AC-4 ya estaban cubiertos por route-selector.test.ts y spawn-areas.test.ts.

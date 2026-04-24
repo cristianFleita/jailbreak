@@ -335,6 +335,14 @@ export type PlayerInteractAction =
   | 'drop'
   | 'item.pickup'
   | 'item.store'
+  | 'route1.search_clue.start'
+  | 'route1.search_clue.stop'
+  | 'route1.disable_server.start'
+  | 'route1.disable_server.stop'
+  | 'route1.open_vent.start'
+  | 'route1.open_vent.stop'
+  | 'route1.escape.start'
+  | 'route1.escape.stop'
 
 export interface PlayerInteractPayload {
   playerId: string

@@ -200,6 +200,24 @@ export function startGameLoop(io: Server, room: GameRoom): void {
     io.to(state.id).emit('npc:mood_shift', payload)
   }
 
+  // ── Wire Route 1 broadcasts (Phase D) ──
+  // Prisoner-only fan-out keeps `correctServerId` away from the guard. We
+  // iterate every tick's emit because socket.io rooms in this codebase aren't
+  // sharded by role.
+  gameManager.route1.onRoute1StateChanged = (payload) => {
+    for (const [socketId, p] of state.players) {
+      if (p.role === 'prisoner') io.to(socketId).emit('escape:route1:state', payload)
+    }
+  }
+  gameManager.route1.onWorldStateChanged = (payload) => {
+    io.to(state.id).emit('world:state', payload)
+  }
+  gameManager.route1.onWorldCue = (payload) => {
+    for (const [socketId, p] of state.players) {
+      if (p.role === 'guard') io.to(socketId).emit('world:cue', payload)
+    }
+  }
+
   // Jail routine is started by transitionToActive AFTER game:start is emitted,
   // so clients have time to load GameScene and subscribe to phase:start.
 
@@ -320,6 +338,17 @@ export function transitionToActive(io: Server, room: GameRoom): void {
   }
   io.to(room.state.id).emit('escape:route:selected', routePayload)
   broadcastAllRouteItemStates(io, room.state.id, room.state)
+
+  // Initial Route 1 snapshot so prisoner HUDs hydrate before the first tick.
+  // World state is broadcast publicly so the guard hears the ventilation.
+  const gameManager = (room as any).gameManager as GameManager | undefined
+  if (gameManager?.route1) {
+    const initialPrisonerPayload = gameManager.route1.buildPrisonerStatePayload()
+    for (const [socketId, p] of room.state.players) {
+      if (p.role === 'prisoner') io.to(socketId).emit('escape:route1:state', initialPrisonerPayload)
+    }
+    io.to(room.state.id).emit('world:state', gameManager.route1.buildWorldStatePayload())
+  }
 
   // Notify all clients that game started
   io.to(room.state.id).emit('game:start', {
