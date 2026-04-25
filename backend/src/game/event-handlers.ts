@@ -21,6 +21,7 @@ import {
 } from './validation.js'
 import { getRoom } from './room-manager.js'
 import { GameManager } from './systems/game-manager.js'
+import { RIOT_THRESHOLD } from './systems/penalties.js'
 import {
   broadcastItemState,
   dropCriticalRouteItemsForPlayer,
@@ -674,18 +675,23 @@ export function handleGuardCatch(context: GuardCatchContext): void {
     // Need to trigger error in guard penalties here, maybe via gameManager
   }
 
+  // Notify game manager FIRST so penalty counter is recorded before broadcast,
+  // letting clients display the up-to-date guard error count on the same event.
+  const gameManager = (room as any).gameManager as GameManager
+  if (gameManager) {
+    gameManager.onGuardCatch(guard.id, targetId, isPlayer)
+  }
+
+  const guardErrorCount = gameManager?.penalty?.getGuardErrorCount(guard.id) ?? 0
+
   io.to(roomId).emit('guard:catch', {
     guardId: guard.id,
     targetId: targetId,
     success: true,
     isPlayer: isPlayer,
+    guardErrorCount,
+    guardErrorThreshold: RIOT_THRESHOLD,
   })
-
-  // Notify game manager
-  const gameManager = (room as any).gameManager as GameManager
-  if (gameManager) {
-    gameManager.onGuardCatch(guard.id, targetId, isPlayer)
-  }
 }
 
 // ============================================================================

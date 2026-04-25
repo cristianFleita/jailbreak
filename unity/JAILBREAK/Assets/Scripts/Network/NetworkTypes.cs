@@ -176,6 +176,8 @@ namespace Jailbreak.Network
         public string targetId;
         public bool success;
         public bool isPlayer;
+        public int guardErrorCount;
+        public int guardErrorThreshold;
     }
 
     [Serializable]

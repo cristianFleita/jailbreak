@@ -37,11 +37,13 @@ namespace Jailbreak.UI
         private VisualElement _routeChecklist;
         private VisualElement _heldItemIcon;
         private VisualElement _toastPanel;
+        private VisualElement _guardErrorPanel;
         private Label _phaseLabel;
         private Label _timeLabel;
         private Label _roleLabel;
         private Label _heldItemLabel;
         private Label _toastLabel;
+        private Label _guardErrorLabel;
 
         private HudSlot _slot0;
         private HudSlot _slot1;
@@ -62,6 +64,8 @@ namespace Jailbreak.UI
         private string _lastRenderedRole;
         private float _nextSlowRefresh;
         private float _toastHideAtRealtime;
+        private int _guardErrorCount;
+        private int _guardErrorThreshold = 3;
 
         private void OnEnable()
         {
@@ -111,6 +115,8 @@ namespace Jailbreak.UI
             _heldItemLabel = _root.Q<Label>("HeldItemLabel");
             _toastPanel = _root.Q<VisualElement>("HudToast");
             _toastLabel = _root.Q<Label>("HudToastLabel");
+            _guardErrorPanel = _root.Q<VisualElement>("GuardErrorPanel");
+            _guardErrorLabel = _root.Q<Label>("GuardErrorLabel");
 
             _slot0 = new HudSlot(
                 _root.Q<VisualElement>("InventorySlot0"),
@@ -212,6 +218,7 @@ namespace Jailbreak.UI
                 _net.OnPhaseWarningEvent += HandlePhaseWarning;
                 _net.OnGameReconnectEvent += HandleGameReconnect;
                 _net.OnGameEndEvent += HandleGameEndPayload;
+                _net.OnGuardCatchResultEvent += HandleGuardCatchResult;
                 _netBound = true;
 
                 if (_net.CachedPhaseJailStart != null)
@@ -239,6 +246,7 @@ namespace Jailbreak.UI
                 _net.OnPhaseWarningEvent -= HandlePhaseWarning;
                 _net.OnGameReconnectEvent -= HandleGameReconnect;
                 _net.OnGameEndEvent -= HandleGameEndPayload;
+                _net.OnGuardCatchResultEvent -= HandleGuardCatchResult;
             }
 
             _gsmBound = false;
@@ -292,6 +300,7 @@ namespace Jailbreak.UI
             RefreshRoute1(_gsm != null ? _gsm.Route1State : null);
             RefreshPhaseLabel();
             RefreshTimer();
+            RefreshGuardErrors();
         }
 
         private void RefreshVisibility()
@@ -307,6 +316,8 @@ namespace Jailbreak.UI
                 _inventoryPanel.style.display = shouldShowInventory ? DisplayStyle.Flex : DisplayStyle.None;
             if (_route1Panel != null)
                 _route1Panel.style.display = shouldShowRoute ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_guardErrorPanel != null)
+                _guardErrorPanel.style.display = isGuard ? DisplayStyle.Flex : DisplayStyle.None;
 
             if (_roleLabel != null)
             {
@@ -564,6 +575,35 @@ namespace Jailbreak.UI
             _phaseDuration = 0f;
             RefreshPhaseLabel();
             RefreshTimer();
+        }
+
+        private void HandleGuardCatchResult(GuardCatchPayload payload)
+        {
+            if (payload == null) return;
+            if (payload.guardErrorThreshold > 0)
+                _guardErrorThreshold = payload.guardErrorThreshold;
+            _guardErrorCount = Mathf.Max(0, payload.guardErrorCount);
+            RefreshGuardErrors();
+
+            if (!IsGuard(_gsm != null ? _gsm.LocalRole : null)) return;
+            if (!payload.success) return;
+
+            if (!payload.isPlayer)
+                ShowToast($"Wrong target! Errors {_guardErrorCount}/{_guardErrorThreshold}");
+        }
+
+        private void RefreshGuardErrors()
+        {
+            if (_guardErrorLabel == null) return;
+            var threshold = _guardErrorThreshold > 0 ? _guardErrorThreshold : 3;
+            _guardErrorLabel.text = $"{_guardErrorCount}/{threshold}";
+
+            if (_guardErrorCount >= threshold)
+                _guardErrorLabel.style.color = new Color(1f, 0.42f, 0.42f);
+            else if (_guardErrorCount > 0)
+                _guardErrorLabel.style.color = new Color(1f, 0.78f, 0.36f);
+            else
+                _guardErrorLabel.style.color = Color.white;
         }
 
         private void HandleGameEndPayload(GameEndPayload payload)
