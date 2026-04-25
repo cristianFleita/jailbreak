@@ -188,6 +188,27 @@ mergeInto(LibraryManager.library, {
         window.unityInstance.SendMessage(window._jbGoName, 'OnNPCMoodShift', JSON.stringify(data));
       });
 
+      // ── Escape Route System (Ruta 1 / Phase A) ─────────────────────────
+      window._jbSocket.on('escape:route:selected', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnEscapeRouteSelected', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('escape:route1:state', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnEscapeRoute1State', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('world:cue', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnWorldCue', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('world:state', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnWorldState', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('item:state', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnItemState', JSON.stringify(data));
+      });
+
     } // end doConnect
 
     // Load socket.io from CDN if the global `io` isn't available yet
@@ -294,6 +315,17 @@ mergeInto(LibraryManager.library, {
     var json = UTF8ToString(jsonPtr);
     if (window._jbSocket && window._jbSocket.connected)
       window._jbSocket.emit('npc:sync_state', json);
+  },
+
+  SocketSendRegisterSpawnAreas: function(jsonPtr) {
+    var json = UTF8ToString(jsonPtr);
+    if (window._jbSocket && window._jbSocket.connected) {
+      try {
+        window._jbSocket.emit('route:register_spawn_areas', JSON.parse(json));
+      } catch (e) {
+        console.error('[SocketBridge] SendRegisterSpawnAreas parse error:', e);
+      }
+    }
   },
 
   SocketDisconnect: function() {

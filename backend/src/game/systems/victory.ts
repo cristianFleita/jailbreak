@@ -35,13 +35,19 @@ export class VictoryConditionSystem {
       return { winner: 'prisoners', reason: 'guard_too_many_errors' }
     }
 
+    // Check prisoners win: at least one prisoner completed Ruta 1 escape.
+    // GDD §2.3 — "Al menos 1 preso jugador escapa por cualquier ruta → Presos ganan (inmediato)".
+    if (this.state.route1 && this.state.route1.escapedPlayerIds.length > 0) {
+      return { winner: 'prisoners', reason: 'escape_route' }
+    }
+
     // Check guards win: all prisoners dead/caught
     const allPrisonersCaught = this.checkAllPrisonersCaught()
     if (allPrisonersCaught) {
       return { winner: 'guards', reason: 'all_prisoners_caught' }
     }
 
-    // Check prisoners win: all escaped
+    // Legacy: check prisoners win via the legacy escape system (TODO — replace with route1).
     const allEscaped = this.escapeSystem.allPrisonersEscaped()
     if (allEscaped) {
       return { winner: 'prisoners', reason: 'escape_route' }

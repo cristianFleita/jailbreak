@@ -67,7 +67,7 @@ interface JailPhaseDef {
 
 const JAIL_PHASES: JailPhaseDef[] = [
   {
-    phase: 1, name: 'Desayuno', duration: 90, zone: 'comedor',
+    phase: 1, name: 'Breakfast', duration: 90, zone: 'Dining Hall',
     actions: [
       { actionId: 'cafe_wait_outside_talk',  type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'cafeteria',  weight: 20,  minDuration: 6,  maxDuration: 7  },
       { actionId: 'cafe_walk_to_counter',    type: 'ONESHOT', animTrigger: 'Walking',       zoneId: 'cafeteria_counter', weight: 100, minDuration: 0,  maxDuration: 0  },
@@ -81,7 +81,7 @@ const JAIL_PHASES: JailPhaseDef[] = [
     ],
   },
   {
-    phase: 2, name: 'Trabajo', duration: 90, zone: 'trabajo',
+    phase: 2, name: 'Work', duration: 90, zone: 'Workshop',
     subZones: ['taller', 'lavanderia'],
     actions: [
       // Taller — free choice (weighted random)
@@ -96,7 +96,7 @@ const JAIL_PHASES: JailPhaseDef[] = [
     ],
   },
   {
-    phase: 3, name: 'Hora libre', duration: 120, zone: 'libre',
+    phase: 3, name: 'Free Time', duration: 120, zone: 'Yard',
     subZones: ['patio', 'comedor', 'lavanderia', 'celdas'],
     actions: [
       { actionId: 'yard_walk_perimeter',     type: 'LOOPING', animTrigger: 'Walking',       zoneId: 'yard',            weight: 20, minDuration: 30, maxDuration: 60, loop: true, chainLength: 4 },
@@ -120,7 +120,7 @@ const JAIL_PHASES: JailPhaseDef[] = [
     ],
   },
   {
-    phase: 4, name: 'Almuerzo', duration: 90, zone: 'comedor',
+    phase: 4, name: 'Lunch', duration: 90, zone: 'Dining Hall',
     actions: [
       { actionId: 'cafe_wait_outside_talk',  type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'cafeteria',  weight: 20,  minDuration: 6,  maxDuration: 7  },
       { actionId: 'cafe_walk_to_counter',    type: 'ONESHOT', animTrigger: 'Walking',       zoneId: 'cafeteria_counter', weight: 100, minDuration: 0,  maxDuration: 0  },
@@ -134,7 +134,7 @@ const JAIL_PHASES: JailPhaseDef[] = [
     ],
   },
   {
-    phase: 5, name: 'Trabajo', duration: 120, zone: 'trabajo',
+    phase: 5, name: 'Work', duration: 120, zone: 'Workshop',
     subZones: ['taller', 'lavanderia'],
     actions: [
       // Taller — free choice (weighted random)
@@ -149,7 +149,7 @@ const JAIL_PHASES: JailPhaseDef[] = [
     ],
   },
   {
-    phase: 6, name: 'Hora libre', duration: 90, zone: 'libre',
+    phase: 6, name: 'Free Time', duration: 90, zone: 'Yard',
     subZones: ['patio', 'comedor', 'lavanderia', 'celdas'],
     actions: [
       { actionId: 'yard_walk_perimeter',     type: 'LOOPING', animTrigger: 'Walking',       zoneId: 'yard',            weight: 20, minDuration: 30, maxDuration: 60, loop: true, chainLength: 4 },
@@ -170,7 +170,7 @@ const JAIL_PHASES: JailPhaseDef[] = [
     ],
   },
   {
-    phase: 7, name: 'Cena', duration: 90, zone: 'comedor',
+    phase: 7, name: 'Dinner', duration: 90, zone: 'Dining Hall',
     actions: [
       { actionId: 'cafe_wait_outside_talk',  type: 'SOCIAL',  animTrigger: 'talk_standing', zoneId: 'cafeteria',  weight: 20,  minDuration: 6,  maxDuration: 7  },
       { actionId: 'cafe_walk_to_counter',    type: 'ONESHOT', animTrigger: 'Walking',       zoneId: 'cafeteria_counter', weight: 100, minDuration: 0,  maxDuration: 0  },
@@ -184,7 +184,7 @@ const JAIL_PHASES: JailPhaseDef[] = [
     ],
   },
   {
-    phase: 8, name: 'Luces apagadas', duration: 120, zone: 'celdas',
+    phase: 8, name: 'Lights Out', duration: 120, zone: 'Cells',
     actions: [
       { actionId: 'lights_sleep', type: 'IDLE', animTrigger: 'sleep',     zoneId: 'cells', weight: 75, minDuration: 90, maxDuration: 120 },
       { actionId: 'lights_toss',  type: 'IDLE', animTrigger: 'toss_turn', zoneId: 'cells', weight: 25, minDuration: 5,  maxDuration: 12  },
@@ -243,7 +243,7 @@ export class JailRoutineSystem {
     this.zoneCheckDoneAt = 0
     this.zoneCheckedPlayers.clear()
     this.emitPhaseStart()
-    console.log('[JAIL] Routine started → Phase 1 (Desayuno)')
+    console.log('[JAIL] Routine started → Phase 1 (Breakfast)')
   }
 
   update(tickDelta: number): void {
@@ -604,7 +604,7 @@ export class JailRoutineSystem {
 
   /**
    * Strict laundry flow: grab_clothes → load_washer → store_clothes → [optional talk].
-   * Used for Phase 2/5 (Trabajo · lavanderia subzone) and Phase 3/6 (Hora libre · lavanderia).
+   * Used for Phase 2/5 (Work · lavanderia subzone) and Phase 3/6 (Free Time · lavanderia).
    * The backend emits the full ordered sequence as actionSequence steps so Unity
    * chains them automatically via NPCBehaviorController.UpdateSequence.
    */

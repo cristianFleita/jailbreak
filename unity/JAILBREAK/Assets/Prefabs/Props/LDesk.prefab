@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 2874630595136479701}
   - component: {fileID: 2204492554538405221}
   - component: {fileID: 4705351586423692844}
-  - component: {fileID: 6764048668486663894}
+  - component: {fileID: 7650085393746790916}
+  - component: {fileID: 8219215390099353057}
   m_Layer: 6
   m_Name: Interactable
   m_TagString: Untagged
@@ -69,7 +70,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProgressAction
   animatorBoolName: isSearching
-  duration: 10
+  duration: 3
   resetOnStop: 0
   onComplete:
     m_PersistentCalls:
@@ -88,7 +89,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProgressPointAction
   actionPoint: {fileID: 721764153084096683}
---- !u!114 &6764048668486663894
+--- !u!114 &7650085393746790916
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -97,11 +98,31 @@ MonoBehaviour:
   m_GameObject: {fileID: 3029658040701648733}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 661e0205762ac4570957dac99199fc8a, type: 3}
+  m_Script: {fileID: 11500000, guid: b4a6e0a11cce4f4aa8baa6a0d5a1b11a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SearchInteractable
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkInteractable
+  networkId: 
+--- !u!114 &8219215390099353057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3029658040701648733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6256746233f415d918960b739017cb4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Interactions.Route1.GuardDeskClueInteractable
   progressBar: {fileID: 0}
   progressLabel: Searching...
+  startLabel: Search
+  stopLabel: Stop
+  interactKey: 101
+  priority: 0
+  prisonersOnly: 1
+  activeStateTag: Route1Action
+  debugLogs: 0
 --- !u!1001 &4753396933465429935
 PrefabInstance:
   m_ObjectHideFlags: 0

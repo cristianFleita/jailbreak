@@ -1,11 +1,11 @@
 # JAILBREAK — Game Design Document
 
-**Version:** 1.3  
-**Fecha:** 21 de abril de 2026  
-**Plataforma:** PC (Unity WebGL)  
-**Jugadores:** 2–4 online  
-**Motor:** Unity 6 LTS  
-**Duración de partida:** ~13 minutos (ver tabla detallada en §4.1)  
+**Version:** 1.5
+**Fecha:** 24 de abril de 2026
+**Plataforma:** PC (Unity WebGL)
+**Jugadores:** 2–4 online
+**Motor:** Unity 6 LTS
+**Duración de partida:** ~15 minutos (ver tabla detallada en §4.1)
 
 ---
 
@@ -88,7 +88,7 @@
 
 ### 2.3 Condiciones de Fin de Partida
 
-La partida simula **un solo día** en la prisión (06:00 → 00:00 hora ficticia). Al llegar a medianoche (fin de Fase 9 — Luces apagadas) la jornada termina y se evalúa el resultado.
+La partida simula **un solo día** en la prisión (06:00 → 00:00 hora ficticia). Al llegar a medianoche (fin de Fase 9 — Encierro / Recuento final) la jornada termina y se evalúa el resultado.
 
 | Condición | Resultado | Cuándo se evalúa |
 |-----------|-----------|-------------------|
@@ -97,7 +97,7 @@ La partida simula **un solo día** en la prisión (06:00 → 00:00 hora ficticia
 | El guardia captura a todos los presos jugadores | **Guardia gana** | Inmediato al capturar al último |
 | La jornada termina (00:00) sin que ningún preso escape | **Guardia gana** | Al finalizar Fase 9 |
 
-**Nota:** Si quedan presos vivos pero ninguno escapó al llegar medianoche, el guardia gana — los prisioneros no lograron fugarse a tiempo.
+**Nota:** Si quedan presos vivos pero ninguno escapó al llegar medianoche, el guardia gana — los prisioneros no lograron fugarse a tiempo. En la Fase 9 no hay alerta automática por catres vacíos: el guardia debe leer visualmente el bloque de celdas y detectar ausencias o dummies sospechosos.
 
 ---
 
@@ -176,26 +176,31 @@ La jornada es el "reloj" de la partida. Cada fase dura un tiempo real fijo y ocu
 | 1 | Inicio | 06:00 | 30 seg | — | — | Celdas → Comedor | Spawn en celda, saludos, charlas, migran hacia comedor |
 | 2 | Desayuno | 06:30 | 90 seg | 10 seg | Silbato 10s antes | Comedor | Agarrar comida → sentarse a comer → tirar bandeja |
 | 3 | Trabajo (1er turno) | 08:00 | 90 seg | 10 seg | Silbato 10s antes | Taller / Lavandería | Bancos de trabajo, cargar cajas, lavar ropa |
-| 4 | Hora libre | 09:30 | 120 seg | 10 seg | Silbato 10s antes | Patio / Comedor / Lavandería / Celdas | Libre: ejercicio, cartas, charlar, descansar en celda. NPCs cambian de sub-zona |
+| 4 | Hora libre | 09:30 | 120 seg | 10 seg | Silbato 10s antes | Patio / Comedor / Lavandería / Celdas | Libre: ejercicio, cartas, charlar, leer o descansar sentado en celda. NPCs cambian de sub-zona |
 | 5 | Almuerzo | 11:30 | 90 seg | 10 seg | Silbato 10s antes | Comedor | Mismo flujo que Desayuno |
 | 6 | Trabajo (2do turno) | 13:00 | 120 seg | 10 seg | Silbato 10s antes | Taller / Lavandería | Mismo pool que Trabajo 1er turno |
 | 7 | Hora libre | 15:00 | 90 seg | 10 seg | Silbato 10s antes | Patio / Comedor / Lavandería / Celdas | Mismo pool que Hora libre (Fase 4) |
 | 8 | Cena | 16:30 | 90 seg | 10 seg | Silbato 10s antes | Comedor | Mismo flujo que Desayuno |
-| 9 | Luces apagadas | 18:00 → 00:00 | 120 seg | 10 seg | Silbato 10s antes | Celdas | Acostados, oscuridad, guardia con linterna |
+| 9 | Encierro / Recuento final | 18:00 → 00:00 | 90 seg | 10 seg | Silbato 10s antes | Celdas | Vuelven a su celda, se acomodan en el catre y quedan visibles desde el pasillo para el recuento |
 
 **Desglose de tiempos:**
 
 | Concepto | Cálculo | Total |
 |----------|---------|-------|
-| Fases (gameplay) | 30 + 90 + 90 + 120 + 90 + 120 + 90 + 90 + 120 | **840 seg** |
+| Fases (gameplay) | 30 + 90 + 90 + 120 + 90 + 120 + 90 + 90 + 90 | **810 seg** |
 | Transiciones (8 cambios × 10 seg) | 8 × 10 | **80 seg** |
-| **Total partida** | | **920 seg (~15 min 20 seg)** |
+| **Total partida** | | **890 seg (~14 min 50 seg)** |
 
 **Sistema de advertencias:**
 - **10 seg antes** de cada cambio de fase: suena un **silbato** audible globalmente.
 - Los NPCs comienzan a moverse hacia la zona de la siguiente fase durante la transición.
 - Los presos tienen **10 seg de transición** para llegar a la zona correcta.
 - Si un preso no llega a tiempo después de la transición, genera una alerta para el guardia: **"Alguien no está en su zona"** (sin identidad).
+
+**Fase 9 — Encierro / Recuento final:**
+- Las celdas tienen el frente abierto con barrotes o puerta abierta, de modo que el guardia puede leer cada catre desde el pasillo central y la pasarela del piso 2.
+- La fase no busca stealth puro en oscuridad: busca una última lectura social bajo presión, con siluetas visibles y poco tiempo.
+- Los NPCs se acomodan brevemente y luego quedan quietos. El guardia gana si nadie escapó antes de las 00:00; los presos pueden usar esta ventana para cerrar rutas que dependan de la celda.
 
 ### 4.2 Comportamiento Sospechoso (Qué Detecta el Guardia)
 
@@ -242,109 +247,119 @@ Además, el ~40% de los NPCs toma un **desvío por pasillo** antes de llegar a s
 ### 5.1 Inventario del Preso
 
 - **2 slots** de inventario máximo.
-- Los objetos se recogen con **[INTERACTUAR]** (tecla E). Animación de 1.5 seg visible para quien mire.
-- Los objetos se usan con **[USAR]** (tecla Q) en la ubicación correcta.
+- Los pickables de ruta se recogen instantáneamente con **[INTERACTUAR]** (tecla E) y quedan en la mano.
+- Los objetos en mano se guardan con **[GUARDAR]** (tecla F) en el primer slot libre.
+- Las interacciones de misión usan la barra de progreso contextual del mundo.
 - Los objetos **no se dropean** voluntariamente (evitar griefing).
 - Si un preso es capturado, sus objetos caen al suelo. Otro preso puede recogerlos.
 
 ### 5.2 Objetos de Escape (por Ruta)
 
-#### Ruta 1 — La Rejilla de Ventilación Industrial (Cooperativa)
+#### Ruta 1 — Ventilación (Cooperativa)
 
 > **Tipo:** Cooperativa (2–3 jugadores recomendados)  
-> **Zonas clave:** Taller, Sala de Electricidad, Oficina del Guardia  
+> **Zonas clave:** Lavandería / Workshop, Oficina del Guardia, Sala de Servidores, zona de Conductos
+> **Spec técnica:** `design/gdd/ruta-1-ventilacion-industrial.md`
 
-**Concepto:** El conducto de ventilación del Taller es lo suficientemente grande para escapar, pero está bloqueado por una pesada rejilla atornillada y un ventilador industrial mortal que está encendido. Los presos deben encontrar las herramientas, identificar y cortar el suministro eléctrico correcto en la otra punta de la prisión, y desatornillar la reja haciendo el menor ruido posible.
+**Concepto:** El backend selecciona una ruta activa al iniciar la partida. En el MVP siempre selecciona `route1_ventilation`, spawnea las herramientas necesarias, elige qué escritorio contiene la pista y decide cuál de los 12 servidores deshabilita el ventilador del conducto. Los presos pueden completar tareas en orden flexible, pero cada interacción está bloqueada por sus requisitos técnicos.
 
-**Fase 1 — Recolección de herramientas:**
+**Objetivo MVP:** implementar una única ruta completa, sincronizada, recuperable por reconexión y robusta contra softlocks. Rutas 2+ quedan como `TODO`.
+
+**Misiones de Ruta 1:**
+
+1. Buscar las **Pinzas**.
+2. Buscar una pista en la **Oficina del Guardia**.
+3. Deshabilitar el **servidor correcto**.
+4. Buscar la **Llave francesa**.
+5. Desatornillar un **conducto de ventilación**.
+6. Escapar por el conducto abierto.
+
+**Herramientas:**
 
 | Objeto | Ubicación | Mecánica | Efecto en inventario |
 |--------|-----------|----------|---------------------|
-| **Pinzas (cizallas)** | Taller — banco de trabajo o cajón (spawn aleatorio) | Interacción rápida (3 seg) | Ocupa 1 slot |
-| **Llave inglesa pesada** | Sala de Electricidad — tablero de herramientas o caja (spawn aleatorio) | Interacción rápida (3 seg) | Ocupa 1 slot. **Preso camina 5% más lento** mientras la lleva |
+| **Pinzas** (`route1_cutters`) | Spawn areas definidas por Unity, elegidas por backend | Pickup instantáneo con E, queda en mano; F guarda en slot | Requeridas para sabotear servidor |
+| **Llave francesa** (`route1_wrench`) | Spawn areas definidas por Unity, elegidas por backend | Pickup instantáneo con E, queda en mano; F guarda en slot | Requerida por quien inicia apertura del conducto |
 
-**Fase 2 — Sabotaje eléctrico (puzzle de tensión):**
+**Spawn backend-driven:** Unity define spawn areas con `spawnAreaId`, `zoneId`, posición y allowed items. El backend activa una pinza y una llave por partida. Si una herramienta crítica queda inaccesible, se devuelve al mundo o se respawnea.
 
-Un preso debe ir a la Sala de Electricidad con las **Pinzas** para cortar el cable que alimenta el ventilador del Taller.
+**Pista en Oficina del Guardia:**
 
-- **El problema:** Hay un servidor eléctrico con 4 cajas de fusibles (cables gruesos) etiquetadas 1, 2, 3 y 4. Solo una apaga el ventilador del Taller.
-- **La pista (plano eléctrico):** La información de qué fusible apaga el Taller está oculta en la **Oficina del Guardia**. El preso debe infiltrarse e interactuar con archivadores/cajones para encontrarla (el mueble exacto cambia aleatoriamente en cada partida). Interacción de **1 seg** — es un "hit and run" táctico.
-- **Mecánica de corte (DbD style):**
-  - El preso interactúa con el cable correcto usando las Pinzas.
-  - **Barra de progreso:** 15 seg netos.
-  - **QTEs (Skill Checks):** Aparecen círculos de timing en pantalla.
-    - **Acierto perfecto:** +5% de progreso bonus.
-    - **Fallo:** Descarga eléctrica. Animación interrumpida (stun 2 seg), pierde 10% de progreso, suena un **CHISPAZO** audible a 15m (alerta al guardia).
-- **Riesgo de equivocarse:** Si corta el cable equivocado (ej. el de las celdas o el comedor), el ventilador **NO** se apaga. En su lugar, se apagan las luces de esa otra zona, generando pánico en los NPCs y dándole al guardia una alerta exacta de sabotaje en la Sala de Electricidad.
+- Hay 4 escritorios: `guard_desk_1` a `guard_desk_4`.
+- El backend elige el escritorio correcto al iniciar la partida.
+- La interacción dura **3 segundos** y usa la barra de progreso del mundo.
+- La pista revela a los presos el `correctServerId`.
+- El guardia no recibe esta información por HUD.
 
-**Fase 3 — Fuerza bruta silenciosa (desatornillar la rejilla):**
+**Sala de servidores:**
 
-Con el ventilador apagado (las aspas se detienen, el ruido de fondo del Taller cesa), los presos van a la rejilla con la **Llave Inglesa Pesada**.
+- Hay 12 servidores: `server_1` a `server_12`.
+- El backend elige el servidor correcto al iniciar la partida.
+- Sabotear un servidor requiere pinzas en mano o inventario.
+- La interacción dura **15 segundos** y usa barra de progreso.
+- Servidor incorrecto: dispara alarma/ruido que alerta al guardia y permite reintentar.
+- Servidor correcto: deshabilita la ventilación y permite abrir conductos.
 
-- **Mecánica de fuerza (DbD style):**
-  - Barra de progreso: **25 seg** para 1 solo jugador.
-  - Animación: El personaje hace fuerza con todo el cuerpo. Rechinido de metal constante.
-  - **QTEs:** Si falla, la llave se zafa y golpea la rejilla. Suena un **¡CLANG!** audible a 25m y la barra retrocede **15%**.
-- **Cooperación (acelerador):** Si un segundo preso se acerca a la rejilla sin objetos e interactúa, entra en animación de "sostener la reja y amortiguar el ruido". Esto **acelera el progreso 50%** (baja a ~12 seg) y **reduce la frecuencia** de los QTEs.
-- **Interrupción:** Si el guardia se acerca, pueden soltar la interacción al instante. La barra de progreso decae lentamente **(-1%/seg)** mientras nadie trabaja.
+**Conductos de ventilación:**
 
-**Fase 4 — La fuga (ventana de vulnerabilidad):**
+- Hay 2 o 3 conductos configurados: `vent_1`, `vent_2`, `vent_3`.
+- Todos los conductos configurados son válidos; no hay conducto correcto secreto.
+- Cada conducto tiene progreso propio.
+- Abrir un conducto requiere ventilación deshabilitada y llave francesa en el jugador que inicia.
+- Duración: **25 segundos** con un preso.
+- Si un segundo preso interactúa en el mismo conducto, la duración efectiva baja a **12 segundos**.
 
-Una vez la barra llega a 100%, la reja cae al piso (ruido moderado).
+**Escape final:**
 
-- **Escape:** Interactuar con el hueco abierto inicia animación de trepar al conducto.
-- **Duración:** 4 seg de animación ininterrumpible.
-- **Peligro final:** Durante estos 4 seg la hitbox del preso sigue en la sala. Si el guardia entra en ese preciso instante, puede atraparlo de las piernas y sacarlo del conducto. Una vez terminada la animación, el preso es inmune, desaparece y **gana**.
+- Requiere un conducto abierto.
+- La interacción dura **5 segundos**.
+- Durante esos 5 segundos el preso sigue capturable.
+- Al completar, el preso escapa y los presos ganan inmediatamente.
+
+**Comunicación cooperativa y HUD de presos:**
+
+Los presos comparten una checklist resumida de Ruta 1 en UI Toolkit. El HUD no revela identidades ni posiciones exactas; solo estado de misiones y progreso compartido.
+
+| Estado | HUD presos | Señal de mundo | Visible para guardia |
+|--------|------------|----------------|----------------------|
+| Pista no encontrada | `Pista: Servidor ?` | Ninguna | No |
+| Pista encontrada | `Pista: Servidor N` | Ninguna | No |
+| Servidor incorrecto | Intento fallido breve | Alarma/ruido | Sí |
+| Servidor correcto | `Servidor listo` | Ventilación apagada | Sí, si observa/escucha |
+| Conducto en progreso | `Conducto X%` | Ruido de metal local | Sí, si está cerca |
+| Conducto abierto | `Conducto abierto` | Prop abierto + sonido | Sí |
 
 **Flujo ideal de ejemplo:**
 
-1. **Preso A** se infiltra en la Oficina del Guardia, revisa un archivador (1s) → descubre: "Taller = Fusible 3". Luego, en fase de Trabajo, roba las Pinzas en el Taller.
-2. **Preso B** roba la Llave Inglesa en la Sala de Electricidad durante Hora libre (aprovechando que hay tráfico de NPCs moviéndose entre zonas).
-3. **Preso A** se cuela en la Sala de Electricidad, corta el Fusible 3, completa QTEs → apaga el ventilador.
-4. Ambos se reúnen en el Taller (ej. durante Hora libre, aprovechando que está más vacío). B desatornilla la rejilla mientras A sostiene. Completan la barra y escapan.
+1. **Preso A** toma las pinzas con E y las guarda con F.
+2. **Preso B** revisa `guard_desk_3` durante 3s y encuentra la pista: `server_8`.
+3. **Preso A** sabotea `server_8` durante 15s con las pinzas.
+4. **Preso C** toma la llave francesa.
+5. Dos presos abren `vent_2`; quien inicia tiene la llave y el segundo acelera la barra a 12s.
+6. Un preso trepa durante 5s y escapa.
 
 **Contramedidas del guardia:**
-- Si cesa el ruido de ventilación del Taller → sabe que la Ruta 1 está en marcha.
-- Si hay apagón en otra zona (ej. luces del comedor parpadean) → sabe que están adivinando fusibles en la Sala de Electricidad.
-- Si patrullando el Taller nota que la rejilla está a medio abrir (tornillos visualmente sueltos) → puede "campear" la zona u observarla por cámaras.
+- Si escucha alarma de servidor incorrecto, sabe que alguien está probando en la sala de servidores.
+- Si la ventilación deja de sonar, sabe que Ruta 1 avanzó.
+- Si escucha metal cerca de los conductos, puede patrullar esa zona.
+- Si ve un conducto abierto, puede vigilar el escape final.
 
-#### Ruta 2 — Túnel (Individual)
+#### Ruta 2 — TODO
 
-Un solo preso excava un túnel desde su celda, saca la tierra disimuladamente y usa un mapa de cloacas para navegar la salida. La dificultad está en que necesita 3 objetos pero solo tiene 2 slots de inventario, forzando una planificación cuidadosa.
+Ruta futura. No se diseña ni implementa en este pase.
 
-| Paso | Objeto | Ubicación | Fase disponible | Quién | Dificultad |
-|------|--------|-----------|-----------------|-------|------------|
-| 1 | **Cuchara** → cavar detrás del inodoro de la celda (requiere 2 fases de hora libre en celda para completar la excavación) | Comedor — cajón de cubiertos | Desayuno / Almuerzo / Cena | El mismo preso | Baja — muchos NPCs cerca, fácil disimular |
-| 2 | **Bolsa de lona** → sacar la tierra del túnel durante el patio (vaciarla en esquina NE, punto ciego de cámara) | Lavandería — canastos | Trabajo | El mismo preso | Media — debe ir a la lavandería fuera de su zona |
-| 3 | **Mapa de cloacas** → navegar el túnel subterráneo sin perderse | Sala de Electricidad — armario lateral | Hora libre / Trabajo | El mismo preso | Alta — sala de electricidad es zona restringida |
+#### Ruta 3 — TODO
 
-**Gestión de inventario:** El preso tiene 2 slots pero necesita 3 objetos. Debe usar la cuchara (cavar) y descartarla antes de buscar el mapa. Orden obligatorio: cuchara → bolsa → (vaciar tierra, libera slot) → mapa.
-**Acción final:** De noche (luces apagadas), entra al túnel desde la celda y sale por una alcantarilla fuera del muro este.
-**Tiempo de escape final:** 20 seg (animación de entrada + carrera por túnel).
-
-#### Ruta 3 — Carro de Ropa Sucia (Cooperativa)
-
-Los presos preparan un dummy para cubrir la ausencia de uno de ellos, sobornan a un NPC para destrabar el carro de lavandería y roban el horario de recolección para saber exactamente cuándo sale el carro.
-
-| Paso | Objeto/Acción | Ubicación | Fase disponible | Quién | Dificultad |
-|------|---------------|-----------|-----------------|-------|------------|
-| 1 | **Almohada extra + ropa** → fabricar **dummy** y dejarlo en el catre propio (engaña la inspección nocturna del guardia) | Celda / Lavandería | Hora libre (sub-zona celda) / Trabajo | Preso A | Media — debe conseguir ropa de la lavandería |
-| 2 | **Sobornar a un NPC** del turno de lavandería con un objeto de valor (cuchara afilada o cigarrillos del patio) → el NPC deja el carro destrabado cerca de la puerta de servicio | Patio → Lavandería | Patio libre → Trabajo | Preso B | Media — debe conseguir el objeto de soborno primero |
-| 3 | **Horario de recolección** de la oficina del guardia → saber exactamente cuándo pasa el carro por la puerta de servicio (ventana de 30 seg) | Pasillo — oficina del guardia | Cualquier fase (muy arriesgado) | Preso C | Alta — la oficina es zona de alto riesgo |
-
-**Acción final:** Durante la cena (última fase antes de la noche), el preso se mete en el carro. El dummy cubre su ausencia en la inspección nocturna. El carro sale por la puerta de servicio en la ventana exacta del horario. Si el guardia inspecciona el catre de cerca, descubre el dummy y la ruta falla.
-**Tiempo de escape final:** 10 seg (meterse en el carro + salida automática).
+Ruta futura. No se diseña ni implementa en este pase.
 
 #### Comparación de Rutas
 
-| | Ventilación Industrial | Túnel | Carro de Ropa |
+| | Ventilación | Ruta 2 | Ruta 3 |
 |---|---|---|---|
-| **Tipo** | Cooperativa (2–3 presos) | Individual (1 preso) | Cooperativa (3 presos) |
-| **Objetos** | 2 + pista | 3 | 3 |
-| **Cuándo se puede escapar** | Cualquier fase | Luces apagadas | Cena |
-| **Mayor riesgo** | QTEs ruidosos + infiltrar Oficina | Gestión de inventario (3 objetos, 2 slots) | Robar horario de oficina + inspección del catre |
-| **Escapa** | Todos los presos en la rejilla | Solo 1 preso | Solo 1 preso (los otros cubren) |
-| **Contramedida del guardia** | Ruido de ventilador cesa + CLANG audible | Escuchar excavación / ver tierra en el patio | Inspeccionar catre de cerca / revisar el carro |
+| **Status** | MVP implementable | TODO | TODO |
+| **Tipo** | Cooperativa | TBD | TBD |
+| **Objetos** | Pinzas + llave francesa + pista | TBD | TBD |
+| **Contramedida guardia** | Alarma, ventilación apagada, ruido de conducto | TBD | TBD |
 
 ### 5.3 Objetos de Molestia (Tácticos)
 
@@ -423,7 +438,7 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 │  (lavadoras,     ├───────────────────────────────┤  (mesas,     │
 │   canastos,      │                               │   counter,   │
 │   carro ropa)    │     SALA DE ELECTRICIDAD      │   depósito)  │
-│                  │     (servidores, fusibles)     │              │
+│                  │     (12 servidores)            │              │
 ├──────────────────┴───────────────────────────────┴──────────────┤
 │                                                                 │
 │                       PATIO EXTERIOR                            │
@@ -442,40 +457,40 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 ### 8.2 Zonas Detalladas
 
 #### Bloque de Celdas
-- **Estructura:** 2 pisos, 10 celdas por piso, pasillo central con barandilla en el piso 2.
-- **Objetos interactuables:** Catre (dummy ruta 3), inodoro (detrás se cava el túnel ruta 2), almohada (dummy ruta 3), reja de la celda.
-- **Puntos de interés:** Cada celda tiene un NPC asignado. Los presos jugadores tienen celdas específicas.
-- **Iluminación:** Fluorescente de día, apagada de noche (guardia usa linterna).
+- **Estructura:** 2 pisos, 10 celdas por piso, pasillo central con barandilla en el piso 2. Las celdas tienen frente de barrotes o puerta abierta; el catre queda visible desde el pasillo.
+- **Objetos interactuables:** Catre, inodoro, almohada y reja de celda quedan como props/interacciones de rutina. Usos de rutas futuras quedan TODO.
+- **Puntos de interés:** Cada celda tiene un NPC asignado. Los presos jugadores tienen celdas específicas. Durante el recuento final, el guardia puede leer la ocupación de cada catre desde el pasillo.
+- **Iluminación:** Fluorescente de día. En el recuento final baja la intensidad del pasillo y se mantiene una luz tenue dentro de cada celda para leer siluetas.
 
 #### Comedor
 - **Estructura:** Mesa central larga (20 asientos), zona de servicio con mostrador, cocina trasera.
-- **Objetos interactuables:** Bandejas (arma de molestia), cubiertos/cuchara (objeto de escape), sillas (obstáculo al correr).
+- **Objetos interactuables:** Bandejas (arma de molestia), cubiertos y sillas. Usos de escape futuros quedan TODO.
 - **Punto de interés:** Debajo de las mesas es punto ciego de la cámara.
 
 #### Taller
 - **Estructura:** Zona de carpintería con bancos, zona de metal con herramientas, conducto de ventilación industrial visible en el techo con ventilador encendido (ruido constante de fondo).
-- **Objetos interactuables:** Pinzas/cizallas (escape ruta 1, spawn aleatorio en banco o cajón), cajones con llave.
-- **Punto de interés:** Rejilla del conducto de ventilación con 4 pernos de seguridad (ruta de escape 1). El ventilador industrial debe estar apagado primero. Requiere llave inglesa pesada para desatornillar.
+- **Objetos interactuables:** Spawn areas posibles para pinzas o llave francesa. Conductos de Ruta 1 con IDs estables `vent_1..3`.
+- **Punto de interés:** Conductos de ventilación de Ruta 1. La ventilación debe estar deshabilitada desde la sala de servidores antes de abrirlos.
 
 #### Lavandería
 - **Estructura:** Canastos grandes, máquinas industriales, tuberías visibles, puerta de servicio hacia exterior, carro de ropa sucia.
-- **Objetos interactuables:** Canastos (esconderse brevemente, 5 seg máx), bolsa de lona (escape ruta 2), ropa extra (escape ruta 3), carro de ropa sucia (escape ruta 3).
-- **Punto de interés:** Puerta de servicio — el carro de ropa sale por aquí en horarios fijos.
+- **Objetos interactuables:** Canastos (esconderse brevemente, 5 seg máx) y spawn areas posibles para herramientas de Ruta 1. Usos de rutas futuras quedan TODO.
+- **Punto de interés:** Zona útil para ocultar herramientas o mezclarse con NPCs durante trabajo.
 
 #### Patio Exterior
 - **Estructura:** Espacio abierto, muro perimetral alto, torre de vigilancia (decorativa), esquina NE sin cámara.
-- **Objetos interactuables:** Tierra cavable en esquina NE (punto ciego).
+- **Objetos interactuables:** Props de rutina y posibles molestias. Rutas futuras quedan TODO.
 - **Punto de interés:** Zona más amplia, difícil para el guardia cubrir todo.
 
 #### Oficina del Guardia
 - **Estructura:** Zona de alto riesgo en la esquina noroeste. Escritorio, archivadores, monitores de cámaras.
-- **Objetos interactuables:** Archivadores/cajones (plano eléctrico ruta 1 — el mueble que lo contiene cambia aleatoriamente cada partida), horario de recolección (ruta 3).
-- **Punto de interés:** Territorio del guardia — entrar es extremadamente arriesgado. Interacción rápida (1 seg) tipo "hit and run".
+- **Objetos interactuables:** 4 escritorios de Ruta 1 con IDs `guard_desk_1..4`. El backend elige cuál contiene la pista del servidor correcto.
+- **Punto de interés:** Territorio del guardia — entrar es extremadamente arriesgado. La búsqueda de pista dura 3 segundos con barra de progreso.
 
 #### Sala de Electricidad
-- **Estructura:** Sala técnica entre la lavandería y el comedor. Contiene servidores eléctricos con 4 cajas de fusibles etiquetadas (1, 2, 3, 4).
-- **Objetos interactuables:** Cables/fusibles (sabotaje ruta 1 — cortar el cable correcto apaga el ventilador del taller). Panel eléctrico (apagar luces de sectores — molestia táctica).
-- **Punto de interés:** Cortar el cable equivocado apaga las luces de otra zona, generando pánico en NPCs y alertando al guardia.
+- **Estructura:** Sala técnica entre la lavandería y el comedor. Contiene 12 servidores etiquetados `server_1..server_12`.
+- **Objetos interactuables:** Servidores de Ruta 1. El backend elige cuál deshabilita la ventilación. Panel eléctrico para molestias queda fuera de scope del MVP.
+- **Punto de interés:** Sabotear el servidor equivocado genera alarma/ruido y alerta al guardia. Sabotear el correcto habilita abrir conductos.
 
 #### Pasillo Principal
 - **Estructura:** Conecta todas las zonas. Alto tráfico de NPCs durante transiciones.
@@ -484,41 +499,28 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 
 ### 8.3 Rutas de Escape (Mapa Detallado)
 
-#### Ruta 1 — La Rejilla de Ventilación Industrial (Cooperativa)
+#### Ruta 1 — Ventilación (Cooperativa)
 ```
-Oficina guardia (leer plano eléctrico, 1s) → descubrir qué fusible apaga el Taller
-Taller (robar pinzas, 3s) + Sala de electricidad (robar llave inglesa, 3s) →
-Sala de electricidad (cortar fusible correcto con pinzas, 15s + QTEs) → ventilador se apaga →
-Taller (desatornillar rejilla con llave inglesa, 25s solo / 12s cooperativo + QTEs) →
-Taller (trepar al conducto, 4s animación) → Exterior
+Backend selecciona route1_ventilation →
+Spawn areas activan pinzas + llave francesa →
+Oficina guardia (buscar pista en 1 de 4 escritorios, 3s) → descubrir server_N →
+Sala de servidores (deshabilitar 1 de 12 servidores con pinzas, 15s) →
+Conducto (desatornillar con llave francesa, 25s solo / 12s cooperativo) →
+Conducto abierto (trepar, 5s vulnerable) → Exterior
 ```
-- **Objetos requeridos:** 2 (pinzas + llave inglesa). Pista separada (plano eléctrico).
+- **Objetos requeridos:** 2 (pinzas + llave francesa). Pista separada en oficina.
 - **Jugadores recomendados:** 2–3.
-- **Cuándo se puede ejecutar:** Cualquier fase — el riesgo es el ruido y el tiempo expuesto.
-- **Tiempo de escape final:** 4 seg (trepar al conducto).
+- **Cuándo se puede ejecutar:** Cualquier fase — el riesgo es entrar en zonas peligrosas, alarmas y tiempo expuesto.
+- **Tiempo de escape final:** 5 seg (trepar al conducto).
+- **Spec técnica:** `design/gdd/ruta-1-ventilacion-industrial.md`.
 
-#### Ruta 2 — Túnel (Individual)
-```
-Comedor (robar cuchara) → Celda (cavar túnel, 2 fases de hora libre en celda) →
-Lavandería (robar bolsa de lona) → Patio NE (vaciar tierra, punto ciego) →
-Sala de electricidad (robar mapa de cloacas) → Celda (entrar al túnel de noche) →
-Cloacas (navegar con mapa) → Exterior muro este
-```
-- **Acciones requeridas:** 3 (un solo preso, gestión de inventario forzada por 2 slots).
-- **Cuándo se puede ejecutar:** Luces apagadas (noche).
-- **Tiempo de escape final:** 20 seg.
+#### Ruta 2 — TODO
 
-#### Ruta 3 — Carro de Ropa Sucia (Cooperativa)
-```
-Lavandería (ropa) + Celda (almohada) → Celda (fabricar dummy, dejarlo en catre) →
-Patio (conseguir objeto de soborno) → Lavandería (sobornar NPC, destraba carro) →
-Oficina guardia (robar horario de recolección) →
-Cena (meterse en el carro en la ventana exacta del horario) → Puerta de servicio → Exterior
-```
-- **Acciones requeridas:** 3 (una por jugador).
-- **Cuándo se puede ejecutar:** Cena (el carro sale por la puerta de servicio).
-- **Contramedida:** Si el guardia inspecciona el catre de cerca, descubre el dummy y la ruta falla.
-- **Tiempo de escape final:** 10 seg.
+Ruta futura. No se diseña ni implementa en el MVP actual.
+
+#### Ruta 3 — TODO
+
+Ruta futura. No se diseña ni implementa en el MVP actual.
 
 ---
 
@@ -542,7 +544,7 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 | Parámetro | Valor |
 |-----------|-------|
 | FOV | 80° (ligeramente más amplio que presos) |
-| Linterna | Activa automáticamente en "luces apagadas" — cono de 40° |
+| Visibilidad fase final | Luces bajas de pasillo + contraluz tenue en celdas; no requiere linterna dedicada |
 | Modo cámara | Overlay en esquinas del HUD, click para zoom |
 
 ### 9.4 NPCs
@@ -569,14 +571,14 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 | Uniforme | Gris Alcatraz, sin número legible durante gameplay | Marrón oscuro, gorra |
 | Distinción visual | **Ninguna** entre jugadores y NPCs (intencional) | Único — siempre visible |
 | Identificación aliada | Ícono discreto sobre compañeros presos cuando están a <5m | — |
-| Accesorio nocturno | — | Linterna en mano |
+| Accesorio de fase final | — | — |
 
 ### 10.3 Iluminación
 
 | Fase | Iluminación |
 |------|-------------|
 | Día (inicio → cena) | Fluorescente interior, luz natural en patio |
-| Luces apagadas | Oscuridad casi total, linterna del guardia es la única fuente principal |
+| Encierro / Recuento final | Luces bajas en pasillo y luz tenue dentro de celdas para siluetas legibles |
 | Cámaras | Luz roja cuando activas, verde cuando inactivas |
 
 ---
@@ -600,7 +602,8 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 | Golpes en pared (señal) | 3D posicional | 10m | Todos (el guardia también) |
 | Tos (señal) | 3D posicional | 8m | Todos |
 | Recoger objeto | 3D posicional | 5m | Todos cercanos |
-| Cavar túnel | 3D posicional | 5m | Todos cercanos |
+| Alarma de servidor incorrecto | 3D / cue filtrado | Por zona | Guardia y cercanos según implementación |
+| Metal de conducto | 3D posicional | 10m | Todos cercanos |
 | Risa de NPCs (jabón) | 3D posicional | 12m | Todos |
 
 ### 11.3 Música
@@ -615,6 +618,8 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 
 ### 12.1 HUD de Presos
 
+El HUD de gameplay se implementa en Unity UI Toolkit. El prompt contextual y la barra de progreso de interacciones del mundo se mantienen en uGUI porque ya existen y funcionan con los interactables.
+
 ```
 ┌──────────────────────────────────────────────┐
 │ [FASE: Desayuno]          [Timer: 1:12]  (↗) │
@@ -624,10 +629,14 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 │                     +                        │  ← Crosshair minimalista
 │                                              │
 │                                              │
-│  ◆ ◇                                        │  ← Inventario (2 slots)
+│  Mano: Pinzas                                │  ← Item held autoritativo
+│  ◆ ◇                                        │  ← Inventario UI Toolkit (2 slots)
+│  Ruta 1: Ventilación                         │
+│  [x] Pinzas                                  │
+│  [x] Pista: Servidor 8                       │  ← Checklist resumida
+│  [~] Conducto 42%                            │
 │  [E] Recoger                                 │  ← Prompt contextual
 │                                              │
-│  ○ ○ ●                                        │  ← Progreso escape (3 piezas)
 │  Compañeros: ← →                             │  ← Posición aliados (periférica)
 └──────────────────────────────────────────────┘
 ```
@@ -635,9 +644,11 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 | Elemento | Posición | Descripción |
 |----------|----------|-------------|
 | Fase actual + timer | Top-center | Nombre de la fase + tiempo restante |
-| Inventario | Bottom-left | 2 slots con ícono del objeto (◆ = ocupado, ◇ = vacío) |
-| Prompt contextual | Bottom-center | "[E] Recoger" / "[Q] Usar" cuando hay interacción disponible |
-| Progreso de escape | Bottom-left (sobre inventario) | Círculos: ○ = falta, ● = conseguido. 3 por ruta. |
+| Mano | Bottom-left | Item sostenido tras pickup con E, antes de guardarlo con F |
+| Inventario | Bottom-left | 2 slots con ícono del objeto confirmado por backend |
+| Checklist Ruta 1 | Bottom-left | Pinzas, pista, servidor, llave, conducto, escape |
+| Prompt contextual | Bottom-center | uGUI: "[E] Recoger", "[E] Buscar pista", "[E] Sabotear", etc. |
+| Barra de progreso | World UI | uGUI existente para pista, servidor, conducto y escape |
 | Posición de aliados | Bordes de pantalla | Flechas direccionales indicando dónde están los compañeros |
 
 ### 12.2 HUD del Guardia
@@ -751,7 +762,12 @@ Unity maneja **toda** la lógica del juego: lobby, partida, resultados, revancha
 | `catch:failed` | Servidor → Guardia | `{ reason }` |
 | `phase:change` | Servidor → Todos | `{ phase, duration, zone }` |
 | `npc:positions` | Servidor → Todos | `{ npcs: [{ id, pos, rot, anim }] }` (delta compressed) |
-| `escape:progress` | Servidor → Presos | `{ route, items_collected, items_needed }` |
+| `escape:route:selected` | Servidor → Todos | `{ activeRouteId: 'route1_ventilation' }` |
+| `escape:route1:state` | Servidor → Presos | Checklist, progreso, pista y estado de Ruta 1 |
+| `world:cue` | Servidor → Guardia | `{ cue, zone, position }` para alarmas/ruidos observables |
+| `world:state` | Servidor → Todos | Props públicos: ventilación, conductos abiertos |
+| `item:state` | Servidor → Todos | Estado de pickables: spawned/held/stored/dropped/respawning |
+| `player:state` | Servidor → Todos | Incluye `heldItemId` e `inventorySlots` |
 | `game:end` | Servidor → Todos | `{ winner: 'prisoners' | 'guard', reason }` |
 | `riot:available` | Servidor → Presos | `{}` |
 | `riot:activate` | Cliente → Servidor | `{}` |
@@ -864,17 +880,17 @@ Siempre **20 personajes en total** para mantener consistencia visual y de perfor
 | Condiciones de victoria/derrota | P0 | 1 día | Captura + Escape |
 | **Entregable:** Partida jugable completa con 1 ruta de escape | | | |
 
-### Semana 3 — Polish + Segunda Ruta (Días 15–21)
+### Semana 3 — Polish Ruta 1 + Sistemas de Soporte (Días 15–21)
 
 | Tarea | Prioridad | Estimación | Dependencias |
 |-------|-----------|------------|-------------|
-| Segunda ruta de escape (túnel — individual) | P1 | 1.5 días | Inventario |
+| Polish de Ruta 1 (cues, props, reconnect, anti-softlock) | P1 | 1.5 días | Ruta 1 |
 | Cámara de seguridad del guardia (HUD + lógica) | P1 | 1.5 días | — |
 | Audio: pasos, ambiente, risas NPCs, alarmas | P1 | 1 día | — |
 | Señales entre presos (golpes en pared — audio 3D) | P2 | 0.5 día | Audio |
 | UI/HUD completo por rol | P1 | 1.5 días | — |
 | Lobby y asignación aleatoria de roles | P1 | 1 día | Rooms |
-| **Entregable:** Juego con 2 rutas, audio, UI completa | | | |
+| **Entregable:** Juego con Ruta 1 completa, audio, UI completa | | | |
 
 ### Últimos 3–4 Días — Final Polish (Días 22–25)
 
@@ -891,9 +907,9 @@ Siempre **20 personajes en total** para mantener consistencia visual y de perfor
 
 | Feature | Impacto si se corta | Alternativa |
 |---------|---------------------|-------------|
-| Ruta de escape 3 (carro de ropa sucia) | Bajo — 2 rutas son suficientes | Dejar para post-jam |
+| Rutas de escape 2+ | Bajo para MVP — Ruta 1 es la ruta implementable | Dejar como TODO post-MVP |
 | Señales entre presos | Bajo — pueden usar Discord | Eliminar |
-| Dummy en la cama | Medio — pierde mecánica nocturna | Simplificar fase nocturna |
+| Interacciones futuras de celdas/lavandería | Medio — reduce variedad futura | Mantener como props sin gameplay de ruta |
 | Cámara de seguridad | Alto — pierde herramienta clave del guardia | Implementar versión minimal (1 cámara fija) |
 
 ---

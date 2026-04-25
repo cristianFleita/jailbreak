@@ -148,7 +148,6 @@ public class WorkTableInteractable : MonoBehaviour, IInteractable
             return;
         }
 
-        Debug.Log($"[WorkTable] Broadcasting '{action}' on '{networkInteractable.NetworkId}'");
         net.SendPlayerAction(networkInteractable.NetworkId, action);
     }
 }

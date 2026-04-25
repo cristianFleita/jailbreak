@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
@@ -88,6 +89,19 @@ namespace Jailbreak.Network
         public event Action<NPCEmergentData>          OnNPCEmergentEvent;
         public event Action<NPCMoodShiftData>         OnNPCMoodShiftEvent;
 
+        // ─── Events: Escape Route System (Ruta 1 / Phase A) ──────────────
+        public event Action<EscapeRouteSelectedPayload> OnEscapeRouteSelectedEvent;
+        public event Action<EscapeRoute1StatePayload>   OnEscapeRoute1StateEvent;
+        public event Action<WorldCuePayload>            OnWorldCueEvent;
+        public event Action<WorldStatePayload>          OnWorldStateEvent;
+        public event Action<ItemStateBroadcastPayload>  OnItemStateEvent;
+
+        // Latest values cached so late-loading scenes / UI can hydrate.
+        public EscapeRouteSelectedPayload CachedEscapeRouteSelected { get; private set; }
+        public EscapeRoute1StatePayload   CachedEscapeRoute1State   { get; private set; }
+        public WorldStatePayload          CachedWorldState          { get; private set; }
+        public Dictionary<string, ItemStateBroadcastPayload> CachedItemStates { get; } = new();
+
         // ─── Private ─────────────────────────────────────────────────────────
         private string _currentRoomId;
         private readonly ConcurrentQueue<Action> _mainThreadQueue = new();
@@ -114,6 +128,7 @@ namespace Jailbreak.Network
         [DllImport("__Internal")] private static extern void   SocketSendPlayerAction(string objectId, string action);
         [DllImport("__Internal")] private static extern void   SocketSendRiotActivate();
         [DllImport("__Internal")] private static extern void   SocketSendNPCSyncState(string json);
+        [DllImport("__Internal")] private static extern void   SocketSendRegisterSpawnAreas(string json);
         [DllImport("__Internal")] private static extern void   SocketDisconnect();
         [DllImport("__Internal")] private static extern string SocketGetSavedUserId();
         [DllImport("__Internal")] private static extern string SocketGetSavedDisplayName();
@@ -346,6 +361,27 @@ namespace Jailbreak.Network
 #else
             try { _socket.EmitStringAsJSON("npc:sync_state", JsonUtility.ToJson(payload)); }
             catch (Exception ex) { Debug.LogError($"[NET] SendNPCSyncState: {ex}"); }
+#endif
+        }
+
+        /// <summary>
+        /// Host-only: registers scene-authored route spawn areas with the
+        /// backend. The backend picks one area per critical item and emits
+        /// item:state with authoritative positions (Phase C-02).
+        /// </summary>
+        public void SendRegisterSpawnAreas(RegisterSpawnAreasPayload payload)
+        {
+            if (!IsInGame() || !IsHost) return;
+            if (payload == null || payload.areas == null || payload.areas.Length == 0)
+            {
+                Debug.LogWarning("[NET] SendRegisterSpawnAreas: empty payload, skipping");
+                return;
+            }
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketSendRegisterSpawnAreas(JsonUtility.ToJson(payload));
+#else
+            try { _socket.EmitStringAsJSON("route:register_spawn_areas", JsonUtility.ToJson(payload)); }
+            catch (Exception ex) { Debug.LogError($"[NET] SendRegisterSpawnAreas: {ex}"); }
 #endif
         }
 
@@ -621,6 +657,61 @@ namespace Jailbreak.Network
             });
         }
 
+        // ─── Escape Route callbacks (WebGL SendMessage) ──────────────────
+
+        public void OnEscapeRouteSelected(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<EscapeRouteSelectedPayload>(json);
+                if (data == null) return;
+                CachedEscapeRouteSelected = data;
+                OnEscapeRouteSelectedEvent?.Invoke(data);
+            });
+        }
+
+        public void OnEscapeRoute1State(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<EscapeRoute1StatePayload>(json);
+                if (data == null) return;
+                CachedEscapeRoute1State = data;
+                OnEscapeRoute1StateEvent?.Invoke(data);
+            });
+        }
+
+        public void OnWorldCue(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<WorldCuePayload>(json);
+                if (data != null) OnWorldCueEvent?.Invoke(data);
+            });
+        }
+
+        public void OnWorldState(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<WorldStatePayload>(json);
+                if (data == null) return;
+                CachedWorldState = data;
+                OnWorldStateEvent?.Invoke(data);
+            });
+        }
+
+        public void OnItemState(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<ItemStateBroadcastPayload>(json);
+                if (data == null) return;
+                CachedItemStates[data.itemId] = data;
+                OnItemStateEvent?.Invoke(data);
+            });
+        }
+
         public void OnNetworkError(string json)
         {
             _mainThreadQueue.Enqueue(() =>
@@ -851,6 +942,49 @@ namespace Jailbreak.Network
             SafeOn("phase:zone_check",r => { var d = DeserializePayload<PhaseZoneCheckPayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnPhaseZoneCheckEvent?.Invoke(d)); });
             SafeOn("npc:emergent",    r => { var d = DeserializePayload<NPCEmergentData>(r);       if (d != null) _mainThreadQueue.Enqueue(() => OnNPCEmergentEvent?.Invoke(d)); });
             SafeOn("npc:mood_shift",  r => { var d = DeserializePayload<NPCMoodShiftData>(r);      if (d != null) _mainThreadQueue.Enqueue(() => OnNPCMoodShiftEvent?.Invoke(d)); });
+
+            // ── Escape Route System (Ruta 1 / Phase A) ────────────────────────
+            SafeOn("escape:route:selected", r =>
+            {
+                var d = DeserializePayload<EscapeRouteSelectedPayload>(r);
+                if (d == null) return;
+                _mainThreadQueue.Enqueue(() =>
+                {
+                    CachedEscapeRouteSelected = d;
+                    OnEscapeRouteSelectedEvent?.Invoke(d);
+                });
+            });
+            SafeOn("escape:route1:state", r =>
+            {
+                var d = DeserializePayload<EscapeRoute1StatePayload>(r);
+                if (d == null) return;
+                _mainThreadQueue.Enqueue(() =>
+                {
+                    CachedEscapeRoute1State = d;
+                    OnEscapeRoute1StateEvent?.Invoke(d);
+                });
+            });
+            SafeOn("world:cue",   r => { var d = DeserializePayload<WorldCuePayload>(r);   if (d != null) _mainThreadQueue.Enqueue(() => OnWorldCueEvent?.Invoke(d)); });
+            SafeOn("world:state", r =>
+            {
+                var d = DeserializePayload<WorldStatePayload>(r);
+                if (d == null) return;
+                _mainThreadQueue.Enqueue(() =>
+                {
+                    CachedWorldState = d;
+                    OnWorldStateEvent?.Invoke(d);
+                });
+            });
+            SafeOn("item:state",  r =>
+            {
+                var d = DeserializePayload<ItemStateBroadcastPayload>(r);
+                if (d != null)
+                    _mainThreadQueue.Enqueue(() =>
+                    {
+                        CachedItemStates[d.itemId] = d;
+                        OnItemStateEvent?.Invoke(d);
+                    });
+            });
 
             SafeOn("game:error", r =>
             {

@@ -103,8 +103,8 @@ public class PlayerMovement : MonoBehaviour
 
     void HandleMovement()
     {
-        float h = Input.GetAxisRaw("Horizontal"); // A / D
-        float v = Input.GetAxisRaw("Vertical");   // W / S
+        float h = ReadAxis(KeyCode.A, KeyCode.D, KeyCode.LeftArrow, KeyCode.RightArrow);
+        float v = ReadAxis(KeyCode.S, KeyCode.W, KeyCode.DownArrow, KeyCode.UpArrow);
 
         Vector3 input = new Vector3(h, 0f, v).normalized;
 
@@ -120,7 +120,8 @@ public class PlayerMovement : MonoBehaviour
         Vector3 moveDir = GetCameraRelativeDirection(input);
 
         // Velocidad actual
-        bool isRunning = Input.GetKey(KeyCode.LeftShift);
+        bool isRunning = InputSystemKey.IsPressed(KeyCode.LeftShift)
+            || InputSystemKey.IsPressed(KeyCode.RightShift);
         float speed = isRunning ? runSpeed : walkSpeed;
 
         // Mover el CharacterController
@@ -143,11 +144,19 @@ public class PlayerMovement : MonoBehaviour
 
     void HandleJump()
     {
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        if (InputSystemKey.WasPressedThisFrame(KeyCode.Space) && isGrounded)
         {
             // v = sqrt(2 * |g| * h)
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
+    }
+
+    private float ReadAxis(KeyCode negative, KeyCode positive, KeyCode negativeAlt, KeyCode positiveAlt)
+    {
+        float value = 0f;
+        if (InputSystemKey.IsPressed(negative) || InputSystemKey.IsPressed(negativeAlt)) value -= 1f;
+        if (InputSystemKey.IsPressed(positive) || InputSystemKey.IsPressed(positiveAlt)) value += 1f;
+        return value;
     }
 
     // ─────────────────────────────────────────────────────────

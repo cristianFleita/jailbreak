@@ -1213,3 +1213,163 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/Build/unity-build.wasm
 ---
 
+## Session End: 20260423_164454
+### Commits
+34ed0a4 Merge pull request #7 from cristianFleita/fix-errors
+eeae6b3 fix: reconnect + add laundry machine collider
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260423_183059
+### Commits
+cf43d93 chore: route 1 spec
+34ed0a4 Merge pull request #7 from cristianFleita/fix-errors
+eeae6b3 fix: reconnect + add laundry machine collider
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Animations/ButtonPushing.anim
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard(1).prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard(1).prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner(1).prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner(1).prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Props/AdjustableSpanner.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Container.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Pliers.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Spoon.prefab
+unity/JAILBREAK/Assets/Scenes/Actions.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Packages/manifest.json
+unity/JAILBREAK/Packages/packages-lock.json
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260423_183838
+### Commits
+cf43d93 chore: route 1 spec
+34ed0a4 Merge pull request #7 from cristianFleita/fix-errors
+eeae6b3 fix: reconnect + add laundry machine collider
+### Uncommitted Changes
+design/GDD.md
+design/gdd/npc-autonomy-personality.md
+design/gdd/rutina-fases-npc.md
+design/gdd/systems-index.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Animations/ButtonPushing.anim
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard(1).prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard(1).prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner(1).prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner(1).prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Props/AdjustableSpanner.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Container.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Pliers.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Spoon.prefab
+unity/JAILBREAK/Assets/Scenes/Actions.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Packages/manifest.json
+unity/JAILBREAK/Packages/packages-lock.json
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260423_191439
+### Commits
+cf43d93 chore: route 1 spec
+34ed0a4 Merge pull request #7 from cristianFleita/fix-errors
+eeae6b3 fix: reconnect + add laundry machine collider
+### Uncommitted Changes
+design/GDD.md
+design/gdd/npc-autonomy-personality.md
+design/gdd/rutina-fases-npc.md
+design/gdd/systems-index.md
+memory/decisions.md
+memory/session-log.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Animations/ButtonPushing.anim
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard(1).prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard(1).prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner(1).prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner(1).prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Props/AdjustableSpanner.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Container.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Pliers.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Spoon.prefab
+unity/JAILBREAK/Assets/Scenes/Actions.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Packages/manifest.json
+unity/JAILBREAK/Packages/packages-lock.json
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260424_115302
+### Uncommitted Changes
+backend/src/game/event-handlers.ts
+backend/src/game/reconnection.ts
+backend/src/game/room-manager.ts
+backend/src/game/routes/route-registry.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+memory/decisions.md
+memory/session-log.md
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/AdjustableSpanner.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Pliers.prefab
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/Input/HeldItemInput.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/Inventory/InventoryInput.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/Inventory/ItemInventory.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/PickUpInteractable.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/PickableItem.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkManager.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260424_190329
+### Commits
+4a3943e chore: phase B, pickable + inventory
+### Uncommitted Changes
+backend/src/game/event-handlers.ts
+backend/src/game/room-manager.ts
+backend/src/game/systems/route-inventory.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+memory/decisions.md
+memory/progress.md
+unity/JAILBREAK/Assets/Plugins/SocketBridge.jslib
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/Network/NetworkManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260425_023013
+### Commits
+3353746 fix: HUD in english
+8df0630 chore: hud toast
+37a39f5 chore: phase F, Hud integration
+8f4abb7 chore: phase E, route 1 + interacts
+81be912 chore: phase D, backend route system
+cc2e7fa chore: phase C, pickable spawn
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260425_084507
+### Commits
+3353746 fix: HUD in english
+8df0630 chore: hud toast
+37a39f5 chore: phase F, Hud integration
+### Uncommitted Changes
+production/session-logs/session-log.md
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

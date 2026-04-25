@@ -30,12 +30,37 @@ namespace Jailbreak.Network
         public string CurrentPhase { get; private set; } = "setup";
         public bool GameActive { get; private set; }
 
+        // ─── Escape Route state (Ruta 1 / Phase A) ────────────────────────
+        /// <summary>Active escape route for this match. MVP: always "route1_ventilation".</summary>
+        public string ActiveRouteId { get; private set; }
+
+        /// <summary>
+        /// Latest Ruta 1 state broadcast (prisoners only). Null until the
+        /// first escape:route1:state arrives — Phase D will wire the first emit.
+        /// </summary>
+        public EscapeRoute1StatePayload Route1State { get; private set; }
+
+        /// <summary>Local player's authoritative held item, e.g. "route1_wrench". Null if empty hand.</summary>
+        public string LocalHeldItemId { get; private set; }
+
+        /// <summary>Local player's authoritative inventory slots. Length 2 for prisoners.</summary>
+        public InventorySlotData[] LocalInventorySlots { get; private set; }
+
         // ─── Unity Events (hookable in Inspector by other systems) ────────
         [Header("Game Events")]
         public UnityEvent<string> onPhaseChanged;          // phase name string
         public UnityEvent<string> onGameEnd;               // winner string
         public UnityEvent onGameStarted;
         public UnityEvent<string> onPlayerCaught;          // targetId
+
+        /// <summary>Fires whenever activeRouteId is set/changed (game:start or reconnect).</summary>
+        public UnityEvent<string> onActiveRouteChanged;
+
+        /// <summary>Fires on every escape:route1:state update. Null-safe; listeners get the full snapshot.</summary>
+        public UnityEvent<EscapeRoute1StatePayload> onRoute1StateChanged;
+
+        /// <summary>Fires when the local player's held item or inventory slots change.</summary>
+        public UnityEvent onLocalInventoryChanged;
 
         // ─── Singleton accessor ───────────────────────────────────────────
         public static GameStateManager Instance { get; private set; }
@@ -65,6 +90,22 @@ namespace Jailbreak.Network
             net.OnPhaseChangeEvent       += HandlePhaseChange;
             net.OnGuardCatchResultEvent  += HandleGuardCatch;
             net.OnGameEndEvent           += HandleGameEnd;
+
+            // Escape Route System (Ruta 1 / Phase A)
+            net.OnEscapeRouteSelectedEvent += HandleEscapeRouteSelected;
+            net.OnEscapeRoute1StateEvent   += HandleEscapeRoute1State;
+
+            // Hydrate from any cached route payload (late-loading GameScene path).
+            if (net.CachedEscapeRouteSelected != null)
+            {
+                Debug.Log("[GSM] Processing cached escape:route:selected payload");
+                HandleEscapeRouteSelected(net.CachedEscapeRouteSelected);
+            }
+            if (net.CachedEscapeRoute1State != null)
+            {
+                Debug.Log("[GSM] Processing cached escape:route1:state payload");
+                HandleEscapeRoute1State(net.CachedEscapeRoute1State);
+            }
 
             // If game:start already fired before this scene loaded (normal flow),
             // process the cached payload now.
@@ -96,6 +137,9 @@ namespace Jailbreak.Network
             net.OnPhaseChangeEvent      -= HandlePhaseChange;
             net.OnGuardCatchResultEvent -= HandleGuardCatch;
             net.OnGameEndEvent          -= HandleGameEnd;
+
+            net.OnEscapeRouteSelectedEvent -= HandleEscapeRouteSelected;
+            net.OnEscapeRoute1StateEvent   -= HandleEscapeRoute1State;
         }
 
         // ─── Handlers ────────────────────────────────────────────────────────
@@ -178,8 +222,15 @@ namespace Jailbreak.Network
             if (data.npcs != null) NPCs.AddRange(data.npcs);
 
             CurrentPhase = data.phase?.current ?? "active";
+
+            // Route selector is included in reconnect snapshot; hydrate early
+            // so UI that subscribes to onActiveRouteChanged gets a value even
+            // if the separate escape:route:selected event has already fired.
+            if (!string.IsNullOrEmpty(data.activeRouteId))
+                SetActiveRouteId(data.activeRouteId);
+
             GameActive = true;
-            Debug.Log($"[GSM] Reconnected — tick {data.tick}, phase {CurrentPhase}");
+            Debug.Log($"[GSM] Reconnected — tick {data.tick}, phase {CurrentPhase}, route {ActiveRouteId}");
         }
 
         private int _stateRecvCount;
@@ -207,6 +258,7 @@ namespace Jailbreak.Network
                         Debug.Log($"[GSM] Role discovered from player:state → {LocalRole.ToUpper()}");
                     }
                     SyncLocalCarrying(p.carrying);
+                    SyncLocalInventory(p.heldItemId, p.inventorySlots);
                     continue;
                 }
 
@@ -501,6 +553,70 @@ namespace Jailbreak.Network
                 RemotePlayerGameObjects.Remove(playerId);
                 Debug.Log($"[GSM] Despawned remote player {playerId}");
             }
+        }
+
+        // ─── Escape Route handlers (Ruta 1 / Phase A) ────────────────────
+
+        private void HandleEscapeRouteSelected(EscapeRouteSelectedPayload data)
+        {
+            if (data == null || string.IsNullOrEmpty(data.activeRouteId)) return;
+            SetActiveRouteId(data.activeRouteId);
+        }
+
+        private void HandleEscapeRoute1State(EscapeRoute1StatePayload data)
+        {
+            if (data == null) return;
+            Route1State = data;
+            onRoute1StateChanged?.Invoke(data);
+        }
+
+        private void SetActiveRouteId(string id)
+        {
+            if (ActiveRouteId == id) return;
+            ActiveRouteId = id;
+            Debug.Log($"[GSM] Active escape route → {id}");
+            onActiveRouteChanged?.Invoke(id);
+        }
+
+        /// <summary>
+        /// Applies authoritative held item + inventory slots from player:state.
+        /// Only fires onLocalInventoryChanged when the snapshot actually differs
+        /// to avoid churning HUD listeners every tick.
+        /// </summary>
+        private void SyncLocalInventory(string heldItemId, InventorySlotData[] slots)
+        {
+            bool changed = false;
+
+            if (LocalHeldItemId != heldItemId)
+            {
+                LocalHeldItemId = heldItemId;
+                changed = true;
+            }
+
+            if (!InventorySlotsEqual(LocalInventorySlots, slots))
+            {
+                LocalInventorySlots = slots;
+                changed = true;
+            }
+
+            if (changed) onLocalInventoryChanged?.Invoke();
+        }
+
+        private static bool InventorySlotsEqual(InventorySlotData[] a, InventorySlotData[] b)
+        {
+            if (ReferenceEquals(a, b)) return true;
+            if (a == null || b == null) return a == null && b == null;
+            if (a.Length != b.Length) return false;
+            for (int i = 0; i < a.Length; i++)
+            {
+                var ai = a[i]; var bi = b[i];
+                if (ai == null && bi == null) continue;
+                if (ai == null || bi == null) return false;
+                if (ai.itemId   != bi.itemId)   return false;
+                if (ai.itemType != bi.itemType) return false;
+                if (ai.iconId   != bi.iconId)   return false;
+            }
+            return true;
         }
 
     }

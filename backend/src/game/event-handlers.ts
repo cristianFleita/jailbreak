@@ -5,7 +5,14 @@
  */
 
 import { Server } from 'socket.io'
-import { GameRoom, PlayerMovePayload, GuardMarkPayload, Vector3 } from './types.js'
+import {
+  GameRoom,
+  PlayerState,
+  PlayerInteractAction,
+  PlayerMovePayload,
+  GuardMarkPayload,
+  Vector3,
+} from './types.js'
 import { updatePlayerMovement, removePlayer, distance, endGame } from './state.js'
 import {
   validatePlayerMovement,
@@ -14,6 +21,21 @@ import {
 } from './validation.js'
 import { getRoom } from './room-manager.js'
 import { GameManager } from './systems/game-manager.js'
+import { RIOT_THRESHOLD } from './systems/penalties.js'
+import {
+  broadcastItemState,
+  dropCriticalRouteItemsForPlayer,
+  isCriticalRouteItem,
+  pickupToHand,
+  storeHeldItem,
+} from './systems/route-inventory.js'
+import {
+  cancelPendingRespawn,
+  placeCriticalItemsInSpawnAreas,
+  registerSpawnAreas,
+  scheduleCriticalItemRespawn,
+} from './systems/spawn-areas.js'
+import type { RegisterSpawnAreasPayload, RouteItemId } from './types.js'
 
 // ============================================================================
 // player:move handler
@@ -36,6 +58,7 @@ export interface PlayerMoveContext {
  * - Clients apply rubber-band correction when they receive `player:state`
  */
 let moveLogCounter = 0
+const DEBUG_MOVEMENT_LOGS = process.env.DEBUG_MOVEMENT === '1'
 
 // Track last move timestamp and move count per player
 const lastMoveTimestamp = new Map<string, number>()
@@ -48,7 +71,7 @@ export function handlePlayerMove(context: PlayerMoveContext): void {
   const { io, roomId, room, socketId, payload } = context
 
   moveLogCounter++
-  if (moveLogCounter % 20 === 1) {
+  if (DEBUG_MOVEMENT_LOGS && moveLogCounter % 20 === 1) {
     console.log(`[MOVE] RECV #${moveLogCounter} from=${socketId} payloadId=${payload.playerId} pos=(${payload.position?.x?.toFixed(2)}, ${payload.position?.y?.toFixed(2)}, ${payload.position?.z?.toFixed(2)}) state=${payload.movementState}`)
   }
 
@@ -75,7 +98,9 @@ export function handlePlayerMove(context: PlayerMoveContext): void {
   // Skip speed validation for the first N moves (spawn grace period)
   // Client may need a few frames to stabilize after teleport
   if (moveNum <= SPAWN_GRACE_MOVES) {
-    console.log(`[MOVE] ${socketId} spawn grace move #${moveNum} accepted pos=(${payload.position?.x?.toFixed(2)},${payload.position?.y?.toFixed(2)},${payload.position?.z?.toFixed(2)})`)
+    if (DEBUG_MOVEMENT_LOGS) {
+      console.log(`[MOVE] ${socketId} spawn grace move #${moveNum} accepted pos=(${payload.position?.x?.toFixed(2)},${payload.position?.y?.toFixed(2)},${payload.position?.z?.toFixed(2)})`)
+    }
   } else {
     // Movement validation with real time delta
     const moveCheck = validatePlayerMovement(
@@ -166,7 +191,7 @@ export interface PlayerInteractContext {
   socketId: string
   playerId: string
   objectId: string
-  action: 'pickup' | 'use' | 'drop'
+  action: PlayerInteractAction
   timestamp: number
 }
 
@@ -186,6 +211,42 @@ export function handlePlayerInteract(context: PlayerInteractContext): void {
   // Ownership — playerId must match the stable userId for this socket
   if (playerId !== player.userId) {
     console.warn(`[INTERACT] Ownership mismatch for ${socketId}: playerId=${playerId} player.userId=${player.userId}`)
+    return
+  }
+
+  const stableObjectItemId = resolveStableItemId(room, objectId)
+
+  // Route tools use the Phase B authoritative hand/slot lifecycle.
+  // They do not go through legacy immediate inventory pickup/drop.
+  if (action === 'item.pickup') {
+    handleRouteItemPickup(io, roomId, room, socketId, player, objectId)
+    return
+  }
+
+  // Defensive alias for stale clients/components that still emit the legacy
+  // pickup action with a route-critical item id.
+  if (action === 'pickup' && isCriticalRouteItem(stableObjectItemId)) {
+    console.warn(`[PICKUP] ${player.userId} used legacy pickup action for ${stableObjectItemId}; routing through item.pickup`)
+    handleRouteItemPickup(io, roomId, room, socketId, player, objectId)
+    return
+  }
+
+  if (action === 'item.store') {
+    handleRouteItemStore(io, roomId, room, socketId, player, objectId)
+    return
+  }
+
+  // Phase D — Route 1 mission interactions. The Route1System owns all
+  // validation (object id, inventory gates, mission flags) and broadcasting;
+  // we just dispatch.
+  if (action.startsWith('route1.')) {
+    handleRoute1Action(io, room, socketId, player, objectId, action)
+    return
+  }
+
+  if (action === 'drop' && isCriticalRouteItem(stableObjectItemId)) {
+    console.warn(`[DROP] ${player.userId} attempted to drop critical route tool ${stableObjectItemId}`)
+    io.to(socketId).emit('game:error', { message: 'Critical route tools cannot be dropped' })
     return
   }
 
@@ -216,6 +277,147 @@ export function handlePlayerInteract(context: PlayerInteractContext): void {
       handleItemDrop(io, roomId, room, playerId, objectId, item)
       break
   }
+}
+
+function resolveStableItemId(room: GameRoom, objectId: string): string {
+  const item = room.state.items.get(objectId)
+  return item?.itemId ?? item?.id ?? objectId
+}
+
+function shouldValidateRoutePickupDistance(item: { state?: string; spawnAreaId?: string; position?: Vector3 }): boolean {
+  if (item.state === 'dropped') return true
+  if (item.spawnAreaId) return true
+
+  // Phase B does not yet have backend-driven spawn areas, so route tools may
+  // still carry the placeholder origin. Once Phase C registers spawn positions,
+  // this branch becomes a normal server-side range check.
+  const p = item.position
+  if (!p) return false
+  return Math.abs(p.x) + Math.abs(p.y) + Math.abs(p.z) > 0.001
+}
+
+function handleRouteItemPickup(
+  io: Server,
+  roomId: string,
+  room: GameRoom,
+  socketId: string,
+  player: PlayerState,
+  objectId: string
+): void {
+  const item = room.state.items.get(objectId)
+  const stableItemId = item?.itemId ?? item?.id ?? objectId
+
+  if (!item || !isCriticalRouteItem(stableItemId)) {
+    console.warn(`[PICKUP] ${player.userId} requested unmanaged route item ${objectId}`)
+    io.to(socketId).emit('game:error', { message: 'Route item not found' })
+    return
+  }
+
+  if (shouldValidateRoutePickupDistance(item)) {
+    const distCheck = validateInteractionDistance(player.position, item.position)
+    if (!distCheck.valid) {
+      console.warn(`[PICKUP] ${player.userId} rejected: ${distCheck.reason}`)
+      io.to(socketId).emit('game:error', { message: distCheck.reason })
+      return
+    }
+  }
+
+  const result = pickupToHand(room.state, player, stableItemId)
+  if (!result.success) {
+    console.warn(`[PICKUP] ${player.userId} rejected ${stableItemId}: ${result.reason}`)
+    io.to(socketId).emit('game:error', { message: result.reason })
+    return
+  }
+
+  // Pickup cancels any pending anti-softlock respawn for this item.
+  cancelPendingRespawn(roomId, stableItemId)
+
+  broadcastItemState(io, roomId, result.item)
+  notifyRoute1InventoryChanged(room)
+  console.log(`[PICKUP] ${player.userId} picked up ${stableItemId} to hand`)
+}
+
+function handleRoute1Action(
+  io: Server,
+  room: GameRoom,
+  socketId: string,
+  player: PlayerState,
+  objectId: string,
+  action: PlayerInteractAction
+): void {
+  const gm = (room as any).gameManager as GameManager | undefined
+  if (!gm || !gm.route1) {
+    console.warn(`[ROUTE1] gameManager.route1 missing — dropping ${action}`)
+    return
+  }
+  const r1 = gm.route1
+  let result: { ok: boolean; reason?: string } = { ok: true }
+
+  switch (action) {
+    case 'route1.search_clue.start':
+      result = r1.startSearchClue(player, objectId); break
+    case 'route1.search_clue.stop':
+      result = r1.stopSearchClue(player, objectId); break
+    case 'route1.disable_server.start':
+      result = r1.startDisableServer(player, objectId); break
+    case 'route1.disable_server.stop':
+      result = r1.stopDisableServer(player, objectId); break
+    case 'route1.open_vent.start':
+      result = r1.startOpenVent(player, objectId); break
+    case 'route1.open_vent.stop':
+      result = r1.stopOpenVent(player, objectId); break
+    case 'route1.escape.start':
+      result = r1.startEscape(player, objectId); break
+    case 'route1.escape.stop':
+      result = r1.stopEscape(player, objectId); break
+    default:
+      console.warn(`[ROUTE1] Unhandled action ${action}`)
+      return
+  }
+
+  if (!result.ok) {
+    console.warn(`[ROUTE1] ${player.userId} ${action} on ${objectId} rejected: ${result.reason}`)
+    io.to(socketId).emit('game:error', { message: result.reason })
+    return
+  }
+
+  console.log(`[ROUTE1] ${player.userId} ${action} ${objectId}`)
+}
+
+function handleRouteItemStore(
+  io: Server,
+  roomId: string,
+  room: GameRoom,
+  socketId: string,
+  player: PlayerState,
+  objectId: string
+): void {
+  if (objectId && player.heldItemId && objectId !== player.heldItemId) {
+    console.warn(`[STORE] ${player.userId} tried to store ${objectId} while holding ${player.heldItemId}`)
+    io.to(socketId).emit('game:error', { message: 'That item is not in hand' })
+    return
+  }
+
+  if (!isCriticalRouteItem(player.heldItemId)) {
+    io.to(socketId).emit('game:error', { message: 'No route tool in hand' })
+    return
+  }
+
+  const result = storeHeldItem(room.state, player)
+  if (!result.success) {
+    console.warn(`[STORE] ${player.userId} rejected: ${result.reason}`)
+    io.to(socketId).emit('game:error', { message: result.reason })
+    return
+  }
+
+  broadcastItemState(io, roomId, result.item)
+  notifyRoute1InventoryChanged(room)
+  console.log(`[STORE] ${player.userId} stored ${result.item.itemId ?? result.item.id} in slot ${result.slotIndex}`)
+}
+
+function notifyRoute1InventoryChanged(room: GameRoom): void {
+  const gm = (room as any).gameManager as GameManager | undefined
+  gm?.route1?.notifyInventoryChanged()
 }
 
 function handleItemPickup(io: Server, roomId: string, room: GameRoom, playerId: string, itemId: string, item: any): void {
@@ -272,6 +474,65 @@ function handleItemDrop(io: Server, roomId: string, room: GameRoom, playerId: st
   })
 
   console.log(`[DROP] ${playerId} dropped ${itemId}`)
+}
+
+// ============================================================================
+// route:register_spawn_areas handler (host-only, Phase C-02)
+// ============================================================================
+
+export interface RegisterSpawnAreasContext {
+  io: Server
+  roomId: string
+  room: GameRoom
+  socketId: string
+  payload: RegisterSpawnAreasPayload
+}
+
+/**
+ * Host registers every scene-authored spawn area for the current GameScene.
+ * The backend validates each entry, stores them, and picks one valid spawn
+ * area per critical route item. `item:state` is broadcast for each placed
+ * item so every client repositions its pickable prefab.
+ */
+export function handleRegisterSpawnAreas(context: RegisterSpawnAreasContext): void {
+  const { io, roomId, room, socketId, payload } = context
+
+  const player = room.state.players.get(socketId)
+  if (!player || player.userId !== room.state.hostUserId) {
+    console.warn(`[SPAWN] Non-host ${socketId} tried to register spawn areas`)
+    return
+  }
+
+  const result = registerSpawnAreas(room.state, payload)
+
+  if (result.skipped) {
+    console.log(`[SPAWN] "${roomId}" already has spawn areas — ignoring re-registration`)
+    return
+  }
+
+  if (result.accepted.length === 0) {
+    console.warn(
+      `[SPAWN] "${roomId}" registration produced zero valid areas. Rejections: ${result.rejected.join(' | ') || 'none'}`
+    )
+    io.to(socketId).emit('game:error', {
+      message: 'Spawn area registration rejected — no valid areas',
+    })
+    return
+  }
+
+  console.log(
+    `[SPAWN] "${roomId}" registered ${result.accepted.length} spawn areas (rejected ${result.rejected.length})`
+  )
+  if (result.rejected.length > 0) {
+    console.warn(`[SPAWN] Rejections: ${result.rejected.join(' | ')}`)
+  }
+
+  const placed = placeCriticalItemsInSpawnAreas(io, roomId, room.state)
+  if (placed.length === 0) {
+    console.warn(
+      `[SPAWN] No critical items were placed — check allowedItemIds on the registered areas`
+    )
+  }
 }
 
 // ============================================================================
@@ -394,24 +655,43 @@ export function handleGuardCatch(context: GuardCatchContext): void {
   // Catch is valid - could be player or NPC
   if (isPlayer) {
     targetPlayer!.isAlive = false
+    const droppedItems = dropCriticalRouteItemsForPlayer(
+      io,
+      roomId,
+      room.state,
+      targetPlayer!,
+      targetPlayer!.position,
+      (itemId) => scheduleCriticalItemRespawn(io, roomId, room.state, itemId as RouteItemId)
+    )
+    // Cancel any in-flight route1 interaction (clue search, sabotage, vent
+    // open, ESCAPE) the captured prisoner had, then refresh route1 so missions
+    // reflect the inventory drops.
+    const gm = (room as any).gameManager as GameManager | undefined
+    gm?.route1?.cancelPlayerInteractions(targetPlayer!.userId)
+    if (droppedItems.length > 0) gm?.route1?.notifyInventoryChanged()
     console.log(`[CATCH] Guard ${guard.id} caught prisoner ${targetPlayer!.id}`)
   } else {
     console.log(`[CATCH] Guard ${guard.id} mistakenly caught NPC ${targetNpc!.id}`)
     // Need to trigger error in guard penalties here, maybe via gameManager
   }
 
+  // Notify game manager FIRST so penalty counter is recorded before broadcast,
+  // letting clients display the up-to-date guard error count on the same event.
+  const gameManager = (room as any).gameManager as GameManager
+  if (gameManager) {
+    gameManager.onGuardCatch(guard.id, targetId, isPlayer)
+  }
+
+  const guardErrorCount = gameManager?.penalty?.getGuardErrorCount(guard.id) ?? 0
+
   io.to(roomId).emit('guard:catch', {
     guardId: guard.id,
     targetId: targetId,
     success: true,
     isPlayer: isPlayer,
+    guardErrorCount,
+    guardErrorThreshold: RIOT_THRESHOLD,
   })
-
-  // Notify game manager
-  const gameManager = (room as any).gameManager as GameManager
-  if (gameManager) {
-    gameManager.onGuardCatch(guard.id, targetId, isPlayer)
-  }
 }
 
 // ============================================================================

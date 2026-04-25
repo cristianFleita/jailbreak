@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 /// <summary>
 /// Scans for nearby IInteractables and routes the interaction key
@@ -21,6 +20,11 @@ public class InteractionManager : MonoBehaviour
     [Header("Arrow")]
     public GameObject arrowPrefab;
 
+    [Header("Debug")]
+    [Tooltip("Logs interactable detection, candidate skips, and final selection. Disable once pickup setup is verified.")]
+    public bool debugDetection = false;
+    public float debugLogInterval = 0.75f;
+
     /// <summary>Raised after a local interaction fires (already executed).</summary>
     public event Action<IInteractable> OnLocalInteract;
 
@@ -31,6 +35,8 @@ public class InteractionManager : MonoBehaviour
 
     private int transitionLockCount;
     private readonly HashSet<string> activeStateTags = new HashSet<string>();
+    private string lastDebugMessage;
+    private float nextDebugLogTime;
 
     void Awake()
     {
@@ -61,6 +67,7 @@ public class InteractionManager : MonoBehaviour
 
         if (current != null && IsKeyPressedThisFrame(current.InteractKey))
         {
+            DebugDetection($"Interact pressed: {Describe(current)} source={selfCollider?.name ?? "null"}", true);
             current.OnInteract(selfCollider);
             OnLocalInteract?.Invoke(current);
         }
@@ -98,23 +105,49 @@ public class InteractionManager : MonoBehaviour
 
         IInteractable best = null;
         float bestDist = Mathf.Infinity;
+        int candidateCount = 0;
 
         foreach (var hit in hits)
         {
-            IInteractable candidate = hit.GetComponent<IInteractable>();
-            if (candidate == null || !candidate.CanInteract) continue;
-            if (!IsAllowed(candidate)) continue;
+            var candidates = hit.GetComponents<IInteractable>();
+            if (candidates == null || candidates.Length == 0)
+                candidates = hit.GetComponentsInParent<IInteractable>();
 
-            float dist = Vector3.Distance(transform.position, hit.transform.position);
-
-            if (best == null
-                || candidate.Priority > best.Priority
-                || (candidate.Priority == best.Priority && dist < bestDist))
+            if (candidates == null || candidates.Length == 0)
             {
-                best = candidate;
-                bestDist = dist;
+                DebugDetection($"Hit {hit.name} on layer {LayerMask.LayerToName(hit.gameObject.layer)} but found no IInteractable");
+                continue;
+            }
+
+            foreach (var candidate in candidates)
+            {
+                candidateCount++;
+                if (candidate == null) continue;
+
+                bool canInteract = candidate.CanInteract;
+                bool allowed = canInteract && IsAllowed(candidate);
+                if (!canInteract || !allowed)
+                {
+                    DebugDetection($"Skip {Describe(candidate)} hit={hit.name} canInteract={canInteract} allowed={allowed}");
+                    continue;
+                }
+
+                float dist = Vector3.Distance(transform.position, candidate.Transform.position);
+
+                if (best == null
+                    || candidate.Priority > best.Priority
+                    || (candidate.Priority == best.Priority && dist < bestDist))
+                {
+                    best = candidate;
+                    bestDist = dist;
+                }
             }
         }
+
+        if (best != null)
+            DebugDetection($"Best {Describe(best)} hits={hits.Length} candidates={candidateCount} dist={bestDist:F2}");
+        else if (hits.Length > 0)
+            DebugDetection($"No usable interactable from hits={hits.Length} candidates={candidateCount}");
 
         return best;
     }
@@ -152,6 +185,7 @@ public class InteractionManager : MonoBehaviour
         prompt?.Show(next.InteractKey, next.ActionLabel);
         currentArrow = InteractionIndicator.CreateArrow(arrowPrefab);
         InteractionIndicator.UpdateArrow(currentArrow, next.Transform.position);
+        DebugDetection($"Prompt shown: {Describe(next)} prompt={(prompt != null ? prompt.name : "null")} arrow={(currentArrow != null ? currentArrow.name : "null")}", true);
     }
 
     void RefreshPrompt(IInteractable interactable)
@@ -174,38 +208,29 @@ public class InteractionManager : MonoBehaviour
 
     static bool IsKeyPressedThisFrame(KeyCode code)
     {
-        var kb = Keyboard.current;
-        if (kb == null) return false;
-
-        Key key = KeyCodeToKey(code);
-        if (key == Key.None) return false;
-
-        return kb[key].wasPressedThisFrame;
+        return InputSystemKey.WasPressedThisFrame(code);
     }
 
-    static Key KeyCodeToKey(KeyCode code)
+    private void DebugDetection(string message, bool force = false)
     {
-        switch (code)
-        {
-            case KeyCode.E:            return Key.E;
-            case KeyCode.F:            return Key.F;
-            case KeyCode.R:            return Key.R;
-            case KeyCode.Q:            return Key.Q;
-            case KeyCode.T:            return Key.T;
-            case KeyCode.G:            return Key.G;
-            case KeyCode.Space:        return Key.Space;
-            case KeyCode.Return:       return Key.Enter;
-            case KeyCode.Tab:          return Key.Tab;
-            case KeyCode.LeftShift:    return Key.LeftShift;
-            case KeyCode.RightShift:   return Key.RightShift;
-            case KeyCode.LeftControl:  return Key.LeftCtrl;
-            case KeyCode.RightControl: return Key.RightCtrl;
-            case KeyCode.LeftAlt:      return Key.LeftAlt;
-            case KeyCode.RightAlt:     return Key.RightAlt;
-        }
+        if (!debugDetection) return;
+        if (!force && Time.unscaledTime < nextDebugLogTime) return;
+        if (message == lastDebugMessage && Time.unscaledTime < nextDebugLogTime) return;
 
-        // Fallback: name-based parse catches A-Z, 0-9, F1-F12, arrows, etc.
-        return Enum.TryParse(code.ToString(), out Key parsed) ? parsed : Key.None;
+        lastDebugMessage = message;
+        nextDebugLogTime = Time.unscaledTime + Mathf.Max(0.1f, debugLogInterval);
+        Debug.Log($"[InteractionManager] {message}", this);
+    }
+
+    private static string Describe(IInteractable interactable)
+    {
+        if (interactable == null) return "null";
+
+        string extra = "";
+        if (interactable is NetworkRoutePickable routePickable)
+            extra = $" {routePickable.DebugState}";
+
+        return $"{interactable.GetType().Name} label='{interactable.ActionLabel}' key={interactable.InteractKey} priority={interactable.Priority} object={interactable.Transform.name}{extra}";
     }
 
     void OnDrawGizmosSelected()

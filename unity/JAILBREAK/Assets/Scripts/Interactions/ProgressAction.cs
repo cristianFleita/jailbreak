@@ -37,8 +37,6 @@ public class ProgressAction : MonoBehaviour
         {
             progress += Time.deltaTime / duration;
             progress  = Mathf.Clamp01(progress);
-            
-            Debug.Log($"[ProgressAction] State={animator.GetCurrentAnimatorStateInfo(0).shortNameHash} norm={animator.GetCurrentAnimatorStateInfo(0).normalizedTime:F2}");
 
             yield return null;
         }

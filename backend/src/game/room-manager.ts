@@ -10,11 +10,14 @@
 import { Server } from 'socket.io'
 import {
   GameRoom, GameRoomState, GameConfig, NPCPositionUpdate, PlayerStateUpdate,
-  RoomStatePayload, PlayerRole,
+  RoomStatePayload, PlayerRole, EscapeRouteSelectedPayload,
 } from './types.js'
 import { createGameRoomState, advanceTick, computeNPCDelta, spawnNPCs, startGame, endGame } from './state.js'
 import { GameManager } from './systems/game-manager.js'
 import { getUser, setUserStatus } from './user-identity.js'
+import { initializeRouteState } from './routes/route-registry.js'
+import { broadcastAllRouteItemStates } from './systems/route-inventory.js'
+import { clearSpawnAreaRegistration } from './systems/spawn-areas.js'
 
 /**
  * Default game configuration (tuning knobs from design doc).
@@ -99,6 +102,9 @@ export function destroyRoom(roomId: string): void {
   // Stop all intervals
   if (room.tickLoopInterval) clearInterval(room.tickLoopInterval)
   if (room.phaseLoopInterval) clearInterval(room.phaseLoopInterval)
+
+  // Drop any pending spawn-area respawn timers for this room.
+  clearSpawnAreaRegistration(roomId)
 
   activeRooms.delete(roomId)
   console.log(`[ROOM] Destroyed room "${roomId}"`)
@@ -192,6 +198,24 @@ export function startGameLoop(io: Server, room: GameRoom): void {
   }
   personality.onMoodShift = (payload) => {
     io.to(state.id).emit('npc:mood_shift', payload)
+  }
+
+  // ── Wire Route 1 broadcasts (Phase D) ──
+  // Prisoner-only fan-out keeps `correctServerId` away from the guard. We
+  // iterate every tick's emit because socket.io rooms in this codebase aren't
+  // sharded by role.
+  gameManager.route1.onRoute1StateChanged = (payload) => {
+    for (const [socketId, p] of state.players) {
+      if (p.role === 'prisoner') io.to(socketId).emit('escape:route1:state', payload)
+    }
+  }
+  gameManager.route1.onWorldStateChanged = (payload) => {
+    io.to(state.id).emit('world:state', payload)
+  }
+  gameManager.route1.onWorldCue = (payload) => {
+    for (const [socketId, p] of state.players) {
+      if (p.role === 'guard') io.to(socketId).emit('world:cue', payload)
+    }
   }
 
   // Jail routine is started by transitionToActive AFTER game:start is emitted,
@@ -299,8 +323,32 @@ export function transitionToActive(io: Server, room: GameRoom): void {
   }
 
   startGame(room.state)
+
+  // Randomize the selected route's authoritative state (desk/server, etc.)
+  // now that players are locked in but before NPC spawn / loop / broadcasts.
+  initializeRouteState(room.state)
+
   initializeNPCs(room)
   startGameLoop(io, room)
+
+  // Notify all clients which escape route is active. Sent BEFORE game:start
+  // so Unity can cache activeRouteId before any route UI renders.
+  const routePayload: EscapeRouteSelectedPayload = {
+    activeRouteId: room.state.activeRouteId,
+  }
+  io.to(room.state.id).emit('escape:route:selected', routePayload)
+  broadcastAllRouteItemStates(io, room.state.id, room.state)
+
+  // Initial Route 1 snapshot so prisoner HUDs hydrate before the first tick.
+  // World state is broadcast publicly so the guard hears the ventilation.
+  const gameManager = (room as any).gameManager as GameManager | undefined
+  if (gameManager?.route1) {
+    const initialPrisonerPayload = gameManager.route1.buildPrisonerStatePayload()
+    for (const [socketId, p] of room.state.players) {
+      if (p.role === 'prisoner') io.to(socketId).emit('escape:route1:state', initialPrisonerPayload)
+    }
+    io.to(room.state.id).emit('world:state', gameManager.route1.buildWorldStatePayload())
+  }
 
   // Notify all clients that game started
   io.to(room.state.id).emit('game:start', {

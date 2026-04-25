@@ -1,7 +1,8 @@
 import { Server, Socket } from 'socket.io'
 import {
-  PlayerMovePayload, Vector3,
+  NPCSyncStatePayload, PlayerInteractAction, PlayerMovePayload, Vector3,
   AuthRegisterPayload, RoomCreatePayload, RoomJoinPayload, RoomKickPayload,
+  RegisterSpawnAreasPayload,
 } from '../game/types.js'
 import {
   createRoom,
@@ -26,12 +27,23 @@ import {
   handleRiotActivate,
   checkGameEndCondition,
   handleNPCSyncState,
+  handleRegisterSpawnAreas,
 } from '../game/event-handlers.js'
 import {
   markPlayerDisconnected,
   restorePlayerConnection,
+  consumeExpiredDisconnectedSlot,
   clearRoomSlots,
 } from '../game/reconnection.js'
+import {
+  dropCriticalRouteItemsForPlayer,
+  emitAllRouteItemStatesToSocket,
+} from '../game/systems/route-inventory.js'
+import {
+  clearSpawnAreaRegistration,
+  scheduleCriticalItemRespawn,
+} from '../game/systems/spawn-areas.js'
+import type { RouteItemId } from '../game/types.js'
 import {
   registerUser,
   getUserBySocket,
@@ -120,13 +132,29 @@ export function setupGameSockets(io: Server) {
             setUserStatus(profile.userId, 'in-game', profile.currentRoomId)
 
             {
+              // Emit the active route BEFORE game:reconnect so Unity can cache
+              // activeRouteId before any route UI hydrates from the snapshot.
+              socket.emit('escape:route:selected', {
+                activeRouteId: roomForReconnect.state.activeRouteId,
+              })
+              emitAllRouteItemStatesToSocket(io, socket.id, roomForReconnect.state)
+
               const gm = (roomForReconnect as any).gameManager
+              // Re-emit Route 1 snapshot so the reconnected client rebuilds
+              // its checklist + world props without waiting for the next tick.
+              if (gm?.route1) {
+                if (reconnectResult.playerState?.role === 'prisoner') {
+                  socket.emit('escape:route1:state', gm.route1.buildPrisonerStatePayload())
+                }
+                socket.emit('world:state', gm.route1.buildWorldStatePayload())
+              }
               socket.emit('game:reconnect', {
                 players: Array.from(roomForReconnect.state.players.values()),
                 npcs: Array.from(roomForReconnect.state.npcs.values()),
                 items: Array.from(roomForReconnect.state.items.values()),
                 phase: roomForReconnect.state.phase,
                 tick: roomForReconnect.state.tick,
+                activeRouteId: roomForReconnect.state.activeRouteId,
                 jailPhase: gm?.jailRoutine ? {
                   phase:          gm.jailRoutine.getCurrentJailPhase(),
                   zone:           gm.jailRoutine.getCurrentZone(),
@@ -275,13 +303,25 @@ export function setupGameSockets(io: Server) {
             setUserStatus(user.userId, 'in-game', payload.roomId)
 
             {
+              socket.emit('escape:route:selected', {
+                activeRouteId: room.state.activeRouteId,
+              })
+              emitAllRouteItemStatesToSocket(io, socket.id, room.state)
+
               const gm2 = (room as any).gameManager
+              if (gm2?.route1) {
+                if (reconnectResult.playerState?.role === 'prisoner') {
+                  socket.emit('escape:route1:state', gm2.route1.buildPrisonerStatePayload())
+                }
+                socket.emit('world:state', gm2.route1.buildWorldStatePayload())
+              }
               socket.emit('game:reconnect', {
                 players: Array.from(room.state.players.values()),
                 npcs: Array.from(room.state.npcs.values()),
                 items: Array.from(room.state.items.values()),
                 phase: room.state.phase,
                 tick: room.state.tick,
+                activeRouteId: room.state.activeRouteId,
                 jailPhase: gm2?.jailRoutine ? {
                   phase:          gm2.jailRoutine.getCurrentJailPhase(),
                   zone:           gm2.jailRoutine.getCurrentZone(),
@@ -511,7 +551,7 @@ export function setupGameSockets(io: Server) {
     // ==================================================================
     // GAMEPLAY: player:interact
     // ==================================================================
-    socket.on('player:interact', ({ objectId, action }: { objectId: string; action: 'pickup' | 'use' | 'drop' }) => {
+    socket.on('player:interact', ({ objectId, action }: { objectId: string; action: PlayerInteractAction }) => {
       if (!currentRoomId) return
 
       try {
@@ -607,16 +647,45 @@ export function setupGameSockets(io: Server) {
     })
 
     // ==================================================================
-    // GAMEPLAY: npc:sync_state (from Host to sync NPC positions)
+    // GAMEPLAY: route:register_spawn_areas (host-only; Phase C-02)
     // ==================================================================
-    socket.on('npc:sync_state', (payloadStr: string) => {
+    socket.on('route:register_spawn_areas', (payloadRaw: string | RegisterSpawnAreasPayload) => {
       if (!currentRoomId) return
 
       try {
         const room = getRoom(currentRoomId)
         if (!room || room.state.status !== 'active') return
 
-        const payload = JSON.parse(payloadStr)
+        const payload = typeof payloadRaw === 'string'
+          ? JSON.parse(payloadRaw) as RegisterSpawnAreasPayload
+          : payloadRaw
+
+        handleRegisterSpawnAreas({
+          io,
+          roomId: currentRoomId,
+          room,
+          socketId: socket.id,
+          payload,
+        })
+      } catch (err) {
+        console.error(`[ERROR] route:register_spawn_areas: ${err}`)
+      }
+    })
+
+    // ==================================================================
+    // GAMEPLAY: npc:sync_state (from Host to sync NPC positions)
+    // ==================================================================
+    socket.on('npc:sync_state', (payloadRaw: string | NPCSyncStatePayload) => {
+      if (!currentRoomId) return
+
+      try {
+        const room = getRoom(currentRoomId)
+        if (!room || room.state.status !== 'active') return
+
+        const payload = typeof payloadRaw === 'string'
+          ? JSON.parse(payloadRaw) as NPCSyncStatePayload
+          : payloadRaw
+
         handleNPCSyncState({
           io,
           roomId: currentRoomId,
@@ -669,7 +738,28 @@ function handleLeaveRoom(
 
     // During an active game: save reconnection slot then remove the stale socket entry
     if (gameIsActive) {
-      markPlayerDisconnected(roomId, player, room.config.reconnectTimeout)
+      // Whatever route1 action this player was doing must end immediately —
+      // their socket is gone, the world cannot rely on a `*.stop` that will
+      // never arrive (see Phase D anti-griefing requirement).
+      const gmLeave = (room as any).gameManager
+      gmLeave?.route1?.cancelPlayerInteractions(userId)
+
+      if (reason === 'left') {
+        dropCriticalRouteItemsForPlayer(
+          io,
+          roomId,
+          room.state,
+          player,
+          player.position,
+          (itemId) => scheduleCriticalItemRespawn(io, roomId, room.state, itemId as RouteItemId)
+        )
+        gmLeave?.route1?.notifyInventoryChanged()
+        setUserStatus(userId, 'idle')
+      } else {
+        markPlayerDisconnected(roomId, player, room.config.reconnectTimeout)
+        scheduleDisconnectedCriticalItemRelease(io, roomId, userId, room.config.reconnectTimeout)
+      }
+
       removePlayer(room.state, socket.id)
       clearPlayerMoveTracking(socket.id)
       socket.leave(roomId)
@@ -681,7 +771,7 @@ function handleLeaveRoom(
         players: buildRoomPlayersPayload(room),
       })
 
-      console.log(`[ROOM] ${isHost ? 'Host' : 'Player'} ${userId} disconnected from active game "${roomId}" — slot reserved`)
+      console.log(`[ROOM] ${isHost ? 'Host' : 'Player'} ${userId} ${reason} active game "${roomId}"${reason === 'disconnected' ? ' — slot reserved' : ''}`)
       return
     }
 
@@ -715,6 +805,7 @@ function handleLeaveRoom(
 
       stopGameLoop(room)
       clearRoomSlots(roomId)
+      clearSpawnAreaRegistration(roomId)
       destroyRoom(roomId)
       return
     }
@@ -731,9 +822,47 @@ function handleLeaveRoom(
       console.log(`[ROOM] "${roomId}" is empty, destroying`)
       stopGameLoop(room)
       clearRoomSlots(roomId)
+      clearSpawnAreaRegistration(roomId)
       destroyRoom(roomId)
     }
   } catch (err) {
     console.error(`[ERROR] handleLeaveRoom: ${err}`)
   }
+}
+
+function scheduleDisconnectedCriticalItemRelease(
+  io: Server,
+  roomId: string,
+  userId: string,
+  reconnectTimeoutSeconds: number
+): void {
+  setTimeout(() => {
+    try {
+      const expiredPlayer = consumeExpiredDisconnectedSlot(roomId, userId)
+      if (!expiredPlayer) return
+
+      const room = getRoom(roomId)
+      if (!room || room.state.status !== 'active') return
+
+      const dropped = dropCriticalRouteItemsForPlayer(
+        io,
+        roomId,
+        room.state,
+        expiredPlayer,
+        expiredPlayer.position,
+        (itemId) => scheduleCriticalItemRespawn(io, roomId, room.state, itemId as RouteItemId)
+      )
+
+      const gmExpire = (room as any).gameManager
+      if (dropped.length > 0) gmExpire?.route1?.notifyInventoryChanged()
+
+      setUserStatus(userId, 'idle')
+
+      if (dropped.length > 0) {
+        console.log(`[RECONNECT] Released expired critical route tools for ${userId}: ${dropped.join(', ')}`)
+      }
+    } catch (err) {
+      console.error(`[ERROR] scheduleDisconnectedCriticalItemRelease: ${err}`)
+    }
+  }, reconnectTimeoutSeconds * 1000 + 100)
 }
