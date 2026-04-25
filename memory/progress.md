@@ -66,6 +66,15 @@
 - [x] Unity: `NetworkManager.SendRegisterSpawnAreas` + jslib binding + DTOs
 - [x] ADR-010 recorded in `memory/decisions.md`
 
+## Ruta 1 — Phase F (UI Toolkit HUD and QA):
+- [x] Unity: `GameHudController.cs` binds phase timer, local held item, 2 inventory slots, and prisoner-only Ruta 1 checklist from authoritative network state.
+- [x] Unity: `GameGUI.uxml` replaced old static/mock inventory layout with runtime-bound UI Toolkit HUD elements.
+- [x] Unity: guard role hides Ruta 1 checklist; uGUI world `InteractionPrompt` / `ProgressBar` remain unchanged.
+- [x] Backend tests: `route-inventory.test.ts` covers pickup, store, pickup race, reconnect held/stored, and critical item drops.
+- [x] QA doc: `design/gdd/ruta-1-phase-f-qa.md` lists focused automated coverage and manual multiplayer pass.
+- [x] Verification: Unity `msbuild Assembly-CSharp.csproj` succeeded; focused Ruta 1 backend tests passed `62/62`.
+- [ ] Scene setup: add a `UIDocument` in `GameScene`, assign `GameGUI.uxml`, add `GameHudController`, and assign route tool sprites.
+
 ## Backlog:
 - [ ] Unit tests (state, validation, room-manager)
 - [ ] Integration tests (game-loop, socket-events)

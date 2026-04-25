@@ -167,3 +167,17 @@
   - Made `VentEscapeInteractable` also subscribe to public `world:state` and cached world state so conduct visibility/colliders follow `openVentIds` directly.
   - Made backend `open_vent` completion idempotent for world cue/log emission if a duplicated completion reaches an already-open vent.
   - Verified backend TypeScript and `route1-system.test.ts` (`36/36`), plus Unity C# via `msbuild` with existing warnings only.
+- **Unity Specialist + Network Programmer — Ruta 1 Phase F HUD and QA**:
+  - Implemented UI Toolkit `GameHudController` for phase/timer, local held item, 2-slot authoritative inventory, and prisoner-only Ruta 1 checklist/progress.
+  - Reworked `GameGUI.uxml` from static/mock inventory slots into runtime-bound HUD regions for phase, timer, inventory, and route checklist.
+  - Added runtime safety disabling for legacy TMP `InventoryHUD` components while preserving uGUI `InteractionPrompt` and `ProgressBar` for world interactions.
+  - Added backend `route-inventory.test.ts` covering pickup, store, pickup race, held/stored reconnect snapshots, and critical tool drops.
+  - Added `design/gdd/ruta-1-phase-f-qa.md` with focused automated coverage and manual 2-prisoner/1-guard QA checklist.
+  - Verified Unity C# via `msbuild unity/JAILBREAK/Assembly-CSharp.csproj`: build succeeded with existing warnings only.
+  - Verified backend TypeScript with bundled Node `tsc`.
+  - Verified focused Ruta 1 backend tests (`route-selector`, `spawn-areas`, `route-inventory`, `route1-system`): `62/62` passing.
+  - Full backend suite still has pre-existing stale failures in old state/room-manager/socket/game-manager tests around userId migration and NPC count expectations.
+  - Recorded ADR-015 in `memory/decisions.md`.
+- **Project preference update**:
+  - User explicitly said not to use local Ollama/local models for project work and not to ask again.
+  - Recorded ADR-016 in `memory/decisions.md`.

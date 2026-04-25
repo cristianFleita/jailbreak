@@ -396,3 +396,51 @@ The grille is an obstacle-removal object, while the conduct tunnel is the actual
 - For a tunnel associated with `vent_1`, use a unique visual/network id such as `vent_1_escape` and set `routeObjectId = vent_1`.
 - The grille scene instance can keep `NetworkInteractable.networkId = vent_1` and leave `routeObjectId` empty.
 - `Conduct.prefab` defaults to `networkId = vent_1_escape`, `routeObjectId = vent_1`, and disables both its body collider and trigger collider until `vent_1` is open.
+
+---
+
+## ADR-015: Ruta 1 Phase F — UI Toolkit HUD reads authoritative state only
+
+**Status**: Implemented
+**Date**: 2026-04-25
+
+### Decision
+
+Phase F implements the in-game HUD with UI Toolkit through `GameHudController` and `GameGUI.uxml`.
+
+- The HUD reads phase data from `phase:start`, local role/inventory from `GameStateManager`, and Ruta 1 checklist/progress from prisoner-only `escape:route1:state`.
+- The guard never renders the Ruta 1 checklist, and the HUD does not read or infer `correctServerId` outside the backend-filtered prisoner payload.
+- Held item and 2 inventory slots are rendered separately from authoritative `heldItemId` / `inventorySlots`.
+- uGUI `InteractionPrompt` and `ProgressBar` remain the world interaction UI for route actions.
+- Legacy TMP `InventoryHUD` is disabled at runtime by `GameHudController` as a safety net, but the scene should remove old TMP HUD objects once UI Toolkit parity is confirmed.
+- Backend Phase F QA adds `route-inventory.test.ts` for pickup/store/reconnect/drop regression coverage and documents manual multiplayer scenarios in `design/gdd/ruta-1-phase-f-qa.md`.
+
+### Why
+
+The inventory/checklist HUD must coordinate prisoners without giving the guard hidden route information. Keeping the HUD read-only with respect to network state avoids client authority drift and makes F5 reconnect behavior match the backend snapshot exactly.
+
+### Implications
+
+- `GameScene` must contain a `UIDocument` using `Assets/UI/Screens/GameGUI.uxml` and a `GameHudController` with route tool sprites assigned.
+- If new route tools are added, `GameHudController.IconForItem` / display-name mapping should be extended or replaced by a data asset.
+- Full route QA should use the focused route test set plus the manual 2-prisoner/1-guard checklist until stale legacy backend tests are updated for current userId/NPC-count contracts.
+
+---
+
+## ADR-016: Do not delegate project work to local Ollama models
+
+**Status**: Accepted
+**Date**: 2026-04-25
+
+### Decision
+
+Do not use local Ollama models for this project, including testing, documentation, comments, reviews, or implementation support.
+
+### Why
+
+User explicitly rejected local model usage for the project and asked not to request it again.
+
+### Implications
+
+- Ignore the older AGENTS.md instruction that suggested `ollama run gemma3:4b` for testing/documentation delegation.
+- Keep testing, documentation, and review work inside Codex plus normal local project tools.
