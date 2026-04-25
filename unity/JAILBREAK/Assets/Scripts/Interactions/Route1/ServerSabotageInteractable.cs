@@ -18,7 +18,7 @@ namespace Jailbreak.Interactions.Route1
 
         protected override string UnavailableMessage(EscapeRoute1StatePayload state)
         {
-            return state != null && state.serverDisabled ? "La ventilacion ya esta apagada" : null;
+            return state != null && state.serverDisabled ? "Ventilation is already off" : null;
         }
     }
 }

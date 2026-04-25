@@ -460,6 +460,7 @@ Short player feedback for Ruta 1 interactions is rendered by `GameHudController.
 - `Route1ProgressInteractable` translates backend rejection messages for missing route tools into player-facing text.
 - Concrete interactables can provide local unavailable messages, such as vent prerequisites.
 - Guard desk clue searches show an empty-desk toast only when the local search completes and the authoritative state still has no clue found.
+- All HUD labels, mission text, item names, and toasts are player-facing English strings.
 
 ### Why
 

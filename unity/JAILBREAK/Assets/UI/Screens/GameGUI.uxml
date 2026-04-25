@@ -39,7 +39,7 @@
             </ui:VisualElement>
 
             <ui:VisualElement name="Route1Panel" picking-mode="Ignore" style="width: 286px; background-color: rgba(0, 0, 0, 0.62); padding-top: 8px; padding-right: 8px; padding-bottom: 8px; padding-left: 8px; border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
-                <ui:Label name="Route1Title" text="RUTA 1: VENTILACION" style="-unity-font-style: bold; font-size: 12px; color: rgb(255, 255, 255); margin-bottom: 6px;"/>
+                <ui:Label name="Route1Title" text="ROUTE 1: VENTILATION" style="-unity-font-style: bold; font-size: 12px; color: rgb(255, 255, 255); margin-bottom: 6px;"/>
                 <ui:VisualElement name="RouteChecklist" picking-mode="Ignore" style="flex-direction: column;"/>
             </ui:VisualElement>
         </ui:VisualElement>

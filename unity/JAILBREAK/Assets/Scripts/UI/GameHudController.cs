@@ -130,11 +130,11 @@ namespace Jailbreak.UI
             if (_routeChecklist == null) return;
 
             _routeChecklist.Clear();
-            AddMissionRow("find_cutters", "Pinzas");
-            AddMissionRow("find_clue", "Pista: Servidor ?");
-            AddMissionRow("disable_server", "Servidor");
-            AddMissionRow("find_wrench", "Llave");
-            AddMissionRow("open_vent", "Conducto");
+            AddMissionRow("find_cutters", "Cutters");
+            AddMissionRow("find_clue", "Clue: Server ?");
+            AddMissionRow("disable_server", "Server");
+            AddMissionRow("find_wrench", "Wrench");
+            AddMissionRow("open_vent", "Vent");
             AddMissionRow("escape", "Escape");
         }
 
@@ -383,8 +383,8 @@ namespace Jailbreak.UI
         {
             switch (itemId)
             {
-                case "route1_cutters": return "Pinzas";
-                case "route1_wrench": return "Llave francesa";
+                case "route1_cutters": return "Cutters";
+                case "route1_wrench": return "Wrench";
                 default: return string.IsNullOrEmpty(itemId) ? "Empty hand" : itemId;
             }
         }
@@ -393,8 +393,8 @@ namespace Jailbreak.UI
         {
             switch (itemId)
             {
-                case "route1_cutters": return "Pinzas";
-                case "route1_wrench": return "Llave";
+                case "route1_cutters": return "Cutters";
+                case "route1_wrench": return "Wrench";
                 default: return string.IsNullOrEmpty(itemId) ? "Empty" : itemId;
             }
         }
@@ -414,18 +414,18 @@ namespace Jailbreak.UI
 
             var missions = state != null ? state.missions : null;
             var clueTitle = state != null && state.clueFound && !string.IsNullOrEmpty(state.correctServerId)
-                ? $"Pista: {ServerDisplayName(state.correctServerId)}"
-                : "Pista: Servidor ?";
+                ? $"Clue: {ServerDisplayName(state.correctServerId)}"
+                : "Clue: Server ?";
 
-            ApplyMission("find_cutters", GetMissionStatus(missions, "find_cutters", "available"), "Pinzas", 0f, false);
+            ApplyMission("find_cutters", GetMissionStatus(missions, "find_cutters", "available"), "Cutters", 0f, false);
             ApplyMission("find_clue", GetMissionStatus(missions, "find_clue", "available"), clueTitle,
                 ProgressForAction(state, "route1.search_clue"), true);
-            ApplyMission("disable_server", GetMissionStatus(missions, "disable_server", "locked"), "Servidor",
+            ApplyMission("disable_server", GetMissionStatus(missions, "disable_server", "locked"), "Server",
                 ProgressForAction(state, "route1.disable_server"), true);
-            ApplyMission("find_wrench", GetMissionStatus(missions, "find_wrench", "available"), "Llave", 0f, false);
+            ApplyMission("find_wrench", GetMissionStatus(missions, "find_wrench", "available"), "Wrench", 0f, false);
 
             var ventProgress = Mathf.Max(ProgressForAction(state, "route1.open_vent"), MaxVentProgress(state));
-            ApplyMission("open_vent", GetMissionStatus(missions, "open_vent", "locked"), "Conducto", ventProgress, true);
+            ApplyMission("open_vent", GetMissionStatus(missions, "open_vent", "locked"), "Vent", ventProgress, true);
             ApplyMission("escape", GetMissionStatus(missions, "escape", "locked"), "Escape",
                 ProgressForAction(state, "route1.escape"), true);
         }
@@ -517,10 +517,10 @@ namespace Jailbreak.UI
 
         private static string ServerDisplayName(string serverId)
         {
-            if (string.IsNullOrEmpty(serverId)) return "Servidor ?";
+            if (string.IsNullOrEmpty(serverId)) return "Server ?";
             const string prefix = "server_";
             return serverId.StartsWith(prefix, StringComparison.Ordinal)
-                ? $"Servidor {serverId.Substring(prefix.Length)}"
+                ? $"Server {serverId.Substring(prefix.Length)}"
                 : serverId;
         }
 

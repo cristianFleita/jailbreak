@@ -66,7 +66,7 @@ namespace Jailbreak.Interactions.Route1
 
         protected override string UnavailableMessage(EscapeRoute1StatePayload state)
         {
-            return IsVentOpen(state, RouteObjectId) ? null : "Primero abre el conducto";
+            return IsVentOpen(state, RouteObjectId) ? null : "Open the vent first";
         }
 
         protected override void OnServerStateApplied(EscapeRoute1StatePayload state)

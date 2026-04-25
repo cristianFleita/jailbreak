@@ -183,9 +183,12 @@
   - Recorded ADR-016 in `memory/decisions.md`.
 - **Unity Specialist + Network Programmer — Ruta 1 HUD warning toasts**:
   - Added a reusable `HudToast` UI Toolkit element to `GameGUI.uxml` and `GameHudController.ShowToast(...)` with timed hiding.
-  - Routed backend rejection messages through `Route1ProgressInteractable` so missing `route1_cutters` shows `Necesitas las pinzas` and missing `route1_wrench` shows `Necesitas la llave francesa`.
+  - Routed backend rejection messages through `Route1ProgressInteractable` so missing `route1_cutters` shows `You need the cutters` and missing `route1_wrench` shows `You need the wrench`.
   - Added local unavailable feedback for blocked vent/escape steps and already-completed route objects.
-  - Added empty guard-desk feedback: completed clue searches that leave `clueFound=false` show `No hay nada en este escritorio`.
+  - Added empty guard-desk feedback: completed clue searches that leave `clueFound=false` show `Nothing useful here`.
   - Updated `design/gdd/ruta-1-phase-f-qa.md` manual multiplayer checks for warning toasts.
   - Verified Unity C# via `msbuild unity/JAILBREAK/Assembly-CSharp.csproj`: build succeeded with existing warnings only.
   - Recorded ADR-017 in `memory/decisions.md`.
+- **Unity Specialist — Ruta 1 HUD English copy pass**:
+  - Converted Route 1 HUD title, mission checklist labels, item display names, server clue text, and warning toasts to English.
+  - Updated Phase F QA checklist expected UI strings to match the English runtime copy.

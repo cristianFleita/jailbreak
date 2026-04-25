@@ -20,7 +20,7 @@ namespace Jailbreak.Interactions.Route1
 
         protected override string UnavailableMessage(EscapeRoute1StatePayload state)
         {
-            return state != null && state.clueFound ? "La pista ya fue encontrada" : null;
+            return state != null && state.clueFound ? "The clue has already been found" : null;
         }
 
         protected override void OnLocalInteractionStarted(EscapeRoute1StatePayload state)
@@ -31,7 +31,7 @@ namespace Jailbreak.Interactions.Route1
         protected override void OnLocalInteractionCompletedWithoutState(EscapeRoute1StatePayload state)
         {
             if (localSearchStartedBeforeClue && (state == null || !state.clueFound))
-                ShowRouteFeedback("No hay nada en este escritorio");
+                ShowRouteFeedback("Nothing useful here");
 
             localSearchStartedBeforeClue = false;
         }

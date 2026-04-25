@@ -365,10 +365,10 @@ namespace Jailbreak.Interactions.Route1
             if (string.IsNullOrEmpty(message)) return null;
 
             var normalized = message.ToLowerInvariant();
-            if (normalized.Contains("route1_cutters required")) return "Necesitas las pinzas";
-            if (normalized.Contains("route1_wrench required")) return "Necesitas la llave francesa";
-            if (normalized.Contains("ventilation must be disabled first")) return "Primero deshabilita la ventilacion";
-            if (normalized.Contains("vent is not open yet")) return "Primero abre el conducto";
+            if (normalized.Contains("route1_cutters required")) return "You need the cutters";
+            if (normalized.Contains("route1_wrench required")) return "You need the wrench";
+            if (normalized.Contains("ventilation must be disabled first")) return "Disable ventilation first";
+            if (normalized.Contains("vent is not open yet")) return "Open the vent first";
             return null;
         }
 
