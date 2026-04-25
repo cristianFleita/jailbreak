@@ -1,5 +1,6 @@
 using Jailbreak.Network;
 using Jailbreak.Player;
+using Jailbreak.UI;
 using UnityEngine;
 
 namespace Jailbreak.Interactions.Route1
@@ -144,7 +145,11 @@ namespace Jailbreak.Interactions.Route1
                 return;
             }
 
-            if (!CanInteract) return;
+            if (!CanInteract)
+            {
+                ShowRouteFeedback(UnavailableMessage(GameStateManager.Instance != null ? GameStateManager.Instance.Route1State : null));
+                return;
+            }
             if (source == null) return;
 
             var root = source.transform.root;
@@ -188,6 +193,7 @@ namespace Jailbreak.Interactions.Route1
         }
 
         protected virtual bool IsAvailable(EscapeRoute1StatePayload state) => true;
+        protected virtual string UnavailableMessage(EscapeRoute1StatePayload state) => null;
 
         protected virtual float GetInitialProgress(EscapeRoute1StatePayload state)
         {
@@ -213,6 +219,20 @@ namespace Jailbreak.Interactions.Route1
 
         protected virtual void OnServerStateApplied(EscapeRoute1StatePayload state)
         {
+        }
+
+        protected virtual void OnLocalInteractionStarted(EscapeRoute1StatePayload state)
+        {
+        }
+
+        protected virtual void OnLocalInteractionCompletedWithoutState(EscapeRoute1StatePayload state)
+        {
+        }
+
+        protected void ShowRouteFeedback(string message, float seconds = 2.4f)
+        {
+            if (string.IsNullOrEmpty(message)) return;
+            GameHudController.Instance?.ShowToast(message, seconds);
         }
 
         private void SubscribeIfNeeded()
@@ -260,6 +280,7 @@ namespace Jailbreak.Interactions.Route1
             float initial = GetInitialProgress(GameStateManager.Instance != null ? GameStateManager.Instance.Route1State : null);
             SetProgress(initial);
             progressBar?.Show(progressLabel, initial);
+            OnLocalInteractionStarted(GameStateManager.Instance != null ? GameStateManager.Instance.Route1State : null);
             DebugRoute($"Started local visual for {StartAction} on visual={NetworkId} route={RouteObjectId}");
             return true;
         }
@@ -322,14 +343,33 @@ namespace Jailbreak.Interactions.Route1
             ignoreServerActiveUntilClear = false;
 
             if (isLocalActive && !pendingStart)
+            {
+                OnLocalInteractionCompletedWithoutState(state);
                 StopLocalVisual(sendNetworkStop: false, broadcastRemoteStop: true);
+            }
         }
 
         private void HandleNetworkError(ErrorPayload payload)
         {
             if (!pendingStart && !pendingStop) return;
             DebugRoute($"Backend rejected/errored while pending: {payload?.message ?? "unknown"}");
+
+            if (pendingStart)
+                ShowRouteFeedback(FeedbackMessageForBackendError(payload?.message));
+
             StopLocalVisual(sendNetworkStop: false, broadcastRemoteStop: true);
+        }
+
+        private static string FeedbackMessageForBackendError(string message)
+        {
+            if (string.IsNullOrEmpty(message)) return null;
+
+            var normalized = message.ToLowerInvariant();
+            if (normalized.Contains("route1_cutters required")) return "Necesitas las pinzas";
+            if (normalized.Contains("route1_wrench required")) return "Necesitas la llave francesa";
+            if (normalized.Contains("ventilation must be disabled first")) return "Primero deshabilita la ventilacion";
+            if (normalized.Contains("vent is not open yet")) return "Primero abre el conducto";
+            return null;
         }
 
         private void HandlePlayerCaught(string targetId)

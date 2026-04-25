@@ -73,6 +73,7 @@
 - [x] Backend tests: `route-inventory.test.ts` covers pickup, store, pickup race, reconnect held/stored, and critical item drops.
 - [x] QA doc: `design/gdd/ruta-1-phase-f-qa.md` lists focused automated coverage and manual multiplayer pass.
 - [x] Verification: Unity `msbuild Assembly-CSharp.csproj` succeeded; focused Ruta 1 backend tests passed `62/62`.
+- [x] HUD feedback: route interactables show short toasts for empty desk searches, missing cutters/wrench, and blocked vent/escape steps.
 - [ ] Scene setup: add a `UIDocument` in `GameScene`, assign `GameGUI.uxml`, add `GameHudController`, and assign route tool sprites.
 
 ## Backlog:

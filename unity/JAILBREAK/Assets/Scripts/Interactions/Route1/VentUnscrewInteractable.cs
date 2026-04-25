@@ -28,6 +28,13 @@ namespace Jailbreak.Interactions.Route1
             return state.serverDisabled && !IsVentOpen(state, RouteObjectId);
         }
 
+        protected override string UnavailableMessage(EscapeRoute1StatePayload state)
+        {
+            if (state == null) return null;
+            if (!state.serverDisabled) return "Primero deshabilita la ventilacion";
+            return IsVentOpen(state, RouteObjectId) ? "Este conducto ya esta abierto" : null;
+        }
+
         protected override float GetInitialProgress(EscapeRoute1StatePayload state)
         {
             var active = base.GetInitialProgress(state);

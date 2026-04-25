@@ -46,14 +46,16 @@ Use 3 clients: 2 prisoners + 1 guard.
 4. Store with `F`; confirm slot 1 updates and held item clears.
 5. Refresh client with cutters held; confirm held item restores.
 6. Refresh client with cutters stored; confirm slot restores.
-7. Search desks until clue is found; confirm prisoners see `Servidor N`; guard does not.
-8. Sabotage wrong server; confirm guard receives only alarm/cue feedback.
-9. Sabotage correct server; confirm ventilation world state changes and vents become usable.
-10. Try opening a vent without wrench; confirm rejected.
-11. Start opening with wrench holder; second prisoner joins same vent; confirm progress is faster than solo.
-12. Complete vent open; confirm route checklist marks `Conducto`.
-13. Start 5s escape and have guard capture prisoner; confirm escape cancels.
-14. Complete 5s escape; confirm `game:end` winner prisoners, reason `escape_route`.
+7. Search a wrong desk; confirm the prisoner sees `No hay nada en este escritorio`.
+8. Search desks until clue is found; confirm prisoners see `Servidor N`; guard does not.
+9. Try sabotaging a server without `route1_cutters`; confirm the prisoner sees `Necesitas las pinzas`.
+10. Sabotage wrong server; confirm guard receives only alarm/cue feedback.
+11. Sabotage correct server; confirm ventilation world state changes and vents become usable.
+12. Try opening a vent without wrench; confirm the prisoner sees `Necesitas la llave francesa`.
+13. Start opening with wrench holder; second prisoner joins same vent; confirm progress is faster than solo.
+14. Complete vent open; confirm route checklist marks `Conducto`.
+15. Start 5s escape and have guard capture prisoner; confirm escape cancels.
+16. Complete 5s escape; confirm `game:end` winner prisoners, reason `escape_route`.
 
 ## Unity Scene Setup Required
 

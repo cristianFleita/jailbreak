@@ -64,6 +64,11 @@ namespace Jailbreak.Interactions.Route1
             return IsVentOpen(state, RouteObjectId);
         }
 
+        protected override string UnavailableMessage(EscapeRoute1StatePayload state)
+        {
+            return IsVentOpen(state, RouteObjectId) ? null : "Primero abre el conducto";
+        }
+
         protected override void OnServerStateApplied(EscapeRoute1StatePayload state)
         {
             SetTunnelAvailable(IsVentOpen(state, RouteObjectId));

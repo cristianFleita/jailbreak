@@ -14,6 +14,8 @@ namespace Jailbreak.UI
     [RequireComponent(typeof(UIDocument))]
     public class GameHudController : MonoBehaviour
     {
+        public static GameHudController Instance { get; private set; }
+
         [Header("References")]
         [SerializeField] private UIDocument uiDocument;
 
@@ -27,16 +29,19 @@ namespace Jailbreak.UI
         [SerializeField] private bool disableLegacyTmpInventoryHud = true;
 
         private const string Route1Id = "route1_ventilation";
+        private const float ToastDefaultSeconds = 2.4f;
 
         private VisualElement _root;
         private VisualElement _inventoryPanel;
         private VisualElement _route1Panel;
         private VisualElement _routeChecklist;
         private VisualElement _heldItemIcon;
+        private VisualElement _toastPanel;
         private Label _phaseLabel;
         private Label _timeLabel;
         private Label _roleLabel;
         private Label _heldItemLabel;
+        private Label _toastLabel;
 
         private HudSlot _slot0;
         private HudSlot _slot1;
@@ -56,9 +61,11 @@ namespace Jailbreak.UI
         private float _phaseStartedAtRealtime;
         private string _lastRenderedRole;
         private float _nextSlowRefresh;
+        private float _toastHideAtRealtime;
 
         private void OnEnable()
         {
+            Instance = this;
             if (uiDocument == null) uiDocument = GetComponent<UIDocument>();
             CacheElements();
             BuildMissionRows();
@@ -70,12 +77,14 @@ namespace Jailbreak.UI
         private void OnDisable()
         {
             UnbindSystems();
+            if (Instance == this) Instance = null;
         }
 
         private void Update()
         {
             TryBindSystems();
             RefreshTimer();
+            RefreshToast();
 
             if (Time.unscaledTime < _nextSlowRefresh) return;
             _nextSlowRefresh = Time.unscaledTime + 0.5f;
@@ -100,6 +109,8 @@ namespace Jailbreak.UI
             _routeChecklist = _root.Q<VisualElement>("RouteChecklist");
             _heldItemIcon = _root.Q<VisualElement>("HeldItemIcon");
             _heldItemLabel = _root.Q<Label>("HeldItemLabel");
+            _toastPanel = _root.Q<VisualElement>("HudToast");
+            _toastLabel = _root.Q<Label>("HudToastLabel");
 
             _slot0 = new HudSlot(
                 _root.Q<VisualElement>("InventorySlot0"),
@@ -250,6 +261,28 @@ namespace Jailbreak.UI
             {
                 if (hud != null) hud.enabled = false;
             }
+        }
+
+        public void ShowToast(string message, float seconds = ToastDefaultSeconds)
+        {
+            if (string.IsNullOrWhiteSpace(message)) return;
+            if (_toastPanel == null || _toastLabel == null) CacheElements();
+            if (_toastPanel == null || _toastLabel == null) return;
+
+            _toastLabel.text = message;
+            _toastPanel.style.display = DisplayStyle.Flex;
+            _toastPanel.style.opacity = 1f;
+            _toastHideAtRealtime = Time.realtimeSinceStartup + Mathf.Max(0.5f, seconds);
+        }
+
+        private void RefreshToast()
+        {
+            if (_toastPanel == null) return;
+            if (_toastHideAtRealtime <= 0f) return;
+            if (Time.realtimeSinceStartup < _toastHideAtRealtime) return;
+
+            _toastPanel.style.display = DisplayStyle.None;
+            _toastHideAtRealtime = 0f;
         }
 
         private void RefreshAll()

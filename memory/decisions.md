@@ -444,3 +444,28 @@ User explicitly rejected local model usage for the project and asked not to requ
 
 - Ignore the older AGENTS.md instruction that suggested `ollama run gemma3:4b` for testing/documentation delegation.
 - Keep testing, documentation, and review work inside Codex plus normal local project tools.
+
+---
+
+## ADR-017: Ruta 1 player warnings use the HUD toast layer
+
+**Status**: Implemented
+**Date**: 2026-04-25
+
+### Decision
+
+Short player feedback for Ruta 1 interactions is rendered by `GameHudController.ShowToast(...)`.
+
+- Route interactables do not create their own UI objects.
+- `Route1ProgressInteractable` translates backend rejection messages for missing route tools into player-facing text.
+- Concrete interactables can provide local unavailable messages, such as vent prerequisites.
+- Guard desk clue searches show an empty-desk toast only when the local search completes and the authoritative state still has no clue found.
+
+### Why
+
+The warning layer should be reusable and tied to the existing UI Toolkit HUD. Keeping backend validation authoritative avoids duplicating tool ownership rules on the client.
+
+### Implications
+
+- `GameScene` needs the Phase F `UIDocument`/`GameHudController` setup for warnings to appear.
+- Future route warnings should prefer `ShowRouteFeedback(...)` from route interactables instead of adding scene-specific labels.
