@@ -1,5 +1,138 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8965832056501134969
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6613564583440620140}
+  - component: {fileID: 6569098492490689012}
+  - component: {fileID: 2371885045335656682}
+  - component: {fileID: 5614062759375966613}
+  - component: {fileID: 3621681589870763725}
+  - component: {fileID: 2214673934911723737}
+  m_Layer: 6
+  m_Name: Interact
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!4 &6613564583440620140
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8965832056501134969}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.49991274, y: 0.50008726, z: 0.49991274, w: 0.50008726}
+  m_LocalPosition: {x: -0.00216, y: -0.00996, z: 0.00222}
+  m_LocalScale: {x: 1.4285716, y: 1.4285716, z: 1.4285716}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4510999104883749193}
+  m_LocalEulerAnglesHint: {x: -90, y: 90, z: 90}
+--- !u!135 &6569098492490689012
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8965832056501134969}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.005
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2371885045335656682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8965832056501134969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c447f42c2e7f4f2ca7d001c974060b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProgressAction
+  animatorBoolName: isWorkingTable
+  duration: 25
+  resetOnStop: 0
+  onComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  progress: 0
+--- !u!114 &5614062759375966613
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8965832056501134969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 562f8f9128ac847ae9ca6eca4cc2b2d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorkTableAction
+  actionPoint: {fileID: 6613564583440620140}
+--- !u!114 &3621681589870763725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8965832056501134969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4a6e0a11cce4f4aa8baa6a0d5a1b11a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkInteractable
+  networkId: 
+--- !u!114 &2214673934911723737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8965832056501134969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82508d1c42774398a2bc04e058517d20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Interactions.Route1.VentUnscrewInteractable
+  progressBar: {fileID: 0}
+  progressLabel: Removing
+  startLabel: Remove
+  stopLabel: Stop
+  interactKey: 101
+  priority: 0
+  prisonersOnly: 1
+  activeStateTag: Route1Action
+  routeObjectId: 
+  debugLogs: 0
+  closedVisual: {fileID: 3878049415461809139}
+  openVisual: {fileID: 0}
+  ventAnimator: {fileID: 0}
+  openAnimatorBool: isOpen
+  hideClosedVisualWhenOpen: 1
+  showOpenVisualWhenOpen: 0
+  disableAssignedCollidersWhenOpen: 1
+  collidersToDisableWhenOpen:
+  - {fileID: 6569098492490689012}
 --- !u!1001 &4112051117319132834
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22,15 +155,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4.76
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.77
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -9.55
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
       propertyPath: m_LocalRotation.w
@@ -74,6 +207,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6613564583440620140}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
+--- !u!1 &3878049415461809139 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
+  m_PrefabInstance: {fileID: 4112051117319132834}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &4510999104883749193 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
+  m_PrefabInstance: {fileID: 4112051117319132834}
+  m_PrefabAsset: {fileID: 0}

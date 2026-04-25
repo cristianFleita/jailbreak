@@ -19,7 +19,7 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
     public string holdPointName = "mixamorig:RightHandIndex1";
 
     [Header("Debug")]
-    public bool debugLogs = true;
+    public bool debugLogs = false;
 
     public KeyCode InteractKey => interactKey;
     public string ActionLabel => actionLabel;

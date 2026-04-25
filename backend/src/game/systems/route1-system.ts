@@ -460,6 +460,9 @@ export class Route1System {
       case 'route1.search_clue': {
         if (inter.objectId === r1.correctDeskId) {
           r1.clueFound = true
+          console.log(`[ROUTE1] CLUE_FOUND user=${inter.startedByUserId} desk=${inter.objectId} server=${r1.correctServerId}`)
+        } else {
+          console.log(`[ROUTE1] clue search completed user=${inter.startedByUserId} desk=${inter.objectId} result=empty`)
         }
         // Wrong desk simply finishes silently — prisoners learn nothing,
         // guard hears nothing. No cue intentionally; the clue is a quiet step.
@@ -471,22 +474,27 @@ export class Route1System {
           r1.serverDisabled = true
           result.worldStateChanged = true
           result.cue = { cue: 'server_correct_power_off' }
+          console.log(`[ROUTE1] SERVER_DISABLED user=${inter.startedByUserId} server=${inter.objectId}`)
         } else {
           if (!r1.wrongServerAttempts.includes(inter.objectId)) {
             r1.wrongServerAttempts.push(inter.objectId)
           }
           result.cue = { cue: 'server_wrong_alarm' }
+          console.log(`[ROUTE1] WRONG_SERVER user=${inter.startedByUserId} server=${inter.objectId}`)
         }
         break
       }
 
       case 'route1.open_vent': {
-        if (!r1.openVentIds.includes(inter.objectId)) {
-          r1.openVentIds.push(inter.objectId)
-        }
+        const newlyOpened = !r1.openVentIds.includes(inter.objectId)
+        if (newlyOpened) r1.openVentIds.push(inter.objectId)
+
         r1.ventProgressById[inter.objectId] = 1
-        result.worldStateChanged = true
-        result.cue = { cue: 'vent_opened' }
+        if (newlyOpened) {
+          result.worldStateChanged = true
+          result.cue = { cue: 'vent_opened' }
+          console.log(`[ROUTE1] VENT_OPENED user=${inter.startedByUserId} vent=${inter.objectId} helpers=${inter.helperUserIds.length}`)
+        }
         break
       }
 
@@ -497,6 +505,7 @@ export class Route1System {
         r1.escapingPlayerIds = r1.escapingPlayerIds.filter(
           (u) => u !== inter.startedByUserId
         )
+        console.log(`[ROUTE1] ESCAPED user=${inter.startedByUserId} vent=${inter.objectId}`)
         // Note: do NOT touch player.isAlive — escaped is a win-state, not a
         // catch-state. VictoryConditionSystem ends the game on escapedPlayerIds.length > 0.
         break

@@ -234,7 +234,7 @@ MonoBehaviour:
   interactKey: 101
   allowedInStates: []
   holdPointName: mixamorig:RightHandIndex1
-  debugLogs: 1
+  debugLogs: 0
 --- !u!65 &3891291572345918438
 BoxCollider:
   m_ObjectHideFlags: 0

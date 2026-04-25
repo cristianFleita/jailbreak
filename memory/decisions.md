@@ -310,3 +310,89 @@ Toda la logica de misiones de Ruta 1 vive en `Route1System` (`backend/src/game/s
 - Cambios en inventario que afectan el gate (`find_cutters`, `find_wrench`, `disable_server`, `open_vent`) deben llamar a `notifyInventoryChanged()`. Hoy lo hacen pickup, store, drop por captura, drop por leave y drop por expiracion de reconnect.
 - Las posiciones de cue (`world:cue.position`) hoy van vacias; cuando Unity registre props en el backend (futuro) se podra rellenar.
 - 36 tests nuevos en `__tests__/route1-system.test.ts` cubren AC-5..AC-13. AC-1..AC-4 ya estaban cubiertos por route-selector.test.ts y spawn-areas.test.ts.
+
+---
+
+## ADR-012: Ruta 1 Fase E — Unity route interactables autoritativos
+
+**Status**: Implemented
+**Date**: 2026-04-24
+
+### Decision
+
+Unity implementa las interacciones de Ruta 1 con una base comun `Route1ProgressInteractable` y cuatro componentes concretos: `GuardDeskClueInteractable`, `ServerSabotageInteractable`, `VentUnscrewInteractable` y `VentEscapeInteractable`.
+
+- El cliente envia solo intencion por `player:interact` usando los action IDs de backend (`route1.*.start/stop`).
+- La barra uGUI se hidrata desde `escape:route1:state.activeInteractions[].progress`; para conductos, el inicio local arranca desde `ventProgress`.
+- El feedback local no decide desk correcto, server correcto ni gates de inventario; si backend rechaza, `game:error` cancela la animacion/barra local.
+- El mismo action ID se re-emite por `player:action` para que `RemoteInteractionHandler` pueda reproducir start/stop de animacion en avatares remotos.
+- `Route1WorldStateController` escucha `world:state` / `world:cue` para ventilacion apagada, vent visual abierto y audio/logs de alarmas.
+- `Route1SceneSetup` crea anchors runtime de fallback con IDs canonicos (`guard_desk_1..4`, `server_1..12`, `vent_1..3`) si la escena aun no tiene `NetworkInteractable` authored para esos IDs.
+- Los spawn areas existentes de `GameScene` mantienen sus posiciones, pero sus `spawnAreaId` fueron desduplicados.
+
+### Why
+
+Mantiene el contrato de autoridad de Phase D: Unity no resuelve progreso ni resultado, solo muestra feedback inmediato y sincroniza contra snapshots de backend. La base comun reduce drift entre los cuatro tipos de interaccion y permite que la escena actual sea jugable aunque los props definitivos aun no esten authored a mano.
+
+### Implications
+
+- Los placeholders runtime son una red de seguridad para el jam; cuando level design coloque props definitivos, basta con agregar `NetworkInteractable.networkId` + el interactable correspondiente y `Route1SceneSetup` saltara ese ID.
+- Las barras siguen siendo uGUI y usan el `ProgressBar` existente; Phase F puede construir HUD UI Toolkit sin tocar estos prompts/progress bars.
+- El guardia sigue sin recibir `escape:route1:state`; su feedback visible/audible llega solo por `world:cue` y `world:state`.
+
+---
+
+## ADR-013: Ruta 1 Fase E — logging and authored visual defaults
+
+**Status**: Implemented
+**Date**: 2026-04-24
+
+### Decision
+
+- Route 1 completion milestones log on the backend with `[ROUTE1]` tags: clue found, wrong desk complete, correct server disabled, wrong server alarm, vent opened, and escape.
+- Route 1 accepted start/stop interactions also log from `event-handlers.ts`; rejected actions keep warning output and return immediately.
+- Movement receive/spawn-grace logs are gated behind `DEBUG_MOVEMENT=1`.
+- Unity Route 1 debug logs stay opt-in (`debugLogs = false`), route item pickup debug logs default to false, `InteractionManager.debugDetection` defaults to false, and the per-frame `ProgressAction` animator log was removed.
+- `Route1SceneSetup.createDebugVisuals` defaults to false. Runtime fallback anchors remain collider-only unless explicitly enabled for debugging.
+- Vent visual code keeps the visual active if `closedVisual` and `openVisual` accidentally reference the same GameObject; authored prefabs should still use separate closed/open visuals when available.
+
+### Why
+
+Playtests need backend signal for Route 1 progress without burying it under movement and progress-bar spam. Runtime fallback anchors are useful for QA but should never create visible blocks in the actual scene unless a developer intentionally enables debug geometry.
+
+### Implications
+
+- To inspect low-level movement, start the backend with `DEBUG_MOVEMENT=1`.
+- If level design needs visible fallback route anchors temporarily, enable `Route1SceneSetup.createDebugVisuals` in the scene, then disable it before playtest builds.
+- Vent prefabs can safely ship with only a closed visual while the open mesh/animation is still being authored.
+
+---
+
+## ADR-014: Ruta 1 Fase E — separate grille and tunnel interactables
+
+**Status**: Implemented
+**Date**: 2026-04-24
+
+### Decision
+
+Vent opening and vent escape are authored as separate Unity interactables.
+
+- `VentilationGrille.prefab` owns only `VentUnscrewInteractable`; it no longer carries `VentEscapeInteractable`.
+- When a vent opens, `VentUnscrewInteractable` hides the closed grille visual and can disable assigned grille colliders. No open-grille animation or open visual is required.
+- `VentEscapeInteractable` can be placed on a separate conduct/tunnel prefab. It can keep its own visual/colliders hidden until the backend reports that the matching vent id is open.
+- `VentEscapeInteractable` listens to both prisoner route snapshots and public `world:state.openVentIds`, so tunnel visibility does not depend on receiving the private route payload at the exact moment the vent opens.
+- If `VentEscapeInteractable.tunnelVisual` points at the same root GameObject as the script, it hides the renderers instead of disabling the root. The listener GameObject must stay active so it can receive the later route state update.
+- `Route1ProgressInteractable` now supports `routeObjectId`: the Unity `NetworkInteractable.networkId` can be unique for remote visual replay (for example `vent_1_escape`), while backend route actions still target the canonical object id (`vent_1`).
+- `RemoteInteractionHandler` chooses the route handler that supports the incoming action, which keeps remote replay correct when multiple route components exist near the same route id.
+- Backend vent-open completion is idempotent for cues/logs: once a vent is already in `openVentIds`, repeated completion paths keep progress saved but do not re-emit `VENT_OPENED`.
+
+### Why
+
+The grille is an obstacle-removal object, while the conduct tunnel is the actual escape entry. Splitting them lets each prefab own its own progress bar, collider size, prompt, and visuals without fighting over a single `NetworkInteractable` registry id.
+
+### Implications
+
+- Conduct/tunnel prefabs should stay active in the scene; hide their visual/collider via `VentEscapeInteractable` fields instead of disabling the whole GameObject.
+- For a tunnel associated with `vent_1`, use a unique visual/network id such as `vent_1_escape` and set `routeObjectId = vent_1`.
+- The grille scene instance can keep `NetworkInteractable.networkId = vent_1` and leave `routeObjectId` empty.
+- `Conduct.prefab` defaults to `networkId = vent_1_escape`, `routeObjectId = vent_1`, and disables both its body collider and trigger collider until `vent_1` is open.

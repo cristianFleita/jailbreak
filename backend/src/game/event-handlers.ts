@@ -57,6 +57,7 @@ export interface PlayerMoveContext {
  * - Clients apply rubber-band correction when they receive `player:state`
  */
 let moveLogCounter = 0
+const DEBUG_MOVEMENT_LOGS = process.env.DEBUG_MOVEMENT === '1'
 
 // Track last move timestamp and move count per player
 const lastMoveTimestamp = new Map<string, number>()
@@ -69,7 +70,7 @@ export function handlePlayerMove(context: PlayerMoveContext): void {
   const { io, roomId, room, socketId, payload } = context
 
   moveLogCounter++
-  if (moveLogCounter % 20 === 1) {
+  if (DEBUG_MOVEMENT_LOGS && moveLogCounter % 20 === 1) {
     console.log(`[MOVE] RECV #${moveLogCounter} from=${socketId} payloadId=${payload.playerId} pos=(${payload.position?.x?.toFixed(2)}, ${payload.position?.y?.toFixed(2)}, ${payload.position?.z?.toFixed(2)}) state=${payload.movementState}`)
   }
 
@@ -96,7 +97,9 @@ export function handlePlayerMove(context: PlayerMoveContext): void {
   // Skip speed validation for the first N moves (spawn grace period)
   // Client may need a few frames to stabilize after teleport
   if (moveNum <= SPAWN_GRACE_MOVES) {
-    console.log(`[MOVE] ${socketId} spawn grace move #${moveNum} accepted pos=(${payload.position?.x?.toFixed(2)},${payload.position?.y?.toFixed(2)},${payload.position?.z?.toFixed(2)})`)
+    if (DEBUG_MOVEMENT_LOGS) {
+      console.log(`[MOVE] ${socketId} spawn grace move #${moveNum} accepted pos=(${payload.position?.x?.toFixed(2)},${payload.position?.y?.toFixed(2)},${payload.position?.z?.toFixed(2)})`)
+    }
   } else {
     // Movement validation with real time delta
     const moveCheck = validatePlayerMovement(
@@ -374,7 +377,10 @@ function handleRoute1Action(
   if (!result.ok) {
     console.warn(`[ROUTE1] ${player.userId} ${action} on ${objectId} rejected: ${result.reason}`)
     io.to(socketId).emit('game:error', { message: result.reason })
+    return
   }
+
+  console.log(`[ROUTE1] ${player.userId} ${action} ${objectId}`)
 }
 
 function handleRouteItemStore(

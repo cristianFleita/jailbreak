@@ -245,4 +245,4 @@ MonoBehaviour:
   interactKey: 101
   allowedInStates: []
   holdPointName: mixamorig:RightHandIndex1
-  debugLogs: 1
+  debugLogs: 0

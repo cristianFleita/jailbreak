@@ -1,4 +1,5 @@
 using Jailbreak.Network;
+using Jailbreak.Interactions.Route1;
 using UnityEngine;
 
 namespace Jailbreak.Player
@@ -99,6 +100,15 @@ namespace Jailbreak.Player
             {
                 worktable.ApplyRemote(transform, data.action);
                 Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
+                return;
+            }
+
+            // ── Route 1 mission interactions ────────────────────────────────
+            var route1Handlers = ni.GetComponents<Route1ProgressInteractable>();
+            foreach (var route1 in route1Handlers)
+            {
+                if (route1 == null || !route1.HandlesRemoteAction(data.action)) continue;
+                route1.ApplyRemote(transform, data.action);
                 return;
             }
 

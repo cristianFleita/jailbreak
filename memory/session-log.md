@@ -134,3 +134,36 @@
   - Fixed networked route tools falling from the hand after pickup by keeping held pickables in a dedicated held physics state.
   - `PickableItem.SetHeldVisible()` now enables renderers, disables colliders, zeroes dynamic velocity, sets `isKinematic = true`, keeps gravity checked, and freezes rotation while held.
   - `NetworkRoutePickable.ApplyLocalHeld()` no longer calls world visibility for held tools, preventing `SetWorldVisible(true)` from turning the Rigidbody dynamic after backend `item:state` refreshes.
+- **Unity Specialist + Network Programmer — Ruta 1 Phase E implementation**:
+  - Added Route 1 mission interactables for guard desks, servers, vent opening, and vent escape under `Assets/Scripts/Interactions/Route1`.
+  - `Route1ProgressInteractable` sends backend `player:interact` start/stop actions, renders uGUI progress from `escape:route1:state`, cancels on backend error/capture/state removal, and broadcasts animation start/stop for remote replay.
+  - Added `Route1WorldStateController` for public ventilation/vent visual state plus guard-facing cue audio hooks.
+  - Added `Route1SceneSetup` runtime fallback anchors for canonical scene IDs `guard_desk_1..4`, `server_1..12`, and `vent_1..3` when authored scene objects are missing.
+  - Wired `RemoteInteractionHandler` to replay Route 1 interaction animations on remote avatars.
+  - Made existing GameScene route spawn area IDs unique: `workshop_wrench_slot_1/2` and `laundry_cutters_slot_1/2`.
+  - Verified Unity C# via `msbuild unity/JAILBREAK/Assembly-CSharp.csproj`: build succeeded with existing warnings only.
+  - Recorded ADR-012 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Ruta 1 Phase E log/visual cleanup**:
+  - Added backend `[ROUTE1]` logs for accepted route interactions plus completion milestones: clue found, server disabled, wrong server, vent opened, and escaped.
+  - Gated noisy backend movement logs behind `DEBUG_MOVEMENT=1`.
+  - Removed Unity progress-bar frame spam and disabled default debug logging on interaction detection, route item pickup, route item prefabs, route world state, and route scene setup.
+  - Disabled Route1SceneSetup debug geometry by default so fallback anchors no longer render visible blocks over desks/worktables.
+  - Guarded vent visual toggling when closed/open visuals point at the same GameObject so `VentilationGrille.prefab` no longer disappears before the open visual is authored.
+  - Verified backend TypeScript with bundled Node, Route1 backend tests (`36/36`), and Unity C# via `msbuild` with existing warnings only.
+  - Recorded ADR-013 in `memory/decisions.md`.
+- **Unity Specialist — Ruta 1 grille/tunnel split**:
+  - Updated `Route1ProgressInteractable` with `routeObjectId` so a tunnel prefab can use a unique `NetworkInteractable.networkId` for remote replay while sending canonical vent ids to the backend.
+  - Updated `VentUnscrewInteractable` to hide the closed grille visual and disable assigned grille colliders once the backend reports that the vent is open.
+  - Updated `VentEscapeInteractable` so separate conduct/tunnel prefabs can hide their visual and assigned colliders until their `routeObjectId` appears in `openVentIds`.
+  - Removed `VentEscapeInteractable` from `VentilationGrille.prefab`; the grille now owns only the 25s unscrew/open interaction.
+  - Updated remote route replay to choose the route component matching the broadcast action.
+  - Verified Unity C# via `msbuild unity/JAILBREAK/Assembly-CSharp.csproj`: build succeeded with existing warnings only.
+  - Recorded ADR-014 in `memory/decisions.md`.
+- **Unity Specialist — Conduct prefab activation fix**:
+  - Fixed `VentEscapeInteractable` so a `tunnelVisual` assigned to the script's own root hides renderers instead of disabling the GameObject that must receive route state updates.
+  - Updated `Conduct.prefab` defaults to `networkId = vent_1_escape`, `routeObjectId = vent_1`, and disabled both body/trigger colliders until the matching vent is open.
+  - Verified Unity C# via `msbuild unity/JAILBREAK/Assembly-CSharp.csproj`: build succeeded with existing warnings only.
+- **Unity/Backend Specialist — Conduct world-state robustness**:
+  - Made `VentEscapeInteractable` also subscribe to public `world:state` and cached world state so conduct visibility/colliders follow `openVentIds` directly.
+  - Made backend `open_vent` completion idempotent for world cue/log emission if a duplicated completion reaches an already-open vent.
+  - Verified backend TypeScript and `route1-system.test.ts` (`36/36`), plus Unity C# via `msbuild` with existing warnings only.

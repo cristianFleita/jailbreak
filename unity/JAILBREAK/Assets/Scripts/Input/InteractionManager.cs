@@ -22,7 +22,7 @@ public class InteractionManager : MonoBehaviour
 
     [Header("Debug")]
     [Tooltip("Logs interactable detection, candidate skips, and final selection. Disable once pickup setup is verified.")]
-    public bool debugDetection = true;
+    public bool debugDetection = false;
     public float debugLogInterval = 0.75f;
 
     /// <summary>Raised after a local interaction fires (already executed).</summary>
