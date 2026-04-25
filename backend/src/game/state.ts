@@ -47,29 +47,33 @@ export function createGameRoomState(roomId: string, hostUserId: string, config: 
 // Row A (left side, facing +X):  Z from ~2 to ~38, X = -5
 // Row B (right side, facing -X): Z from ~2 to ~38, X = +5
 const CELL_DOOR_SPAWNS: { id: string; position: Vector3 }[] = [
-  // Row A — 
-  { id: 'cell_door_exit_01', position: { x: 1.78, y: 0, z:  7.96 } },
-  { id: 'cell_door_exit_02', position: { x: 1.78, y: 0, z:  3.597 } },
-  { id: 'cell_door_exit_03', position: { x: 1.78, y: 0, z: -0.26 } },
-  { id: 'cell_door_exit_04', position: { x: 1.78, y: 0, z: -4.1 } },
-  { id: 'cell_door_exit_05', position: { x: 1.78, y: 0, z: -8.48 } },
-  // Row B — 1st floor
-  { id: 'cell_door_exit_06', position: { x: -5.974, y: 3.193, z: -6.155 } },
-  { id: 'cell_door_exit_07', position: { x: -5.974, y: 3.193, z: -1.826 } },
-  { id: 'cell_door_exit_08', position: { x: -5.974, y: 3.193, z: 2.276 } },
-  { id: 'cell_door_exit_09', position: { x: -6.832, y: 3.193, z: 6.718 } },
-  { id: 'cell_door_exit_10', position: { x: -3.499, y: 3.193, z: 6.718 } },
-  { id: 'cell_door_exit_11', position: { x:  -0.264, y: 3.193, z:  6.718 } },
-  { id: 'cell_door_exit_12', position: { x:  2.986, y: 3.193, z:  6.718 } },
-  { id: 'cell_door_exit_13', position: { x:  2.236, y: 3.193, z: 1.973 } },
-  { id: 'cell_door_exit_14', position: { x:  2.236, y: 3.193, z: -2.031 } },
-  { id: 'cell_door_exit_15', position: { x:  2.236, y: 3.193, z: -6.395 } },
-  // Row A — 
-  { id: 'cell_door_exit_16', position: { x:  -6.065, y: 0, z: 8.237 } },
-  { id: 'cell_door_exit_17', position: { x:  -6.065, y: 0, z: 4.166 } },
-  { id: 'cell_door_exit_18', position: { x:  -6.065, y: 0, z: -0.15 } },
-  { id: 'cell_door_exit_19', position: { x:  -6.065, y: 0, z: -3.837 } },
-  { id: 'cell_door_exit_20', position: { x:  -6.065, y: 0, z: -8.054 } },
+  // Row A 
+  { id: 'cell_door_exit_01', position: { x: 2.681, y: 0, z: 7.125 } },
+  { id: 'cell_door_exit_02', position: { x: 2.681, y: 0, z: 4.73 } },
+  { id: 'cell_door_exit_03', position: { x: 2.681, y: 0, z: 1.146 } },
+  { id: 'cell_door_exit_04', position: { x: 2.681, y: 0, z: -3.006 } },
+  { id: 'cell_door_exit_05', position: { x: 2.681, y: 0, z: -7.4 } },
+
+  // Row B
+  { id: 'cell_door_exit_06', position: { x: -6.641, y: 0, z: -7.424 } },
+  { id: 'cell_door_exit_07', position: { x: -6.641, y: 0, z: -4.852 } },
+  { id: 'cell_door_exit_08', position: { x: -6.641, y: 0, z: -0.573 } },
+  { id: 'cell_door_exit_09', position: { x: -6.641, y: 0, z: 2.219 } },
+  { id: 'cell_door_exit_10', position: { x: -6.641, y: 0, z: 6.103 } },
+
+  // Row C - Second floor
+  { id: 'cell_door_exit_11', position: { x: 3.14, y: 3.193, z: 6.976 } },
+  { id: 'cell_door_exit_12', position: { x: 3.14, y: 3.193, z: 4.506 } },
+  { id: 'cell_door_exit_13', position: { x: 3.14, y: 3.193, z: 0.167 } },
+  { id: 'cell_door_exit_14', position: { x: 3.14, y: 3.193, z: -3.243 } },
+  { id: 'cell_door_exit_15', position: { x: 3.14, y: 3.193, z: -6.513 } },
+
+  // Row D - Second floor
+  { id: 'cell_door_exit_16', position: { x: -6.773, y: 3.193, z: -7.254 } },
+  { id: 'cell_door_exit_17', position: { x: -6.773, y: 3.193, z: -4.921 } },
+  { id: 'cell_door_exit_18', position: { x: -6.773, y: 3.193, z: -0.925 } },
+  { id: 'cell_door_exit_19', position: { x: -6.773, y: 3.193, z: 2.618 } },
+  { id: 'cell_door_exit_20', position: { x: -6.773, y: 3.193, z: 6.591 } },
 ]
 
 // Guard spawns at a dedicated position (guard post / center of map)
@@ -97,7 +101,7 @@ export function addPlayer(
     id: userId,
     userId,
     role: 'prisoner', // placeholder — reassigned on game start
-    position: { x:  0, y: 0, z: 0 },
+    position: { x: 0, y: 0, z: 0 },
     rotation: { x: 0, y: 0, z: 0, w: 1 },
     velocity: { x: 0, y: 0, z: 0 },
     movementState: 'idle',
@@ -218,7 +222,7 @@ export function spawnNPCs(state: GameRoomState, _config: GameConfig): void {
   console.log(`[NPC] Spawning ${npcCount} NPCs (${playerCount} players, ${playerCount - 1} prisoner players)`)
 
   for (let i = 0; i < npcCount; i++) {
-    const npcId     = `npc_prisoner_${String(i).padStart(3, '0')}`
+    const npcId = `npc_prisoner_${String(i).padStart(3, '0')}`
     const spawnSlot = availableSlots[i % availableSlots.length]
 
     const npc: NPCState = {
