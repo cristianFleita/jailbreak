@@ -1,7 +1,7 @@
 # JAILBREAK — Game Design Document
 
-**Version:** 1.5
-**Fecha:** 24 de abril de 2026
+**Version:** 1.6
+**Fecha:** 26 de abril de 2026
 **Plataforma:** PC (Unity WebGL)
 **Jugadores:** 2–4 online
 **Motor:** Unity 6 LTS
@@ -176,12 +176,12 @@ La jornada es el "reloj" de la partida. Cada fase dura un tiempo real fijo y ocu
 | 1 | Inicio | 06:00 | 30 seg | — | — | Celdas → Comedor | Spawn en celda, saludos, charlas, migran hacia comedor |
 | 2 | Desayuno | 06:30 | 90 seg | 10 seg | Silbato 10s antes | Comedor | Agarrar comida → sentarse a comer → tirar bandeja |
 | 3 | Trabajo (1er turno) | 08:00 | 90 seg | 10 seg | Silbato 10s antes | Taller / Lavandería | Bancos de trabajo, cargar cajas, lavar ropa |
-| 4 | Hora libre | 09:30 | 120 seg | 10 seg | Silbato 10s antes | Patio / Comedor / Lavandería / Celdas | Libre: ejercicio, cartas, charlar, leer o descansar sentado en celda. NPCs cambian de sub-zona |
+| 4 | Hora libre | 09:30 | 120 seg | 10 seg | Silbato 10s antes | Patio / Cocina / Lavandería / Celdas | NPCs eligen sub-zona: patio simplificado, idle/sleep en celda, trabajo en lavandería o quedarse en cocina |
 | 5 | Almuerzo | 11:30 | 90 seg | 10 seg | Silbato 10s antes | Comedor | Mismo flujo que Desayuno |
 | 6 | Trabajo (2do turno) | 13:00 | 120 seg | 10 seg | Silbato 10s antes | Taller / Lavandería | Mismo pool que Trabajo 1er turno |
-| 7 | Hora libre | 15:00 | 90 seg | 10 seg | Silbato 10s antes | Patio / Comedor / Lavandería / Celdas | Mismo pool que Hora libre (Fase 4) |
+| 7 | Hora libre | 15:00 | 90 seg | 10 seg | Silbato 10s antes | Patio / Cocina / Lavandería / Celdas | Mismo pool multi-zona que Hora libre (Fase 4) |
 | 8 | Cena | 16:30 | 90 seg | 10 seg | Silbato 10s antes | Comedor | Mismo flujo que Desayuno |
-| 9 | Encierro / Recuento final | 18:00 → 00:00 | 90 seg | 10 seg | Silbato 10s antes | Celdas | Vuelven a su celda, se acomodan en el catre y quedan visibles desde el pasillo para el recuento |
+| 9 | Encierro / Recuento final | 18:00 → 00:00 | 90 seg | 10 seg | Silbato 10s antes | Celdas | Backend asigna `cell_area_01..08`, `seed` y acción `cell_stand_idle` o `cell_sleep`; Unity implementará cama después |
 
 **Desglose de tiempos:**
 
@@ -200,7 +200,10 @@ La jornada es el "reloj" de la partida. Cada fase dura un tiempo real fijo y ocu
 **Fase 9 — Encierro / Recuento final:**
 - Las celdas tienen el frente abierto con barrotes o puerta abierta, de modo que el guardia puede leer cada catre desde el pasillo central y la pasarela del piso 2.
 - La fase no busca stealth puro en oscuridad: busca una última lectura social bajo presión, con siluetas visibles y poco tiempo.
-- Los NPCs se acomodan brevemente y luego quedan quietos. El guardia gana si nadie escapó antes de las 00:00; los presos pueden usar esta ventana para cerrar rutas que dependan de la celda.
+- En la implementación actual, el backend puede enviar `cell_stand_idle` o `cell_sleep` con `cell_area_01..08` y `seed`. Unity resuelve `cell_stand_idle` como punto libre dentro del área; el resolver de cama para `cell_sleep` queda para una iteración posterior.
+- Hay 8 celdas físicas: 4 abajo y 4 en primer piso. La capacidad de camas es `2,3,2,3` por piso, para 10 camas abajo y 10 arriba.
+- La acción `cell_sleep` ya viaja por red; acostarse visualmente en la cama queda diferido para una iteración posterior.
+- El guardia gana si nadie escapó antes de las 00:00; los presos pueden usar esta ventana para cerrar rutas que dependan de la celda.
 
 ### 4.2 Comportamiento Sospechoso (Qué Detecta el Guardia)
 
@@ -220,7 +223,7 @@ La jornada es el "reloj" de la partida. Cada fase dura un tiempo real fijo y ocu
 - El **silbato** suena al inicio de los 10 seg de transición (audio global).
 - Los presos deben llegar a la zona correcta antes de que termine la transición de 10 seg.
 - Si un preso no está en la zona correcta al finalizar la transición, genera una alerta visual para el guardia: **"Alguien no está en su zona"** (sin identidad).
-- **Hora libre (Fases 4 y 7):** Los NPCs pueden cambiar de sub-zona durante toda la fase (no solo al inicio), lo que genera tráfico orgánico que camufla los movimientos de los jugadores reales.
+- **Hora libre (Fases 4 y 7):** Los NPCs pueden ir a patio, cocina, lavandería o celdas. En reassign pueden cambiar de sub-zona, generando tráfico orgánico entre áreas.
 
 #### 4.3.1 Movimiento Orgánico post-silbato (Anti-NPC-Tell)
 
@@ -238,7 +241,7 @@ Además, el ~40% de los NPCs toma un **desvío por pasillo** antes de llegar a s
 1. El jugador preso que tarda en reaccionar al silbato queda camuflado entre los rezagados
 2. El guardia no puede usar "nadie se mueve todavía" como señal de que alguien es jugador
 3. El tráfico continuo de NPCs por pasillos crea ruido visual persistente entre zonas
-4. Durante Hora libre (fases 4 y 7), los NPCs también cambian de sub-zona libremente (~25% en cada reassign), creando cruce de zonas que confunde la búsqueda del guardia
+4. Durante Hora libre (fases 4 y 7), los NPCs pueden cambiar entre patio, cocina, lavandería y celdas; el patio usa puntos determinísticos por seed y animaciones simples
 
 ---
 
@@ -423,7 +426,7 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 ┌──────────────────┬───────────────────────────────┬──────────────┐
 │                  │                               │              │
 │  OFICINA DEL     │     BLOQUE DE CELDAS          │   TALLER     │
-│  GUARDIA         │     (2 pisos, 20 celdas)      │              │
+│  GUARDIA         │     (2 pisos, 8 celdas)       │              │
 │  (cámaras,       │     Pasillo central           │  (herram.,   │
 │   archivos)      │                               │   ventilac.) │
 │                  │                               │              │
@@ -457,9 +460,9 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 ### 8.2 Zonas Detalladas
 
 #### Bloque de Celdas
-- **Estructura:** 2 pisos, 10 celdas por piso, pasillo central con barandilla en el piso 2. Las celdas tienen frente de barrotes o puerta abierta; el catre queda visible desde el pasillo.
+- **Estructura:** 2 pisos, 4 celdas por piso, pasillo central con barandilla en el piso 2. Las celdas tienen frente de barrotes o puerta abierta; el catre queda visible desde el pasillo.
 - **Objetos interactuables:** Catre, inodoro, almohada y reja de celda quedan como props/interacciones de rutina. Usos de rutas futuras quedan TODO.
-- **Puntos de interés:** Cada celda tiene un NPC asignado. Los presos jugadores tienen celdas específicas. Durante el recuento final, el guardia puede leer la ocupación de cada catre desde el pasillo.
+- **Puntos de interés:** Cada celda tiene un área lógica `cell_area_01..08`. Hay 4 celdas abajo y 4 en primer piso; las capacidades por piso son `2,3,2,3` camas, para 20 camas totales. En Hora libre y Encierro, el backend puede asignar celda para `cell_stand_idle` o `cell_sleep`. Unity busca un punto libre para idle; la resolución de cama para `cell_sleep` queda para la siguiente iteración.
 - **Iluminación:** Fluorescente de día. En el recuento final baja la intensidad del pasillo y se mantiene una luz tenue dentro de cada celda para leer siluetas.
 
 #### Comedor
@@ -479,8 +482,8 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 
 #### Patio Exterior
 - **Estructura:** Espacio abierto, muro perimetral alto, torre de vigilancia (decorativa), esquina NE sin cámara.
-- **Objetos interactuables:** Props de rutina y posibles molestias. Rutas futuras quedan TODO.
-- **Punto de interés:** Zona más amplia, difícil para el guardia cubrir todo.
+- **Objetos interactuables:** Props ambientales y posibles molestias. La rutina NPC de Hora libre usa áreas de patio por `zoneId` y `seed`, sin coordenadas backend, como una de varias sub-zonas posibles.
+- **Punto de interés:** Zona más amplia, difícil para el guardia cubrir todo. Zonas requeridas en Unity: `yard`, `yard_benches`, `yard_exercise`.
 
 #### Oficina del Guardia
 - **Estructura:** Zona de alto riesgo en la esquina noroeste. Escritorio, archivadores, monitores de cámaras.

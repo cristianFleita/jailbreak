@@ -470,3 +470,106 @@ The warning layer should be reusable and tied to the existing UI Toolkit HUD. Ke
 
 - `GameScene` needs the Phase F `UIDocument`/`GameHudController` setup for warnings to appear.
 - Future route warnings should prefer `ShowRouteFeedback(...)` from route interactables instead of adding scene-specific labels.
+
+---
+
+## ADR-018: Hora libre y encierro usan solo rutina de celda
+
+**Status**: Superseded by ADR-019, then ADR-021 for current implementation
+**Date**: 2026-04-25
+
+### Decision
+
+Fases 4, 7 y 9 usan un pool único de celda para NPCs:
+
+- `cell_stand_idle`: el NPC permanece parado dentro de una celda.
+- `cell_sleep`: el NPC duerme en la cama/catre de una celda.
+- El backend asigna `cellAreaId` (`cell_area_01..20`) y la acción, pero no coordenadas ni waypoints exactos.
+- Unity resuelve localmente el destino con `CellAreaRegistry`: cama para dormir, `standing_spot` disponible para estar parado.
+- Patio, comedor y lavandería quedan fuera de la rutina NPC de Hora libre en el MVP; sus waypoints de patio quedan como referencia post-MVP.
+
+### Why
+
+El comportamiento de Hora libre y Encierro debe ser simple, legible y consistente con el bloque de celdas. Pasar de waypoints exactos a áreas por celda permite que backend conserve autoridad de intención sin acoplarse al layout fino de Unity.
+
+### Implications
+
+- `phase:start` y `npc:reassign` para fases 4, 7 y 9 deben incluir `cellAreaId` y `cellTargetKind` en lugar de `waypointId`.
+- Unity debe configurar 20 `cell_area_XX` con `bedAnchor` y al menos un `standingSpot`.
+- Tests de rutina deben validar que esas fases solo emiten `cell_stand_idle` o `cell_sleep`.
+- Documentación actualizada en `design/GDD.md` y `design/gdd/rutina-fases-npc.md`.
+
+## ADR-019: Hora libre usa patio seed-driven y Encierro usa idle de celda
+
+**Status**: Superseded by ADR-021
+**Date**: 2026-04-25
+
+### Decision
+
+Implementar el primer corte de rutina NPC con estas reglas:
+
+- Hora libre usa solo acciones simples de patio. El backend emite `zoneId`, `seed`, `animTrigger` y duración por NPC.
+- Las zonas Unity requeridas para patio son `yard`, `yard_benches` y `yard_exercise`.
+- Encierro usa solo `cell_stand_idle`. El backend asigna una zona de celda estable `cell_area_01..08`, más `seed` e `idle`.
+- Las zonas Unity requeridas para celdas son `cell_area_01` hasta `cell_area_08`.
+- Acostarse/dormir en cama queda diferido para una iteración posterior.
+
+### Why
+
+La implementación actual aprovecha el contrato ya existente `zoneId + seed`, mantiene al backend como autoridad de intención y deja a Unity resolver puntos exactos por `ZoneRegistry`. Esto evita crear ahora un registry especializado de camas antes de necesitar la interacción de acostarse.
+
+### Implications
+
+- `ZoneRegistry` debe tener las 11 zonas requeridas y avisar en runtime si falta alguna.
+- Los tests de rutina validan que Hora libre no emite `actionSequence` ni social pairing, y que Encierro solo emite `cell_stand_idle`.
+- ADR-018 queda como diseño descartado para Hora libre; su parte de celda se conserva solo como futuro para `cell_sleep`.
+
+## ADR-020: Ocho áreas de celda con veinte camas
+
+**Status**: Implemented
+**Date**: 2026-04-26
+
+### Decision
+
+El bloque de celdas se modela como 8 áreas físicas, no 20 celdas individuales:
+
+- Planta baja: `cell_area_01..04`, con capacidades `2,3,2,3` camas.
+- Primer piso: `cell_area_05..08`, con capacidades `2,3,2,3` camas.
+- Total: 10 camas abajo + 10 camas arriba = 20 camas.
+- El backend asigna NPCs a `cell_area_01..08` respetando esas capacidades.
+
+### Why
+
+La escena real tiene 8 celdas grandes compartidas. Modelar 20 áreas falsas acoplaría backend y Unity a una geometría inexistente, y haría más difícil implementar después camas múltiples por celda.
+
+### Implications
+
+- `ZoneRegistry` debe requerir `cell_area_01..08` para Hora libre y Encierro.
+- Los tests de rutina validan capacidad por celda, no unicidad de celda por NPC.
+- Cuando se implemente dormir/acostarse, Unity resolverá una cama disponible dentro de la celda asignada.
+
+## ADR-021: Hora libre multi-zona con patio simplificado y sleep en celdas
+
+**Status**: Implemented
+**Date**: 2026-04-26
+
+### Decision
+
+Hora libre vuelve a ser una fase multi-zona. Los NPCs pueden ir a:
+
+- Patio, usando solo `yard_idle`, `yard_bench_idle`, `yard_exercise`, `yard_shadow_box`, `yard_lean_wall`.
+- Celdas, usando `cell_stand_idle` o `cell_sleep` con `cell_area_01..08`.
+- Lavandería, usando el flujo secuencial de ropa personal.
+- Cocina/comedor, usando `free_cafe_sit_talk`, `free_cafe_sit_idle`, `free_cafe_stand_chat`.
+
+Encierro también puede emitir `cell_stand_idle` o `cell_sleep`. `cell_sleep` ya viaja por red con `animTrigger = sleep`; Unity resolverá la cama/catre en una iteración posterior.
+
+### Why
+
+Hora libre debe mantener variedad y tráfico orgánico entre zonas. El cambio real es simplificar el patio a acciones seed-driven por zona, no eliminar cocina, lavandería ni celdas.
+
+### Implications
+
+- El backend mantiene `SUBZONE_CHANGE_PROB = 0.25` para que los NPCs puedan cambiar de sub-zona durante Hora libre.
+- Unity debe configurar los nuevos `ZoneRegistry` entries de patio y las 8 áreas de celda: `yard`, `yard_benches`, `yard_exercise`, `cell_area_01..08`.
+- Los tests de rutina validan que Hora libre cubre las cuatro sub-zonas y que Encierro puede emitir sleep.

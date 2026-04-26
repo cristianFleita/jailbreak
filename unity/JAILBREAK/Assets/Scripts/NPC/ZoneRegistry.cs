@@ -7,9 +7,29 @@ namespace Jailbreak.NPC
     /// Replaces the old WaypointRegistry.
     /// Maps zone ID strings (e.g., "cafeteria", "yard_benches") to physical BoxCollider bounds.
     /// Provides deterministic random point generation inside those bounds using a seed.
+    ///
+    /// New zone-area IDs that must be configured for the current free-time/lockdown routine:
+    /// - Yard free time: yard, yard_benches, yard_exercise
+    /// - Free-time/lockdown cells: cell_area_01 through cell_area_08
+    ///   Ground floor capacities: 2, 3, 2, 3 beds. First floor capacities: 2, 3, 2, 3 beds.
     /// </summary>
     public class ZoneRegistry : MonoBehaviour
     {
+        public static readonly string[] RequiredRoutineZoneIds =
+        {
+            "yard",
+            "yard_benches",
+            "yard_exercise",
+            "cell_area_01",
+            "cell_area_02",
+            "cell_area_03",
+            "cell_area_04",
+            "cell_area_05",
+            "cell_area_06",
+            "cell_area_07",
+            "cell_area_08",
+        };
+
         [System.Serializable]
         public class ZoneEntry
         {
@@ -18,6 +38,7 @@ namespace Jailbreak.NPC
         }
 
         [SerializeField] private List<ZoneEntry> zones = new();
+        [SerializeField] private bool warnMissingRoutineZones = true;
 
         private Dictionary<string, BoxCollider> _lookup;
 
@@ -32,6 +53,9 @@ namespace Jailbreak.NPC
                 }
             }
             Debug.Log($"[ZoneRegistry] Initialized {_lookup.Count} zones.");
+
+            if (warnMissingRoutineZones)
+                WarnMissingRoutineZones();
         }
 
         private void Awake()
@@ -47,6 +71,23 @@ namespace Jailbreak.NPC
                 return col;
             }
             return null;
+        }
+
+        private void WarnMissingRoutineZones()
+        {
+            if (_lookup == null) return;
+
+            var missing = new List<string>();
+            foreach (var zoneId in RequiredRoutineZoneIds)
+            {
+                if (!_lookup.ContainsKey(zoneId))
+                    missing.Add(zoneId);
+            }
+
+            if (missing.Count > 0)
+            {
+                Debug.LogWarning($"[ZoneRegistry] Missing routine zones: {string.Join(", ", missing)}");
+            }
         }
 
         public SitPoint GetDeterministicSitPoint(string zoneId, uint seed)

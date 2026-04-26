@@ -1373,3 +1373,45 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260425_142508
+### Commits
+b0e29c0 chore: new cells + spawn points adjust
+9101368 Merge pull request #8 from cristianFleita/feat-route-1
+d58aa6e chore: gui guard, show mistakes
+33792d7 chore: config ventilation prefab + phases to english
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260426_125040
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+design/GDD.md
+design/gdd/rutina-fases-npc.md
+memory/decisions.md
+memory/progress.md
+memory/session-log.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+unity/JAILBREAK/Assets/Scripts/UI/GameHudController.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260426_132949
+### Uncommitted Changes
+backend/src/game/systems/jail-routine.ts
+design/GDD.md
+design/gdd/rutina-fases-npc.md
+memory/decisions.md
+memory/progress.md
+memory/session-log.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+unity/JAILBREAK/Assets/Scripts/UI/GameHudController.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

@@ -192,3 +192,29 @@
 - **Unity Specialist — Ruta 1 HUD English copy pass**:
   - Converted Route 1 HUD title, mission checklist labels, item display names, server clue text, and warning toasts to English.
   - Updated Phase F QA checklist expected UI strings to match the English runtime copy.
+- **Unity Specialist + Network Programmer — NPC cell-only free time design update**:
+  - Updated `design/GDD.md` so Hora libre Fases 4/7 now happen in Celdas only, with NPCs either standing inside a cell or sleeping in bed.
+  - Updated `design/gdd/rutina-fases-npc.md` to replace free-time patio/comedor/lavanderia pools with `cell_stand_idle` and `cell_sleep`.
+  - Added the backend/Unity contract: backend sends `cellAreaId` (`cell_area_01..20`) and `cellTargetKind`; Unity resolves bed or standing spot locally through `CellAreaRegistry`.
+  - Applied the same cell-only behavior to Fase 9 Encierro / Recuento final.
+  - Recorded ADR-018 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — NPC Hora libre / Encierro implementation**:
+  - Implemented Hora libre in backend as patio-only simple assignments with `zoneId`, `seed`, `animTrigger`, and duration; no social pairing or `actionSequence`.
+  - Implemented Encierro in backend as `cell_stand_idle` only, assigning stable `cell_area_01..20` zones per NPC. `cell_sleep` / acostarse remains TODO.
+  - Updated Unity `ZoneRegistry` with required routine zone IDs and a runtime warning for missing `yard`, `yard_benches`, `yard_exercise`, or `cell_area_01..20`.
+  - Added backend routine tests for Hora libre patio assignments and Encierro cell idle assignments.
+  - Updated GDD/routine docs to supersede the previous cell-only Hora libre design with the current patio seed-driven implementation.
+  - Verified backend TypeScript with bundled Node, focused Vitest routine tests, and Unity C# via Mono `msbuild` with existing warnings only.
+  - Recorded ADR-019 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — NPC cell area count correction**:
+  - Adjusted Encierro from 20 individual cell areas to 8 physical cell areas: `cell_area_01..04` downstairs and `cell_area_05..08` on the first floor.
+  - Backend now assigns lockdown NPCs by bed capacity `2,3,2,3` per floor, for 10 beds downstairs and 10 beds upstairs.
+  - Updated `ZoneRegistry` required routine zones to only require `cell_area_01..08`.
+  - Updated routine tests, GDD, detailed routine docs, progress, and ADR-020.
+- **Unity Specialist + Network Programmer — NPC Hora libre multi-zone correction**:
+  - Restored Hora libre as multi-zone: patio, celdas, lavanderia, and cocina.
+  - Simplified only the patio pool to `yard_idle`, `yard_bench_idle`, `yard_exercise`, `yard_shadow_box`, and `yard_lean_wall`.
+  - Added `cell_sleep` alongside `cell_stand_idle` for celdas during Hora libre and Encierro; backend sends `animTrigger = sleep` now, Unity bed resolution remains deferred.
+  - Kept the 8 physical cell areas with capacity split `2,3,2,3` per floor and `cell_area_01..08` IDs.
+  - Updated `design/GDD.md`, `design/gdd/rutina-fases-npc.md`, `memory/progress.md`, and recorded ADR-021.
+  - Verified backend TypeScript, focused `jail-routine.test.ts` (`4/4`), Unity C# via `msbuild`, and `git diff --check`; Unity build passed with existing warnings only.
