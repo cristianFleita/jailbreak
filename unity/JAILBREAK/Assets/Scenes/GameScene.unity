@@ -15478,6 +15478,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: LaundryCart (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 8732211161368206678, guid: 8aee65af9ee8949269de4f353ed66ae5, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -28122,6 +28126,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: LaundryCart (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 8732211161368206678, guid: 8aee65af9ee8949269de4f353ed66ae5, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -33309,6 +33317,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: LaundryCart (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 8732211161368206678, guid: 8aee65af9ee8949269de4f353ed66ae5, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1861087734}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
