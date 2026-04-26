@@ -43,6 +43,7 @@ GameObject:
   - component: {fileID: 6625068576406004}
   - component: {fileID: 814319531296840515}
   - component: {fileID: 2376824866483254317}
+  - component: {fileID: 1099024383505564071}
   m_Layer: 6
   m_Name: Interact (1)
   m_TagString: Untagged
@@ -100,10 +101,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SleepAction
   sleepPoint: {fileID: 2273512801244259312}
   sleepPointOffset: 0.3
-  stateSleep: Sleep
-  stateWakeUp: WakeUp
-  animationEndThreshold: 0.9
-  delayBeforeFade: 2
+  animatorBoolName: isSleeping
+  sleepStateName: Sleep
+  wakeUpStateName: WakeUp
+  idleStateName: Idle
+  enterCrossfade: 0.2
+  exitCrossfade: 0.2
 --- !u!114 &2376824866483254317
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -116,8 +119,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fba0419b5d1154f29b5002500376533b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SleepInteractable
-  fade: {fileID: 0}
-  holdDuration: 2
+--- !u!114 &1099024383505564071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8553927820211629975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4a6e0a11cce4f4aa8baa6a0d5a1b11a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkInteractable
+  networkId: 
 --- !u!1 &9039716907226805955
 GameObject:
   m_ObjectHideFlags: 0
@@ -130,6 +144,7 @@ GameObject:
   - component: {fileID: 2258314412287420281}
   - component: {fileID: 4221172001112844753}
   - component: {fileID: 7598508995096664986}
+  - component: {fileID: 1627463683908555788}
   m_Layer: 6
   m_Name: Interact
   m_TagString: Untagged
@@ -187,10 +202,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SleepAction
   sleepPoint: {fileID: 2273512801244259312}
   sleepPointOffset: 0.3
-  stateSleep: Sleep
-  stateWakeUp: WakeUp
-  animationEndThreshold: 0.9
-  delayBeforeFade: 2
+  animatorBoolName: isSleeping
+  sleepStateName: LyingDown
+  wakeUpStateName: WakeUp
+  idleStateName: Idle
+  enterCrossfade: 0.2
+  exitCrossfade: 0.2
 --- !u!114 &7598508995096664986
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -203,8 +220,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fba0419b5d1154f29b5002500376533b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SleepInteractable
-  fade: {fileID: 0}
-  holdDuration: 2
+--- !u!114 &1627463683908555788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9039716907226805955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4a6e0a11cce4f4aa8baa6a0d5a1b11a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkInteractable
+  networkId: 
 --- !u!1001 &8215484253267525062
 PrefabInstance:
   m_ObjectHideFlags: 0

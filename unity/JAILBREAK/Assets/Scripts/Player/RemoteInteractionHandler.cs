@@ -121,6 +121,15 @@ namespace Jailbreak.Player
                 return;
             }
 
+            // ── Sleep start/stop ─────────────────────────────────────────────
+            var sleep = ni.GetComponent<SleepInteractable>();
+            if (sleep != null)
+            {
+                sleep.ApplyRemote(transform, data.action);
+                Debug.Log($"[RemoteInteract] '{PlayerId}' → {data.action} on '{data.objectId}'");
+                return;
+            }
+
             // ── Laundry grab-clothes start/stop/grab ─────────────────────────
             var laundryGrab = ni.GetComponent<LaundryGrabClothesInteractable>();
             if (laundryGrab != null)
