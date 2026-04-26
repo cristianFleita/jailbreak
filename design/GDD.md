@@ -181,15 +181,15 @@ La jornada es el "reloj" de la partida. Cada fase dura un tiempo real fijo y ocu
 | 6 | Trabajo (2do turno) | 13:00 | 120 seg | 10 seg | Silbato 10s antes | Taller / Lavandería | Mismo pool que Trabajo 1er turno |
 | 7 | Hora libre | 15:00 | 90 seg | 10 seg | Silbato 10s antes | Patio / Cocina / Lavandería / Celdas | Mismo pool multi-zona que Hora libre (Fase 4) |
 | 8 | Cena | 16:30 | 90 seg | 10 seg | Silbato 10s antes | Comedor | Mismo flujo que Desayuno |
-| 9 | Encierro / Recuento final | 18:00 → 00:00 | 90 seg | 10 seg | Silbato 10s antes | Celdas | Backend asigna `cell_area_01..08`, `seed` y acción `cell_stand_idle` o `cell_sleep`; Unity implementará cama después |
+| 9 | Encierro / Recuento final | 18:00 → 00:00 | 60 seg | 10 seg | Silbato 10s antes | Celdas | Backend asigna `cell_area_01..08`, `seed` y acción `cell_stand_idle` o `cell_sleep`; Unity implementará cama después |
 
 **Desglose de tiempos:**
 
 | Concepto | Cálculo | Total |
 |----------|---------|-------|
-| Fases (gameplay) | 30 + 90 + 90 + 120 + 90 + 120 + 90 + 90 + 90 | **810 seg** |
+| Fases (gameplay) | 30 + 90 + 90 + 120 + 90 + 120 + 90 + 90 + 60 | **780 seg** |
 | Transiciones (8 cambios × 10 seg) | 8 × 10 | **80 seg** |
-| **Total partida** | | **890 seg (~14 min 50 seg)** |
+| **Total partida** | | **860 seg (~14 min 20 seg)** |
 
 **Sistema de advertencias:**
 - **10 seg antes** de cada cambio de fase: suena un **silbato** audible globalmente.

@@ -218,3 +218,8 @@
   - Kept the 8 physical cell areas with capacity split `2,3,2,3` per floor and `cell_area_01..08` IDs.
   - Updated `design/GDD.md`, `design/gdd/rutina-fases-npc.md`, `memory/progress.md`, and recorded ADR-021.
   - Verified backend TypeScript, focused `jail-routine.test.ts` (`4/4`), Unity C# via `msbuild`, and `git diff --check`; Unity build passed with existing warnings only.
+- **Network Programmer — Lockdown duration adjustment**:
+  - Changed backend Lockdown duration from 120s to 60s.
+  - Updated routine tests to assert `phase:start.duration === 60` and adjusted phase-completion timing comments/fixtures.
+  - Updated GDD/routine duration docs and recorded ADR-022.
+  - Verified backend TypeScript, focused `jail-routine.test.ts` (`9/9`), and `git diff --check`.

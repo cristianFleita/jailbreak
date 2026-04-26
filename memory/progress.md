@@ -80,9 +80,10 @@
 - [x] Backend: Hora libre emits multi-zone assignments for patio, celdas, lavanderia, and cocina.
 - [x] Backend: Patio free-time actions are simplified to `yard_idle`, `yard_bench_idle`, `yard_exercise`, `yard_shadow_box`, and `yard_lean_wall`.
 - [x] Backend: Celdas in Hora libre and Encierro emit `cell_stand_idle` or `cell_sleep` with stable `cell_area_01..08` zones and 20-bed capacity distribution.
+- [x] Backend: Lockdown/Encierro duration is 60 seconds.
 - [x] Unity: `ZoneRegistry` documents and warns for missing new patio/cell routine zones.
 - [x] Backend tests: focused routine tests cover multi-zone free time, cell capacities, and sleep lockdown assignments.
-- [x] Verification: backend TypeScript, focused `jail-routine.test.ts` (`4/4`), Unity `msbuild Assembly-CSharp.csproj`, and `git diff --check` passed.
+- [x] Verification: backend TypeScript, focused `jail-routine.test.ts` (`9/9`), Unity `msbuild Assembly-CSharp.csproj`, and `git diff --check` passed.
 - [ ] Scene setup: add `ZoneRegistry` entries for `yard`, `yard_benches`, `yard_exercise`, and `cell_area_01..08`.
 
 ## Backlog:

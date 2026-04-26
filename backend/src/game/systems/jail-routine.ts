@@ -192,7 +192,7 @@ const JAIL_PHASES: JailPhaseDef[] = [
     ],
   },
   {
-    phase: 8, name: 'Lockdown', duration: 120, zone: 'Cells',
+    phase: 8, name: 'Lockdown', duration: 60, zone: 'Cells',
     actions: [
       { actionId: 'cell_stand_idle', type: 'IDLE', animTrigger: 'idle', zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 60 },
       { actionId: 'cell_sleep', type: 'IDLE', animTrigger: 'sleep', zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 60 },

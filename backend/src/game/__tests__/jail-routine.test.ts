@@ -102,6 +102,7 @@ describe('JailRoutineSystem', () => {
 
     expect(payload.phase).toBe(8)
     expect(payload.phaseName).toBe('Lockdown')
+    expect(payload.duration).toBe(60)
     expect(payload.zone).toBe('Cells')
     expect(payload.npcAssignments).toHaveLength(state.npcs.size)
 
@@ -148,9 +149,9 @@ describe('JailRoutineSystem', () => {
       const { routine } = createRoutineWithNPCs()
       routine.start()
 
-        // Force phase 8 with the timer already past its 120s duration.
+        // Force phase 8 with the timer already past its 60s duration.
         ; (routine as any).currentPhase = 8
-        ; (routine as any).phaseStartedAt = Date.now() - 200_000
+        ; (routine as any).phaseStartedAt = Date.now() - 61_000
 
       let phaseStartEmittedAfter = 0
       routine.onPhaseStart = () => { phaseStartEmittedAfter++ }
@@ -166,9 +167,9 @@ describe('JailRoutineSystem', () => {
       const { routine } = createRoutineWithNPCs()
       routine.start()
 
-        // Inside the 10s warning window but not yet expired (phase 8 = 120s).
+        // Inside the 10s warning window but not yet expired (phase 8 = 60s).
         ; (routine as any).currentPhase = 8
-        ; (routine as any).phaseStartedAt = Date.now() - 115_000
+        ; (routine as any).phaseStartedAt = Date.now() - 55_000
 
       let warningEmitted = false
       routine.onPhaseWarning = () => { warningEmitted = true }
@@ -197,7 +198,7 @@ describe('JailRoutineSystem', () => {
       routine.start()
 
         ; (routine as any).currentPhase = 8
-        ; (routine as any).phaseStartedAt = Date.now() - 200_000
+        ; (routine as any).phaseStartedAt = Date.now() - 61_000
 
       routine.update(0.05)
       expect(routine.isRoutineComplete()).toBe(true)

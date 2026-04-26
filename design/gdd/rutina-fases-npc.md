@@ -46,7 +46,7 @@ La novedad arquitectónica central es el **sistema de libre albedrío**: dentro 
 | 6   | Trabajo        | 13:00         | 120 s         | Taller / Lavandería                     | Taller, Lavandería                 |
 | 7   | Hora libre     | 15:00         | 90 s          | Patio / Cocina / Lavandería / Celdas   | Patio, Cocina, Lavandería, Celdas  |
 | 8   | Cena           | 16:30         | 90 s          | Comedor                                 | — (mismo que Desayuno)             |
-| 9   | Encierro / Recuento final | 18:00 → 00:00 | 90 s | Celdas | `cell_area_01..08` |
+| 9   | Encierro / Recuento final | 18:00 → 00:00 | 60 s | Celdas | `cell_area_01..08` |
 
 
 **Reglas de transición:**

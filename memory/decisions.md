@@ -82,7 +82,7 @@ La ruta necesita comunicar progreso cooperativo sin depender de voz externa ni r
 
 Reemplazar la antigua fase de "Luces apagadas" por una fase breve de **Encierro / Recuento final** con estas reglas:
 - El bloque de celdas mantiene 2 pisos, pero las celdas pasan a tener frente de barrotes o puerta abierta para que el catre se vea desde el pasillo.
-- La Fase 9 dura 90 segundos y se centra en lectura visual, no en oscuridad total ni patrulla con linterna.
+- La Fase 9 dura 60 segundos y se centra en lectura visual, no en oscuridad total ni patrulla con linterna.
 - Durante hora libre, las celdas usan acciones legibles y baratas de producir: sentarse en el catre, leer, mirar al corredor.
 - Durante el recuento final, los NPCs vuelven a su celda, se acomodan y quedan visibles como siluetas en el catre.
 - Ruta 2 (tunel) usa esta ventana final desde la celda.
@@ -573,3 +573,22 @@ Hora libre debe mantener variedad y tráfico orgánico entre zonas. El cambio re
 - El backend mantiene `SUBZONE_CHANGE_PROB = 0.25` para que los NPCs puedan cambiar de sub-zona durante Hora libre.
 - Unity debe configurar los nuevos `ZoneRegistry` entries de patio y las 8 áreas de celda: `yard`, `yard_benches`, `yard_exercise`, `cell_area_01..08`.
 - Los tests de rutina validan que Hora libre cubre las cuatro sub-zonas y que Encierro puede emitir sleep.
+
+## ADR-022: Encierro dura 60 segundos
+
+**Status**: Implemented
+**Date**: 2026-04-26
+
+### Decision
+
+La fase final de backend `phase: 8, name: 'Lockdown'` dura 60 segundos.
+
+### Why
+
+El recuento final debe ser una ventana breve de presión y cierre, no una fase larga de espera.
+
+### Implications
+
+- `phase:start` de Lockdown emite `duration = 60`.
+- Al expirar esos 60 segundos, la rutina queda completa y no vuelve a Fase 1.
+- Los tests de rutina fijan explícitamente la duración de Lockdown en 60 segundos.
