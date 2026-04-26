@@ -223,3 +223,10 @@
   - Updated routine tests to assert `phase:start.duration === 60` and adjusted phase-completion timing comments/fixtures.
   - Updated GDD/routine duration docs and recorded ADR-022.
   - Verified backend TypeScript, focused `jail-routine.test.ts` (`9/9`), and `git diff --check`.
+- **Unity Specialist — NPC bed sleep interaction hookup** (2026-04-26 17:41 -03):
+  - Added `ZoneRegistry.GetDeterministicSleepInteractable` so `cell_sleep` resolves a free bed/catre inside `cell_area_01..08`.
+  - Updated `NPCBehaviorController` to reserve the bed, navigate to a walkable point near `SleepAction.sleepPoint`, and invoke `SleepInteraction` on arrival instead of playing `sleep` directly.
+  - Released sleep reservations on completion, reassignment, sequence transitions, and destroy; same-zone sleep refreshes keep the NPC asleep.
+  - Updated `SleepInteractable` occupancy release/replay and `SleepInteraction` locomotion re-enable on wake.
+  - Updated GDD/routine docs, progress, and recorded ADR-023.
+  - Verified `git diff --check`; Unity batchmode compile was blocked because the project is already open in another Unity instance.

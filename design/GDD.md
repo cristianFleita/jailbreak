@@ -181,7 +181,7 @@ La jornada es el "reloj" de la partida. Cada fase dura un tiempo real fijo y ocu
 | 6 | Trabajo (2do turno) | 13:00 | 120 seg | 10 seg | Silbato 10s antes | Taller / Lavandería | Mismo pool que Trabajo 1er turno |
 | 7 | Hora libre | 15:00 | 90 seg | 10 seg | Silbato 10s antes | Patio / Cocina / Lavandería / Celdas | Mismo pool multi-zona que Hora libre (Fase 4) |
 | 8 | Cena | 16:30 | 90 seg | 10 seg | Silbato 10s antes | Comedor | Mismo flujo que Desayuno |
-| 9 | Encierro / Recuento final | 18:00 → 00:00 | 60 seg | 10 seg | Silbato 10s antes | Celdas | Backend asigna `cell_area_01..08`, `seed` y acción `cell_stand_idle` o `cell_sleep`; Unity implementará cama después |
+| 9 | Encierro / Recuento final | 18:00 → 00:00 | 60 seg | 10 seg | Silbato 10s antes | Celdas | Backend asigna `cell_area_01..08`, `seed` y acción `cell_stand_idle` o `cell_sleep`; Unity resuelve punto idle o cama libre |
 
 **Desglose de tiempos:**
 
@@ -200,9 +200,9 @@ La jornada es el "reloj" de la partida. Cada fase dura un tiempo real fijo y ocu
 **Fase 9 — Encierro / Recuento final:**
 - Las celdas tienen el frente abierto con barrotes o puerta abierta, de modo que el guardia puede leer cada catre desde el pasillo central y la pasarela del piso 2.
 - La fase no busca stealth puro en oscuridad: busca una última lectura social bajo presión, con siluetas visibles y poco tiempo.
-- En la implementación actual, el backend puede enviar `cell_stand_idle` o `cell_sleep` con `cell_area_01..08` y `seed`. Unity resuelve `cell_stand_idle` como punto libre dentro del área; el resolver de cama para `cell_sleep` queda para una iteración posterior.
+- En la implementación actual, el backend puede enviar `cell_stand_idle` o `cell_sleep` con `cell_area_01..08` y `seed`. Unity resuelve `cell_stand_idle` como punto libre dentro del área y `cell_sleep` como una cama/catre libre dentro de esa celda mediante `SleepInteractable`.
 - Hay 8 celdas físicas: 4 abajo y 4 en primer piso. La capacidad de camas es `2,3,2,3` por piso, para 10 camas abajo y 10 arriba.
-- La acción `cell_sleep` ya viaja por red; acostarse visualmente en la cama queda diferido para una iteración posterior.
+- La acción `cell_sleep` ya viaja por red y en Unity navega hasta la cama, reserva el interactable y ejecuta `SleepInteraction`.
 - El guardia gana si nadie escapó antes de las 00:00; los presos pueden usar esta ventana para cerrar rutas que dependan de la celda.
 
 ### 4.2 Comportamiento Sospechoso (Qué Detecta el Guardia)
@@ -462,7 +462,7 @@ Estas mecánicas son opcionales para los presos pero proporcionan ventaja tácti
 #### Bloque de Celdas
 - **Estructura:** 2 pisos, 4 celdas por piso, pasillo central con barandilla en el piso 2. Las celdas tienen frente de barrotes o puerta abierta; el catre queda visible desde el pasillo.
 - **Objetos interactuables:** Catre, inodoro, almohada y reja de celda quedan como props/interacciones de rutina. Usos de rutas futuras quedan TODO.
-- **Puntos de interés:** Cada celda tiene un área lógica `cell_area_01..08`. Hay 4 celdas abajo y 4 en primer piso; las capacidades por piso son `2,3,2,3` camas, para 20 camas totales. En Hora libre y Encierro, el backend puede asignar celda para `cell_stand_idle` o `cell_sleep`. Unity busca un punto libre para idle; la resolución de cama para `cell_sleep` queda para la siguiente iteración.
+- **Puntos de interés:** Cada celda tiene un área lógica `cell_area_01..08`. Hay 4 celdas abajo y 4 en primer piso; las capacidades por piso son `2,3,2,3` camas, para 20 camas totales. En Hora libre y Encierro, el backend puede asignar celda para `cell_stand_idle` o `cell_sleep`. Unity busca un punto libre para idle; para `cell_sleep` busca una cama/catre libre dentro del área y usa su `sleepPoint`.
 - **Iluminación:** Fluorescente de día. En el recuento final baja la intensidad del pasillo y se mantiene una luz tenue dentro de cada celda para leer siluetas.
 
 #### Comedor

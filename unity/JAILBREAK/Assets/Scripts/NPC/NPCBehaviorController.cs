@@ -73,6 +73,14 @@ namespace Jailbreak.NPC
             }
         }
 
+        public bool IsSleeping
+        {
+            get
+            {
+                return TryGetComponent<SleepInteraction>(out var sleep) && sleep.IsSleeping;
+            }
+        }
+
         private bool _hasEverReceivedAssignment;
 
         private NPCAssignmentData _current;
@@ -131,6 +139,10 @@ namespace Jailbreak.NPC
 
         // Shelf reserved for the current store-clothes step.
         private LaundryStoreClothesInteractable _reservedLaundryStore;
+
+        // Bed reserved for the current sleep step. Set before navigation so
+        // NPCs assigned to the same cell walk to different beds.
+        private SleepInteractable _reservedSleepInteractable;
 
         // ─── Emergent behavior state ──────────────────────────────────────────
         private bool   _isPlayingEmergent;
@@ -239,6 +251,7 @@ namespace Jailbreak.NPC
             if (!IsNavigating && (_current == null || _hasArrived))
             {
                 if (TryGetComponent<SitInteraction>(out var sit) && sit.IsSitting) return;
+                if (TryGetComponent<SleepInteraction>(out var sleep) && sleep.IsSleeping) return;
                 PlayAnimation(animHint);
             }
         }
@@ -249,6 +262,9 @@ namespace Jailbreak.NPC
         {
             string newAnim = data.actionSequence != null && data.actionSequence.Length > 0 ? data.actionSequence[0].animTrigger : data.animTrigger;
             string newZone = data.actionSequence != null && data.actionSequence.Length > 0 ? data.actionSequence[0].zoneId : data.zoneId;
+            string newActionId = data.actionSequence != null && data.actionSequence.Length > 0
+                ? data.actionSequence[0].actionId
+                : data.actionId;
 
             if (TryGetComponent<SitInteraction>(out var sit) && sit.IsSitting)
             {
@@ -274,12 +290,13 @@ namespace Jailbreak.NPC
             // Release the pile reservation whenever we switch to a different zone,
             // so the next NPC assigned to zone_laundry_pile can claim this slot.
             // CarryClothesInteraction runs its own coroutine — no need to stop it.
-            string newActionId = data.actionSequence != null && data.actionSequence.Length > 0
-                ? data.actionSequence[0].actionId
-                : data.actionId;
             bool continuingSameGrab = IsLaundryGrabClothesAction(newActionId)
                                       && newZone == (_currentStepZoneId ?? _current?.zoneId);
             if (!continuingSameGrab) ReleaseLaundryGrabClothes();
+
+            bool continuingSameSleep = IsCurrentSleepContinuation(newActionId, newAnim, newZone)
+                                       && newZone == (_currentStepZoneId ?? _current?.zoneId);
+            if (!continuingSameSleep) StopSleepIfActive();
 
             CleanupCurrent();
 
@@ -353,6 +370,12 @@ namespace Jailbreak.NPC
             _chainIndex   = 0;
             _isLooping    = data.loop;
 
+            if (IsCurrentSleepContinuation(data.actionId, data.animTrigger, data.zoneId))
+            {
+                _hasArrived = true;
+                return;
+            }
+
             var destination = ResolveFirstDestination(data);
             if (destination.HasValue)
             {
@@ -370,7 +393,7 @@ namespace Jailbreak.NPC
             else
             {
                 _hasArrived = true;
-                PlayAnimation(data.animTrigger);
+                PlayAnimation(IsSleepAction(data.actionId, data.animTrigger) ? "idle" : data.animTrigger);
             }
         }
 
@@ -460,6 +483,12 @@ namespace Jailbreak.NPC
             _stepArrived = false;
             _stepTimer = step.duration;
             _currentStepZoneId = step.zoneId;
+
+            if (IsCurrentSleepContinuation(step.actionId, step.animTrigger, step.zoneId))
+            {
+                _stepArrived = true;
+                return;
+            }
 
             Vector3? destination = null;
             string destSrc = "none";
@@ -551,6 +580,20 @@ namespace Jailbreak.NPC
                     else
                     {
                         destSrc = "laundry_shelf_all_busy_fallback";
+                    }
+                }
+
+                if (!destination.HasValue && IsSleepAction(step.actionId, step.animTrigger))
+                {
+                    var bed = ReserveSleepInteractable(step.zoneId, step.seed);
+                    if (bed != null)
+                    {
+                        destination = ResolveSleepDestination(bed);
+                        destSrc = "sleep_bed";
+                    }
+                    else
+                    {
+                        destSrc = "sleep_bed_all_busy_fallback";
                     }
                 }
 
@@ -650,6 +693,12 @@ namespace Jailbreak.NPC
                                              && _sequenceSteps[peekIndex].zoneId == _currentStepZoneId;
                 if (!nextIsStoreSameZone) StopLaundryStoreIfActive();
 
+                bool nextIsSleepSameZone = peekIndex < _sequenceSteps.Length
+                                           && IsSleepAction(_sequenceSteps[peekIndex].actionId, _sequenceSteps[peekIndex].animTrigger)
+                                           && !string.IsNullOrEmpty(_sequenceSteps[peekIndex].zoneId)
+                                           && _sequenceSteps[peekIndex].zoneId == _currentStepZoneId;
+                if (!nextIsSleepSameZone) StopSleepIfActive();
+
                 // CarryClothesInteraction's grab routine self-terminates when its
                 // own duration elapses (isSearching=false → bundle attached +
                 // isCarrying=true). Nothing to stop here. Release the pile slot
@@ -698,10 +747,13 @@ namespace Jailbreak.NPC
             StopLaundryWasherIfActive();
             StopLaundryStoreIfActive();
             ReleaseLaundryGrabClothes();
+            StopSleepIfActive();
         }
 
         private void OnSequenceComplete()
         {
+            StopSleepIfActive();
+
             _currentStepZoneId = null;
             _sequenceSteps = null;
             _current = null;
@@ -749,6 +801,7 @@ namespace Jailbreak.NPC
             StopLaundryWasherIfActive();
             StopLaundryStoreIfActive();
             ReleaseLaundryGrabClothes();
+            StopSleepIfActive();
 
             _isLooping = false;
             _current   = null;
@@ -817,6 +870,13 @@ namespace Jailbreak.NPC
                 var shelf = ReserveLaundryStore(data.zoneId, data.seed);
                 if (shelf != null) return ResolveLaundryStoreDestination(shelf);
                 // No shelf free → fall through to zone point lookups.
+            }
+
+            if (IsSleepAction(data.actionId, data.animTrigger) && !string.IsNullOrEmpty(data.zoneId))
+            {
+                var bed = ReserveSleepInteractable(data.zoneId, data.seed);
+                if (bed != null) return ResolveSleepDestination(bed);
+                // No bed free → fall through to zone point lookups.
             }
 
             if (data.seedChain != null && data.seedChain.Length > 0)
@@ -898,6 +958,23 @@ namespace Jailbreak.NPC
             return actionId == "laundry_store_clothes";
         }
 
+        private bool IsSleepAction(string actionId, string trigger)
+        {
+            return actionId == "cell_sleep"
+                   || actionId == "lights_sleep"
+                   || trigger == "sleep"
+                   || trigger == "lie_down";
+        }
+
+        private bool IsCurrentSleepContinuation(string actionId, string trigger, string zoneId)
+        {
+            if (!IsSleepAction(actionId, trigger)) return false;
+            if (string.IsNullOrEmpty(zoneId)) return false;
+            if (_reservedSleepInteractable == null) return false;
+
+            return TryGetComponent<SleepInteraction>(out var sleep) && sleep.IsSleeping;
+        }
+
         // Desks use the ProgressPointAction.actionPoint as the stand-at spot.
         // Prefer that Transform so the walk destination lines up exactly with
         // where the NPC will be snapped when starting the work loop.
@@ -957,6 +1034,27 @@ namespace Jailbreak.NPC
                     clothes.TryPickUpWithGrabAnimation(grabDuration);
                     return;
                 }
+            }
+
+            if (IsSleepAction(actionId, animTrigger) && !string.IsNullOrEmpty(zoneId))
+            {
+                var bed = _reservedSleepInteractable ?? ReserveSleepInteractable(zoneId, seed);
+                if (bed != null)
+                {
+                    var sleepAction = bed.GetComponent<SleepAction>();
+                    var sleepPoint = (sleepAction != null && sleepAction.sleepPoint != null)
+                        ? sleepAction.sleepPoint
+                        : bed.transform;
+
+                    var sleep = EnsureSleepInteraction(sleepAction);
+                    sleep.TryStartSleep(sleepPoint);
+                    return;
+                }
+
+                // No bed was available inside the cell area. Avoid playing a
+                // fake sleep animation in the middle of the room.
+                PlayAnimation("idle");
+                return;
             }
 
             if (IsTakeFoodAction(animTrigger))
@@ -1341,6 +1439,78 @@ namespace Jailbreak.NPC
             return anchor.position;
         }
 
+        // ─── Sleep Setup ────────────────────────────────────────────────────
+
+        private SleepInteraction EnsureSleepInteraction(SleepAction sleepAction = null)
+        {
+            var sleep = GetComponent<SleepInteraction>();
+            if (sleep == null)
+                sleep = gameObject.AddComponent<SleepInteraction>();
+
+            if (sleep.animator == null)            sleep.animator            = animator;
+            if (sleep.navMeshAgent == null)        sleep.navMeshAgent        = agent;
+            if (sleep.characterController == null) sleep.characterController = GetComponent<CharacterController>();
+
+            if (sleepAction != null)
+            {
+                sleep.sleepPointOffset = sleepAction.sleepPointOffset;
+                if (!string.IsNullOrEmpty(sleepAction.animatorBoolName))
+                    sleep.animatorBoolName = sleepAction.animatorBoolName;
+                if (!string.IsNullOrEmpty(sleepAction.sleepStateName))
+                    sleep.animatorStateName = sleepAction.sleepStateName;
+                if (!string.IsNullOrEmpty(sleepAction.wakeUpStateName))
+                    sleep.idleStateName = sleepAction.wakeUpStateName;
+                else if (!string.IsNullOrEmpty(sleepAction.idleStateName))
+                    sleep.idleStateName = sleepAction.idleStateName;
+                sleep.crossfadeDuration = sleepAction.enterCrossfade;
+            }
+
+            return sleep;
+        }
+
+        private void StopSleepIfActive()
+        {
+            if (TryGetComponent<SleepInteraction>(out var sleep) && sleep.IsSleeping)
+                sleep.TryStopSleep();
+
+            ReleaseSleepInteractable();
+        }
+
+        private SleepInteractable ReserveSleepInteractable(string zoneId, uint seed)
+        {
+            if (_reservedSleepInteractable != null) return _reservedSleepInteractable;
+            if (zoneRegistry == null) return null;
+
+            var bed = zoneRegistry.GetDeterministicSleepInteractable(zoneId, seed);
+            if (bed == null) return null;
+
+            bed.isOccupied = true;
+            _reservedSleepInteractable = bed;
+            return bed;
+        }
+
+        private void ReleaseSleepInteractable()
+        {
+            if (_reservedSleepInteractable != null)
+            {
+                _reservedSleepInteractable.isOccupied = false;
+                _reservedSleepInteractable = null;
+            }
+        }
+
+        private Vector3 ResolveSleepDestination(SleepInteractable bed)
+        {
+            var sleepAction = bed.GetComponent<SleepAction>();
+            var anchor = (sleepAction != null && sleepAction.sleepPoint != null)
+                ? sleepAction.sleepPoint
+                : bed.transform;
+
+            if (NavMesh.SamplePosition(anchor.position, out var hit, 2f, NavMesh.AllAreas))
+                return hit.position;
+
+            return anchor.position;
+        }
+
         // ─── Clothes Carry Setup ─────────────────────────────────────────────
         // Auto-add a CarryClothesInteraction to the NPC the first time it grabs
         // a bundle, mirroring the food-carry on-demand setup. The clothes visual
@@ -1403,6 +1573,7 @@ namespace Jailbreak.NPC
             ReleaseLaundryGrabClothes();
             ReleaseLaundryWasher();
             ReleaseLaundryStore();
+            ReleaseSleepInteractable();
         }
 
         // ─── Food Carry Setup ──────────────────────────────────────────────────

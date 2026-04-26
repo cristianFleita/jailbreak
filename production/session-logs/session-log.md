@@ -1470,3 +1470,34 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260426_164651
+### Commits
+017ca64 chore: player bed interactable
+81005e1 chore: adjust phase 8 time
+e1e1ecb chore: routine completition
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260426_180955
+### Commits
+017ca64 chore: player bed interactable
+81005e1 chore: adjust phase 8 time
+e1e1ecb chore: routine completition
+### Uncommitted Changes
+design/GDD.md
+design/gdd/rutina-fases-npc.md
+memory/decisions.md
+memory/progress.md
+memory/session-log.md
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Scripts/Interactions/Sleep/SleepInteractable.cs
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+unity/JAILBREAK/Assets/Scripts/NPC/ZoneRegistry.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

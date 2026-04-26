@@ -260,7 +260,7 @@ Zonas Unity requeridas: `yard`, `yard_benches`, `yard_exercise`.
 | `cell_stand_idle`   | IDLE | idle      | `cell_area_01..08`  | 100    | 25–60s   |
 | `cell_sleep`        | IDLE | sleep     | `cell_area_01..08`  | 100    | 25–60s   |
 
-`cell_sleep` ya se envía desde backend. Unity resolverá la cama/catre dentro de la celda en una iteración posterior.
+`cell_sleep` ya se envía desde backend. Unity resuelve una cama/catre libre dentro del `cell_area_XX`, navega hasta un punto caminable cercano y al llegar ejecuta `SleepInteraction` sobre el `sleepPoint`.
 
 
 ---
@@ -284,7 +284,7 @@ Zonas Unity requeridas: `yard`, `yard_benches`, `yard_exercise`.
 
 #### Fase 8 — Encierro / Recuento final | Celdas
 
-> Fase final breve. Sin interacciones sociales. Todos los NPCs vuelven a una celda asignada por backend. El backend puede enviar idle de pie o sleep; Unity implementará después el resolver visual de cama para `cell_sleep`.
+> Fase final breve. Sin interacciones sociales. Todos los NPCs vuelven a una celda asignada por backend. El backend puede enviar idle de pie o sleep; Unity resuelve `cell_sleep` contra una cama/catre libre dentro de la celda.
 
 
 | ActionId            | Type | Animation | ZoneId              | Weight | Duration |
@@ -453,7 +453,7 @@ var destination = zoneRegistry.GetDeterministicPoint(data.zoneId, data.seed);
 agent.SetDestination(destination);
 ```
 
-Para acostarse/dormir se agregará después un resolver especializado de cama dentro de cada celda. Hasta entonces, `cell_sleep` viaja por red con `animTrigger = sleep`, pero Unity puede resolverlo temporalmente como fallback local.
+Para acostarse/dormir, Unity usa un resolver especializado de cama dentro de cada celda: busca `SleepInteractable` dentro del `cell_area_XX`, reserva la cama, navega a un punto caminable cercano y al llegar ejecuta `SleepInteraction` con el `sleepPoint` configurado.
 
 ### 3.6 Transición Orgánica entre Fases
 
@@ -514,7 +514,7 @@ Roll de acción → yard_exercise
 NPC en Encierro:
 Celda asignada → cell_area_07
 → Backend emite npc:reassign con zoneId = cell_area_07, seed y animTrigger = idle o sleep
-→ Unity resuelve idle local ahora; cama/sleep visual queda para iteración posterior
+→ Unity resuelve idle local en el área o cama libre + SleepInteraction para sleep
 ```
 
 ---
@@ -935,7 +935,7 @@ Cada `cell_area_XX` se configura como un área lógica en `ZoneRegistry` con un 
 
 Hay 4 celdas abajo y 4 celdas en primer piso. Las capacidades por piso son `2,3,2,3`, para 10 camas abajo y 10 camas arriba.
 
-En la implementación actual se usa para `cell_stand_idle` y `cell_sleep`. Unity puede resolver ambos a punto de área por ahora; el resolver específico de cama para `cell_sleep` se agregará después.
+En la implementación actual se usa para `cell_stand_idle` y `cell_sleep`. Unity resuelve `cell_stand_idle` a punto de área y `cell_sleep` a una cama/catre libre con `SleepInteractable`.
 
 | # | CellArea ID | Piso | Camas/Cap | Fases |
 |---|-------------|------|-----------|-------|

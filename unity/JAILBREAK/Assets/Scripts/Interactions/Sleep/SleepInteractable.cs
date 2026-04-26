@@ -26,13 +26,20 @@ public class SleepInteractable : MonoBehaviour, IInteractable
     public string ActionLabel       => isActive ? "Wake up" : "Sleep";
     public int Priority             => 10;
     public Transform Transform      => transform;
-    public bool CanInteract         => true;
+    public bool CanInteract         => isActive || !isOccupied;
     public string[] AllowedInStates => new[] { ActiveState };
 
     public const string ActionStartSleep = "startSleep";
     public const string ActionStopSleep  = "stopSleep";
 
     const string ActiveState = "Sleeping";
+
+    /// <summary>
+    /// Runtime reservation flag. Set to true by the actor (NPC or local player)
+    /// currently walking to / sleeping in this bed so another actor picks a
+    /// different one. Mirrors <see cref="WorkInspectCabinetsInteractable.isOccupied"/>.
+    /// </summary>
+    [System.NonSerialized] public bool isOccupied;
 
     private SleepAction sleepAction;
     private NetworkInteractable networkInteractable;
@@ -69,6 +76,7 @@ public class SleepInteractable : MonoBehaviour, IInteractable
     void StartSleep(Transform player, Animator animator, CharacterController cc, InteractionManager manager)
     {
         isActive        = true;
+        isOccupied      = true;
         localPlayer     = player;
         localAnimator   = animator;
         localController = cc;
@@ -95,6 +103,7 @@ public class SleepInteractable : MonoBehaviour, IInteractable
         Broadcast(ActionStopSleep);
 
         isActive        = false;
+        isOccupied      = false;
         localPlayer     = null;
         localAnimator   = null;
         localController = null;
@@ -120,6 +129,7 @@ public class SleepInteractable : MonoBehaviour, IInteractable
 
         if (action == ActionStartSleep)
         {
+            isOccupied = true;
             if (sync != null) sync.enabled = false;
             sleepAction.BeginSleep(animator, remoteRoot);
         }
@@ -128,6 +138,7 @@ public class SleepInteractable : MonoBehaviour, IInteractable
             sleepAction.EndSleep(animator);
             remoteRoot.position = SleepAction.ResolveGroundPosition(remoteRoot.position);
             if (sync != null) sync.enabled = true;
+            isOccupied = false;
         }
     }
 

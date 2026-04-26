@@ -540,13 +540,13 @@ El bloque de celdas se modela como 8 áreas físicas, no 20 celdas individuales:
 
 ### Why
 
-La escena real tiene 8 celdas grandes compartidas. Modelar 20 áreas falsas acoplaría backend y Unity a una geometría inexistente, y haría más difícil implementar después camas múltiples por celda.
+La escena real tiene 8 celdas grandes compartidas. Modelar 20 áreas falsas acoplaría backend y Unity a una geometría inexistente, y haría más difícil resolver camas múltiples por celda.
 
 ### Implications
 
 - `ZoneRegistry` debe requerir `cell_area_01..08` para Hora libre y Encierro.
 - Los tests de rutina validan capacidad por celda, no unicidad de celda por NPC.
-- Cuando se implemente dormir/acostarse, Unity resolverá una cama disponible dentro de la celda asignada.
+- Dormir/acostarse se resuelve en Unity con una cama disponible dentro de la celda asignada (ver ADR-023).
 
 ## ADR-021: Hora libre multi-zona con patio simplificado y sleep en celdas
 
@@ -562,7 +562,7 @@ Hora libre vuelve a ser una fase multi-zona. Los NPCs pueden ir a:
 - Lavandería, usando el flujo secuencial de ropa personal.
 - Cocina/comedor, usando `free_cafe_sit_talk`, `free_cafe_sit_idle`, `free_cafe_stand_chat`.
 
-Encierro también puede emitir `cell_stand_idle` o `cell_sleep`. `cell_sleep` ya viaja por red con `animTrigger = sleep`; Unity resolverá la cama/catre en una iteración posterior.
+Encierro también puede emitir `cell_stand_idle` o `cell_sleep`. `cell_sleep` viaja por red con `animTrigger = sleep`; Unity resuelve la cama/catre dentro del `cell_area_XX` (ver ADR-023).
 
 ### Why
 
@@ -592,3 +592,22 @@ El recuento final debe ser una ventana breve de presión y cierre, no una fase l
 - `phase:start` de Lockdown emite `duration = 60`.
 - Al expirar esos 60 segundos, la rutina queda completa y no vuelve a Fase 1.
 - Los tests de rutina fijan explícitamente la duración de Lockdown en 60 segundos.
+
+## ADR-023: NPC sleep uses bed interactables inside cell areas
+
+**Status**: Implemented
+**Date**: 2026-04-26
+
+### Decision
+
+`cell_sleep` no se resuelve como animación directa. Unity busca un `SleepInteractable` libre dentro del `cell_area_XX`, lo reserva, navega hasta un punto caminable cercano al `SleepAction.sleepPoint` y al llegar ejecuta `SleepInteraction`.
+
+### Why
+
+El comportamiento debe seguir el mismo patrón que mesas, gabinetes y lavandería: el backend envía zona, seed y acción; Unity resuelve el interactable concreto localmente y evita que varios NPCs usen el mismo recurso.
+
+### Implications
+
+- Cada cama/catre debe tener `SleepInteractable` y `SleepAction.sleepPoint` dentro de los bounds de su `cell_area_XX`.
+- Si no hay cama disponible, Unity no reproduce una animación falsa de sueño en medio de la celda; cae a idle.
+- Al terminar, reasignar o destruir el NPC, se libera la reserva de la cama.
