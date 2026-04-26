@@ -43,6 +43,19 @@ describe('GameManager', () => {
       expect(result).toHaveProperty('shouldEnd')
       expect(typeof result.shouldEnd).toBe('boolean')
     })
+
+    it('ends the game with guards as winners when the jail routine completes (phase 8 expired)', () => {
+      // Force the jail routine into a completed state to simulate phase 8 ending.
+      ;(gameManager.jailRoutine as any).routineCompleted = true
+      ;(gameManager.jailRoutine as any).currentPhase = 8
+      ;(gameManager.jailRoutine as any).phaseStartedAt = Date.now()
+
+      const result = gameManager.tick()
+
+      expect(result.shouldEnd).toBe(true)
+      expect(result.winner).toBe('guards')
+      expect(result.reason).toBe('routine_completed')
+    })
   })
 
   describe('Guard Errors and Riot', () => {

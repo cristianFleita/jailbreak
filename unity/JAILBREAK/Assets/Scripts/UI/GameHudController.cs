@@ -134,14 +134,25 @@ namespace Jailbreak.UI
         {
             _missions.Clear();
             if (_routeChecklist == null) return;
-
             _routeChecklist.Clear();
-            AddMissionRow("find_cutters", "Cutters");
-            AddMissionRow("find_clue", "Clue: Server ?");
-            AddMissionRow("disable_server", "Server");
-            AddMissionRow("find_wrench", "Wrench");
-            AddMissionRow("open_vent", "Vent");
-            AddMissionRow("escape", "Escape");
+
+            // 1. Objetivo: Herramientas
+            AddMissionRow("find_cutters", "Find the pliers and save them to your inventory.");
+
+            // 2. Objetivo: Pista
+            AddMissionRow("find_clue", "Search the Guard's Office for the Fuse Box schematics.");
+
+            // 3. Objetivo: Sabotaje
+            AddMissionRow("disable_server", "Locate the Electrical Panel and cut the wires to disable the power.");
+
+            // 4. Objetivo: Herramienta de acceso
+            AddMissionRow("find_wrench", "Retrieve the wrench from the maintenance area.");
+
+            // 5. Objetivo: Identificación y Apertura (Corregido)
+            AddMissionRow("open_vent", "Find a Ventilation Shaft on the wall and use the wrench to open it.");
+
+            // 6. Objetivo: Escape
+            AddMissionRow("escape", "Crawl through the vents to reach the Roof Access and escape.");
         }
 
         private void AddMissionRow(string id, string title)

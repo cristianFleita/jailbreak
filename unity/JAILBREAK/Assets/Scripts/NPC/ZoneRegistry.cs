@@ -7,9 +7,29 @@ namespace Jailbreak.NPC
     /// Replaces the old WaypointRegistry.
     /// Maps zone ID strings (e.g., "cafeteria", "yard_benches") to physical BoxCollider bounds.
     /// Provides deterministic random point generation inside those bounds using a seed.
+    ///
+    /// New zone-area IDs that must be configured for the current free-time/lockdown routine:
+    /// - Yard free time: yard, yard_benches, yard_exercise
+    /// - Free-time/lockdown cells: cell_area_01 through cell_area_08
+    ///   Ground floor capacities: 2, 3, 2, 3 beds. First floor capacities: 2, 3, 2, 3 beds.
     /// </summary>
     public class ZoneRegistry : MonoBehaviour
     {
+        public static readonly string[] RequiredRoutineZoneIds =
+        {
+            "yard",
+            "yard_benches",
+            "yard_exercise",
+            "cell_area_01",
+            "cell_area_02",
+            "cell_area_03",
+            "cell_area_04",
+            "cell_area_05",
+            "cell_area_06",
+            "cell_area_07",
+            "cell_area_08",
+        };
+
         [System.Serializable]
         public class ZoneEntry
         {
@@ -18,6 +38,7 @@ namespace Jailbreak.NPC
         }
 
         [SerializeField] private List<ZoneEntry> zones = new();
+        [SerializeField] private bool warnMissingRoutineZones = true;
 
         private Dictionary<string, BoxCollider> _lookup;
 
@@ -32,6 +53,9 @@ namespace Jailbreak.NPC
                 }
             }
             Debug.Log($"[ZoneRegistry] Initialized {_lookup.Count} zones.");
+
+            if (warnMissingRoutineZones)
+                WarnMissingRoutineZones();
         }
 
         private void Awake()
@@ -47,6 +71,23 @@ namespace Jailbreak.NPC
                 return col;
             }
             return null;
+        }
+
+        private void WarnMissingRoutineZones()
+        {
+            if (_lookup == null) return;
+
+            var missing = new List<string>();
+            foreach (var zoneId in RequiredRoutineZoneIds)
+            {
+                if (!_lookup.ContainsKey(zoneId))
+                    missing.Add(zoneId);
+            }
+
+            if (missing.Count > 0)
+            {
+                Debug.LogWarning($"[ZoneRegistry] Missing routine zones: {string.Join(", ", missing)}");
+            }
         }
 
         public SitPoint GetDeterministicSitPoint(string zoneId, uint seed)
@@ -316,6 +357,44 @@ namespace Jailbreak.NPC
                 var p = ls.transform.position;
                 if (p.x >= b.min.x && p.x <= b.max.x && p.z >= b.min.z && p.z <= b.max.z)
                     inZone.Add(ls);
+            }
+
+            if (inZone.Count == 0) return null;
+
+            inZone.Sort((a, b2) => {
+                int cmp = a.transform.position.x.CompareTo(b2.transform.position.x);
+                if (cmp == 0) cmp = a.transform.position.z.CompareTo(b2.transform.position.z);
+                return cmp;
+            });
+
+            int startIdx = (int)(seed % (uint)inZone.Count);
+            for (int i = 0; i < inZone.Count; i++)
+            {
+                int idx = (startIdx + i) % inZone.Count;
+                if (!inZone[idx].isOccupied) return inZone[idx];
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns a deterministic SleepInteractable inside the requested cell zone.
+        /// Mirrors the occupied-aware interactable lookup used by desks, cabinets,
+        /// piles, washers and shelves so several NPCs in one cell pick different beds.
+        /// </summary>
+        public SleepInteractable GetDeterministicSleepInteractable(string zoneId, uint seed)
+        {
+            var col = GetZoneBounds(zoneId);
+            if (col == null) return null;
+
+            var b = col.bounds;
+            var all = FindObjectsOfType<SleepInteractable>();
+            var inZone = new List<SleepInteractable>();
+            foreach (var bed in all)
+            {
+                var p = bed.transform.position;
+                if (p.x >= b.min.x && p.x <= b.max.x && p.z >= b.min.z && p.z <= b.max.z)
+                    inZone.Add(bed);
             }
 
             if (inZone.Count == 0) return null;

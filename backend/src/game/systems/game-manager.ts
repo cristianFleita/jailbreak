@@ -102,6 +102,16 @@ export class GameManager {
       }
     }
 
+    // Last phase (Recuento final) ended without an escape or capture → guards win.
+    // Placed after the victory check so any in-flight escape/catch resolves first.
+    if (this.jailRoutine.isRoutineComplete()) {
+      return {
+        shouldEnd: true,
+        winner: 'guards',
+        reason: 'routine_completed',
+      }
+    }
+
     return { shouldEnd: false }
   }
 

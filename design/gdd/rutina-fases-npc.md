@@ -2,7 +2,7 @@
 
 > **Status**: Designed  
 > **Author**: Cris + Claude  
-> **Last Updated**: 2026-04-14  
+> **Last Updated**: 2026-04-26
 > **Cubre sistemas**: #4 Rutina/Fases + #13 NPC Rutina/NavMesh  
 > **Implementa Pilar**: "La rutina es la cárcel" — los jugadores prisioneros deben imitar a los NPCs para sobrevivir
 
@@ -25,7 +25,7 @@ La novedad arquitectónica central es el **sistema de libre albedrío**: dentro 
 
 ## 2. Player Fantasy
 
-**Para el jugador prisionero:** La rutina no se siente como un tutorial — se siente como presión social constante. Estás rodeado de NPCs que saben exactamente qué hacer y dónde estar. Si te quedás quieto o vas a la zona equivocada, el contraste te delata. Los NPCs charlan, barren, doblan ropa, juegan cartas — y vos tenés que encajar en esa normalidad mientras planificás la fuga.
+**Para el jugador prisionero:** La rutina no se siente como un tutorial — se siente como presión social constante. Estás rodeado de NPCs que saben exactamente qué hacer y dónde estar. Si te quedás quieto o vas a la zona equivocada, el contraste te delata. Los NPCs charlan, trabajan, comen, vuelven a su celda, se quedan parados o duermen — y vos tenés que encajar en esa normalidad mientras planificás la fuga.
 
 **Para el jugador guardia:** Los NPCs le dan cobertura a los prisioneros. La cancha con los personajes moviéndose crea ruido visual real. Detectar quién es jugador y quién es NPC requiere atención sostenida, no solo mirar el minimapa. Un NPC que dobla bandeja y se va a su celda a tiempo es ruido. Un "NPC" que se queda parado tres segundos demasiado cerca de la ventilación es señal.
 
@@ -41,12 +41,12 @@ La novedad arquitectónica central es el **sistema de libre albedrío**: dentro 
 | 1   | Inicio         | 06:00         | 30 s          | Celda                                   | —                                  |
 | 2   | Desayuno       | 06:30         | 90 s          | Comedor                                 | —                                  |
 | 3   | Trabajo        | 08:00         | 90 s          | Taller / Lavandería                     | Taller, Lavandería                 |
-| 4   | Hora libre     | 09:30         | 120 s         | Libre (patio/comedor/lavandería/celdas) | Patio, Comedor, Lavandería, Celdas |
+| 4   | Hora libre     | 09:30         | 120 s         | Patio / Cocina / Lavandería / Celdas   | Patio, Cocina, Lavandería, Celdas  |
 | 5   | Almuerzo       | 11:30         | 90 s          | Comedor                                 | — (mismo que Desayuno)             |
 | 6   | Trabajo        | 13:00         | 120 s         | Taller / Lavandería                     | Taller, Lavandería                 |
-| 7   | Hora libre     | 15:00         | 90 s          | Libre (patio/comedor/lavandería/celdas) | Patio, Comedor, Lavandería, Celdas |
+| 7   | Hora libre     | 15:00         | 90 s          | Patio / Cocina / Lavandería / Celdas   | Patio, Cocina, Lavandería, Celdas  |
 | 8   | Cena           | 16:30         | 90 s          | Comedor                                 | — (mismo que Desayuno)             |
-| 9   | Encierro / Recuento final | 18:00 → 00:00 | 90 s | Celdas | — |
+| 9   | Encierro / Recuento final | 18:00 → 00:00 | 60 s | Celdas | `cell_area_01..08` |
 
 
 **Reglas de transición:**
@@ -63,7 +63,8 @@ La novedad arquitectónica central es el **sistema de libre albedrío**: dentro 
 | --------------------------------- | -------------------- | --------------------- |
 | Timer de fases                    | ✅ Autoritativo       | ❌ Solo muestra        |
 | Asignación de acción NPC          | ✅ Sortea y emite     | ❌ Solo ejecuta        |
-| Waypoint (ID string)              | ✅ Envía el ID        | ❌ Resuelve ID→Vector3 |
+| Waypoint/Zona (ID string)         | ✅ Envía el ID        | ✅ Resuelve ID→Vector3 |
+| Área asignada (`zoneId`)          | ✅ Envía `yard*`, comedor/lavandería o `cell_area_01..08` | ✅ Resuelve punto determinístico por `seed` dentro del área |
 | Pathfinding / movimiento          | ❌ No calcula         | ✅ NavMeshAgent        |
 | Animaciones NPC                   | ❌ No controla        | ✅ Animator local      |
 | Interacción social (pairing)      | ✅ Empareja NPCs      | ✅ Sincroniza llegada  |
@@ -77,7 +78,9 @@ Cada acción define:
 - `actionId` — identificador único string
 - `type` — SOLO | SOCIAL | LOOPING | IDLE
 - `animation` — trigger del Animator
-- `waypointTag` — prefijo de los waypoints válidos para esta acción
+- `waypointTag` — prefijo de los waypoints válidos para acciones legacy/especializadas
+- `zoneId` — área lógica que Unity resuelve localmente (`yard`, `yard_benches`, `yard_exercise`, `cafeteria`, `cafeteria_seating`, `zone_laundry_*`, `cell_area_01..08`)
+- `seed` — semilla enviada por backend para que Unity elija un punto determinístico dentro de `zoneId`
 - `weight` — probabilidad relativa de selección (mayor = más frecuente)
 - `minDuration` / `maxDuration` — rango en segundos
 
@@ -213,55 +216,51 @@ Cada acción define:
 
 ---
 
-#### Fase 4 — Hora libre | Patio / Comedor / Lavandería / Celdas
+#### Fase 4 — Hora libre | Patio / Cocina / Lavandería / Celdas
 
-> Fase de máxima variedad. Los NPCs eligen libremente entre cuatro sub-zonas.  
-> Distribución inicial: ~5 patio / ~5 comedor / ~5 lavandería (ropa personal) / ~3 celdas (descanso).  
-> **A diferencia de Trabajo, los NPCs pueden cambiar de sub-zona durante la fase.** En cada `npc:reassign` un NPC puede ser reasignado a una sub-zona distinta (camina hasta allá y ejecuta una acción del nuevo pool). Esto genera tráfico orgánico entre zonas que camufla los movimientos de los jugadores reales.
+> Fase de máxima variedad. Los NPCs eligen libremente entre cuatro sub-zonas: patio, cocina/comedor, lavandería y celdas.
+> Distribución inicial: ~5 patio / ~5 celdas / ~5 lavandería / ~4 cocina.
+> A diferencia de Trabajo, los NPCs pueden cambiar de sub-zona durante la fase. En cada `npc:reassign`, un NPC puede recibir una sub-zona distinta y caminar hacia allí.
+>
+> El patio usa el contrato simplificado nuevo: el backend envía `zoneId`, `seed`, `animTrigger` y duración. Unity resuelve localmente un punto determinístico dentro del área registrada en `ZoneRegistry`.
 
 **Sub-zona: Patio**
 
+| ActionId           | Type | Animation  | ZoneId          | Weight | Duration |
+| ------------------ | ---- | ---------- | --------------- | ------ | -------- |
+| `yard_idle`        | IDLE | idle       | `yard`          | 35     | 20–45s   |
+| `yard_bench_idle`  | IDLE | idle       | `yard_benches`  | 30     | 20–45s   |
+| `yard_exercise`    | IDLE | exercise   | `yard_exercise` | 20     | 15–35s   |
+| `yard_shadow_box`  | IDLE | shadowbox  | `yard_exercise` | 10     | 10–25s   |
+| `yard_lean_wall`   | IDLE | lean_wall  | `yard`          | 5      | 15–30s   |
 
-| ActionId                  | Type    | Animation     | WaypointTag                | Weight | Duration    |
-| ------------------------- | ------- | ------------- | -------------------------- | ------ | ----------- |
-| `yard_walk_perimeter`     | LOOPING | Walk          | `yard_perimeter`_ (cadena) | 20     | 30–60s loop |
-| `yard_sit_bench`          | IDLE    | Sit_Bench     | `yard_bench`_              | 20     | 20–60s      |
-| `yard_exercise`           | IDLE    | Exercise      | `yard_exercise_area`_      | 15     | 15–40s      |
-| `yard_conversation_group` | SOCIAL  | Talk_Standing | `yard_conversation_spot`_  | 20     | 15–35s      |
-| `yard_play_cards`         | SOCIAL  | Sit_Cards     | `yard_card_table`_         | 10     | 30–90s      |
-| `yard_lean_wall`          | IDLE    | Lean_Wall     | `yard_wall_lean`_          | 8      | 15–40s      |
-| `yard_shadow_boxing`      | IDLE    | Shadowbox     | `yard_exercise_area`_      | 5      | 10–20s      |
-| `yard_kick_ball`          | SOCIAL  | Kick          | `yard_ball_spot`           | 2      | 20–40s      |
+Zonas Unity requeridas: `yard`, `yard_benches`, `yard_exercise`.
 
+**Sub-zona: Cocina / Comedor** *(quedarse, charlar, no comer)*
 
-**Sub-zona: Comedor** *(charlar, no comer)*
+| ActionId               | Type   | Animation     | ZoneId               | Weight | Duration |
+| ---------------------- | ------ | ------------- | -------------------- | ------ | -------- |
+| `free_cafe_sit_talk`   | SOCIAL | talk_seated   | `cafeteria_seating`  | 40     | 15–40s   |
+| `free_cafe_sit_idle`   | IDLE   | sit_idle      | `cafeteria_seating`  | 35     | 10–30s   |
+| `free_cafe_stand_chat` | SOCIAL | talk_standing | `cafeteria`          | 25     | 10–25s   |
 
+**Sub-zona: Lavandería** *(ropa personal, sigue el flujo estructurado de trabajo)*
 
-| ActionId               | Type   | Animation     | WaypointTag       | Weight | Duration |
-| ---------------------- | ------ | ------------- | ----------------- | ------ | -------- |
-| `free_cafe_sit_talk`   | SOCIAL | Talk_Seated   | `cafeteria_seat`_ | 40     | 15–40s   |
-| `free_cafe_sit_idle`   | IDLE   | Sit_Idle      | `cafeteria_seat`_ | 35     | 10–30s   |
-| `free_cafe_stand_chat` | SOCIAL | Talk_Standing | `cafeteria_line`_ | 25     | 10–25s   |
+| ActionId                 | Type    | Animation      | ZoneId                | Weight | Duration | Orden en flujo |
+| ------------------------ | ------- | -------------- | --------------------- | ------ | -------- | -------------- |
+| `laundry_grab_clothes`   | ONESHOT | rummaging      | `zone_laundry_pile`   | 100    | 3–5s     | 1° obligatorio |
+| `laundry_load_washer`    | IDLE    | load_machine   | `zone_laundry_wash`   | 100    | 15–20s   | 2° obligatorio |
+| `laundry_store_clothes`  | IDLE    | store_clothes  | `zone_laundry_shelf`  | 100    | 3–5s     | 3° obligatorio |
+| `laundry_talk_coworker`  | SOCIAL  | talk_standing  | `zone_laundry_chat`   | 30     | 8–15s    | Opcional       |
 
+**Sub-zona: Celdas**
 
-**Sub-zona: Lavandería** *(ropa personal, sigue el mismo flujo estructurado que el turno de trabajo)*
+| ActionId            | Type | Animation | ZoneId              | Weight | Duration |
+| ------------------- | ---- | --------- | ------------------- | ------ | -------- |
+| `cell_stand_idle`   | IDLE | idle      | `cell_area_01..08`  | 100    | 25–60s   |
+| `cell_sleep`        | IDLE | sleep     | `cell_area_01..08`  | 100    | 25–60s   |
 
-| ActionId                 | Type    | Animation          | ZoneId              | Weight | Duration | Orden en flujo |
-| ------------------------ | ------- | ------------------ | ------------------- | ------ | -------- | -------------- |
-| `laundry_grab_clothes`   | ONESHOT | Rummaging          | `zone_laundry_pile` | 100    | 3–5s     | 1° obligatorio |
-| `laundry_load_washer`    | IDLE    | Load_Machine       | `zone_laundry_wash` | 100    | 15–20s   | 2° obligatorio |
-| `laundry_store_clothes`  | IDLE    | Opening            | `zone_laundry_shelf`| 100    | 3–5s     | 3° obligatorio |
-| `laundry_talk_coworker`  | SOCIAL  | Talk_Standing      | `zone_laundry_chat` | 30     | 8–15s    | Opcional       |
-
-**Sub-zona: Celdas** *(descanso visible)*
-
-> Cada NPC que elige esta sub-zona vuelve a su celda asignada. Las celdas tienen frente de barrotes, asi que el guardia puede leer la postura general desde el pasillo sin entrar. La idea no es esconder NPCs dentro de cajas cerradas, sino generar lectura social clara y barata de producir.
-
-| ActionId              | Type | Animation    | WaypointTag    | Weight | Duration |
-| --------------------- | ---- | ------------ | -------------- | ------ | -------- |
-| `cell_sit_bed`        | IDLE | Sit_Bed_Edge | `cell_XX_bed`_ | 40     | 15–35s   |
-| `cell_read_book`      | IDLE | Read_Book    | `cell_XX_bed`_ | 35     | 20–45s   |
-| `cell_watch_corridor` | IDLE | Idle_Window  | `cell_XX_bed`_ | 25     | 10–25s   |
+`cell_sleep` ya se envía desde backend. Unity resuelve una cama/catre libre dentro del `cell_area_XX`, navega hasta un punto caminable cercano y al llegar ejecuta `SleepInteraction` sobre el `sleepPoint`.
 
 
 ---
@@ -274,25 +273,26 @@ Cada acción define:
 
 ---
 
-#### Fase 7 — Hora libre (2da) | Patio / Comedor / Lavandería / Celdas
+#### Fase 7 — Hora libre (2da) | Patio / Cocina / Lavandería / Celdas
 
-> Idéntico a Fase 4. Los NPCs pueden elegir una sub-zona distinta a la de la primera hora libre (libre albedrío de fase).
+> Idéntico a Fase 4. Los NPCs pueden elegir o cambiar entre patio, celdas, lavandería y cocina.
 
 *(Mismo catálogo de acciones que Fase 4 — ver arriba)*
 
 
 ---
 
-#### Fase 9 — Encierro / Recuento final | Celdas
+#### Fase 8 — Encierro / Recuento final | Celdas
 
-> Fase final breve. Sin interacciones sociales. Todos los NPCs vuelven a su celda, se acomodan y quedan visibles desde el pasillo para el recuento. La tension viene de leer siluetas y ausencias, no de perseguir gente en oscuridad total.
+> Fase final breve. Sin interacciones sociales. Todos los NPCs vuelven a una celda asignada por backend. El backend puede enviar idle de pie o sleep; Unity resuelve `cell_sleep` contra una cama/catre libre dentro de la celda.
 
 
-| ActionId                  | Type | Animation    | WaypointTag    | Weight | Duration                         |
-| ------------------------- | ---- | ------------ | -------------- | ------ | -------------------------------- |
-| `count_settle_bed`        | IDLE | Sit_Bed_Edge | `cell_XX_bed`_ | 25     | 4–10s                            |
-| `count_sleep_silhouette`  | IDLE | Sleep        | `cell_XX_bed`_ | 65     | duración total o resto de la fase |
-| `count_toss_turn`         | IDLE | Toss_Turn    | `cell_XX_bed`_ | 10     | 4–8s → vuelve a sleep            |
+| ActionId            | Type | Animation | ZoneId              | Weight | Duration |
+| ------------------- | ---- | --------- | ------------------- | ------ | -------- |
+| `cell_stand_idle`   | IDLE | idle      | `cell_area_01..08`  | 100    | 25–60s   |
+| `cell_sleep`        | IDLE | sleep     | `cell_area_01..08`  | 100    | 25–60s   |
+
+**Zonas Unity requeridas para Encierro:** `cell_area_01` hasta `cell_area_08`.
 
 
 ---
@@ -304,7 +304,7 @@ Cada acción define:
 ```json
 {
   "nextPhase": 4,
-  "nextPhaseName": "Patio libre",
+  "nextPhaseName": "Hora libre",
   "warningInSeconds": 10
 }
 ```
@@ -314,30 +314,66 @@ Cada acción define:
 ```json
 {
   "phase": 4,
-  "phaseName": "Patio libre",
+  "phaseName": "Hora libre",
   "duration": 120,
-  "zone": "patio_exterior",
+  "zone": "Patio / Cocina / Lavandería / Celdas",
   "npcAssignments": [
     {
       "npcId": "npc_01",
-      "actionId": "yard_walk_perimeter",
-      "waypointChain": ["yard_perimeter_01", "yard_perimeter_03", "yard_perimeter_06"],
-      "duration": 45,
-      "loop": true
+      "actionId": "yard_idle",
+      "animTrigger": "idle",
+      "zoneId": "yard",
+      "seed": 331245,
+      "duration": 28
     },
     {
       "npcId": "npc_02",
-      "actionId": "yard_conversation_group",
-      "waypointId": "yard_conversation_spot_02",
-      "socialPartnerId": "npc_07",
-      "duration": 30
+      "actionId": "yard_exercise",
+      "animTrigger": "exercise",
+      "zoneId": "yard_exercise",
+      "seed": 331246,
+      "duration": 24
     },
     {
       "npcId": "npc_03",
-      "actionId": "work_use_workbench",
-      "waypointId": "workshop_bench_02",
-      "subZone": "taller",
-      "duration": 40
+      "actionId": "cell_sleep",
+      "animTrigger": "sleep",
+      "zoneId": "cell_area_02",
+      "seed": 331247,
+      "duration": 41,
+      "subZone": "celdas"
+    },
+    {
+      "npcId": "npc_04",
+      "actionId": "free_cafe_sit_idle",
+      "animTrigger": "idle",
+      "zoneId": "cafeteria_seating",
+      "seed": 331248,
+      "duration": 22,
+      "subZone": "cocina"
+    },
+    {
+      "npcId": "npc_05",
+      "actionId": "laundry_sequence",
+      "animTrigger": "idle",
+      "duration": 34,
+      "subZone": "lavanderia",
+      "actionSequence": [
+        {
+          "actionId": "laundry_grab_clothes",
+          "animTrigger": "rummaging",
+          "zoneId": "zone_laundry_pile",
+          "seed": 331249,
+          "duration": 4
+        },
+        {
+          "actionId": "laundry_load_washer",
+          "animTrigger": "load_machine",
+          "zoneId": "zone_laundry_wash",
+          "seed": 331250,
+          "duration": 18
+        }
+      ]
     }
   ]
 }
@@ -351,16 +387,20 @@ Cada acción define:
   "assignments": [
     {
       "npcId": "npc_01",
-      "actionId": "yard_sit_bench",
-      "waypointId": "yard_bench_03",
+      "actionId": "yard_lean_wall",
+      "animTrigger": "lean_wall",
+      "zoneId": "yard",
+      "seed": 441001,
       "duration": 25
     },
     {
       "npcId": "npc_02",
-      "actionId": "yard_kick_ball",
-      "waypointId": "yard_ball_spot",
-      "socialPartnerId": "npc_09",
-      "duration": 30
+      "actionId": "cell_stand_idle",
+      "animTrigger": "idle",
+      "zoneId": "cell_area_05",
+      "seed": 441002,
+      "duration": 36,
+      "subZone": "celdas"
     }
   ]
 }
@@ -374,7 +414,8 @@ Cada acción define:
 {
   "playerId": "player_02",
   "currentZone": "taller",
-  "expectedZone": "patio_exterior",
+  "expectedZone": "free_time",
+  "allowedZones": ["patio", "cocina", "lavanderia", "celdas"],
   "phase": 4,
   "graceSeconds": 5
 }
@@ -382,106 +423,37 @@ Cada acción define:
 
 ---
 
-### 3.5 Estructura de Waypoints en Unity
+### 3.5 Estructura de Zonas en Unity
 
-Los waypoints son **ScriptableObjects** configurados en el Editor. El backend solo conoce los IDs string — nunca coordenadas Vector3.
+El backend solo conoce IDs string y semillas; nunca transmite coordenadas `Vector3`.
 
-```csharp
-// WaypointRegistry.cs
-[CreateAssetMenu(menuName = "Jailbreak/WaypointRegistry")]
-public class WaypointRegistry : ScriptableObject
-{
-    [SerializeField] private List<WaypointEntry> waypoints;
-    private Dictionary<string, WaypointEntry> _lookup;
+Unity configura las áreas en `ZoneRegistry.cs` como `ZoneEntry` con `zoneId` + `BoxCollider`. Para Hora libre y Encierro, `NPCBehaviorController` usa `ZoneRegistry.GetDeterministicPoint(zoneId, seed)` y navega con `NavMeshAgent` a ese punto.
 
-    [System.Serializable]
-    public class WaypointEntry
-    {
-        public string waypointId;          // "yard_bench_03"
-        public Transform transform;        // drag desde Scene en Editor
-        public string zone;                // "patio_exterior"
-        public string subZone;             // "taller", "lavanderia", etc.
-        public bool isExclusive;           // solo 1 ocupante a la vez
-        public int maxOccupants = 1;       // mesas de cartas = 4
-        public string[] validPhases;       // fases donde este WP es usable
-        [HideInInspector] public int currentOccupants;
-    }
+Zonas requeridas:
 
-    public WaypointEntry Get(string id) { ... }
-    public List<WaypointEntry> GetByZone(string zone) { ... }
-    public List<WaypointEntry> GetAvailableForPhase(int phase) { ... }
-    public bool Reserve(string id) { ... }   // retorna false si está lleno
-    public void Release(string id) { ... }
-}
-```
+- Patio: `yard`, `yard_benches`, `yard_exercise`
+- Cocina/comedor en Hora libre: `cafeteria`, `cafeteria_seating`
+- Lavandería en Hora libre: `zone_laundry_pile`, `zone_laundry_wash`, `zone_laundry_shelf`, `zone_laundry_chat`
+- Celdas de Hora libre y Encierro: `cell_area_01` ... `cell_area_08`
 
 ```csharp
-// NPCBehaviorController.cs
-public class NPCBehaviorController : MonoBehaviour
+// Contrato actual para Hora libre y Encierro
+public struct NPCActionData
 {
-    [SerializeField] private NavMeshAgent agent;
-    [SerializeField] private Animator animator;
-    [SerializeField] private WaypointRegistry waypointRegistry;
-
-    private NPCActionData currentAction;
-    private float actionTimer;
-    private bool hasArrived;
-    private int chainIndex;
-
-    public void AssignAction(NPCActionData data)
-    {
-        // Liberar waypoint anterior
-        if (currentAction != null)
-            waypointRegistry.Release(currentAction.waypointId);
-
-        currentAction = data;
-        actionTimer = data.duration;
-        hasArrived = false;
-        chainIndex = 0;
-
-        // Reservar y navegar
-        var entry = waypointRegistry.Get(data.waypointId ?? data.waypointChain[0]);
-        agent.SetDestination(entry.transform.position);
-    }
-
-    private void Update()
-    {
-        if (!hasArrived && agent.remainingDistance < 0.3f && !agent.pathPending)
-        {
-            hasArrived = true;
-            OnReachedWaypoint();
-        }
-
-        if (hasArrived)
-        {
-            actionTimer -= Time.deltaTime;
-            if (actionTimer <= 0f)
-                OnActionComplete();
-        }
-    }
-
-    private void OnReachedWaypoint()
-    {
-        animator.SetTrigger(currentAction.animationTrigger);
-
-        // LOOPING: si hay chain, navegar al siguiente
-        if (currentAction.loop && currentAction.waypointChain != null)
-        {
-            chainIndex = (chainIndex + 1) % currentAction.waypointChain.Length;
-            var next = waypointRegistry.Get(currentAction.waypointChain[chainIndex]);
-            agent.SetDestination(next.transform.position);
-            hasArrived = false;
-        }
-    }
-
-    private void OnActionComplete()
-    {
-        // El servidor se encarga de reasignar. Si no llega reassign en 3s,
-        // el NPC hace idle en su posición actual.
-        animator.SetTrigger("Idle");
-    }
+    public string npcId;
+    public string actionId;
+    public string animTrigger;
+    public string zoneId;
+    public uint seed;
+    public float duration;
 }
+
+// Resolución local en Unity
+var destination = zoneRegistry.GetDeterministicPoint(data.zoneId, data.seed);
+agent.SetDestination(destination);
 ```
+
+Para acostarse/dormir, Unity usa un resolver especializado de cama dentro de cada celda: busca `SleepInteractable` dentro del `cell_area_XX`, reserva la cama, navega a un punto caminable cercano y al llegar ejecuta `SleepInteraction` con el `sleepPoint` configurado.
 
 ### 3.6 Transición Orgánica entre Fases
 
@@ -489,7 +461,7 @@ public class NPCBehaviorController : MonoBehaviour
 
 #### Perfiles de salida
 
-Al emitir `phase:start`, el backend asigna a cada NPC un `actionSequence` que incluye un **prefijo de transición orgánica** antes de su acción de fase:
+En fases con flujo secuencial o transición orgánica, el backend puede asignar a cada NPC un `actionSequence` que incluye un **prefijo de transición orgánica** antes de su acción de fase. Hora libre puede usar `actionSequence` para lavandería, cocina/comedor social y prefijos de transición; las acciones directas de patio y celda siguen usando `zoneId` + `seed`.
 
 | Perfil | % NPCs | Linger (in-place) | Detour corredor | Chat en corredor |
 |--------|--------|-------------------|-----------------|------------------|
@@ -526,18 +498,23 @@ phase:start recibido
 
 #### Comportamiento de LOOPING
 
-Las acciones de tipo LOOPING (p.ej. `yard_walk_perimeter`, `work_carry_box`) **no reciben prefijo de transición** — su animación de loop ya es visualmente orgánica y meterles un linger los haría comenzar en el lugar equivocado.
+Las acciones de tipo LOOPING, si se reactivan en un pool futuro, **no reciben prefijo de transición**: su animación de loop ya es visualmente orgánica y meterles un linger los haría comenzar en el lugar equivocado.
 
-#### Libre albedrío + cambio de sub-zona (Fases 4 y 7)
+#### Libre albedrío por sub-zona (Hora libre y Encierro)
 
-Durante el reassign (cada 20s), los NPCs en Hora libre tienen un **25% de probabilidad de cambiar de sub-zona**:
+Durante el reassign (cada 20s), los NPCs de Hora libre pueden cambiar entre patio, celdas, lavandería y cocina. En Encierro pueden refrescar `cell_stand_idle` o `cell_sleep` dentro de la misma celda asignada.
 
 ```
-NPC actualmente en: patio
-Roll = 0.18 < SUBZONE_CHANGE_PROB (0.25)
-→ New sub-zone elegida: comedor
-→ NPC recibe acción de comedor (free_cafe_sit_idle) en siguiente reassign
-→ Se genera tráfico visible patio → comedor que camufla movimientos de jugadores
+NPC en Hora libre:
+Roll de sub-zona → patio
+Roll de acción → yard_exercise
+→ Backend emite npc:reassign con zoneId = yard_exercise, seed y animTrigger = exercise
+→ Unity resuelve un punto dentro de yard_exercise
+
+NPC en Encierro:
+Celda asignada → cell_area_07
+→ Backend emite npc:reassign con zoneId = cell_area_07, seed y animTrigger = idle o sleep
+→ Unity resuelve idle local en el área o cama libre + SleepInteraction para sleep
 ```
 
 ---
@@ -548,26 +525,29 @@ Roll = 0.18 < SUBZONE_CHANGE_PROB (0.25)
 Al inicio de cada fase:
   1. Para cada NPC:
      a. Si la fase tiene sub-zonas (Trabajo) → asignar sub-zona balanceada
-     b. Seleccionar acción inicial: weighted random del pool de la fase
-     c. Seleccionar waypoint disponible del waypointTag de la acción
-     d. Si la acción es SOCIAL → buscar partner disponible compatible
-     e. Calcular duration = random(minDuration, maxDuration)
+     b. Si la fase es Hora libre → asignar sub-zona balanceada (`patio`, `celdas`, `lavanderia`, `cocina`)
+     c. Si la fase es Encierro → asignar `zoneId` de celda (`cell_area_01..08`) + `seed`
+     d. Seleccionar acción inicial: weighted random del pool de la fase
+     e. Si la acción es SOCIAL → buscar partner disponible compatible
+     f. Calcular duration = random(minDuration, maxDuration)
   2. Emitir phase:start con todos los assignments
 
 Cada REASSIGN_INTERVAL segundos (default 20s):
   1. Para cada NPC con actionTimer < 5s (a punto de terminar):
      a. 80% probabilidad de cambiar acción
-     b. Fases 4/7 únicamente: 25% de probabilidad de cambiar de sub-zona antes de elegir acción
-     c. Si cambia: nuevo weighted random del pool de su sub-zona, excluyendo acción actual
-     d. SOCIAL: skip en reassign (partner logic es complejo para incremental)
+     b. Hora libre: 25% de probabilidad de cambiar sub-zona antes de elegir acción
+     c. Encierro: refrescar `cell_stand_idle` o `cell_sleep`, manteniendo `cell_area_XX`
+     d. Si cambia: nuevo weighted random del pool de su fase/sub-zona, excluyendo acción actual
+     e. SOCIAL: skip en reassign (partner logic es complejo para incremental)
   2. Emitir npc:reassign solo con los NPCs que cambian
 
 Restricciones:
   - No asignar waypoints exclusivos ya ocupados
-  - En Fase 9 (Encierro / Recuento final): solo acciones IDLE del pool de la fase; sin SOCIAL ni cambios de sub-zona
+  - En Hora libre: patio usa solo las acciones `yard_*` simplificadas; celdas usa `cell_stand_idle` / `cell_sleep`; lavandería conserva su secuencia; cocina conserva idle/social de comedor
+  - En Encierro: solo `cell_stand_idle` o `cell_sleep` con `cell_area_01..08`
   - En Fase 1 (Inicio): solo acciones del pool de inicio
   - Sub-zona de Trabajo: NPC no cambia de sub-zona durante la fase
-  - Sub-zona de Hora libre: NPC SÍ puede cambiar de sub-zona vía reassign (genera tráfico que camufla jugadores)
+  - Hora libre: cualquier reassign conserva una sub-zona válida y no usa las acciones viejas complejas de patio
 ```
 
 ---
@@ -588,17 +568,42 @@ n_npcs = total_npcs                            // 17–19
 taller_count    = floor(n_npcs / 2)            // ~9
 lavanderia_count = n_npcs - taller             // ~9
 
-// Distribución de sub-zonas (Fase 4/7 — Hora libre)
+// Hora libre — selección de sub-zona
 n_npcs = total_npcs                            // 17–19
-patio_count     = floor(n_npcs * 0.28)         // ~5
-comedor_count   = floor(n_npcs * 0.28)         // ~5
-lavanderia_count = floor(n_npcs * 0.28)        // ~5
-celdas_count    = n_npcs - patio - comedor - lavanderia // ~3
+for each npc:
+  subZone = balanced_random([patio, celdas, lavanderia, cocina])
+  if subZone == patio:
+    action = weighted_random([yard_idle, yard_bench_idle, yard_exercise, yard_shadow_box, yard_lean_wall])
+    zoneId = action.zoneId
+    seed = random_uint()
+  if subZone == celdas:
+    action = weighted_random([cell_stand_idle, cell_sleep])
+    zoneId = assigned_cell_area[npc]
+    seed = random_uint()
+  if subZone == lavanderia:
+    actionSequence = [laundry_grab_clothes, laundry_load_washer, laundry_store_clothes, optional(laundry_talk_coworker)]
+  if subZone == cocina:
+    action = weighted_random([free_cafe_sit_talk, free_cafe_sit_idle, free_cafe_stand_chat])
+    zoneId = action.zoneId
+    seed = random_uint()
+
+// Asignación de celdas (Encierro)
+n_npcs = total_npcs                            // 17–19
+cell_areas = [
+  cell_area_01(cap=2), cell_area_02(cap=3),
+  cell_area_03(cap=2), cell_area_04(cap=3),
+  cell_area_05(cap=2), cell_area_06(cap=3),
+  cell_area_07(cap=2), cell_area_08(cap=3)
+]
+for each npc:
+  zoneId = preferred_cell_area[npc] ?? first_available_slot(cell_areas)
+  action = weighted_random([cell_stand_idle, cell_sleep])
+  seed = random_uint()
 
 // Bandwidth estimada (reemplaza npc:positions)
-phase_start_payload = n_npcs × (npcId[4B] + actionId[20B] + waypointId[20B] + duration[2B]) 
-                    = 19 × 46B ≈ 874B per phase transition (~1 KB cada 90–120s)
-npc_reassign_payload = avg_changed_npcs(7) × 46B ≈ 322B cada 25s
+phase_start_payload = n_npcs × (npcId[4B] + actionId[20B] + zoneId[20B] + seed[4B] + duration[2B])
+                    = 19 × 50B ≈ 950B per phase transition (~1 KB cada 90–120s)
+npc_reassign_payload = avg_changed_npcs(7) × 50B ≈ 350B cada 25s
 vs. antiguo npc:positions = 20 × 18B × 5/s = 1800B/s (delta 25%) ≈ ~450B/s
 
 Reducción: de ~450 B/s continuo a ~13 B/s promedio → reducción de 35x
@@ -615,14 +620,16 @@ slot_count = 20
 
 | Caso                                                      | Qué pasa                                                                 | Resolución                                                                                                                                                         |
 | --------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **NPC recibe reassign mientras navega**                   | El agente estaba en camino a waypoint A, llega reassign para waypoint B  | Interrumpir navegación inmediatamente. Liberar reserva de A. Navegar a B.                                                                                          |
-| **Waypoint exclusivo lleno al asignar**                   | El servidor asignó `yard_bench_03` pero ya hay un NPC ahí                | Unity no reserva el WP. El NPC hace Idle en su posición actual y espera hasta que el WP se libere o llegue el siguiente reassign.                                  |
-| **Partner social se desconecta mid-action**               | NPC_02 estaba en `yard_kick_ball` con NPC_07 (jugador) que se desconectó | NPC_02 recibe `Idle` trigger automáticamente al detectar que su partner ya no está activo. Queda disponible para el siguiente reassign.                            |
+| **NPC recibe reassign mientras navega**                   | El agente estaba en camino a zona A, llega reassign para zona B          | Interrumpir navegación inmediatamente. Resolver nuevo punto por `zoneId` + `seed`. Navegar a B.                                                                    |
+| **Waypoint exclusivo lleno al asignar**                   | El servidor asignó `cafeteria_counter_03` pero ya hay un NPC ahí         | Unity no reserva el WP. El NPC hace Idle en su posición actual y espera hasta que el WP se libere o llegue el siguiente reassign.                                  |
+| **Partner social se desconecta mid-action**               | NPC_02 estaba en `work_talk_coworker` con NPC_07 que deja de estar activo | NPC_02 recibe `Idle` trigger automáticamente al detectar que su partner ya no está activo. Queda disponible para el siguiente reassign.                            |
 | **Jugador en zona equivocada**                            | Servidor detecta jugador en patio durante fase de Cena                   | Servidor emite `phase:zone_check` con 5s de gracia. Si el jugador no se mueve a la zona correcta → el guardia recibe alerta (sistema de Alertas #16).              |
-| **phase:start llega antes de que NPC termine transición** | NPC está en la puerta de la celda cuando empieza Patio Libre             | NPC recibe el nuevo assignment. NavMeshAgent redirige hacia patio exterior sin importar estado anterior.                                                           |
+| **phase:start llega antes de que NPC termine transición** | NPC está en la puerta de la celda cuando empieza Hora libre              | NPC recibe el nuevo assignment. NavMeshAgent redirige hacia el `zoneId` nuevo sin importar estado anterior.                                                        |
 | **Todos los waypoints de un pool están llenos**           | 19 NPCs quieren `cafeteria_seat`_ pero solo hay 16 seats                 | Los últimos 3 NPCs reciben `cafe_wait_in_line` como fallback. El servidor itera el pool hasta encontrar acción alternativa.                                        |
-| **Fase de trabajo: sub-zona sin waypoints libres**        | 7 NPCs en taller pero solo 4 workbenches libres                          | Los NPCs sobrantes reciben `work_carry_box` o `work_inspect_equipment` como fallback hasta que se libere un workbench.                                             |
-| **LOOPING action durante phase:start**                    | NPC en medio de carry_box cuando llega nueva fase                        | NPC abandona la acción en el próximo waypoint de la cadena (no teleporta). Luego navega a la nueva zona.                                                           |
+| **Celda sin área configurada**                            | Unity recibe `cell_stand_idle` o `cell_sleep` con `cell_area_07`, pero falta en `ZoneRegistry` | Unity loguea warning de authoring y deja al NPC en idle local hasta recibir un assignment válido.                                                                  |
+| **Zona de patio sin collider**                            | Unity recibe `yard_exercise`, pero falta el `BoxCollider` del área       | Unity loguea warning de authoring y deja al NPC en idle local hasta recibir un assignment válido.                                                                  |
+| **Fase de trabajo: sub-zona sin waypoints libres**        | 7 NPCs en taller pero solo 4 workbenches libres                          | Los NPCs sobrantes reciben `work_inspect_cabinets` o idle local como fallback hasta que se libere un workbench.                                                    |
+| **LOOPING action durante phase:start**                    | NPC en medio de una acción de loop cuando llega nueva fase               | NPC abandona la acción en el próximo waypoint de la cadena (no teleporta). Luego navega a la nueva zona.                                                           |
 | **Cliente nuevo se une mid-partida (reconexión)**         | Se une en Fase 4, necesita saber el estado actual de todos los NPCs      | Al reconectar, el servidor envía un `phase:start` completo con los assignments actuales (no solo los cambios) para resincronizar.                                  |
 | **Backend se reinicia mid-partida**                       | Todos los clientes pierden assignments                                   | Al reconectar, Unity mantiene el último assignment conocido por NPC. El servidor emite un `phase:start` completo. Los NPCs continúan desde su último estado local. |
 
@@ -664,11 +671,14 @@ Este sistema depende de #18 (Sync) para emitir eventos. El GDD de #18 debe actua
 | `phase_warning_time`          | 10s         | 5–15s           | Jugadores sin tiempo para reaccionar                | Warning demasiado anticipado, pierde tensión          |
 | `zone_grace_period`           | 5s          | 3–10s           | Demasiado punitivo con jugadores que cambian zona   | Jugadores pueden ignorar la zona correcta             |
 | `work_subzone_split`          | 50%/50%     | 30–70% por zona | Una zona queda vacía (visual raro)                  | Una zona queda sobrecargada                           |
-| `free_subzone_split`          | 28%/28%/28%/16% | 15–40% por zona | Una zona queda vacía (visual raro)              | Una zona queda sobrecargada                           |
+| `yard_idle_weight`            | 35          | 20–50           | Demasiado movimiento para una hora libre             | Patio demasiado estático                              |
+| `yard_exercise_weight`        | 20          | 10–35           | Poca actividad visible en patio                      | Demasiados NPCs ejercitando a la vez                  |
+| `cell_stand_weight`           | 100         | 50–150          | Pocos NPCs quedan legibles de pie                    | Casi nadie duerme en celdas                           |
+| `cell_sleep_weight`           | 100         | 50–150          | Casi nadie duerme en celdas                          | Pocos NPCs quedan legibles de pie                     |
+| `free_time_subzone_change_prob` | 0.25      | 0.10–0.40       | Poco tráfico entre zonas durante Hora libre          | Demasiado cruce de NPCs entre zonas                   |
 | `transition_linger_max`       | 20s         | 10–30s          | Todos se mueven casi igual de rápido (NPC-tell)     | Algunos NPCs llegan muy tarde a la zona              |
 | `transition_detour_prob`      | 0.40        | 0.15–0.65       | Poco tráfico en pasillos, ruido visual bajo         | Demasiados NPCs en corredores, congestión             |
 | `transition_enroute_chat_prob`| 0.30        | 0.10–0.50       | Los desvíos se ven mecánicos (nadie charla)         | Demasiadas charlas, los NPCs tardan en llegar         |
-| `subzone_change_prob`         | 0.25        | 0.05–0.45       | Poca movilidad entre zonas en hora libre            | NPCs cambian zona tan seguido que no tienen actividad |
 
 
 ---
@@ -679,23 +689,23 @@ Este sistema depende de #18 (Sync) para emitir eventos. El GDD de #18 debe actua
 | #     | Criterio                                                                                                      | Cómo verificar                                                                                          |
 | ----- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | AC-1  | Al inicio de cada fase, todos los clientes reciben el mismo `phase:start` con assignments para todos los NPCs | Loguear payload en 4 clientes simultáneos → payload idéntico (mismo timestamp y assignments)            |
-| AC-2  | Los NPCs navegan a su waypoint asignado usando NavMesh (sin teletransportarse)                                | Observar visualmente que los NPCs caminan hacia sus destinos al inicio de fase                          |
+| AC-2  | Los NPCs navegan al `zoneId` asignado usando NavMesh (sin teletransportarse)                                  | Observar visualmente que los NPCs caminan hacia sus destinos al inicio de fase                          |
 | AC-3  | Los NPCs ejecutan la animación correcta al llegar al waypoint                                                 | NPC asignado a `cafe_sit_eat` → se sienta al llegar al seat, no camina en el aire                       |
 | AC-4  | Un waypoint exclusivo no acepta más de 1 NPC simultáneo                                                       | Asignar manualmente 2 NPCs al mismo waypoint exclusivo → el segundo hace Idle                           |
-| AC-5  | Los NPCs en LOOPING action completan el ciclo sin interrupciones de navegación                                | NPC con `yard_walk_perimeter` navega A→B→C→A en loop hasta recibir reassign                             |
+| AC-5  | Los assignments por zona resuelven destino local sin coordenadas de backend                                   | NPC con `yard_exercise` + `seed` navega a un punto estable dentro de `yard_exercise`                    |
 | AC-6  | `npc:reassign` actualiza solo los NPCs mencionados; los demás continúan su acción                             | Emitir reassign para 3 NPCs → solo esos 3 cambian destino, los 16 restantes no se interrumpen           |
 | AC-7  | Bandwidth de NPCs ≤ 50 B/s promedio en partida normal (excluye phase transitions)                             | Wireshark/Network Profiler Unity durante 2 minutos de Fase 4 → medir bytes/s de mensajes `npc:`*        |
 | AC-8  | Un cliente que reconecta mid-partida recibe los assignments actuales y los NPCs quedan consistentes           | Desconectar cliente en Fase 3, reconectar en Fase 4 → NPCs en posiciones correctas, sin NPCs "fantasma" |
-| AC-9  | En Fase 9, ningún NPC ejecuta una acción SOCIAL y la mayoría termina visible en su catre                       | Loggear todas las acciones asignadas en Fase 9 → ninguna tiene `socialPartnerId` y >=70% usa `count_sleep_silhouette` en los ultimos 30s |
-| AC-10 | Los jugadores prisioneros reciben `phase:zone_check` si están en zona incorrecta 5s después de `phase:start`  | Jugador permanece en comedor cuando empieza Fase 4 (patio) → recibe warning a los 5s                    |
+| AC-9  | En Fase 9, todos los NPCs usan solo acciones de celda y quedan visibles desde el pasillo                      | Loggear Fase 9 → solo `cell_stand_idle` o `cell_sleep`, sin `socialPartnerId`, todos con `cell_area_XX` válido |
+| AC-10 | Los jugadores prisioneros reciben `phase:zone_check` si están en zona incorrecta 5s después de `phase:start`  | Jugador permanece fuera de las sub-zonas válidas de la fase → recibe warning a los 5s                  |
 | AC-11 | Los NPCs de Fase 6 (Trabajo) permanecen en su sub-zona asignada toda la fase                                  | Observar visualmente que los NPCs de taller no navegan a lavandería durante la fase                     |
-| AC-12 | En Fases 4 y 7 (Hora libre), los NPCs cambian de sub-zona vía reassign generando tráfico entre zonas         | Observar que al menos 3 NPCs cambian de sub-zona durante una fase de hora libre completa                |
+| AC-12 | En Fases 4 y 7 (Hora libre), los NPCs usan patio simplificado, cocina, lavandería o celdas                   | Loggear `phase:start` y `npc:reassign` → aparecen `yard_*`, `free_cafe_*`, `laundry_*`, `cell_stand_idle`/`cell_sleep`; no aparecen acciones viejas complejas de patio |
 | AC-13 | Al sonar el silbato de transición, los NPCs NO se mueven todos a la vez — el movimiento es escalonado        | En el momento exacto de `phase:start`, ≥5 NPCs están aún en su posición anterior (linger activo)        |
 | AC-14 | Al menos el 30% de los NPCs pasan por un waypoint de corredor durante una transición de fase                  | Loguear waypoints reservados en `corridor_idle_*` durante 3 transiciones → al menos 6 NPCs usan corredor|
 
 ---
 
-## 9. Referencia Completa de Waypoints (177 total)
+## 9. Referencia Completa de Waypoints y Áreas (122 waypoints + 11 zone areas)
 
 > **Fuente canónica:** `Assets/Editor/WaypointRegistryGenerator.cs`
 > **Convención de nombres:** Los GameObjects en escena deben tener exactamente este nombre para que `WaypointRegistry` los resuelva automáticamente desde los `waypointRoots`.
@@ -901,90 +911,54 @@ Este sistema depende de #18 (Sync) para emitir eventos. El GDD de #18 debe actua
 
 ---
 
-### 9.6 Patio (35 waypoints)
+### 9.6 Patio (3 zone areas)
 
 **Parent sugerido:** `WP_Patio`
 **Fases:** 4, 7
 
-| # | Waypoint ID | Cap | Fases |
-|---|-------------|-----|-------|
-| 1 | `yard_perimeter_01` | 1 | 4, 7 |
-| 2 | `yard_perimeter_02` | 1 | 4, 7 |
-| 3 | `yard_perimeter_03` | 1 | 4, 7 |
-| 4 | `yard_perimeter_04` | 1 | 4, 7 |
-| 5 | `yard_perimeter_05` | 1 | 4, 7 |
-| 6 | `yard_perimeter_06` | 1 | 4, 7 |
-| 7 | `yard_perimeter_07` | 1 | 4, 7 |
-| 8 | `yard_perimeter_08` | 1 | 4, 7 |
-| 9 | `yard_bench_01` | 1 | 4, 7 |
-| 10 | `yard_bench_02` | 1 | 4, 7 |
-| 11 | `yard_bench_03` | 1 | 4, 7 |
-| 12 | `yard_bench_04` | 1 | 4, 7 |
-| 13 | `yard_bench_05` | 1 | 4, 7 |
-| 14 | `yard_bench_06` | 1 | 4, 7 |
-| 15 | `yard_bench_07` | 1 | 4, 7 |
-| 16 | `yard_bench_08` | 1 | 4, 7 |
-| 17 | `yard_exercise_area_01` | 2 | 4, 7 |
-| 18 | `yard_exercise_area_02` | 2 | 4, 7 |
-| 19 | `yard_exercise_area_03` | 2 | 4, 7 |
-| 20 | `yard_exercise_area_04` | 2 | 4, 7 |
-| 21 | `yard_conversation_spot_01` | 2 | 4, 7 |
-| 22 | `yard_conversation_spot_02` | 2 | 4, 7 |
-| 23 | `yard_conversation_spot_03` | 2 | 4, 7 |
-| 24 | `yard_conversation_spot_04` | 2 | 4, 7 |
-| 25 | `yard_conversation_spot_05` | 2 | 4, 7 |
-| 26 | `yard_conversation_spot_06` | 2 | 4, 7 |
-| 27 | `yard_card_table_01` | 4 | 4, 7 |
-| 28 | `yard_card_table_02` | 4 | 4, 7 |
-| 29 | `yard_wall_lean_01` | 1 | 4, 7 |
-| 30 | `yard_wall_lean_02` | 1 | 4, 7 |
-| 31 | `yard_wall_lean_03` | 1 | 4, 7 |
-| 32 | `yard_wall_lean_04` | 1 | 4, 7 |
-| 33 | `yard_wall_lean_05` | 1 | 4, 7 |
-| 34 | `yard_wall_lean_06` | 1 | 4, 7 |
-| 35 | `yard_ball_spot` | 2 | 4, 7 |
+Cada `zoneId` se configura en `ZoneRegistry` con un `BoxCollider` que cubre el área caminable. Unity elige un punto determinístico dentro del área usando el `seed` recibido del backend.
+
+| # | Zone ID | Uso | Fases |
+|---|---------|-----|-------|
+| 1 | `yard` | Idle general y lean wall | 4, 7 |
+| 2 | `yard_benches` | Idle cerca de bancos | 4, 7 |
+| 3 | `yard_exercise` | Ejercicio y shadowbox | 4, 7 |
 
 ---
 
-### 9.7 Celdas — Interior (20 waypoints)
+### 9.7 Celdas — Interior (8 cell areas / 20 beds)
 
 **Parent sugerido:** `WP_Celdas_Interior`
 **Fases:** 4, 7, 9
 
-| # | Waypoint ID | Cap | Fases |
-|---|-------------|-----|-------|
-| 1 | `cell_00_bed_01` | 1 | 4, 7, 9 |
-| 2 | `cell_00_bed_02` | 1 | 4, 7, 9 |
-| 3 | `cell_01_bed_01` | 1 | 4, 7, 9 |
-| 4 | `cell_01_bed_02` | 1 | 4, 7, 9 |
-| 5 | `cell_02_bed_01` | 1 | 4, 7, 9 |
-| 6 | `cell_02_bed_02` | 1 | 4, 7, 9 |
-| 7 | `cell_03_bed_01` | 1 | 4, 7, 9 |
-| 8 | `cell_03_bed_02` | 1 | 4, 7, 9 |
-| 9 | `cell_04_bed_01` | 1 | 4, 7, 9 |
-| 10 | `cell_04_bed_02` | 1 | 4, 7, 9 |
-| 11 | `cell_05_bed_01` | 1 | 4, 7, 9 |
-| 12 | `cell_05_bed_02` | 1 | 4, 7, 9 |
-| 13 | `cell_06_bed_01` | 1 | 4, 7, 9 |
-| 14 | `cell_06_bed_02` | 1 | 4, 7, 9 |
-| 15 | `cell_07_bed_01` | 1 | 4, 7, 9 |
-| 16 | `cell_07_bed_02` | 1 | 4, 7, 9 |
-| 17 | `cell_08_bed_01` | 1 | 4, 7, 9 |
-| 18 | `cell_08_bed_02` | 1 | 4, 7, 9 |
-| 19 | `cell_09_bed_01` | 1 | 4, 7, 9 |
-| 20 | `cell_09_bed_02` | 1 | 4, 7, 9 |
+Cada `cell_area_XX` se configura como un área lógica en `ZoneRegistry` con un `BoxCollider` que cubre el espacio caminable dentro de la celda.
+
+Hay 4 celdas abajo y 4 celdas en primer piso. Las capacidades por piso son `2,3,2,3`, para 10 camas abajo y 10 camas arriba.
+
+En la implementación actual se usa para `cell_stand_idle` y `cell_sleep`. Unity resuelve `cell_stand_idle` a punto de área y `cell_sleep` a una cama/catre libre con `SleepInteractable`.
+
+| # | CellArea ID | Piso | Camas/Cap | Fases |
+|---|-------------|------|-----------|-------|
+| 1 | `cell_area_01` | Abajo | 2 | 4, 7, 9 |
+| 2 | `cell_area_02` | Abajo | 3 | 4, 7, 9 |
+| 3 | `cell_area_03` | Abajo | 2 | 4, 7, 9 |
+| 4 | `cell_area_04` | Abajo | 3 | 4, 7, 9 |
+| 5 | `cell_area_05` | Primer piso | 2 | 4, 7, 9 |
+| 6 | `cell_area_06` | Primer piso | 3 | 4, 7, 9 |
+| 7 | `cell_area_07` | Primer piso | 2 | 4, 7, 9 |
+| 8 | `cell_area_08` | Primer piso | 3 | 4, 7, 9 |
 
 ---
 
 ### 9.8 Resumen por Parent
 
-| Parent sugerido | Zona | Waypoints | Fases principales |
+| Parent sugerido | Zona | Waypoints / Áreas | Fases principales |
 |-----------------|------|-----------|-------------------|
 | `WP_Celdas` | celda | 20 | 1 |
 | `WP_Comedor` | comedor | 45 | 1, 2, 4, 5, 7, 8 |
 | `WP_Corredor` | corredor | 24 | todas |
 | `WP_Taller` | trabajo/taller | 17 | 3, 6 |
 | `WP_Lavanderia` | lavanderia | 16 | 3, 4, 6, 7 |
-| `WP_Patio` | patio | 35 | 4, 7 |
-| `WP_Celdas_Interior` | celdas | 20 | 4, 7, 9 |
-| **Total** | | **177** | |
+| `WP_Patio` | patio | 3 zone areas | 4, 7 |
+| `WP_Celdas_Interior` | celdas | 8 cell areas | 4, 7, 9 |
+| **Total** | | **122 waypoints + 11 zone areas** | |
