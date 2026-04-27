@@ -44,7 +44,8 @@ describe('State Management', () => {
     it('should add player with default prisoner role', () => {
       const player = addPlayer(state, 'socket_1', HOST_USER_ID, { x: 0, y: 1.5, z: 0 })
 
-      expect(player.id).toBe('socket_1')
+      // player.id mirrors the stable userId — the socketId is the map key only.
+      expect(player.id).toBe(HOST_USER_ID)
       expect(player.userId).toBe(HOST_USER_ID)
       expect(player.role).toBe('prisoner') // default — reassigned on game start
       expect(state.players.size).toBe(1)

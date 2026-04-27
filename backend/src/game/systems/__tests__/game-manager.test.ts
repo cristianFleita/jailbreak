@@ -116,7 +116,7 @@ describe('GameManager', () => {
       })
 
       gameManager.onGuardMark('guard_1', 'prisoner_1')
-      gameManager.onGuardCatch('prisoner_1')
+      gameManager.onGuardCatch('guard_1', 'prisoner_1', true)
 
       // Pursuit should end
       expect(gameManager.pursuit.isBeingChased('prisoner_1')).toBe(false)

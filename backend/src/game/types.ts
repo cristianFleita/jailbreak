@@ -70,9 +70,18 @@ export interface PlayerState {
 export type RouteItemId = 'route1_cutters' | 'route1_wrench' | string
 export type RouteItemType = 'route_tool' | string
 
+/**
+ * Kind / family of a route tool. Multiple physical instances may share the
+ * same kind (e.g. two cutters spawned as `route1_cutters_a` and
+ * `route1_cutters_b`). Mission gates check by kind so any matching instance
+ * counts as satisfying the requirement.
+ */
+export type RouteItemKind = 'route1_cutters' | 'route1_wrench'
+
 export interface InventorySlotSync {
-  itemId: RouteItemId
+  itemId: RouteItemId        // unique instance id (e.g. route1_cutters_a)
   itemType: RouteItemType
+  itemKind?: RouteItemKind   // family — used by HUD for icon/name resolution
   iconId?: string
 }
 
@@ -119,8 +128,9 @@ export interface ItemState {
 
   // ── Extended fields (Ruta 1 / Phase A contract) ─────────────────────────
   // Coexist with legacy fields above; new route-tool items populate these.
-  itemId?: RouteItemId            // stable item identifier (e.g. "route1_wrench")
+  itemId?: RouteItemId            // unique instance id (e.g. "route1_cutters_a")
   itemType?: RouteItemType        // e.g. "route_tool"
+  itemKind?: RouteItemKind        // family/kind shared by multiple instances (e.g. "route1_cutters")
   state?: RouteItemLifecycle      // finite-state lifecycle for networked pickables
   holderUserId?: string           // userId of current holder (distinct from legacy pickedUpBy=socketId)
   spawnAreaId?: string            // spawn area chosen by backend for initial placement
@@ -303,8 +313,9 @@ export interface WorldStatePayload {
  * Delivered on spawn, pickup, store, drop, and respawn.
  */
 export interface ItemStateBroadcast {
-  itemId: RouteItemId
+  itemId: RouteItemId            // unique instance id
   itemType: RouteItemType
+  itemKind?: RouteItemKind       // family/kind — clients use this to resolve prefab + HUD icon
   state: RouteItemLifecycle
   holderUserId?: string
   spawnAreaId?: string

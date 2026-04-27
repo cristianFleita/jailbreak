@@ -327,8 +327,8 @@ export function stopGameLoop(room: GameRoom): void {
  * Initializes NPCs for a room (called when game starts).
  * NPC count is computed dynamically based on player count.
  */
-export function initializeNPCs(room: GameRoom): void {
-  spawnNPCs(room.state, room.config)
+export function initializeNPCs(room: GameRoom, count?: number): void {
+  spawnNPCs(room.state, room.config, count)
   console.log(`[ROOM] Spawned ${room.state.npcs.size} NPCs in "${room.state.id}"`)
 }
 

@@ -124,6 +124,7 @@ describe('Room Manager', () => {
       const room = createRoom('bounds-room', HOST)!
       initializeNPCs(room, 20)
 
+
       room.state.npcs.forEach((npc) => {
         const { minX, maxX, minZ, maxZ } = room.config.mapBounds
 

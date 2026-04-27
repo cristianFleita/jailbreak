@@ -48,7 +48,7 @@ describe('Socket Events Integration', () => {
       const guard = addTestPlayer(room.state, 'socket_guard', HOST, { x: 0, y: 1.5, z: 0 }, 'guard')
 
       const payload = {
-        playerId: 'socket_guard',
+        playerId: HOST,
         position: { x: 0.25, y: 1.5, z: 0 }, // Legal movement (5 m/s)
         rotation: { x: 0, y: 0, z: 0, w: 1 },
         velocity: { x: 1, y: 0, z: 0 },
@@ -74,11 +74,31 @@ describe('Socket Events Integration', () => {
 
     it('should reject out-of-bounds movement', () => {
       const guard = addTestPlayer(room.state, 'socket_guard', HOST, { x: 0, y: 1.5, z: 0 }, 'guard')
+
+      // Burn through the spawn grace period with small valid moves so the
+      // anti-cheat speed/bounds validator actually runs on the next move.
+      const idlePayload = {
+        playerId: HOST,
+        position: { x: 0, y: 1.5, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        velocity: { x: 0, y: 0, z: 0 },
+        movementState: 'idle' as const,
+      }
+      for (let i = 0; i < 5; i++) {
+        handlePlayerMove({
+          io,
+          roomId: 'event-test-room',
+          room,
+          socketId: 'socket_guard',
+          payload: idlePayload,
+          timestamp: Date.now(),
+        })
+      }
       const originalPos = { ...guard.position }
 
       const payload = {
-        playerId: 'socket_guard',
-        position: { x: 100, y: 1.5, z: 0 }, // out of bounds
+        playerId: HOST,
+        position: { x: 500, y: 1.5, z: 0 }, // outside mapBounds (maxX=300)
         rotation: { x: 0, y: 0, z: 0, w: 1 },
         velocity: { x: 50, y: 0, z: 0 },
         movementState: 'walking' as const,
@@ -93,7 +113,7 @@ describe('Socket Events Integration', () => {
         timestamp: Date.now(),
       })
 
-      // Position should remain unchanged (validation failed)
+      // Position should remain unchanged (validation rejected)
       expect(guard.position).toEqual(originalPos)
     })
   })
@@ -128,14 +148,14 @@ describe('Socket Events Integration', () => {
         roomId: 'event-test-room',
         room,
         socketId: 'socket_p1',
-        playerId: 'socket_p1',
+        playerId: 'user_p1',
         objectId: 'item_123',
         action: 'pickup',
         timestamp: Date.now(),
       })
 
       expect(broadcastedEvent1).not.toBeNull()
-      expect((broadcastedEvent1 as any).payload.playerId).toBe('socket_p1')
+      expect((broadcastedEvent1 as any).payload.playerId).toBe('user_p1')
 
       // Second pickup attempt (should fail)
       let broadcastedEvent2 = null
@@ -153,7 +173,7 @@ describe('Socket Events Integration', () => {
         roomId: 'event-test-room',
         room,
         socketId: 'socket_p2',
-        playerId: 'socket_p2',
+        playerId: 'user_p2',
         objectId: 'item_123',
         action: 'pickup',
         timestamp: Date.now(),
@@ -183,8 +203,8 @@ describe('Socket Events Integration', () => {
         emit: (event: string, payload: any) => {
           if (event === 'chase:start') {
             chaseStarted = true
-            expect(payload.guardId).toBe('socket_guard')
-            expect(payload.targetId).toBe('socket_p1')
+            expect(payload.guardId).toBe(HOST)
+            expect(payload.targetId).toBe('user_p1')
           }
         },
       })
@@ -194,8 +214,8 @@ describe('Socket Events Integration', () => {
         roomId: 'event-test-room',
         room,
         socketId: 'socket_guard',
-        guardId: 'socket_guard',
-        targetId: 'socket_p1',
+        guardId: HOST,
+        targetId: 'user_p1',
         timestamp: Date.now(),
       })
 
@@ -234,8 +254,8 @@ describe('Socket Events Integration', () => {
         roomId: 'event-test-room',
         room,
         socketId: 'socket_guard',
-        guardId: 'socket_guard',
-        targetId: 'socket_p1',
+        guardId: HOST,
+        targetId: 'user_p1',
         timestamp: Date.now(),
       })
 

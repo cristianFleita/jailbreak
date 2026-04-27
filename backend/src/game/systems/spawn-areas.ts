@@ -19,13 +19,15 @@ import { Server } from 'socket.io'
 import {
   GameRoomState,
   RouteItemId,
+  RouteItemKind,
   SpawnAreaRegistration,
   Vector3,
 } from '../types.js'
 import {
-  CRITICAL_ROUTE_ITEM_IDS,
   broadcastItemState,
   ensureItemState,
+  getItemKind,
+  inferItemKind,
   isCriticalRouteItem,
 } from './route-inventory.js'
 
@@ -152,10 +154,35 @@ export function registerSpawnAreas(
 }
 
 /**
- * For each critical route item that does not yet have a spawn area assigned,
- * picks a random valid spawn area from the registered set and updates the
- * authoritative ItemState. Emits `item:state` for every item that was
- * repositioned so all clients move the prefab visually.
+ * Returns areas whose `allowedItemIds` accepts the given item — either by the
+ * exact instance id or by the item's kind (e.g. an area listing
+ * "route1_cutters" accepts both `route1_cutters_a` and `route1_cutters_b`).
+ */
+function candidatesForItem(
+  state: GameRoomState,
+  itemId: RouteItemId,
+  kind?: RouteItemKind
+): SpawnAreaRegistration[] {
+  if (!state.spawnAreas) return []
+  const out: SpawnAreaRegistration[] = []
+  for (const area of state.spawnAreas.values()) {
+    if (area.allowedItemIds.includes(itemId)) {
+      out.push(area)
+      continue
+    }
+    if (kind && area.allowedItemIds.includes(kind)) out.push(area)
+  }
+  return out
+}
+
+/**
+ * For each critical route item already seeded in `state.items`, picks a valid
+ * spawn area and updates its authoritative ItemState. When several instances
+ * of the same kind exist (e.g. two cutters) they are placed at different
+ * areas whenever there are enough candidates, so a softlock can never come
+ * from both copies clustering on the same spot.
+ *
+ * Held/stored items are skipped — their placement is driven by players.
  *
  * This is the Phase C-02 entry point called right after a successful
  * registerSpawnAreas. It is also reused by the respawn path so an item
@@ -165,13 +192,23 @@ export function placeCriticalItemsInSpawnAreas(
   io: Server,
   roomId: string,
   state: GameRoomState,
-  targetItemIds: readonly RouteItemId[] = CRITICAL_ROUTE_ITEM_IDS
+  targetItemIds?: readonly RouteItemId[]
 ): RouteItemId[] {
   if (!state.spawnAreas || state.spawnAreas.size === 0) return []
 
-  const placed: RouteItemId[] = []
+  // Default target list = every critical instance currently in state.items.
+  // This keeps callers (and tests) that pre-seed items via ensureItemState
+  // working transparently with N instances per kind.
+  const targets: RouteItemId[] = targetItemIds
+    ? targetItemIds.slice()
+    : Array.from(state.items.values())
+        .filter((it) => isCriticalRouteItem(it.itemId ?? it.id))
+        .map((it) => (it.itemId ?? it.id) as RouteItemId)
 
-  for (const itemId of targetItemIds) {
+  const placed: RouteItemId[] = []
+  const usedAreaByKind = new Map<RouteItemKind, Set<string>>()
+
+  for (const itemId of targets) {
     const item = ensureItemState(state, itemId, 'route_tool')
 
     // Skip items that are mid-play (held/stored) — their placement is already
@@ -179,31 +216,44 @@ export function placeCriticalItemsInSpawnAreas(
     const lifecycle = item.state ?? 'spawned'
     if (lifecycle === 'held' || lifecycle === 'stored') continue
 
-    const candidates: SpawnAreaRegistration[] = []
-    for (const area of state.spawnAreas.values()) {
-      if (area.allowedItemIds.includes(itemId)) candidates.push(area)
-    }
+    const kind = getItemKind(item) ?? inferItemKind(itemId)
+    const candidates = candidatesForItem(state, itemId, kind)
 
     if (candidates.length === 0) {
       console.warn(
-        `[SPAWN] No registered spawn area allows item "${itemId}" — leaving at current position ${JSON.stringify(item.position)}`
+        `[SPAWN] No registered spawn area allows item "${itemId}" (kind=${kind ?? 'unknown'}) — leaving at current position ${JSON.stringify(item.position)}`
       )
       continue
     }
 
-    const chosen = candidates[Math.floor(Math.random() * candidates.length)]
+    // Prefer an area not yet used by another instance of the same kind.
+    let pool = candidates
+    if (kind) {
+      const used = usedAreaByKind.get(kind) ?? new Set<string>()
+      const fresh = candidates.filter((c) => !used.has(c.spawnAreaId))
+      if (fresh.length > 0) pool = fresh
+    }
+
+    const chosen = pool[Math.floor(Math.random() * pool.length)]
     item.spawnAreaId = chosen.spawnAreaId
     item.position = { ...chosen.position }
     item.state = 'spawned'
     item.holderUserId = undefined
     item.isPickedUp = false
     item.pickedUpBy = undefined
+    if (kind && !item.itemKind) item.itemKind = kind
+
+    if (kind) {
+      const used = usedAreaByKind.get(kind) ?? new Set<string>()
+      used.add(chosen.spawnAreaId)
+      usedAreaByKind.set(kind, used)
+    }
 
     broadcastItemState(io, roomId, item)
     placed.push(itemId)
 
     console.log(
-      `[SPAWN] Placed "${itemId}" at ${chosen.spawnAreaId} (zone=${chosen.zoneId}) pos=(${chosen.position.x.toFixed(2)}, ${chosen.position.y.toFixed(2)}, ${chosen.position.z.toFixed(2)})`
+      `[SPAWN] Placed "${itemId}" (kind=${kind ?? 'unknown'}) at ${chosen.spawnAreaId} (zone=${chosen.zoneId}) pos=(${chosen.position.x.toFixed(2)}, ${chosen.position.y.toFixed(2)}, ${chosen.position.z.toFixed(2)})`
     )
   }
 
@@ -232,10 +282,8 @@ export function respawnCriticalItem(
   const lifecycle = item.state ?? 'spawned'
   if (lifecycle === 'held' || lifecycle === 'stored') return false
 
-  const candidates: SpawnAreaRegistration[] = []
-  for (const area of state.spawnAreas.values()) {
-    if (area.allowedItemIds.includes(itemId)) candidates.push(area)
-  }
+  const kind = getItemKind(item) ?? inferItemKind(itemId)
+  const candidates = candidatesForItem(state, itemId, kind)
   if (candidates.length === 0) return false
 
   // Prefer an area different from the current one if we have options

@@ -29,7 +29,7 @@ namespace Jailbreak.Interactions.Pickable
         [Serializable]
         public class ItemPrefabEntry
         {
-            [Tooltip("Stable backend item id (e.g. route1_cutters, route1_wrench).")]
+            [Tooltip("Item kind / family. The backend may spawn multiple instances of this kind (e.g. route1_cutters_a, route1_cutters_b) — every instance uses this same prefab. Typical values: route1_cutters, route1_wrench.")]
             public string itemId;
 
             [Tooltip("Prefab to instantiate when backend places this item in a spawn area. Must carry NetworkRoutePickable.")]
@@ -37,7 +37,7 @@ namespace Jailbreak.Interactions.Pickable
         }
 
         [Header("Item prefabs")]
-        [Tooltip("Mapping of itemId -> networked pickable prefab. Must include every route-critical item expected in this scene.")]
+        [Tooltip("Mapping of item kind -> networked pickable prefab. One entry per kind; the same prefab is reused for every instance of that kind (cutters_a / cutters_b share the cutters prefab).")]
         public ItemPrefabEntry[] itemPrefabs;
 
         [Header("Spawn area discovery")]
@@ -235,7 +235,16 @@ namespace Jailbreak.Interactions.Pickable
         private void HandleItemState(ItemStateBroadcastPayload payload)
         {
             if (payload == null || string.IsNullOrEmpty(payload.itemId)) return;
-            if (!_prefabByItemId.TryGetValue(payload.itemId, out var prefab)) return;
+
+            // Resolve prefab by kind (multi-instance support). Fall back to the
+            // unique itemId so legacy single-instance entries keep working.
+            var lookupKey = !string.IsNullOrEmpty(payload.itemKind) ? payload.itemKind : payload.itemId;
+            if (!_prefabByItemId.TryGetValue(lookupKey, out var prefab)
+                && !_prefabByItemId.TryGetValue(payload.itemId, out prefab))
+            {
+                if (debugLogs) Debug.LogWarning($"[RouteItemRegistry] No prefab for item '{payload.itemId}' (kind='{payload.itemKind}')");
+                return;
+            }
 
             // Only instantiate once the backend has actually assigned a
             // spawn area (or the item is held/stored/dropped — in all of
