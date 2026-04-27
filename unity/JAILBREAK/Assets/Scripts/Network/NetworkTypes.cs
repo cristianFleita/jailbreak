@@ -412,7 +412,10 @@ namespace Jailbreak.Network
     public class JailPhaseSnapshot
     {
         public int                  phase;
+        public string               phaseName;
         public string               zone;
+        public float                duration;
+        public float                elapsed;
         public NPCAssignmentData[]  npcAssignments;
     }
 

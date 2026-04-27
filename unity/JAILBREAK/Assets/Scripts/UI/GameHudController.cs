@@ -68,6 +68,7 @@ namespace Jailbreak.UI
         private int _phaseNumber;
         private float _phaseDuration;
         private float _phaseStartedAtRealtime;
+        private bool _hasPhaseTimer;
         private string _lastRenderedRole;
         private float _nextSlowRefresh;
         private float _toastHideAtRealtime;
@@ -684,6 +685,7 @@ namespace Jailbreak.UI
             _phaseZone = null;
             _phaseNumber = 0;
             _phaseDuration = 0f;
+            _hasPhaseTimer = false;
             RefreshPhaseLabel();
         }
 
@@ -693,6 +695,7 @@ namespace Jailbreak.UI
             _phaseZone = null;
             _phaseNumber = 0;
             _phaseDuration = 0f;
+            _hasPhaseTimer = false;
             RefreshPhaseLabel();
             RefreshTimer();
         }
@@ -733,6 +736,7 @@ namespace Jailbreak.UI
             _phaseZone = payload.reason;
             _phaseNumber = 0;
             _phaseDuration = 0f;
+            _hasPhaseTimer = false;
             RefreshPhaseLabel();
             RefreshTimer();
         }
@@ -745,6 +749,7 @@ namespace Jailbreak.UI
             _phaseZone = data.zone;
             _phaseDuration = Mathf.Max(0f, data.duration);
             _phaseStartedAtRealtime = Time.realtimeSinceStartup;
+            _hasPhaseTimer = _phaseDuration > 0f;
             RefreshPhaseLabel();
             RefreshTimer();
         }
@@ -760,10 +765,25 @@ namespace Jailbreak.UI
             if (data?.jailPhase != null)
             {
                 _phaseNumber = data.jailPhase.phase;
-                _phaseName = $"Phase {_phaseNumber}";
+                _phaseName = string.IsNullOrEmpty(data.jailPhase.phaseName)
+                    ? $"Phase {_phaseNumber}"
+                    : data.jailPhase.phaseName;
                 _phaseZone = data.jailPhase.zone;
-                _phaseDuration = 0f;
-                _phaseStartedAtRealtime = 0f;
+                _phaseDuration = Mathf.Max(0f, data.jailPhase.duration);
+                if (_phaseDuration > 0f)
+                {
+                    // Reconstruct start time so the countdown matches the server's
+                    // remaining time. Note: after F5, Time.realtimeSinceStartup
+                    // resets near 0, so this value can legitimately be negative.
+                    var elapsed = Mathf.Clamp(data.jailPhase.elapsed, 0f, _phaseDuration);
+                    _phaseStartedAtRealtime = Time.realtimeSinceStartup - elapsed;
+                    _hasPhaseTimer = true;
+                }
+                else
+                {
+                    _phaseStartedAtRealtime = 0f;
+                    _hasPhaseTimer = false;
+                }
                 RefreshPhaseLabel();
                 RefreshTimer();
             }
@@ -788,7 +808,7 @@ namespace Jailbreak.UI
         {
             if (_timeLabel == null) return;
 
-            if (_phaseDuration <= 0f || _phaseStartedAtRealtime <= 0f)
+            if (!_hasPhaseTimer || _phaseDuration <= 0f)
             {
                 _timeLabel.text = "--:--";
                 return;
