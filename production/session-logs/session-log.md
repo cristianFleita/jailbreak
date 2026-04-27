@@ -1501,3 +1501,78 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260426_211422
+### Commits
+6b3c5c6 chore: list available rooms
+b031362 Merge pull request #9 from cristianFleita/feat-phases-v2
+964375e chore: progress and cooldown on hide interaction
+67d7a6b chore: hide on laundry cart interactable
+df052c6 fix: add step to stair
+0eec43b chore: npc interact with bed
+017ca64 chore: player bed interactable
+81005e1 chore: adjust phase 8 time
+e1e1ecb chore: routine completition
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/UI/GameHudController.cs
+unity/JAILBREAK/Assets/UI/Screens/GameGUI.uxml
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260426_213533
+### Commits
+6b3c5c6 chore: list available rooms
+b031362 Merge pull request #9 from cristianFleita/feat-phases-v2
+964375e chore: progress and cooldown on hide interaction
+67d7a6b chore: hide on laundry cart interactable
+df052c6 fix: add step to stair
+0eec43b chore: npc interact with bed
+017ca64 chore: player bed interactable
+81005e1 chore: adjust phase 8 time
+e1e1ecb chore: routine completition
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/UI/GameHudController.cs
+unity/JAILBREAK/Assets/UI/Screens/GameGUI.uxml
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260426_214618
+### Commits
+6b3c5c6 chore: list available rooms
+b031362 Merge pull request #9 from cristianFleita/feat-phases-v2
+964375e chore: progress and cooldown on hide interaction
+67d7a6b chore: hide on laundry cart interactable
+df052c6 fix: add step to stair
+0eec43b chore: npc interact with bed
+017ca64 chore: player bed interactable
+81005e1 chore: adjust phase 8 time
+e1e1ecb chore: routine completition
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/UI/GameHudController.cs
+unity/JAILBREAK/Assets/UI/Screens/GameGUI.uxml
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260426_220906
+### Commits
+6b3c5c6 chore: list available rooms
+b031362 Merge pull request #9 from cristianFleita/feat-phases-v2
+964375e chore: progress and cooldown on hide interaction
+67d7a6b chore: hide on laundry cart interactable
+df052c6 fix: add step to stair
+0eec43b chore: npc interact with bed
+017ca64 chore: player bed interactable
+81005e1 chore: adjust phase 8 time
+e1e1ecb chore: routine completition
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/UI/GameHudController.cs
+unity/JAILBREAK/Assets/UI/Screens/GameGUI.uxml
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

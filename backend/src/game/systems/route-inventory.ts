@@ -331,3 +331,58 @@ export function dropItemAt(
   item.pickedUpBy = undefined
   return item
 }
+
+/**
+ * Removes a single itemId from the player's hand or any inventory slot.
+ * Returns true if anything was cleared. Used by the voluntary throw flow
+ * (mission gates re-evaluate via `findPlayerWithItem`, so dropping the
+ * cutters/wrench rolls back `find_cutters` / `find_wrench` automatically).
+ */
+export function removeItemFromInventory(
+  player: PlayerState,
+  itemId: string
+): boolean {
+  if (!itemId) return false
+  let mutated = false
+
+  if (player.heldItemId === itemId) {
+    player.heldItemId = null
+    mutated = true
+  }
+
+  const slots = player.inventorySlots ?? []
+  for (let i = 0; i < slots.length; i++) {
+    if (slots[i]?.itemId === itemId) {
+      slots[i] = null
+      mutated = true
+    }
+  }
+  player.inventorySlots = slots
+
+  return mutated
+}
+
+/**
+ * Voluntary single-item drop. Removes the item from the player's hand or
+ * slot, marks the world ItemState as `dropped` at `position`, and broadcasts
+ * `item:state`. Returns the updated ItemState, or null if the player did not
+ * actually hold the item.
+ *
+ * Callers should follow up with `notifyRoute1InventoryChanged(room)` so the
+ * mission checklist rolls back immediately instead of waiting for the next
+ * tick that mutates an active interaction.
+ */
+export function dropInventoryItem(
+  io: Server,
+  roomId: string,
+  state: GameRoomState,
+  player: PlayerState,
+  itemId: string,
+  position: Vector3 = player.position
+): ItemState | null {
+  if (!removeItemFromInventory(player, itemId)) return null
+
+  const item = dropItemAt(state, itemId, position)
+  if (item) broadcastItemState(io, roomId, item)
+  return item
+}

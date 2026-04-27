@@ -19,10 +19,16 @@ import { initializeRouteState } from '../routes/route-registry.js'
 import { ROUTE1_CONFIG } from '../routes/route1/state.js'
 import { Route1System } from '../systems/route1-system.js'
 import {
+  dropInventoryItem,
   ensureItemState,
   pickupToHand,
   storeHeldItem,
 } from '../systems/route-inventory.js'
+import type { Server } from 'socket.io'
+
+const noopIo = {
+  to: () => ({ emit: () => {} }),
+} as unknown as Server
 import {
   EscapeRoute1StatePayload,
   GameRoomState,
@@ -457,6 +463,69 @@ describe('Route1System (Phase D)', () => {
     it('in_progress reflects active interactions', () => {
       rig.system.startSearchClue(rig.prisonerA, 'guard_desk_2')
       expect(rig.state.route1!.missions.find_clue).toBe('in_progress')
+    })
+
+    it('throwing cutters from hand clears hand and rolls back find_cutters', () => {
+      giveItem(rig.state, rig.prisonerA, 'route1_cutters')
+      rig.system.notifyInventoryChanged()
+      expect(rig.prisonerA.heldItemId).toBe('route1_cutters')
+      expect(rig.state.route1!.missions.find_cutters).toBe('complete')
+      expect(rig.state.route1!.missions.disable_server).toBe('available')
+
+      const dropped = dropInventoryItem(
+        noopIo,
+        rig.state.id,
+        rig.state,
+        rig.prisonerA,
+        'route1_cutters'
+      )
+      rig.system.notifyInventoryChanged()
+
+      expect(dropped?.state).toBe('dropped')
+      expect(rig.prisonerA.heldItemId).toBeNull()
+      expect(rig.state.route1!.missions.find_cutters).toBe('available')
+      expect(rig.state.route1!.missions.disable_server).toBe('locked')
+    })
+
+    it('throwing cutters from a stored slot empties the slot and rolls back find_cutters', () => {
+      giveItem(rig.state, rig.prisonerA, 'route1_cutters')
+      const stored = storeHeldItem(rig.state, rig.prisonerA)
+      expect(stored.success).toBe(true)
+      rig.system.notifyInventoryChanged()
+      expect(rig.prisonerA.inventorySlots?.[0]?.itemId).toBe('route1_cutters')
+      expect(rig.state.route1!.missions.find_cutters).toBe('complete')
+
+      dropInventoryItem(
+        noopIo,
+        rig.state.id,
+        rig.state,
+        rig.prisonerA,
+        'route1_cutters'
+      )
+      rig.system.notifyInventoryChanged()
+
+      expect(rig.prisonerA.heldItemId).toBeNull()
+      expect(rig.prisonerA.inventorySlots?.[0]).toBeNull()
+      expect(rig.state.route1!.missions.find_cutters).toBe('available')
+    })
+
+    it('throwing cutters after server is disabled keeps disable_server complete', () => {
+      giveItem(rig.state, rig.prisonerA, 'route1_cutters')
+      rig.state.route1!.serverDisabled = true
+      rig.system.notifyInventoryChanged()
+      expect(rig.state.route1!.missions.disable_server).toBe('complete')
+
+      dropInventoryItem(
+        noopIo,
+        rig.state.id,
+        rig.state,
+        rig.prisonerA,
+        'route1_cutters'
+      )
+      rig.system.notifyInventoryChanged()
+
+      expect(rig.state.route1!.missions.find_cutters).toBe('available')
+      expect(rig.state.route1!.missions.disable_server).toBe('complete')
     })
   })
 
