@@ -170,20 +170,32 @@ public class InteractionManager : MonoBehaviour
     {
         if (obstructionLayer.value == 0) return true;
 
-        Vector3 origin = transform.position + sightOriginOffset;
+        // Prop root = highest ancestor that owns a NetworkInteractable or Rigidbody.
+        // This defines "everything that belongs to this prop" so its own walls/floor
+        // (often on Default layer, on a parent of the trigger child) don't occlude
+        // their own pickup point.
+        Transform propRoot = FindPropRoot(candidate.Transform);
 
-        // Aim for the candidate's collider rather than the raw transform pivot,
-        // because pivots are often inside meshes / under the floor.
-        Vector3 target = candidate.Transform.position;
         Collider aimCollider = candidateHit;
-        if (aimCollider == null || !aimCollider.transform.IsChildOf(candidate.Transform))
+        if (aimCollider == null
+            || (aimCollider.transform != propRoot && !aimCollider.transform.IsChildOf(propRoot)))
         {
-            aimCollider = candidate.Transform.GetComponentInChildren<Collider>();
+            aimCollider = propRoot.GetComponentInChildren<Collider>();
         }
+
+        // Player capsule already overlapping the prop's collider = player is
+        // snapped/standing on it (hide cart, chair). LOS doesn't apply — a wall
+        // between their head and the prop's pivot is irrelevant when they're
+        // physically inside the prop's volume.
+        if (aimCollider != null && selfCollider != null
+            && selfCollider.bounds.Intersects(aimCollider.bounds))
+            return true;
+
+        Vector3 origin = transform.position + sightOriginOffset;
+        Vector3 target = candidate.Transform.position;
         if (aimCollider != null)
         {
             Vector3 closest = aimCollider.bounds.ClosestPoint(origin);
-            // Nudge a hair toward the bounds center so we don't graze the candidate's own shell on the way in.
             target = Vector3.MoveTowards(closest, aimCollider.bounds.center, sightSkin);
         }
 
@@ -193,19 +205,30 @@ public class InteractionManager : MonoBehaviour
         Vector3 dir = delta / dist;
 
         var hits = Physics.RaycastAll(origin, dir, dist, obstructionLayer, QueryTriggerInteraction.Ignore);
-        Transform candidateRoot = candidate.Transform;
         Transform selfRoot = selfCollider != null ? selfCollider.transform : transform;
 
         for (int i = 0; i < hits.Length; i++)
         {
             Transform t = hits[i].collider.transform;
-            // Ignore the local player's own colliders — they shouldn't be on obstructionLayer, but be defensive.
             if (t == selfRoot || t.IsChildOf(selfRoot)) continue;
-            // Ignore the candidate's own colliders (e.g. a desk whose static mesh sits on Default layer).
-            if (t == candidateRoot || t.IsChildOf(candidateRoot)) continue;
+            if (t == propRoot || t.IsChildOf(propRoot)) continue;
             return false;
         }
         return true;
+    }
+
+    static Transform FindPropRoot(Transform leaf)
+    {
+        Transform best = leaf;
+        Transform cur = leaf;
+        while (cur != null)
+        {
+            if (cur.GetComponent<NetworkInteractable>() != null
+                || cur.GetComponent<Rigidbody>() != null)
+                best = cur;
+            cur = cur.parent;
+        }
+        return best;
     }
 
     bool IsAllowed(IInteractable candidate)
