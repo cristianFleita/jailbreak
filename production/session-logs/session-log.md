@@ -1576,3 +1576,30 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260426_231508
+### Commits
+148513c chore: collapsable ui
+6b3c5c6 chore: list available rooms
+b031362 Merge pull request #9 from cristianFleita/feat-phases-v2
+964375e chore: progress and cooldown on hide interaction
+67d7a6b chore: hide on laundry cart interactable
+df052c6 fix: add step to stair
+0eec43b chore: npc interact with bed
+017ca64 chore: player bed interactable
+### Uncommitted Changes
+backend/src/game/__tests__/route-inventory.test.ts
+backend/src/game/event-handlers.ts
+backend/src/game/systems/route-inventory.ts
+backend/src/game/types.ts
+design/GDD.md
+design/gdd/systems-index.md
+memory/decisions.md
+memory/session-log.md
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner.prefab
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/Input/HeldItemInput.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/Inventory/InventoryInput.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/NetworkRoutePickable.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

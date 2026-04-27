@@ -59,7 +59,7 @@
 
 | # | Sistema | Descripción | Origen | Prioridad |
 |---|---------|-------------|--------|-----------|
-| 23 | Audio 3D | Pasos, golpes, tos, excavación, risas — posicional con rangos | Explícito | VS |
+| 23 | Audio 3D + Voz de Proximidad | Pasos, voz diegética PTT, señales post-MVP, alarmas y risas — posicional con rangos | Explícito | VS |
 | 24 | Audio Ambiente + Stingers | Eco prisión, silbato de fase, stingers de eventos | Explícito | Alpha |
 
 ### Infraestructura
@@ -120,7 +120,7 @@
 [20] HUD Presos         ← [5], [4], [2], [6]
 [21] HUD Guardia        ← [2], [9], [15], [16]
 [22] Pantallas UI       ← [17], [11]
-[23] Audio 3D           ← [1], [2], [8]
+[23] Audio 3D + Voz     ← [1], [2], [8], [17], [18]
 [24] Audio Ambiente     ← [4], [11]
 ```
 
@@ -219,7 +219,7 @@ Orden de implementación combinando dependencias + prioridad MVP-first:
 | 18 | Alertas de Comportamiento (16) | Feature | 0.5 día |
 | 19 | HUD Presos (20) | Presentación | 1 día |
 | 20 | HUD Guardia (21) | Presentación | 1 día |
-| 21 | Audio 3D (23) | Presentación | 1 día |
+| 21 | Audio 3D + Voz de Proximidad (23) | Presentación | 2 días |
 
 **Entregable S3:** Juego con 2 rutas, HUD completo, audio, cámaras.
 
@@ -264,7 +264,7 @@ Orden de implementación combinando dependencias + prioridad MVP-first:
 | 20 | HUD Presos | Not Started | — | S3 |
 | 21 | HUD Guardia | Not Started | — | S3 |
 | 22 | Pantallas de UI | Not Started | — | Polish |
-| 23 | Audio 3D | Not Started | — | S3 |
+| 23 | Audio 3D + Voz de Proximidad | Designed | [voz-diegetica-proximidad.md](voz-diegetica-proximidad.md) | S3 |
 | 24 | Audio Ambiente + Stingers | Not Started | — | Polish |
 | 25 | Iluminación Dinámica | Not Started | — | Polish |
 

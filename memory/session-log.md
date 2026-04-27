@@ -240,3 +240,39 @@
   - Verified focused room browser Vitest case passes; full `room-manager.test.ts` still has pre-existing `initializeNPCs` count expectation failures.
   - Verified Unity C# via `msbuild Assembly-CSharp.csproj`: build succeeded with existing warnings only.
   - Recorded ADR-024 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Route tool drop/throw completion** (2026-04-26 22:41 -03):
+  - Completed backend `item.throw` dispatch for critical route tools through `handlePlayerInteract`.
+  - `item.throw` validates ownership from hand or stored slot, drops the item in front of the player, broadcasts `item:state`, cancels active Route 1 interactions, and recalculates mission gates.
+  - Kept legacy `drop` blocked for critical route tools so old clients cannot bypass authoritative hand/slot state.
+  - Confirmed voluntary throws leave the item dropped in-world instead of scheduling anti-softlock respawn; capture/leave/disconnect respawns remain unchanged.
+  - Completed Unity input path with `HeldItemInput.dropKey = G` and `NetworkRoutePickable.RequestThrow()` from held or stored route tools.
+  - Added focused handler tests for `item.throw` from hand and from stored slot in `route-inventory.test.ts`.
+  - Verified backend TypeScript, focused `route-inventory.test.ts` (`8/8`), combined `route-inventory + route1-system` (`47/47`), Unity `msbuild Assembly-CSharp.csproj`, and `git diff --check`.
+  - Recorded ADR-025 in `memory/decisions.md`.
+- **Game Design — Voz diegetica de proximidad** (2026-04-27):
+  - Updated `design/GDD.md` so match voice is proximity-based, spatial, push-to-talk on `V`, and audible to all nearby roles including the guard.
+  - Moved cough/wall-knock signals to post-MVP and fixed the control conflict by documenting `F` as prisoner inventory store.
+  - Added Socket.io voice signaling notes while keeping raw voice transport outside Socket.io.
+  - Created `design/gdd/voz-diegetica-proximidad.md` with gameplay rules, WebGL/WebRTC architecture, phase plan, per-domain tasks, tunables, risks, MVP cuts, and acceptance criteria.
+  - Updated `design/gdd/systems-index.md` to link Audio 3D + Voz de Proximidad to the new plan.
+  - Recorded ADR-026 in `memory/decisions.md`.
+  - Verified docs with `git diff --check`.
+- **Unity Specialist + Network Programmer — Route tool drop persistence and slot controls** (2026-04-27):
+  - Confirmed voluntary route-tool drop updates backend `ItemState.position` through `dropInventoryItem(...)` / `dropItemAt(...)` and broadcasts the new world position with `item:state`.
+  - Updated Unity slot navigation defaults to `K` previous slot and `L` next slot in `InventoryInput`.
+  - Updated `Prisoner.prefab` serialized controls so the actual player prefab uses `K` / `L` for slots and `G` for route-tool drop.
+  - Verified focused backend `route-inventory.test.ts` (`8/8`), Unity C# via `msbuild Assembly-CSharp.csproj`, and `git diff --check`.
+  - Recorded ADR-027 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Selected-slot route inventory fix** (2026-04-27):
+  - Removed side effects from `InventoryInput`: `K` / `L` now only move the selected slot and never store, equip, swap, or throw items.
+  - Added selected-slot storage for route tools by sending `slotIndex` with `item.store`; backend stores in that slot when valid and rejects occupied/invalid target slots.
+  - Updated `HeldItemInput` so `F` stores into the selected slot and `G` drops from the selected slot when the hand is empty.
+  - Updated `GameHudController` to bind to the local `ItemInventory` and visually highlight the selected HUD slot.
+  - Updated WebGL `SocketBridge.jslib` and `NetworkManager.SendPlayerInteract(..., slotIndex)` for slot-aware interactions.
+  - Verified backend TypeScript, focused `route-inventory.test.ts` (`11/11`), combined `route-inventory + route1-system` (`50/50`), Unity `msbuild Assembly-CSharp.csproj`, and `git diff --check`.
+  - Recorded ADR-028 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Slot-only route drop refinement** (2026-04-27):
+  - Changed `G` so it never drops a route tool directly from the hand.
+  - Unity now only sends `item.throw` for the route tool currently in the selected inventory slot.
+  - Backend rejects `item.throw` unless the requested item is stored in one of the player's inventory slots, preventing stale clients from dropping held tools.
+  - Updated Route inventory tests so hand throws are rejected and stored-slot throws still work.
