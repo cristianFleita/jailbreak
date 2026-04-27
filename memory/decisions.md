@@ -611,3 +611,28 @@ El comportamiento debe seguir el mismo patrón que mesas, gabinetes y lavanderí
 - Cada cama/catre debe tener `SleepInteractable` y `SleepAction.sleepPoint` dentro de los bounds de su `cell_area_XX`.
 - Si no hay cama disponible, Unity no reproduce una animación falsa de sueño en medio de la celda; cae a idle.
 - Al terminar, reasignar o destruir el NPC, se libera la reserva de la cama.
+
+## ADR-024: Lobby room browser usa payload envuelto y broadcasts de disponibilidad
+
+**Status**: Implemented
+**Date**: 2026-04-26
+
+### Decision
+
+El browser de salas del lobby usa un contrato nuevo `RoomListPayload` con raíz `{ rooms: [...] }`.
+
+- El backend mantiene el `room:list` legacy como array para no romper el wrapper React existente.
+- Unity consume `room:list:response` para refresh manual y `room:list:update` para cambios live.
+- La lista pública incluye solo salas joinables: `status === 'lobby'` y `playerCount < maxPlayers`.
+- El backend emite `room:list:update` cuando una sala se crea, alguien se une, alguien es kickeado, el host inicia partida, un jugador deja el lobby o la sala se destruye.
+- Unity mantiene el flujo en `LobbyScene`, agregando un panel plegable dentro de `LobbyScreen.uxml` en vez de crear una escena nueva.
+
+### Why
+
+Unity `JsonUtility` no deserializa arrays en la raíz de forma cómoda, y el cliente web ya dependía del evento legacy. Separar respuesta legacy y payload envuelto permite agregar el browser sin romper contratos existentes.
+
+### Implications
+
+- Cualquier cliente nuevo debe preferir `room:list:response` / `room:list:update`.
+- La lista no muestra partidas activas ni salas llenas; el join por ID sigue existiendo para compatibilidad y casos directos.
+- Cambios futuros de metadata visible de sala deben extender `RoomListEntryPayload`, no `RoomStatePayload`.

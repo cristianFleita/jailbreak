@@ -10,7 +10,7 @@
 import { Server } from 'socket.io'
 import {
   GameRoom, GameRoomState, GameConfig, NPCPositionUpdate, PlayerStateUpdate,
-  RoomStatePayload, PlayerRole, EscapeRouteSelectedPayload,
+  RoomListPayload, RoomStatePayload, PlayerRole, EscapeRouteSelectedPayload,
 } from './types.js'
 import { createGameRoomState, advanceTick, computeNPCDelta, spawnNPCs, startGame, endGame } from './state.js'
 import { GameManager } from './systems/game-manager.js'
@@ -142,6 +142,33 @@ export function buildRoomStatePayload(room: GameRoom): RoomStatePayload {
     hostUserId: room.state.hostUserId,
     status: room.state.status,
     players: buildRoomPlayersPayload(room),
+  }
+}
+
+/**
+ * Builds one public row for the room browser.
+ */
+export function buildRoomListEntryPayload(room: GameRoom): RoomListPayload['rooms'][number] {
+  const hostProfile = getUser(room.state.hostUserId)
+
+  return {
+    roomId: room.state.id,
+    hostUserId: room.state.hostUserId,
+    hostDisplayName: hostProfile?.displayName || `Player_${room.state.hostUserId.slice(0, 6)}`,
+    status: room.state.status,
+    playerCount: room.state.players.size,
+    maxPlayers: room.config.maxPlayers,
+    createdAt: room.state.createdAt,
+    players: buildRoomPlayersPayload(room),
+  }
+}
+
+/**
+ * Builds the full public room browser payload.
+ */
+export function buildRoomListPayload(): RoomListPayload {
+  return {
+    rooms: listJoinableRooms(),
   }
 }
 
@@ -398,6 +425,20 @@ export function listRooms(): RoomStatePayload[] {
     }
   }
   return result
+}
+
+/**
+ * Lists only rooms a new player can join from the lobby browser.
+ */
+export function listJoinableRooms(): RoomListPayload['rooms'] {
+  const result: RoomListPayload['rooms'] = []
+  for (const [_id, room] of activeRooms) {
+    if (room.state.status === 'lobby' && room.state.players.size < room.config.maxPlayers) {
+      result.push(buildRoomListEntryPayload(room))
+    }
+  }
+
+  return result.sort((a, b) => b.createdAt - a.createdAt)
 }
 
 /**

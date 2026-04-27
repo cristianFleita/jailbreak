@@ -7,6 +7,7 @@ import {
   stopGameLoop,
   initializeNPCs,
   defaultGameConfig,
+  buildRoomListPayload,
 } from '../room-manager.js'
 
 const HOST = 'host-user-1'
@@ -18,7 +19,8 @@ describe('Room Manager', () => {
       'test-room-1', 'new-room', 'existing-room', 'config-room',
       'get-room', 'destroy-room', 'interval-room', 'npc-room',
       'custom-npc-room', 'bounds-room', 'stop-room', 'no-loop-room',
-      'status-room', 'join-room', 'dup-room',
+      'status-room', 'join-room', 'dup-room', 'visible-room',
+      'active-room', 'full-room',
     ]) {
       const room = getRoom(name)
       if (room) {
@@ -169,6 +171,36 @@ describe('Room Manager', () => {
 
       expect(room.state.players.size).toBe(2)
       expect(room.state.playersByUserId.size).toBe(2)
+    })
+  })
+
+  describe('room browser payload', () => {
+    it('should list only lobby rooms with open player slots', async () => {
+      const { addPlayer } = await import('../state.js')
+
+      const visible = createRoom('visible-room', HOST)!
+      addPlayer(visible.state, 'socket_host', HOST, { x: 0, y: 1.5, z: 0 })
+
+      const active = createRoom('active-room', 'active-host')!
+      active.state.status = 'active'
+      addPlayer(active.state, 'socket_active', 'active-host', { x: 0, y: 1.5, z: 0 })
+
+      const full = createRoom('full-room', 'full-host')!
+      for (let i = 0; i < full.config.maxPlayers; i++) {
+        addPlayer(full.state, `socket_full_${i}`, `full-user-${i}`, { x: i, y: 1.5, z: 0 })
+      }
+
+      const payload = buildRoomListPayload()
+      const roomIds = payload.rooms.map((room) => room.roomId)
+
+      expect(roomIds).toContain('visible-room')
+      expect(roomIds).not.toContain('active-room')
+      expect(roomIds).not.toContain('full-room')
+
+      const row = payload.rooms.find((room) => room.roomId === 'visible-room')
+      expect(row?.playerCount).toBe(1)
+      expect(row?.maxPlayers).toBe(defaultGameConfig.maxPlayers)
+      expect(row?.hostUserId).toBe(HOST)
     })
   })
 })

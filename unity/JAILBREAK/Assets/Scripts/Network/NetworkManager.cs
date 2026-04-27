@@ -54,6 +54,7 @@ namespace Jailbreak.Network
         public event Action<AuthRegisteredPayload>    OnAuthRegisteredEvent;
         public event Action<RoomCreatedPayload>       OnRoomCreatedEvent;
         public event Action<RoomStatePayload>         OnRoomStateEvent;
+        public event Action<RoomListPayload>          OnRoomListEvent;
         public event Action<RoomPlayerJoinedPayload>  OnRoomPlayerJoinedEvent;
         public event Action<RoomPlayerLeftPayload>    OnRoomPlayerLeftEvent;
         public event Action<RoomKickedPayload>        OnRoomKickedEvent;
@@ -119,6 +120,7 @@ namespace Jailbreak.Network
         [DllImport("__Internal")] private static extern void   SocketJoinRoom(string roomId);
         [DllImport("__Internal")] private static extern void   SocketKickPlayer(string targetUserId);
         [DllImport("__Internal")] private static extern void   SocketStartGame();
+        [DllImport("__Internal")] private static extern void   SocketListRooms();
         [DllImport("__Internal")] private static extern void   SocketGetRoomState();
         [DllImport("__Internal")] private static extern void   SocketLeaveRoom();
         [DllImport("__Internal")] private static extern void   SocketSendPlayerMove(string json);
@@ -236,6 +238,16 @@ namespace Jailbreak.Network
             SocketJoinRoom(roomId);
 #else
             _socket?.Emit("room:join", new { roomId });
+#endif
+        }
+
+        public void RequestRoomList()
+        {
+            if (!IsAuthenticated) return;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketListRooms();
+#else
+            _socket?.Emit("room:list");
 #endif
         }
 
@@ -457,6 +469,15 @@ namespace Jailbreak.Network
                 _currentRoomId = data.roomId;
                 IsHost = data.hostUserId == LocalUserId;
                 OnRoomStateEvent?.Invoke(data);
+            });
+        }
+
+        public void OnRoomList(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<RoomListPayload>(json);
+                if (data != null) OnRoomListEvent?.Invoke(data);
             });
         }
 
@@ -826,6 +847,20 @@ namespace Jailbreak.Network
                     IsHost = data.hostUserId == LocalUserId;
                     OnRoomStateEvent?.Invoke(data);
                 });
+            });
+
+            SafeOn("room:list:response", r =>
+            {
+                var data = DeserializePayload<RoomListPayload>(r);
+                if (data != null)
+                    _mainThreadQueue.Enqueue(() => OnRoomListEvent?.Invoke(data));
+            });
+
+            SafeOn("room:list:update", r =>
+            {
+                var data = DeserializePayload<RoomListPayload>(r);
+                if (data != null)
+                    _mainThreadQueue.Enqueue(() => OnRoomListEvent?.Invoke(data));
             });
 
             SafeOn("room:player-joined", r =>

@@ -230,3 +230,13 @@
   - Updated `SleepInteractable` occupancy release/replay and `SleepInteraction` locomotion re-enable on wake.
   - Updated GDD/routine docs, progress, and recorded ADR-023.
   - Verified `git diff --check`; Unity batchmode compile was blocked because the project is already open in another Unity instance.
+- **Unity Specialist + Network Programmer — Lobby room browser** (2026-04-26 20:32 -03):
+  - Added backend `RoomListPayload` / `RoomListEntryPayload` for Unity-friendly room lists while preserving legacy `room:list` array for React.
+  - Added `room:list:response` for manual refresh and `room:list:update` live broadcasts on room create, join, kick, start, leave, and destroy.
+  - Filtered browser results to joinable rooms only: lobby status and available player slots.
+  - Added Unity `NetworkManager.RequestRoomList`, WebGL `SocketListRooms`, and `OnRoomListEvent`.
+  - Extended `LobbyScreen.uxml`, `LobbyUI.uss`, and `LobbyScreenController` with a collapsible available-room list, refresh button, player counts, host display, and one-click join.
+  - Verified backend TypeScript with bundled Node `tsc`.
+  - Verified focused room browser Vitest case passes; full `room-manager.test.ts` still has pre-existing `initializeNPCs` count expectation failures.
+  - Verified Unity C# via `msbuild Assembly-CSharp.csproj`: build succeeded with existing warnings only.
+  - Recorded ADR-024 in `memory/decisions.md`.

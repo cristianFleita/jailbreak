@@ -100,6 +100,14 @@ mergeInto(LibraryManager.library, {
         window.unityInstance.SendMessage(window._jbGoName, 'OnRoomState', JSON.stringify(data));
       });
 
+      window._jbSocket.on('room:list:response', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnRoomList', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('room:list:update', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnRoomList', JSON.stringify(data));
+      });
+
       window._jbSocket.on('room:player-joined', function (data) {
         window.unityInstance.SendMessage(window._jbGoName, 'OnRoomPlayerJoined', JSON.stringify(data));
       });
@@ -261,6 +269,11 @@ mergeInto(LibraryManager.library, {
   SocketStartGame: function() {
     if (window._jbSocket && window._jbSocket.connected)
       window._jbSocket.emit('room:start');
+  },
+
+  SocketListRooms: function() {
+    if (window._jbSocket && window._jbSocket.connected)
+      window._jbSocket.emit('room:list');
   },
 
   SocketLeaveRoom: function() {

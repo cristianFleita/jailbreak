@@ -36,6 +36,18 @@
                 </ui:VisualElement>
                 <ui:Button name="join-room-btn" text="" class="action-btn" style="background-image: url(&quot;project://database/Assets/UI/Sprites/lobby-screen-spreadsheet.png?fileID=-1054804021&amp;guid=06274fbf9d35d42d693f35b3152f8cf8&amp;type=3#lobby-screen-spreadsheet_5&quot;);"/>
             </ui:VisualElement>
+
+            <ui:VisualElement name="browse-section" class="browser-section">
+                <ui:Button name="browse-rooms-btn" text="VIEW ROOMS" class="secondary-btn"/>
+                <ui:VisualElement name="room-browser-section" class="room-browser-panel" style="display: none;">
+                    <ui:VisualElement class="room-browser-header">
+                        <ui:Label text="AVAILABLE ROOMS" class="room-browser-title"/>
+                        <ui:Button name="refresh-rooms-btn" text="REFRESH" class="refresh-btn"/>
+                    </ui:VisualElement>
+                    <ui:ScrollView name="room-list" class="room-list"/>
+                    <ui:Label name="room-list-empty-label" text="No rooms available" class="room-empty-text"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
             
         </ui:ScrollView>
         

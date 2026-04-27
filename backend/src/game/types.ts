@@ -464,6 +464,21 @@ export interface RoomStatePayload {
   players: Array<{ userId: string; displayName: string; role: PlayerRole; isHost: boolean }>
 }
 
+export interface RoomListEntryPayload {
+  roomId: string
+  hostUserId: string
+  hostDisplayName: string
+  status: GameRoomState['status']
+  playerCount: number
+  maxPlayers: number
+  createdAt: number
+  players: RoomStatePayload['players']
+}
+
+export interface RoomListPayload {
+  rooms: RoomListEntryPayload[]
+}
+
 export interface RoomPlayerJoinedPayload {
   userId: string
   displayName: string
