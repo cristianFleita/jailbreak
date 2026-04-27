@@ -57,8 +57,10 @@ namespace Jailbreak.UI
 
         private GameStateManager _gsm;
         private NetworkManager _net;
+        private ItemInventory _localInventory;
         private bool _gsmBound;
         private bool _netBound;
+        private bool _localInventoryBound;
         private bool _legacyHudDisabled;
 
         private string _phaseName;
@@ -79,6 +81,7 @@ namespace Jailbreak.UI
             CacheElements();
             BuildMissionRows();
             TryBindSystems();
+            TryBindLocalInventory();
             DisableLegacyInventoryHud();
             RefreshAll();
         }
@@ -86,6 +89,7 @@ namespace Jailbreak.UI
         private void OnDisable()
         {
             UnbindSystems();
+            UnbindLocalInventory();
             if (Instance == this) Instance = null;
         }
 
@@ -106,6 +110,7 @@ namespace Jailbreak.UI
         private void Update()
         {
             TryBindSystems();
+            TryBindLocalInventory();
             RefreshTimer();
             RefreshToast();
             HandleRoute1ToggleInput();
@@ -281,6 +286,43 @@ namespace Jailbreak.UI
             }
         }
 
+        private void TryBindLocalInventory()
+        {
+            if (_localInventoryBound && _localInventory != null) return;
+
+            var root = FindLocalPlayerRoot();
+            var inventory = root != null ? root.GetComponent<ItemInventory>() : null;
+            if (inventory == null) return;
+
+            _localInventory = inventory;
+            _localInventory.onSlotSelected.AddListener(HandleLocalSlotSelected);
+            _localInventoryBound = true;
+            RefreshInventory();
+        }
+
+        private void UnbindLocalInventory()
+        {
+            if (_localInventoryBound && _localInventory != null)
+                _localInventory.onSlotSelected.RemoveListener(HandleLocalSlotSelected);
+
+            _localInventoryBound = false;
+            _localInventory = null;
+        }
+
+        private static Transform FindLocalPlayerRoot()
+        {
+#if UNITY_2023_1_OR_NEWER
+            var managers = UnityEngine.Object.FindObjectsByType<InteractionManager>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+#else
+            var managers = UnityEngine.Object.FindObjectsOfType<InteractionManager>();
+#endif
+            foreach (var manager in managers)
+                if (manager != null && manager.enabled)
+                    return manager.transform.root;
+
+            return null;
+        }
+
         private void UnbindSystems()
         {
             if (_gsmBound && _gsm != null)
@@ -406,8 +448,9 @@ namespace Jailbreak.UI
 
             SetHeldItem(_gsm.LocalHeldItemId);
             var slots = _gsm.LocalInventorySlots;
-            SetSlot(_slot0, slots != null && slots.Length > 0 ? slots[0] : null);
-            SetSlot(_slot1, slots != null && slots.Length > 1 ? slots[1] : null);
+            var selectedIndex = _localInventory != null ? _localInventory.SelectedIndex : 0;
+            SetSlot(_slot0, slots != null && slots.Length > 0 ? slots[0] : null, selectedIndex == 0);
+            SetSlot(_slot1, slots != null && slots.Length > 1 ? slots[1] : null, selectedIndex == 1);
         }
 
         private void SetHeldItem(string itemId)
@@ -418,7 +461,7 @@ namespace Jailbreak.UI
             SetIcon(_heldItemIcon, hasItem ? IconForItem(itemId) : null);
         }
 
-        private void SetSlot(HudSlot slot, InventorySlotData data)
+        private void SetSlot(HudSlot slot, InventorySlotData data, bool selected = false)
         {
             if (slot == null) return;
 
@@ -430,7 +473,26 @@ namespace Jailbreak.UI
             SetIcon(slot.icon, hasItem ? IconForItem(itemId) : null);
 
             if (slot.root != null)
+            {
                 slot.root.style.opacity = hasItem ? 1f : 0.72f;
+                slot.root.style.backgroundColor = selected
+                    ? new Color(1f, 0.72f, 0.28f, 0.18f)
+                    : new Color(1f, 1f, 1f, 0.08f);
+                slot.root.style.borderTopWidth = selected ? 2 : 1;
+                slot.root.style.borderRightWidth = selected ? 2 : 1;
+                slot.root.style.borderBottomWidth = selected ? 2 : 1;
+                slot.root.style.borderLeftWidth = selected ? 2 : 1;
+                var borderColor = selected
+                    ? new Color(1f, 0.82f, 0.38f, 1f)
+                    : new Color(1f, 1f, 1f, 0.14f);
+                slot.root.style.borderTopColor = borderColor;
+                slot.root.style.borderRightColor = borderColor;
+                slot.root.style.borderBottomColor = borderColor;
+                slot.root.style.borderLeftColor = borderColor;
+            }
+
+            if (slot.label != null)
+                slot.label.style.color = selected ? Color.white : new Color(0.77f, 0.85f, 0.92f);
         }
 
         private Sprite IconForItem(string itemId)
@@ -602,6 +664,11 @@ namespace Jailbreak.UI
         private void HandleLocalInventoryChanged()
         {
             RefreshVisibility();
+            RefreshInventory();
+        }
+
+        private void HandleLocalSlotSelected(int _)
+        {
             RefreshInventory();
         }
 

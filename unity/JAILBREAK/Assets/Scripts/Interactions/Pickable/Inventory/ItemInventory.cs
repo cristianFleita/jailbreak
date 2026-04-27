@@ -20,19 +20,50 @@ public class ItemInventory : MonoBehaviour
 
     void Awake()
     {
-        slots = new PickableItem[slotCount];
+        slots = new PickableItem[Mathf.Max(0, slotCount)];
     }
 
     public bool TryAdd(PickableItem item)
     {
         for (int i = 0; i < slots.Length; i++)
         {
-            if (slots[i] != null) continue;
-            slots[i] = item;
-            onItemAdded.Invoke(i, item);
-            return true;
+            if (TryAddAt(item, i)) return true;
         }
         return false;
+    }
+
+    public bool TryAddAt(PickableItem item, int index)
+    {
+        if (item == null) return false;
+        if (!IsValidIndex(index)) return false;
+        if (slots[index] != null) return false;
+
+        slots[index] = item;
+        onItemAdded.Invoke(index, item);
+        return true;
+    }
+
+    public bool SetAt(PickableItem item, int index)
+    {
+        if (item == null) return false;
+        if (!IsValidIndex(index)) return false;
+
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (i == index || slots[i] != item) continue;
+            slots[i] = null;
+            onItemRemoved.Invoke(i, item);
+        }
+
+        if (slots[index] == item) return true;
+
+        var previous = slots[index];
+        if (previous != null)
+            onItemRemoved.Invoke(index, previous);
+
+        slots[index] = item;
+        onItemAdded.Invoke(index, item);
+        return true;
     }
 
     public PickableItem TakeAt(int index)
@@ -79,8 +110,13 @@ public class ItemInventory : MonoBehaviour
 
     public bool HasItemAt(int index)
     {
-        if (index < 0 || index >= slots.Length) return false;
+        if (!IsValidIndex(index)) return false;
         return slots[index] != null;
+    }
+
+    public bool IsValidIndex(int index)
+    {
+        return slots != null && index >= 0 && index < slots.Length;
     }
 
     public bool IsFull()
@@ -92,12 +128,14 @@ public class ItemInventory : MonoBehaviour
 
     public void SelectNext()
     {
+        if (slots.Length == 0) return;
         selectedIndex = (selectedIndex + 1) % slots.Length;
         onSlotSelected.Invoke(selectedIndex);
     }
 
     public void SelectPrevious()
     {
+        if (slots.Length == 0) return;
         selectedIndex = (selectedIndex - 1 + slots.Length) % slots.Length;
         onSlotSelected.Invoke(selectedIndex);
     }

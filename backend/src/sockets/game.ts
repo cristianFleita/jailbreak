@@ -566,7 +566,15 @@ export function setupGameSockets(io: Server) {
     // ==================================================================
     // GAMEPLAY: player:interact
     // ==================================================================
-    socket.on('player:interact', ({ objectId, action }: { objectId: string; action: PlayerInteractAction }) => {
+    socket.on('player:interact', ({
+      objectId,
+      action,
+      slotIndex,
+    }: {
+      objectId: string
+      action: PlayerInteractAction
+      slotIndex?: number
+    }) => {
       if (!currentRoomId) return
 
       try {
@@ -582,6 +590,7 @@ export function setupGameSockets(io: Server) {
           playerId: interactUser?.userId ?? socket.id,
           objectId,
           action,
+          slotIndex,
           timestamp: Date.now(),
         })
       } catch (err) {

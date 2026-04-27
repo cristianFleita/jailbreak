@@ -312,6 +312,13 @@ mergeInto(LibraryManager.library, {
       window._jbSocket.emit('player:interact', { objectId: objectId, action: action });
   },
 
+  SocketSendInteractWithSlot: function(objectIdPtr, actionPtr, slotIndex) {
+    var objectId = UTF8ToString(objectIdPtr);
+    var action   = UTF8ToString(actionPtr);
+    if (window._jbSocket && window._jbSocket.connected)
+      window._jbSocket.emit('player:interact', { objectId: objectId, action: action, slotIndex: slotIndex });
+  },
+
   SocketSendPlayerAction: function(objectIdPtr, actionPtr) {
     var objectId = UTF8ToString(objectIdPtr);
     var action   = UTF8ToString(actionPtr);

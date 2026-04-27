@@ -127,6 +127,7 @@ namespace Jailbreak.Network
         [DllImport("__Internal")] private static extern void   SocketSendGuardMark(string targetId);
         [DllImport("__Internal")] private static extern void   SocketSendGuardCatch(string targetId);
         [DllImport("__Internal")] private static extern void   SocketSendInteract(string objectId, string action);
+        [DllImport("__Internal")] private static extern void   SocketSendInteractWithSlot(string objectId, string action, int slotIndex);
         [DllImport("__Internal")] private static extern void   SocketSendPlayerAction(string objectId, string action);
         [DllImport("__Internal")] private static extern void   SocketSendRiotActivate();
         [DllImport("__Internal")] private static extern void   SocketSendNPCSyncState(string json);
@@ -337,6 +338,16 @@ namespace Jailbreak.Network
             SocketSendInteract(objectId, action);
 #else
             _socket?.Emit("player:interact", new { objectId, action });
+#endif
+        }
+
+        public void SendPlayerInteract(string objectId, string action, int slotIndex)
+        {
+            if (!IsInGame()) return;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketSendInteractWithSlot(objectId, action, slotIndex);
+#else
+            _socket?.Emit("player:interact", new { objectId, action, slotIndex });
 #endif
         }
 
