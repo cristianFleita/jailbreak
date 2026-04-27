@@ -14,6 +14,14 @@ public class InteractionManager : MonoBehaviour
     public float detectionRadius = 2f;
     public LayerMask interactableLayer;
 
+    [Header("Line of Sight")]
+    [Tooltip("Layers that BLOCK interaction line of sight (walls, doors, static geometry). Default layer recommended.")]
+    public LayerMask obstructionLayer = 1; // Default layer
+    [Tooltip("Local-space offset of the LOS ray origin (roughly chest height so we don't shoot from the floor).")]
+    public Vector3 sightOriginOffset = new Vector3(0f, 1.0f, 0f);
+    [Tooltip("Shrinks the LOS ray on both ends so a candidate flush against a wall isn't rejected by sub-cm collider skin.")]
+    public float sightSkin = 0.05f;
+
     [Header("UI (auto-located from scene if null)")]
     public InteractionPrompt prompt;
 
@@ -132,6 +140,12 @@ public class InteractionManager : MonoBehaviour
                     continue;
                 }
 
+                if (!HasLineOfSight(candidate, hit))
+                {
+                    DebugDetection($"Skip {Describe(candidate)} blocked by wall (LOS)");
+                    continue;
+                }
+
                 float dist = Vector3.Distance(transform.position, candidate.Transform.position);
 
                 if (best == null
@@ -150,6 +164,48 @@ public class InteractionManager : MonoBehaviour
             DebugDetection($"No usable interactable from hits={hits.Length} candidates={candidateCount}");
 
         return best;
+    }
+
+    bool HasLineOfSight(IInteractable candidate, Collider candidateHit)
+    {
+        if (obstructionLayer.value == 0) return true;
+
+        Vector3 origin = transform.position + sightOriginOffset;
+
+        // Aim for the candidate's collider rather than the raw transform pivot,
+        // because pivots are often inside meshes / under the floor.
+        Vector3 target = candidate.Transform.position;
+        Collider aimCollider = candidateHit;
+        if (aimCollider == null || !aimCollider.transform.IsChildOf(candidate.Transform))
+        {
+            aimCollider = candidate.Transform.GetComponentInChildren<Collider>();
+        }
+        if (aimCollider != null)
+        {
+            Vector3 closest = aimCollider.bounds.ClosestPoint(origin);
+            // Nudge a hair toward the bounds center so we don't graze the candidate's own shell on the way in.
+            target = Vector3.MoveTowards(closest, aimCollider.bounds.center, sightSkin);
+        }
+
+        Vector3 delta = target - origin;
+        float dist = delta.magnitude;
+        if (dist <= 0.01f) return true;
+        Vector3 dir = delta / dist;
+
+        var hits = Physics.RaycastAll(origin, dir, dist, obstructionLayer, QueryTriggerInteraction.Ignore);
+        Transform candidateRoot = candidate.Transform;
+        Transform selfRoot = selfCollider != null ? selfCollider.transform : transform;
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Transform t = hits[i].collider.transform;
+            // Ignore the local player's own colliders — they shouldn't be on obstructionLayer, but be defensive.
+            if (t == selfRoot || t.IsChildOf(selfRoot)) continue;
+            // Ignore the candidate's own colliders (e.g. a desk whose static mesh sits on Default layer).
+            if (t == candidateRoot || t.IsChildOf(candidateRoot)) continue;
+            return false;
+        }
+        return true;
     }
 
     bool IsAllowed(IInteractable candidate)
