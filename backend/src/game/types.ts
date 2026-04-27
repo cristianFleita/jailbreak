@@ -150,7 +150,7 @@ export type RouteItemLifecycle =
 export interface GameRoomState {
   id: string // room name given by host
   hostUserId: string // persistent userId of the host
-  status: 'lobby' | 'loading' | 'active' | 'finished'
+  status: 'lobby' | 'loading' | 'tutorial' | 'active' | 'finished'
   players: Map<string, PlayerState> // socket ID → PlayerState
   playersByUserId: Map<string, PlayerState> // userId → PlayerState (reverse lookup)
   npcs: Map<string, NPCState> // npc ID → NPCState
@@ -167,6 +167,9 @@ export interface GameRoomState {
   activeRouteId: ActiveRouteId
   route1?: Route1State
   spawnAreas?: Map<string, SpawnAreaRegistration>
+
+  // ── Tutorial (Fase A) — present only while status === 'tutorial' ──
+  tutorial?: TutorialRoomState
 }
 
 // ============================================================================
@@ -509,6 +512,80 @@ export interface RoomPlayerLeftPayload {
 export interface RoomDestroyedPayload {
   roomId: string
   reason: 'host-left' | 'empty' | 'game-ended'
+}
+
+// ============================================================================
+// Tutorial — Fase A (authoritative pre-match training round)
+// Spec: design/gdd/tutorial-plan.md
+// ============================================================================
+
+/**
+ * Mission IDs the client can claim as completed via `tutorial:mission:complete`.
+ * Each mission belongs to exactly one role; submitting a mission for the wrong
+ * role is rejected by the server.
+ */
+export type TutorialPrisonerMissionId =
+  | 'p1_review_route'
+  | 'p2_food_flow'
+  | 'p3_sprint'
+  | 'p4_store_item'
+  | 'p5_drop_item'
+  | 'p6_risky_action'
+  | 'p7_hide_cart'
+
+export type TutorialGuardMissionId =
+  | 'g1_observe'
+  | 'g2_anomaly'
+  | 'g3_capture'
+  | 'g4_error'
+  | 'g5_world_cue'
+
+export type TutorialMissionId = TutorialPrisonerMissionId | TutorialGuardMissionId
+
+/** Authoritative tutorial state attached to the room while training is running. */
+export interface TutorialRoomState {
+  startedAt: number
+  durationSeconds: number
+  endsAt: number
+  seed: number
+  /** Per-user completion sets, keyed by userId. */
+  completedByUserId: Map<string, Set<TutorialMissionId>>
+}
+
+/**
+ * Server → Client. Sent once per player when the tutorial begins. Each player
+ * receives their own role and the mission set for that role.
+ */
+export interface TutorialStartPayload {
+  duration: number // seconds (60)
+  role: PlayerRole
+  seed: number
+  missions: TutorialMissionId[]
+}
+
+/**
+ * Server → Client. Heartbeat emitted once per second with remaining time and
+ * the requesting player's checklist. Per-player, never room-wide.
+ */
+export interface TutorialStatePayload {
+  remainingSeconds: number
+  completedMissionIds: TutorialMissionId[]
+}
+
+/**
+ * Client → Server. Marks a single mission as complete for the sender. The
+ * server validates the mission exists in the role's set before recording it.
+ */
+export interface TutorialMissionCompletePayload {
+  missionId: TutorialMissionId
+}
+
+/**
+ * Server → Client. Fired once when the tutorial finishes (timer or forced
+ * end). Clients should load the next scene.
+ */
+export interface TutorialEndPayload {
+  nextScene: 'GameScene'
 }
 
 // ============================================================================

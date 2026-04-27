@@ -2,20 +2,21 @@ import { Server, Socket } from 'socket.io'
 import {
   NPCSyncStatePayload, PlayerInteractAction, PlayerMovePayload, Vector3,
   AuthRegisterPayload, RoomCreatePayload, RoomJoinPayload, RoomKickPayload,
-  RegisterSpawnAreasPayload,
+  RegisterSpawnAreasPayload, TutorialMissionCompletePayload,
 } from '../game/types.js'
 import {
   createRoom,
   getRoom,
   destroyRoom,
   roomExists,
-  transitionToActive,
+  transitionToTutorial,
   stopGameLoop,
   buildRoomPlayersPayload,
   buildRoomStatePayload,
   buildRoomListPayload,
   findSocketByUserId,
   listRooms,
+  getTutorialManager,
 } from '../game/room-manager.js'
 import { addPlayer, removePlayer, assignRandomRoles } from '../game/state.js'
 import {
@@ -498,13 +499,18 @@ export function setupGameSockets(io: Server) {
             setUserStatus(player.userId, 'in-game', currentRoomId)
           }
 
-          // Randomly assign 1 guard + rest prisoners
+          // Randomly assign 1 guard + rest prisoners. Roles must be set before
+          // the tutorial fan-out — each player's tutorial:start carries the
+          // role-specific mission list.
           assignRandomRoles(room.state)
 
-          transitionToActive(io, room)
+          // Fase A: Start Game enters the 60s tutorial round, NOT the live
+          // match. The tutorial manager auto-transitions to active when it
+          // ends. Status goes lobby → tutorial → active.
+          transitionToTutorial(io, room)
           emitRoomListUpdate(io)
 
-          console.log(`[ROOM] "${currentRoomId}" started by ${user.displayName}`)
+          console.log(`[ROOM] "${currentRoomId}" started by ${user.displayName} → TUTORIAL`)
         } catch (err) {
           console.error(`[ERROR] room:start: ${err}`)
           socket.emit('game:error', { code: 'START_FAILED', message: String(err) })
@@ -674,6 +680,33 @@ export function setupGameSockets(io: Server) {
       } catch (err) {
         console.error(`[ERROR] riot:activate: ${err}`)
       }
+    })
+
+    // ==================================================================
+    // TUTORIAL: client claims a mission completed (Fase A)
+    // ==================================================================
+    socket.on('tutorial:mission:complete', (payloadRaw: string | TutorialMissionCompletePayload) => {
+      requireAuth(socket, () => {
+        if (!currentRoomId) return
+        try {
+          const room = getRoom(currentRoomId)
+          if (!room || room.state.status !== 'tutorial') return
+
+          const payload = typeof payloadRaw === 'string'
+            ? JSON.parse(payloadRaw) as TutorialMissionCompletePayload
+            : payloadRaw
+
+          const manager = getTutorialManager(room)
+          if (!manager) return
+
+          const user = getUserBySocket(socket.id)
+          if (!user) return
+
+          manager.markMissionComplete(user.userId, payload.missionId)
+        } catch (err) {
+          console.error(`[ERROR] tutorial:mission:complete: ${err}`)
+        }
+      })
     })
 
     // ==================================================================

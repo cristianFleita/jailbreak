@@ -731,3 +731,24 @@ El jugador debe poder decidir explicitamente donde guardar una herramienta y des
 - El HUD debe reflejar el slot seleccionado localmente, aunque el contenido del inventario siga viniendo del estado autoritativo del backend.
 - Cualquier cliente nuevo que implemente `item.store` deberia mandar `slotIndex`.
 - `item.throw` sigue identificando el item por `itemId`; el backend rechaza el throw si ese item no esta almacenado en un slot.
+
+## ADR-029: Pre-match tutorial is a 60s dedicated scene after Start Game
+
+**Status**: Designed
+**Date**: 2026-04-27
+
+### Decision
+
+Despues de que el host presiona Start Game, la sala no entra directamente a la partida principal. El estado pasa a una antesala/tutorial de 60 segundos y Unity carga una escena dedicada de tutorial. En esa escena, los jugadores ya tienen rol asignado y ven misiones especificas por rol: presos practican rutina, inventario e interacciones de Ruta 1; guardia practica observacion, captura por foco y el costo de acusar mal.
+
+### Why
+
+El tutorial debe ensenar el juego desde la fantasia central: escapar siguiendo un plan mientras se imita la rutina de NPCs. Al ubicarlo despues de Start Game, todos los jugadores llegan con contexto claro, roles definidos y un timer corto que mantiene ritmo de partida. La escena dedicada permite practicar interacciones sin contaminar inventario, estadisticas, errores del guardia o progreso real de escape.
+
+### Implications
+
+- Backend necesita un estado transitorio de tutorial/antesala con timer autoritativo de 60s.
+- Unity debe cargar una escena distinta para tutorial y luego cargar la escena principal de gameplay.
+- El tutorial debe resetear inventario, errores, capturas y progreso antes de iniciar la partida real.
+- La UI de tutorial debe ser role-specific y no debe revelar informacion de Ruta 1 al guardia.
+- TAB queda recomendado como toggle de misiones para presos; el uso de TAB del guardia debe resolverse por contexto si convive con camaras.

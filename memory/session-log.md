@@ -280,3 +280,11 @@
   - Updated `design/GDD.md` to document `K` / `L` slot selection, `F` store into selected slot, and `G` drop only from the selected stored slot.
   - Updated Ruta 1 spec and implementation plan so they no longer claim `F` stores into the first free slot or that route tools cannot be dropped at all.
   - Refined ADR-007 and ADR-025 wording to point at ADR-028 for selected-slot storage and slot-only voluntary drop.
+- **Game Design — Tutorial plan review** (2026-04-27):
+  - Read `memory/progress.md`, `design/GDD.md`, `design/gdd/tutorial-plan.md`, and related Ruta 1, captura por foco, rutina/NPC, HUD/control docs.
+  - Reframed tutorial from waiting-room lobby to a 60s post-Start Game tutorial scene with role-assigned missions.
+  - Rewrote `design/gdd/tutorial-plan.md` with scene layout, prioritized interactables, prisoner/guard mission descriptions, backend/Unity/UI task breakdown, edge cases, tuning knobs, dependencies, acceptance criteria, and MVP cut.
+  - Included prisoner tutorial missions around TAB route checklist, sprint discipline, routine camouflage, pickup/store/drop inventory, guard-desk clue, laundry hiding, and power supply/server sabotage.
+  - Included guard tutorial missions around observing NPC routine, practicing focus capture, learning the 3 wrong-accusation loss condition, and reading world cues.
+  - Attempted the required local Ollama documentation review, but `ollama` was not available in PATH.
+  - Recorded ADR-029 in `memory/decisions.md`.
