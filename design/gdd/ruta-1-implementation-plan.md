@@ -4,7 +4,7 @@
 > **Companion spec**: `design/gdd/ruta-1-ventilacion-industrial.md`
 > **GDD section**: `design/GDD.md` §5.2
 > **Authors**: unity-specialist + network-programmer
-> **Last Updated**: 2026-04-24
+> **Last Updated**: 2026-04-27
 
 ---
 
@@ -17,7 +17,9 @@ The backend will use a route-selection architecture so future routes can be adde
 Core decisions:
 
 - Pickables are instant pickup with `E`, then held in hand.
-- `F` stores the held item in backend inventory.
+- `K` / `L` select the target inventory slot.
+- `F` stores the held item in the selected backend inventory slot.
+- `G` drops only the route tool already stored in the selected slot; held tools cannot be dropped directly.
 - Pickables do not use progress bars.
 - Mission interactions use the existing world uGUI prompt/progress bar.
 - All configured vents are valid once opened.
@@ -83,9 +85,10 @@ Core decisions:
 - Add `player:interact` actions:
   - `item.pickup`
   - `item.store`
+  - `item.throw`
 - `item.pickup` validates range, item availability and empty hand.
-- `item.store` validates held item and free inventory slot.
-- Critical route tools cannot be voluntarily thrown or dropped in MVP.
+- `item.store` validates held item and selected free inventory slot.
+- `item.throw` validates that the critical route tool is stored in a slot; held route tools cannot be voluntarily dropped.
 - Capture/disconnect with a critical tool returns it to the world or triggers respawn.
 
 ### Unity
@@ -97,8 +100,10 @@ Core decisions:
   - `InteractionManager`
 - Replace local-only `PickUpInteractable` behavior on route tools with a networked wrapper.
 - On `E`, send `item.pickup`; parent to hand only after server confirmation.
-- On `F`, send `item.store`; update local inventory only after server confirmation.
-- Disable throw/drop behavior for `route1_cutters` and `route1_wrench`.
+- On `K` / `L`, change selected slot only.
+- On `F`, send `item.store` with `slotIndex`; update local inventory only after server confirmation.
+- On `G`, send `item.throw` only for the selected stored slot.
+- Disable direct throw/drop from hand for `route1_cutters` and `route1_wrench`.
 - Keep old world prompt behavior for nearby pickup prompt.
 
 ### Done

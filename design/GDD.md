@@ -1,7 +1,7 @@
 # JAILBREAK — Game Design Document
 
-**Version:** 1.6
-**Fecha:** 26 de abril de 2026
+**Version:** 1.7
+**Fecha:** 27 de abril de 2026
 **Plataforma:** PC (Unity WebGL)
 **Jugadores:** 2–4 online
 **Motor:** Unity 6 LTS
@@ -251,9 +251,10 @@ Además, el ~40% de los NPCs toma un **desvío por pasillo** antes de llegar a s
 
 - **2 slots** de inventario máximo.
 - Los pickables de ruta se recogen instantáneamente con **[INTERACTUAR]** (tecla E) y quedan en la mano.
-- Los objetos en mano se guardan con **[GUARDAR]** (tecla F) en el primer slot libre.
+- El preso selecciona slot con **K** (anterior) y **L** (siguiente). Cambiar de slot no guarda, equipa, intercambia ni tira objetos.
+- Los objetos en mano se guardan con **[GUARDAR]** (tecla F) en el slot seleccionado.
 - Las interacciones de misión usan la barra de progreso contextual del mundo.
-- Los objetos **no se dropean** voluntariamente (evitar griefing).
+- Las herramientas críticas de ruta solo se sueltan voluntariamente con **G** si ya están guardadas en el slot seleccionado. Un objeto en mano no puede dropearse directamente: primero debe guardarse en un slot.
 - Si un preso es capturado, sus objetos caen al suelo. Otro preso puede recogerlos.
 
 ### 5.2 Objetos de Escape (por Ruta)
@@ -281,8 +282,8 @@ Además, el ~40% de los NPCs toma un **desvío por pasillo** antes de llegar a s
 
 | Objeto | Ubicación | Mecánica | Efecto en inventario |
 |--------|-----------|----------|---------------------|
-| **Pinzas** (`route1_cutters`) | Spawn areas definidas por Unity, elegidas por backend | Pickup instantáneo con E, queda en mano; F guarda en slot | Requeridas para sabotear servidor |
-| **Llave francesa** (`route1_wrench`) | Spawn areas definidas por Unity, elegidas por backend | Pickup instantáneo con E, queda en mano; F guarda en slot | Requerida por quien inicia apertura del conducto |
+| **Pinzas** (`route1_cutters`) | Spawn areas definidas por Unity, elegidas por backend | Pickup instantáneo con E, queda en mano; K/L selecciona slot; F guarda en slot seleccionado; G suelta solo desde slot | Requeridas para sabotear servidor |
+| **Llave francesa** (`route1_wrench`) | Spawn areas definidas por Unity, elegidas por backend | Pickup instantáneo con E, queda en mano; K/L selecciona slot; F guarda en slot seleccionado; G suelta solo desde slot | Requerida por quien inicia apertura del conducto |
 
 **Spawn backend-driven:** Unity define spawn areas con `spawnAreaId`, `zoneId`, posición y allowed items. El backend activa una pinza y una llave por partida. Si una herramienta crítica queda inaccesible, se devuelve al mundo o se respawnea.
 
@@ -738,7 +739,10 @@ El HUD de gameplay se implementa en Unity UI Toolkit. El prompt contextual y la 
 | Sprint | Shift | x | | |
 | Agacharse | C (toggle) | x | | |
 | Interactuar / Recoger | E | x | | |
-| Guardar objeto en inventario | F | | x | |
+| Seleccionar slot anterior | K | | x | |
+| Seleccionar slot siguiente | L | | x | |
+| Guardar objeto en slot seleccionado | F | | x | |
+| Soltar herramienta del slot seleccionado | G | | x | |
 | Usar objeto | Q | | x | |
 | Capturar sospechoso (mantener 0.5s) | Click izq. | | | x |
 | Modo cámaras | TAB | | | x |

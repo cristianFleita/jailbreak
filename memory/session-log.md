@@ -276,3 +276,7 @@
   - Unity now only sends `item.throw` for the route tool currently in the selected inventory slot.
   - Backend rejects `item.throw` unless the requested item is stored in one of the player's inventory slots, preventing stale clients from dropping held tools.
   - Updated Route inventory tests so hand throws are rejected and stored-slot throws still work.
+- **Documentation — Inventory controls and slot-only drop** (2026-04-27):
+  - Updated `design/GDD.md` to document `K` / `L` slot selection, `F` store into selected slot, and `G` drop only from the selected stored slot.
+  - Updated Ruta 1 spec and implementation plan so they no longer claim `F` stores into the first free slot or that route tools cannot be dropped at all.
+  - Refined ADR-007 and ADR-025 wording to point at ADR-028 for selected-slot storage and slot-only voluntary drop.

@@ -179,17 +179,17 @@ Los documentos anteriores mezclaban fusibles, escritorios/cajones, duraciones y 
 
 ## ADR-007: Ruta 1 Fase B — Herramientas Criticas con Mano/Slots Autoritativos
 
-**Status**: Implemented
+**Status**: Implemented; refined by ADR-028
 **Date**: 2026-04-24
 
 ### Decision
 
 Implementar Fase B con el backend como fuente de verdad para las herramientas criticas de Ruta 1:
 - `item.pickup` mueve `route1_cutters` / `route1_wrench` a `PlayerState.heldItemId`.
-- `item.store` mueve el item en mano al primer slot libre de `PlayerState.inventorySlots`.
+- `item.store` mueve el item en mano a `PlayerState.inventorySlots`; ADR-028 refina el contrato para usar el slot seleccionado cuando el cliente manda `slotIndex`.
 - Los presos tienen 2 slots; el guardia mantiene inventario vacio.
 - Unity solo parenta/guarda visualmente una herramienta despues de recibir `item:state` / `player:state`.
-- `route1_cutters` y `route1_wrench` no se pueden tirar voluntariamente.
+- `route1_cutters` y `route1_wrench` no se pueden tirar directamente desde la mano; ADR-028 permite soltarlas voluntariamente solo desde un slot seleccionado.
 - Captura, abandono explicito o expiracion del timeout de reconexion devuelven herramientas criticas al mundo como `dropped`.
 
 ### Why
@@ -207,7 +207,7 @@ Evita duplicados entre clientes, resuelve carreras de pickup desde el servidor y
 
 ## ADR-008: Ruta 1 — Separar Pickup en Mano de Progreso Legacy
 
-**Status**: Implemented
+**Status**: Implemented; refined by ADR-028
 **Date**: 2026-04-24
 
 ### Decision
@@ -644,24 +644,24 @@ Unity `JsonUtility` no deserializa arrays en la raíz de forma cómoda, y el cli
 
 ### Decision
 
-Las herramientas críticas de Ruta 1 se pueden tirar voluntariamente solo mediante la acción nueva `item.throw`.
+Las herramientas críticas de Ruta 1 se pueden tirar voluntariamente solo mediante la acción nueva `item.throw`, y solo si ya están guardadas en un slot de inventario.
 
-- El backend valida que el item sea crítico y que el jugador lo tenga en mano o en un slot.
-- `item.throw` usa `dropInventoryItem(...)`, limpia mano/slot, marca el `ItemState` como `dropped`, emite `item:state`, cancela interacciones activas de Ruta 1 para ese jugador y recalcula misiones.
+- El backend valida que el item sea crítico y que el jugador lo tenga guardado en un slot.
+- `item.throw` usa `dropInventoryItem(...)`, limpia el slot, marca el `ItemState` como `dropped`, emite `item:state`, cancela interacciones activas de Ruta 1 para ese jugador y recalcula misiones.
 - El drop voluntario queda en el mundo en la posición calculada frente al jugador para que otro preso pueda recogerlo.
 - No se agenda respawn automático para `item.throw`; los respawns anti-softlock siguen reservados para captura, leave/disconnect o timers existentes.
 - La acción legacy `drop` sigue rechazando herramientas críticas para no saltearse el contrato autoritativo de hand/slots.
-- Unity usa `HeldItemInput.dropKey = G` para pedir `NetworkRoutePickable.RequestThrow()` desde la herramienta en mano o desde el primer slot local con herramienta de ruta.
+- Unity usa `HeldItemInput.dropKey = G` para pedir `NetworkRoutePickable.RequestThrow()` solo desde la herramienta de ruta guardada en el slot seleccionado.
 
 ### Why
 
-Separar `item.throw` de `drop` permite sumar transferencia voluntaria de herramientas sin reabrir el flujo legacy de inventario, que no actualiza correctamente misiones, HUD, reconexión ni `item:state`.
+Separar `item.throw` de `drop` permite sumar transferencia voluntaria de herramientas sin reabrir el flujo legacy de inventario, que no actualiza correctamente misiones, HUD, reconexión ni `item:state`. Exigir que la herramienta esté en un slot evita que el input de drop compita con el estado visual de "item en mano" y hace explícita la intención del jugador: primero guardar, luego soltar.
 
 ### Implications
 
 - Los prefabs de herramientas de ruta deben conservar `NetworkRoutePickable.itemId` igual al item autoritativo.
 - El HUD se actualiza por `player:state` y `item:state`; Unity no mueve localmente la herramienta hasta confirmación del servidor.
-- Si más adelante se quiere elegir qué slot tirar, debe extenderse el input/UI, no el contrato backend.
+- El slot seleccionado se documenta en ADR-028; cualquier cliente nuevo debe mandar `slotIndex` para `item.store` y solo emitir `item.throw` desde slots.
 
 ## ADR-026: Match voice uses diegetic proximity audio
 
