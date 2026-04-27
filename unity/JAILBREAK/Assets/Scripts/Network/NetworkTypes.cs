@@ -75,8 +75,9 @@ namespace Jailbreak.Network
     [Serializable]
     public class InventorySlotData
     {
-        public string itemId;    // e.g. "route1_cutters", "route1_wrench"
+        public string itemId;    // unique instance id (e.g. "route1_cutters_a")
         public string itemType;  // e.g. "route_tool"
+        public string itemKind;  // family/kind shared by instances (e.g. "route1_cutters") — used by HUD for icon/name
         public string iconId;    // optional HUD icon hint
     }
 
@@ -412,7 +413,10 @@ namespace Jailbreak.Network
     public class JailPhaseSnapshot
     {
         public int                  phase;
+        public string               phaseName;
         public string               zone;
+        public float                duration;
+        public float                elapsed;
         public NPCAssignmentData[]  npcAssignments;
     }
 
@@ -565,12 +569,17 @@ namespace Jailbreak.Network
     /// <summary>
     /// Authoritative broadcast of a single item's lifecycle state.
     /// state ∈ { spawned, held, stored, dropped, respawning }.
+    ///
+    /// itemId is the unique instance id ("route1_cutters_a"). itemKind is the
+    /// shared family ("route1_cutters") and is what clients should use to look
+    /// up prefabs and HUD icons — multiple instances may share the same kind.
     /// </summary>
     [Serializable]
     public class ItemStateBroadcastPayload
     {
         public string   itemId;
         public string   itemType;
+        public string   itemKind;
         public string   state;
         public string   holderUserId;
         public string   spawnAreaId;

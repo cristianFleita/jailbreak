@@ -272,6 +272,12 @@ export class JailRoutineSystem {
 
   getCurrentJailPhase(): JailPhaseNumber { return this.currentPhase }
   getCurrentZone(): string { return this.getPhaseDef(this.currentPhase)?.zone ?? 'unknown' }
+  getCurrentPhaseName(): string { return this.getPhaseDef(this.currentPhase)?.name ?? 'Unknown' }
+  getCurrentPhaseDuration(): number { return this.getPhaseDef(this.currentPhase)?.duration ?? 0 }
+  getCurrentPhaseElapsed(): number {
+    if (this.phaseStartedAt === 0) return 0
+    return Math.max(0, (Date.now() - this.phaseStartedAt) / 1000)
+  }
 
   buildReconnectAssignments(): NPCAssignment[] {
     const elapsedPhase = (Date.now() - this.phaseStartedAt) / 1000

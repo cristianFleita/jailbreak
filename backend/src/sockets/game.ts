@@ -165,7 +165,10 @@ export function setupGameSockets(io: Server) {
                 activeRouteId: roomForReconnect.state.activeRouteId,
                 jailPhase: gm?.jailRoutine ? {
                   phase:          gm.jailRoutine.getCurrentJailPhase(),
+                  phaseName:      gm.jailRoutine.getCurrentPhaseName(),
                   zone:           gm.jailRoutine.getCurrentZone(),
+                  duration:       gm.jailRoutine.getCurrentPhaseDuration(),
+                  elapsed:        gm.jailRoutine.getCurrentPhaseElapsed(),
                   npcAssignments: gm.jailRoutine.buildReconnectAssignments(),
                 } : undefined,
               })
@@ -336,7 +339,10 @@ export function setupGameSockets(io: Server) {
                 activeRouteId: room.state.activeRouteId,
                 jailPhase: gm2?.jailRoutine ? {
                   phase:          gm2.jailRoutine.getCurrentJailPhase(),
+                  phaseName:      gm2.jailRoutine.getCurrentPhaseName(),
                   zone:           gm2.jailRoutine.getCurrentZone(),
+                  duration:       gm2.jailRoutine.getCurrentPhaseDuration(),
+                  elapsed:        gm2.jailRoutine.getCurrentPhaseElapsed(),
                   npcAssignments: gm2.jailRoutine.buildReconnectAssignments(),
                 } : undefined,
               })

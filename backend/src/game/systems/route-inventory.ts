@@ -21,23 +21,55 @@ import {
   ItemStateBroadcast,
   PlayerState,
   RouteItemId,
+  RouteItemKind,
   RouteItemLifecycle,
   Vector3,
 } from '../types.js'
 
 /**
- * Critical route tools that use the authoritative hand/slot lifecycle.
- * They can be voluntarily thrown through `item.throw`; legacy `drop` remains
- * blocked so old clients cannot bypass the route inventory contract.
+ * Critical route tool kinds. Multiple physical instances may share a kind
+ * (e.g. two cutters spawned at different areas) so we never softlock if a
+ * single one is lost.
  */
-export const CRITICAL_ROUTE_ITEM_IDS: readonly RouteItemId[] = [
+export const CRITICAL_ROUTE_ITEM_KINDS: readonly RouteItemKind[] = [
   'route1_cutters',
   'route1_wrench',
 ]
 
+/**
+ * Back-compat alias — older code paths and tests reference this list.
+ * Now exposes kinds rather than instance ids; instance ids are derived
+ * dynamically from `state.items`.
+ */
+export const CRITICAL_ROUTE_ITEM_IDS: readonly RouteItemId[] = CRITICAL_ROUTE_ITEM_KINDS
+
+/**
+ * True for either a kind id (`route1_cutters`) or any instance id derived
+ * from a critical kind via `<kind>_<suffix>` (`route1_cutters_a`).
+ */
 export function isCriticalRouteItem(itemId: string | null | undefined): boolean {
   if (!itemId) return false
-  return CRITICAL_ROUTE_ITEM_IDS.includes(itemId as RouteItemId)
+  for (const kind of CRITICAL_ROUTE_ITEM_KINDS) {
+    if (itemId === kind) return true
+    if (itemId.startsWith(kind + '_')) return true
+  }
+  return false
+}
+
+/** Infer the kind of an item id, even if `itemKind` was never set. */
+export function inferItemKind(itemId: string | null | undefined): RouteItemKind | undefined {
+  if (!itemId) return undefined
+  for (const kind of CRITICAL_ROUTE_ITEM_KINDS) {
+    if (itemId === kind || itemId.startsWith(kind + '_')) return kind
+  }
+  return undefined
+}
+
+/** Returns the canonical kind for an ItemState, falling back to id-based inference. */
+export function getItemKind(item: ItemState | undefined | null): RouteItemKind | undefined {
+  if (!item) return undefined
+  if (item.itemKind) return item.itemKind
+  return inferItemKind(item.itemId ?? item.id)
 }
 
 // ─── Item lifecycle mutators ────────────────────────────────────────────────
@@ -47,16 +79,27 @@ export function ensureItemState(
   state: GameRoomState,
   itemId: RouteItemId,
   itemType: string = 'route_tool',
-  initialPosition: Vector3 = { x: 0, y: 0, z: 0 }
+  initialPosition: Vector3 = { x: 0, y: 0, z: 0 },
+  itemKind?: RouteItemKind
 ): ItemState {
   const existing = state.items.get(itemId)
-  if (existing) return existing
+  if (existing) {
+    if (itemKind && !existing.itemKind) existing.itemKind = itemKind
+    if (!existing.itemKind) {
+      const inferred = inferItemKind(itemId)
+      if (inferred) existing.itemKind = inferred
+    }
+    return existing
+  }
+
+  const resolvedKind = itemKind ?? inferItemKind(itemId)
 
   const item: ItemState = {
     id: itemId,
     type: itemType,
     itemId,
     itemType,
+    itemKind: resolvedKind,
     state: 'spawned',
     position: { ...initialPosition },
     isPickedUp: false,
@@ -69,6 +112,7 @@ export function buildItemStateBroadcast(item: ItemState): ItemStateBroadcast {
   return {
     itemId: (item.itemId ?? item.id) as RouteItemId,
     itemType: (item.itemType ?? item.type) as string,
+    itemKind: getItemKind(item),
     state: (item.state ?? 'spawned') as RouteItemLifecycle,
     holderUserId: item.holderUserId,
     spawnAreaId: item.spawnAreaId,
@@ -127,6 +171,45 @@ export function findPlayerWithItem(
   return null
 }
 
+/**
+ * True if the player holds ANY instance whose kind matches `kind`.
+ * Used by mission gates so a single critical-tool kind is satisfied by any
+ * physical instance — picking up `route1_cutters_a` OR `route1_cutters_b`
+ * unlocks the disable_server step.
+ */
+export function playerHasItemKind(
+  state: GameRoomState,
+  player: PlayerState,
+  kind: RouteItemKind
+): boolean {
+  const heldKind = getItemKind(state.items.get(player.heldItemId ?? ''))
+  if (heldKind === kind) return true
+
+  const slots = player.inventorySlots ?? []
+  for (const slot of slots) {
+    if (!slot) continue
+    if (slot.itemKind === kind) return true
+    // Slots emitted by older clients may omit itemKind — fall back to id lookup.
+    const slotKind = getItemKind(state.items.get(slot.itemId))
+    if (slotKind === kind) return true
+  }
+  return false
+}
+
+/**
+ * Returns the first prisoner currently carrying any instance of `kind`.
+ * Mirrors `findPlayerWithItem` but matches by kind instead of unique id.
+ */
+export function findPlayerWithKind(
+  state: GameRoomState,
+  kind: RouteItemKind
+): PlayerState | null {
+  for (const player of state.playersByUserId.values()) {
+    if (playerHasItemKind(state, player, kind)) return player
+  }
+  return null
+}
+
 export function ensurePrisonerInventorySlots(player: PlayerState): void {
   if (player.role !== 'prisoner') return
 
@@ -157,6 +240,7 @@ function buildSlotSync(item: ItemState): InventorySlotSync {
   return {
     itemId: (item.itemId ?? item.id) as RouteItemId,
     itemType: (item.itemType ?? item.type) as string,
+    itemKind: getItemKind(item),
   }
 }
 

@@ -9,7 +9,7 @@
  * Plan: design/gdd/ruta-1-implementation-plan.md (Phase A)
  */
 
-import { ActiveRouteId, GameRoomState } from '../types.js'
+import { ActiveRouteId, GameRoomState, RouteItemId, RouteItemKind } from '../types.js'
 import { createRoute1State } from './route1/state.js'
 import { ensureItemState } from '../systems/route-inventory.js'
 
@@ -23,17 +23,35 @@ interface RouteDefinition {
   init(state: GameRoomState): void
 }
 
+/**
+ * Two physical instances per critical kind so a single dropped/lost tool
+ * never softlocks the route. Each instance has a unique id; the kind is
+ * what mission gates check, so any instance satisfies its requirement.
+ */
+export interface RouteItemInstance {
+  instanceId: RouteItemId
+  kind: RouteItemKind
+}
+
+export const ROUTE1_ITEM_INSTANCES: readonly RouteItemInstance[] = [
+  { instanceId: 'route1_cutters_a', kind: 'route1_cutters' },
+  { instanceId: 'route1_cutters_b', kind: 'route1_cutters' },
+  { instanceId: 'route1_wrench_a',  kind: 'route1_wrench' },
+  { instanceId: 'route1_wrench_b',  kind: 'route1_wrench' },
+]
+
 const REGISTRY: RouteDefinition[] = [
   {
     id: 'route1_ventilation',
     init: (state) => {
       state.route1 = createRoute1State()
-      // Seed authoritative lifecycle for the two critical route tools.
+      // Seed authoritative lifecycle for every critical tool instance.
       // Positions are placeholders (0,0,0) until Phase C spawn areas override
       // them via item:state updates. Pickup validation tolerates placeholder
       // positions; Unity is the source of proximity in this phase.
-      ensureItemState(state, 'route1_cutters', 'route_tool')
-      ensureItemState(state, 'route1_wrench', 'route_tool')
+      for (const inst of ROUTE1_ITEM_INSTANCES) {
+        ensureItemState(state, inst.instanceId, 'route_tool', undefined, inst.kind)
+      }
     },
   },
   // Route 2 — TODO (not implementable in MVP)

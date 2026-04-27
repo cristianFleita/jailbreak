@@ -101,7 +101,7 @@ export function addPlayer(
     id: userId,
     userId,
     role: 'prisoner', // placeholder — reassigned on game start
-    position: { x: 0, y: 0, z: 0 },
+    position: { ...initialPosition },
     rotation: { x: 0, y: 0, z: 0, w: 1 },
     velocity: { x: 0, y: 0, z: 0 },
     movementState: 'idle',
@@ -202,11 +202,12 @@ export function updatePlayerMovement(
  * The guard has a dedicated spawn, prisoner players take random cell doors,
  * and NPCs fill the remaining CELL_DOOR_SPAWNS with unique positions.
  */
-export function spawnNPCs(state: GameRoomState, _config: GameConfig): void {
+export function spawnNPCs(state: GameRoomState, _config: GameConfig, count?: number): void {
   const playerCount = state.players.size
-  // Guard has its own spawn, so prisoner players = playerCount - 1
-  // NPCs fill the remaining 20 - (playerCount - 1) cell slots
-  const npcCount = 20 - (playerCount - 1)
+  // Guard has its own spawn, so prisoner players = max(0, playerCount - 1).
+  // NPCs fill the remaining cell slots, clamped to [0, 20].
+  const prisonerPlayerCount = Math.max(0, playerCount - 1)
+  const npcCount = count ?? Math.max(0, 20 - prisonerPlayerCount)
 
   // Collect spawn slot IDs already taken by prisoner players
   const usedSpawnIds = new Set<string>()

@@ -68,6 +68,7 @@ namespace Jailbreak.UI
         private int _phaseNumber;
         private float _phaseDuration;
         private float _phaseStartedAtRealtime;
+        private bool _hasPhaseTimer;
         private string _lastRenderedRole;
         private float _nextSlowRefresh;
         private float _toastHideAtRealtime;
@@ -456,9 +457,10 @@ namespace Jailbreak.UI
         private void SetHeldItem(string itemId)
         {
             var hasItem = !string.IsNullOrEmpty(itemId);
+            var key = ResolveItemKindKey(itemId);
             if (_heldItemLabel != null)
-                _heldItemLabel.text = hasItem ? DisplayNameForItem(itemId) : "Empty hand";
-            SetIcon(_heldItemIcon, hasItem ? IconForItem(itemId) : null);
+                _heldItemLabel.text = hasItem ? DisplayNameForItem(key) : "Empty hand";
+            SetIcon(_heldItemIcon, hasItem ? IconForItem(key) : null);
         }
 
         private void SetSlot(HudSlot slot, InventorySlotData data, bool selected = false)
@@ -466,11 +468,13 @@ namespace Jailbreak.UI
             if (slot == null) return;
 
             var itemId = data != null ? data.itemId : null;
+            var itemKind = data != null ? data.itemKind : null;
             var hasItem = !string.IsNullOrEmpty(itemId);
+            var key = !string.IsNullOrEmpty(itemKind) ? itemKind : ResolveItemKindKey(itemId);
 
             if (slot.label != null)
-                slot.label.text = hasItem ? ShortNameForItem(itemId) : "Empty";
-            SetIcon(slot.icon, hasItem ? IconForItem(itemId) : null);
+                slot.label.text = hasItem ? ShortNameForItem(key) : "Empty";
+            SetIcon(slot.icon, hasItem ? IconForItem(key) : null);
 
             if (slot.root != null)
             {
@@ -495,9 +499,9 @@ namespace Jailbreak.UI
                 slot.label.style.color = selected ? Color.white : new Color(0.77f, 0.85f, 0.92f);
         }
 
-        private Sprite IconForItem(string itemId)
+        private Sprite IconForItem(string key)
         {
-            switch (itemId)
+            switch (key)
             {
                 case "route1_cutters": return cuttersIcon != null ? cuttersIcon : unknownItemIcon;
                 case "route1_wrench": return wrenchIcon != null ? wrenchIcon : unknownItemIcon;
@@ -505,23 +509,37 @@ namespace Jailbreak.UI
             }
         }
 
-        private static string DisplayNameForItem(string itemId)
+        /// <summary>
+        /// Maps either a kind id ("route1_cutters") or an instance id
+        /// ("route1_cutters_a") to the kind id used by icon/name switches.
+        /// Lets the HUD resolve display data from the local heldItemId field
+        /// even when the network slot omits itemKind (older payloads).
+        /// </summary>
+        private static string ResolveItemKindKey(string itemId)
         {
-            switch (itemId)
+            if (string.IsNullOrEmpty(itemId)) return null;
+            if (itemId.StartsWith("route1_cutters", StringComparison.Ordinal)) return "route1_cutters";
+            if (itemId.StartsWith("route1_wrench",  StringComparison.Ordinal)) return "route1_wrench";
+            return itemId;
+        }
+
+        private static string DisplayNameForItem(string key)
+        {
+            switch (key)
             {
                 case "route1_cutters": return "Cutters";
                 case "route1_wrench": return "Wrench";
-                default: return string.IsNullOrEmpty(itemId) ? "Empty hand" : itemId;
+                default: return string.IsNullOrEmpty(key) ? "Empty hand" : key;
             }
         }
 
-        private static string ShortNameForItem(string itemId)
+        private static string ShortNameForItem(string key)
         {
-            switch (itemId)
+            switch (key)
             {
                 case "route1_cutters": return "Cutters";
                 case "route1_wrench": return "Wrench";
-                default: return string.IsNullOrEmpty(itemId) ? "Empty" : itemId;
+                default: return string.IsNullOrEmpty(key) ? "Empty" : key;
             }
         }
 
@@ -684,6 +702,7 @@ namespace Jailbreak.UI
             _phaseZone = null;
             _phaseNumber = 0;
             _phaseDuration = 0f;
+            _hasPhaseTimer = false;
             RefreshPhaseLabel();
         }
 
@@ -693,6 +712,7 @@ namespace Jailbreak.UI
             _phaseZone = null;
             _phaseNumber = 0;
             _phaseDuration = 0f;
+            _hasPhaseTimer = false;
             RefreshPhaseLabel();
             RefreshTimer();
         }
@@ -733,6 +753,7 @@ namespace Jailbreak.UI
             _phaseZone = payload.reason;
             _phaseNumber = 0;
             _phaseDuration = 0f;
+            _hasPhaseTimer = false;
             RefreshPhaseLabel();
             RefreshTimer();
         }
@@ -745,6 +766,7 @@ namespace Jailbreak.UI
             _phaseZone = data.zone;
             _phaseDuration = Mathf.Max(0f, data.duration);
             _phaseStartedAtRealtime = Time.realtimeSinceStartup;
+            _hasPhaseTimer = _phaseDuration > 0f;
             RefreshPhaseLabel();
             RefreshTimer();
         }
@@ -760,10 +782,25 @@ namespace Jailbreak.UI
             if (data?.jailPhase != null)
             {
                 _phaseNumber = data.jailPhase.phase;
-                _phaseName = $"Phase {_phaseNumber}";
+                _phaseName = string.IsNullOrEmpty(data.jailPhase.phaseName)
+                    ? $"Phase {_phaseNumber}"
+                    : data.jailPhase.phaseName;
                 _phaseZone = data.jailPhase.zone;
-                _phaseDuration = 0f;
-                _phaseStartedAtRealtime = 0f;
+                _phaseDuration = Mathf.Max(0f, data.jailPhase.duration);
+                if (_phaseDuration > 0f)
+                {
+                    // Reconstruct start time so the countdown matches the server's
+                    // remaining time. Note: after F5, Time.realtimeSinceStartup
+                    // resets near 0, so this value can legitimately be negative.
+                    var elapsed = Mathf.Clamp(data.jailPhase.elapsed, 0f, _phaseDuration);
+                    _phaseStartedAtRealtime = Time.realtimeSinceStartup - elapsed;
+                    _hasPhaseTimer = true;
+                }
+                else
+                {
+                    _phaseStartedAtRealtime = 0f;
+                    _hasPhaseTimer = false;
+                }
                 RefreshPhaseLabel();
                 RefreshTimer();
             }
@@ -788,7 +825,7 @@ namespace Jailbreak.UI
         {
             if (_timeLabel == null) return;
 
-            if (_phaseDuration <= 0f || _phaseStartedAtRealtime <= 0f)
+            if (!_hasPhaseTimer || _phaseDuration <= 0f)
             {
                 _timeLabel.text = "--:--";
                 return;

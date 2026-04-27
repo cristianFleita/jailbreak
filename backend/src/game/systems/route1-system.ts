@@ -45,9 +45,9 @@ import {
 } from '../routes/route1/state.js'
 import {
   CRITICAL_ROUTE_ITEM_IDS,
-  findPlayerWithItem,
+  findPlayerWithKind,
   isCriticalRouteItem,
-  playerHasItem,
+  playerHasItemKind,
 } from './route-inventory.js'
 
 // ─── Action contract ────────────────────────────────────────────────────────
@@ -182,7 +182,7 @@ export class Route1System {
     if (!SERVER_IDS.includes(serverId as ServerRackId)) {
       return fail(`Invalid server "${serverId}"`)
     }
-    if (!playerHasItem(player, 'route1_cutters')) {
+    if (!playerHasItemKind(this.state, player, 'route1_cutters')) {
       return fail('route1_cutters required')
     }
     if (this.r1.serverDisabled) {
@@ -245,7 +245,7 @@ export class Route1System {
     }
 
     // New interaction: initiator must have the wrench.
-    if (!playerHasItem(player, 'route1_wrench')) {
+    if (!playerHasItemKind(this.state, player, 'route1_wrench')) {
       return fail('route1_wrench required to start opening vent')
     }
     this.replaceUserInteraction(player.userId, {
@@ -524,8 +524,8 @@ export class Route1System {
     const r1 = this.state.route1
     const m = r1.missions
 
-    const cuttersHeld = !!findPlayerWithItem(this.state, 'route1_cutters')
-    const wrenchHeld = !!findPlayerWithItem(this.state, 'route1_wrench')
+    const cuttersHeld = !!findPlayerWithKind(this.state, 'route1_cutters')
+    const wrenchHeld = !!findPlayerWithKind(this.state, 'route1_wrench')
 
     m.find_cutters = cuttersHeld ? 'complete' : 'available'
     m.find_wrench = wrenchHeld ? 'complete' : 'available'

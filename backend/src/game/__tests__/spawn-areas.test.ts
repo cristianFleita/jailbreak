@@ -141,10 +141,13 @@ describe('Spawn Areas (Phase C)', () => {
       registerSpawnAreas(state, { areas: AREAS_A })
       const placed = placeCriticalItemsInSpawnAreas(io, 'room-place', state)
 
-      expect(placed).toEqual(expect.arrayContaining(['route1_cutters', 'route1_wrench']))
+      expect(placed).toEqual(expect.arrayContaining([
+        'route1_cutters_a', 'route1_cutters_b',
+        'route1_wrench_a',  'route1_wrench_b',
+      ]))
 
-      const cutters = state.items.get('route1_cutters')!
-      const wrench = state.items.get('route1_wrench')!
+      const cutters = state.items.get('route1_cutters_a')!
+      const wrench = state.items.get('route1_wrench_a')!
 
       expect(cutters.state).toBe('spawned')
       expect(cutters.spawnAreaId).toBeDefined()
@@ -162,7 +165,7 @@ describe('Spawn Areas (Phase C)', () => {
     it('does not reposition held or stored items', () => {
       const state = makeRoom('room-keep')
       const io = mockIo()
-      const cutters = state.items.get('route1_cutters')!
+      const cutters = state.items.get('route1_cutters_a')!
       cutters.state = 'held'
       cutters.holderUserId = 'some-user'
 
@@ -182,10 +185,10 @@ describe('Spawn Areas (Phase C)', () => {
       registerSpawnAreas(state, { areas: AREAS_A })
       placeCriticalItemsInSpawnAreas(io, 'room-respawn', state)
 
-      const cutters = state.items.get('route1_cutters')!
+      const cutters = state.items.get('route1_cutters_a')!
       cutters.state = 'dropped'
 
-      const ok = respawnCriticalItem(io, 'room-respawn', state, 'route1_cutters')
+      const ok = respawnCriticalItem(io, 'room-respawn', state, 'route1_cutters_a')
       expect(ok).toBe(true)
       expect(cutters.state).toBe('spawned')
       expect(cutters.spawnAreaId).toBeDefined()
@@ -197,9 +200,9 @@ describe('Spawn Areas (Phase C)', () => {
       const io = mockIo()
       registerSpawnAreas(state, { areas: AREAS_A })
 
-      const cutters = state.items.get('route1_cutters')!
+      const cutters = state.items.get('route1_cutters_a')!
       cutters.state = 'held'
-      const ok = respawnCriticalItem(io, 'room-refuse', state, 'route1_cutters')
+      const ok = respawnCriticalItem(io, 'room-refuse', state, 'route1_cutters_a')
       expect(ok).toBe(false)
       clearSpawnAreaRegistration('room-refuse')
     })
@@ -212,11 +215,11 @@ describe('Spawn Areas (Phase C)', () => {
       registerSpawnAreas(state, { areas: AREAS_A })
       placeCriticalItemsInSpawnAreas(io, 'room-timer', state)
 
-      const wrench = state.items.get('route1_wrench')!
+      const wrench = state.items.get('route1_wrench_a')!
       wrench.state = 'dropped'
       wrench.spawnAreaId = undefined
 
-      scheduleCriticalItemRespawn(io, 'room-timer', state, 'route1_wrench', 5)
+      scheduleCriticalItemRespawn(io, 'room-timer', state, 'route1_wrench_a', 5)
       expect(wrench.state).toBe('dropped')
 
       vi.advanceTimersByTime(5_000 + 50)
@@ -231,11 +234,11 @@ describe('Spawn Areas (Phase C)', () => {
       registerSpawnAreas(state, { areas: AREAS_A })
       placeCriticalItemsInSpawnAreas(io, 'room-cancel', state)
 
-      const wrench = state.items.get('route1_wrench')!
+      const wrench = state.items.get('route1_wrench_a')!
       wrench.state = 'dropped'
 
-      scheduleCriticalItemRespawn(io, 'room-cancel', state, 'route1_wrench', 5)
-      cancelPendingRespawn('room-cancel', 'route1_wrench')
+      scheduleCriticalItemRespawn(io, 'room-cancel', state, 'route1_wrench_a', 5)
+      cancelPendingRespawn('room-cancel', 'route1_wrench_a')
       vi.advanceTimersByTime(10_000)
       // Still dropped — timer never ran respawn
       expect(wrench.state).toBe('dropped')
@@ -248,9 +251,9 @@ describe('Spawn Areas (Phase C)', () => {
       registerSpawnAreas(state, { areas: AREAS_A })
       placeCriticalItemsInSpawnAreas(io, 'room-pickup', state)
 
-      const wrench = state.items.get('route1_wrench')!
+      const wrench = state.items.get('route1_wrench_a')!
       wrench.state = 'dropped'
-      scheduleCriticalItemRespawn(io, 'room-pickup', state, 'route1_wrench', 3)
+      scheduleCriticalItemRespawn(io, 'room-pickup', state, 'route1_wrench_a', 3)
 
       // Simulate a pickup before the timer fires
       wrench.state = 'held'

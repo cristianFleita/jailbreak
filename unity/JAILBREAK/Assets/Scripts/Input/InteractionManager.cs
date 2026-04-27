@@ -14,6 +14,14 @@ public class InteractionManager : MonoBehaviour
     public float detectionRadius = 2f;
     public LayerMask interactableLayer;
 
+    [Header("Line of Sight")]
+    [Tooltip("Layers that BLOCK interaction line of sight (walls, doors, static geometry). Default layer recommended.")]
+    public LayerMask obstructionLayer = 1; // Default layer
+    [Tooltip("Local-space offset of the LOS ray origin (roughly chest height so we don't shoot from the floor).")]
+    public Vector3 sightOriginOffset = new Vector3(0f, 1.0f, 0f);
+    [Tooltip("Shrinks the LOS ray on both ends so a candidate flush against a wall isn't rejected by sub-cm collider skin.")]
+    public float sightSkin = 0.05f;
+
     [Header("UI (auto-located from scene if null)")]
     public InteractionPrompt prompt;
 
@@ -132,6 +140,12 @@ public class InteractionManager : MonoBehaviour
                     continue;
                 }
 
+                if (!HasLineOfSight(candidate, hit))
+                {
+                    DebugDetection($"Skip {Describe(candidate)} blocked by wall (LOS)");
+                    continue;
+                }
+
                 float dist = Vector3.Distance(transform.position, candidate.Transform.position);
 
                 if (best == null
@@ -149,6 +163,71 @@ public class InteractionManager : MonoBehaviour
         else if (hits.Length > 0)
             DebugDetection($"No usable interactable from hits={hits.Length} candidates={candidateCount}");
 
+        return best;
+    }
+
+    bool HasLineOfSight(IInteractable candidate, Collider candidateHit)
+    {
+        if (obstructionLayer.value == 0) return true;
+
+        // Prop root = highest ancestor that owns a NetworkInteractable or Rigidbody.
+        // This defines "everything that belongs to this prop" so its own walls/floor
+        // (often on Default layer, on a parent of the trigger child) don't occlude
+        // their own pickup point.
+        Transform propRoot = FindPropRoot(candidate.Transform);
+
+        Collider aimCollider = candidateHit;
+        if (aimCollider == null
+            || (aimCollider.transform != propRoot && !aimCollider.transform.IsChildOf(propRoot)))
+        {
+            aimCollider = propRoot.GetComponentInChildren<Collider>();
+        }
+
+        // Player capsule already overlapping the prop's collider = player is
+        // snapped/standing on it (hide cart, chair). LOS doesn't apply — a wall
+        // between their head and the prop's pivot is irrelevant when they're
+        // physically inside the prop's volume.
+        if (aimCollider != null && selfCollider != null
+            && selfCollider.bounds.Intersects(aimCollider.bounds))
+            return true;
+
+        Vector3 origin = transform.position + sightOriginOffset;
+        Vector3 target = candidate.Transform.position;
+        if (aimCollider != null)
+        {
+            Vector3 closest = aimCollider.bounds.ClosestPoint(origin);
+            target = Vector3.MoveTowards(closest, aimCollider.bounds.center, sightSkin);
+        }
+
+        Vector3 delta = target - origin;
+        float dist = delta.magnitude;
+        if (dist <= 0.01f) return true;
+        Vector3 dir = delta / dist;
+
+        var hits = Physics.RaycastAll(origin, dir, dist, obstructionLayer, QueryTriggerInteraction.Ignore);
+        Transform selfRoot = selfCollider != null ? selfCollider.transform : transform;
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Transform t = hits[i].collider.transform;
+            if (t == selfRoot || t.IsChildOf(selfRoot)) continue;
+            if (t == propRoot || t.IsChildOf(propRoot)) continue;
+            return false;
+        }
+        return true;
+    }
+
+    static Transform FindPropRoot(Transform leaf)
+    {
+        Transform best = leaf;
+        Transform cur = leaf;
+        while (cur != null)
+        {
+            if (cur.GetComponent<NetworkInteractable>() != null
+                || cur.GetComponent<Rigidbody>() != null)
+                best = cur;
+            cur = cur.parent;
+        }
         return best;
     }
 
