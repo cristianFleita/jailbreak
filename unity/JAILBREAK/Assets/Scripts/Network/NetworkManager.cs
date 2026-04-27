@@ -54,6 +54,7 @@ namespace Jailbreak.Network
         public event Action<AuthRegisteredPayload>    OnAuthRegisteredEvent;
         public event Action<RoomCreatedPayload>       OnRoomCreatedEvent;
         public event Action<RoomStatePayload>         OnRoomStateEvent;
+        public event Action<RoomListPayload>          OnRoomListEvent;
         public event Action<RoomPlayerJoinedPayload>  OnRoomPlayerJoinedEvent;
         public event Action<RoomPlayerLeftPayload>    OnRoomPlayerLeftEvent;
         public event Action<RoomKickedPayload>        OnRoomKickedEvent;
@@ -119,12 +120,14 @@ namespace Jailbreak.Network
         [DllImport("__Internal")] private static extern void   SocketJoinRoom(string roomId);
         [DllImport("__Internal")] private static extern void   SocketKickPlayer(string targetUserId);
         [DllImport("__Internal")] private static extern void   SocketStartGame();
+        [DllImport("__Internal")] private static extern void   SocketListRooms();
         [DllImport("__Internal")] private static extern void   SocketGetRoomState();
         [DllImport("__Internal")] private static extern void   SocketLeaveRoom();
         [DllImport("__Internal")] private static extern void   SocketSendPlayerMove(string json);
         [DllImport("__Internal")] private static extern void   SocketSendGuardMark(string targetId);
         [DllImport("__Internal")] private static extern void   SocketSendGuardCatch(string targetId);
         [DllImport("__Internal")] private static extern void   SocketSendInteract(string objectId, string action);
+        [DllImport("__Internal")] private static extern void   SocketSendInteractWithSlot(string objectId, string action, int slotIndex);
         [DllImport("__Internal")] private static extern void   SocketSendPlayerAction(string objectId, string action);
         [DllImport("__Internal")] private static extern void   SocketSendRiotActivate();
         [DllImport("__Internal")] private static extern void   SocketSendNPCSyncState(string json);
@@ -239,6 +242,16 @@ namespace Jailbreak.Network
 #endif
         }
 
+        public void RequestRoomList()
+        {
+            if (!IsAuthenticated) return;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketListRooms();
+#else
+            _socket?.Emit("room:list");
+#endif
+        }
+
         public void KickPlayer(string targetUserId)
         {
             if (!IsHost) return;
@@ -325,6 +338,16 @@ namespace Jailbreak.Network
             SocketSendInteract(objectId, action);
 #else
             _socket?.Emit("player:interact", new { objectId, action });
+#endif
+        }
+
+        public void SendPlayerInteract(string objectId, string action, int slotIndex)
+        {
+            if (!IsInGame()) return;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketSendInteractWithSlot(objectId, action, slotIndex);
+#else
+            _socket?.Emit("player:interact", new { objectId, action, slotIndex });
 #endif
         }
 
@@ -457,6 +480,15 @@ namespace Jailbreak.Network
                 _currentRoomId = data.roomId;
                 IsHost = data.hostUserId == LocalUserId;
                 OnRoomStateEvent?.Invoke(data);
+            });
+        }
+
+        public void OnRoomList(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<RoomListPayload>(json);
+                if (data != null) OnRoomListEvent?.Invoke(data);
             });
         }
 
@@ -826,6 +858,20 @@ namespace Jailbreak.Network
                     IsHost = data.hostUserId == LocalUserId;
                     OnRoomStateEvent?.Invoke(data);
                 });
+            });
+
+            SafeOn("room:list:response", r =>
+            {
+                var data = DeserializePayload<RoomListPayload>(r);
+                if (data != null)
+                    _mainThreadQueue.Enqueue(() => OnRoomListEvent?.Invoke(data));
+            });
+
+            SafeOn("room:list:update", r =>
+            {
+                var data = DeserializePayload<RoomListPayload>(r);
+                if (data != null)
+                    _mainThreadQueue.Enqueue(() => OnRoomListEvent?.Invoke(data));
             });
 
             SafeOn("room:player-joined", r =>

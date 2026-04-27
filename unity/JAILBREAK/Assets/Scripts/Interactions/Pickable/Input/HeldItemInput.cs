@@ -7,6 +7,8 @@ public class HeldItemInput : MonoBehaviour
     [Header("Input")]
     public KeyCode throwKey = KeyCode.Mouse0;
     public KeyCode storeKey = KeyCode.F;
+    [Tooltip("Voluntarily drop the held route tool back into the world. Server-driven for route items.")]
+    public KeyCode dropKey  = KeyCode.G;
 
     [Header("Hold Point")]
     public string holdPointName = "Hand_R";
@@ -33,6 +35,7 @@ public class HeldItemInput : MonoBehaviour
     public bool HasItem => heldItem != null;
     public KeyCode ThrowKey => throwKey;
     public KeyCode StoreKey => storeKey;
+    public KeyCode DropKey  => dropKey;
 
     void Awake()
     {
@@ -67,13 +70,17 @@ public class HeldItemInput : MonoBehaviour
     {
         HandleIKWeight();
 
+        // Route tools can only be dropped after being stored in a slot.
+        if (InputSystemKey.WasPressedThisFrame(dropKey) && TryRouteDrop())
+            return;
+
         if (heldItem == null) return;
 
         var routePickable = heldItem.GetComponent<NetworkRoutePickable>();
         if (routePickable != null)
         {
-            if (InputSystemKey.WasPressedThisFrame(storeKey))
-                routePickable.RequestStore();
+            if (InputSystemKey.WasPressedThisFrame(storeKey) && CanStoreInSelectedSlot())
+                routePickable.RequestStore(SelectedSlotIndex());
             return;
         }
 
@@ -81,6 +88,27 @@ public class HeldItemInput : MonoBehaviour
             Throw();
         else if (InputSystemKey.WasPressedThisFrame(storeKey))
             TryStore();
+    }
+
+    /// <summary>
+    /// Drops the route tool in the selected inventory slot. Server is
+    /// authoritative; the local client only sends the request and waits for
+    /// item:state.
+    /// </summary>
+    private bool TryRouteDrop()
+    {
+        if (inventory != null)
+        {
+            var slot = inventory.GetAt(inventory.SelectedIndex);
+            var route = slot != null ? slot.GetComponent<NetworkRoutePickable>() : null;
+            if (route != null)
+            {
+                route.RequestThrow();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void HandleIKWeight()
@@ -99,14 +127,15 @@ public class HeldItemInput : MonoBehaviour
         var routePickable = heldItem.GetComponent<NetworkRoutePickable>();
         if (routePickable != null)
         {
-            routePickable.RequestStore();
+            if (!CanStoreInSelectedSlot()) return;
+            routePickable.RequestStore(SelectedSlotIndex());
             return;
         }
-        if (inventory == null || inventory.IsFull()) return;
+        if (!CanStoreInSelectedSlot()) return;
 
         var item = heldItem;
         Detach();
-        inventory.TryAdd(item);
+        inventory.TryAddAt(item, inventory.SelectedIndex);
         item.OnStoredInInventory();
         onItemStored.Invoke(item);
     }
@@ -129,16 +158,29 @@ public class HeldItemInput : MonoBehaviour
     {
         if (heldItem != null && heldItem.GetComponent<NetworkRoutePickable>() != null)
         {
-            heldItem.GetComponent<NetworkRoutePickable>().RequestStore();
+            if (!CanStoreInSelectedSlot()) return;
+            heldItem.GetComponent<NetworkRoutePickable>().RequestStore(SelectedSlotIndex());
             return;
         }
-        if (inventory == null || inventory.IsFull()) return;
+        if (!CanStoreInSelectedSlot()) return;
 
         var item = heldItem;
         Detach();
-        inventory.TryAdd(item);
+        inventory.TryAddAt(item, inventory.SelectedIndex);
         item.OnStoredInInventory();
         onItemStored.Invoke(item);
+    }
+
+    private int SelectedSlotIndex()
+    {
+        return inventory != null ? inventory.SelectedIndex : -1;
+    }
+
+    private bool CanStoreInSelectedSlot()
+    {
+        return inventory != null
+            && inventory.IsValidIndex(inventory.SelectedIndex)
+            && !inventory.HasItemAt(inventory.SelectedIndex);
     }
 
     private Vector3 ResolveThrowDirection()

@@ -25,6 +25,7 @@ import { RIOT_THRESHOLD } from './systems/penalties.js'
 import {
   broadcastItemState,
   dropCriticalRouteItemsForPlayer,
+  dropInventoryItem,
   isCriticalRouteItem,
   pickupToHand,
   storeHeldItem,
@@ -192,6 +193,7 @@ export interface PlayerInteractContext {
   playerId: string
   objectId: string
   action: PlayerInteractAction
+  slotIndex?: number
   timestamp: number
 }
 
@@ -200,7 +202,7 @@ export interface PlayerInteractContext {
  * Validates distance and item availability, then broadcasts result.
  */
 export function handlePlayerInteract(context: PlayerInteractContext): void {
-  const { io, roomId, room, socketId, playerId, objectId, action, timestamp } = context
+  const { io, roomId, room, socketId, playerId, objectId, action, timestamp, slotIndex } = context
 
   const player = room.state.players.get(socketId)
   if (!player) {
@@ -232,7 +234,12 @@ export function handlePlayerInteract(context: PlayerInteractContext): void {
   }
 
   if (action === 'item.store') {
-    handleRouteItemStore(io, roomId, room, socketId, player, objectId)
+    handleRouteItemStore(io, roomId, room, socketId, player, objectId, slotIndex)
+    return
+  }
+
+  if (action === 'item.throw') {
+    handleRouteItemThrow(io, roomId, room, socketId, player, objectId)
     return
   }
 
@@ -390,7 +397,8 @@ function handleRouteItemStore(
   room: GameRoom,
   socketId: string,
   player: PlayerState,
-  objectId: string
+  objectId: string,
+  slotIndex?: number
 ): void {
   if (objectId && player.heldItemId && objectId !== player.heldItemId) {
     console.warn(`[STORE] ${player.userId} tried to store ${objectId} while holding ${player.heldItemId}`)
@@ -403,7 +411,7 @@ function handleRouteItemStore(
     return
   }
 
-  const result = storeHeldItem(room.state, player)
+  const result = storeHeldItem(room.state, player, slotIndex)
   if (!result.success) {
     console.warn(`[STORE] ${player.userId} rejected: ${result.reason}`)
     io.to(socketId).emit('game:error', { message: result.reason })
@@ -418,6 +426,72 @@ function handleRouteItemStore(
 function notifyRoute1InventoryChanged(room: GameRoom): void {
   const gm = (room as any).gameManager as GameManager | undefined
   gm?.route1?.notifyInventoryChanged()
+}
+
+const THROW_FORWARD_OFFSET = 1.0
+
+function computeThrowDropPosition(player: PlayerState): Vector3 {
+  // Drop in front of the player so the prefab doesn't overlap the avatar
+  // capsule and re-trigger the pickup collider on the same frame.
+  const yaw = player.rotation?.y ?? 0
+  const w = player.rotation?.w ?? 1
+  // Quaternion (0, sin(yaw/2), 0, cos(yaw/2)) → forward = (2*y*w, 0, 1 - 2*y*y)
+  const fx = 2 * yaw * w
+  const fz = 1 - 2 * yaw * yaw
+  const len = Math.hypot(fx, fz) || 1
+  return {
+    x: player.position.x + (fx / len) * THROW_FORWARD_OFFSET,
+    y: player.position.y,
+    z: player.position.z + (fz / len) * THROW_FORWARD_OFFSET,
+  }
+}
+
+function handleRouteItemThrow(
+  io: Server,
+  roomId: string,
+  room: GameRoom,
+  socketId: string,
+  player: PlayerState,
+  objectId: string
+): void {
+  const stableItemId = resolveStableItemId(room, objectId)
+
+  if (!isCriticalRouteItem(stableItemId)) {
+    console.warn(`[THROW] ${player.userId} requested non-route throw ${objectId}`)
+    io.to(socketId).emit('game:error', { message: 'That item cannot be thrown' })
+    return
+  }
+
+  if (!playerHasItemInSlot(player, stableItemId)) {
+    console.warn(`[THROW] ${player.userId} tried to throw ${stableItemId} without storing it first`)
+    io.to(socketId).emit('game:error', { message: 'Store the item in a slot before dropping it' })
+    return
+  }
+
+  const position = computeThrowDropPosition(player)
+  const item = dropInventoryItem(io, roomId, room.state, player, stableItemId, position)
+  if (!item) {
+    console.warn(`[THROW] ${player.userId} dropInventoryItem returned null for ${stableItemId}`)
+    return
+  }
+
+  // Cancel any active route1 interaction this player started while still
+  // holding the tool (e.g. mid disable_server). Mission rollback runs as part
+  // of notifyInventoryChanged below.
+  const gm = (room as any).gameManager as GameManager | undefined
+  gm?.route1?.cancelPlayerInteractions(player.userId)
+
+  notifyRoute1InventoryChanged(room)
+
+  // Clear any stale timer defensively. Voluntary throws intentionally leave
+  // the tool where it landed so players can pass tools to each other.
+  cancelPendingRespawn(roomId, stableItemId)
+
+  console.log(`[THROW] ${player.userId} threw ${stableItemId} at (${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`)
+}
+
+function playerHasItemInSlot(player: PlayerState, itemId: string): boolean {
+  return (player.inventorySlots ?? []).some((slot) => slot?.itemId === itemId)
 }
 
 function handleItemPickup(io: Server, roomId: string, room: GameRoom, playerId: string, itemId: string, item: any): void {

@@ -28,7 +28,7 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
     public bool CanInteract => worldAvailable && !pendingPickup && !pickable.IsHeld;
     public string[] AllowedInStates => allowedInStates;
     public string DebugState =>
-        $"itemId={itemId} worldAvailable={worldAvailable} pendingPickup={pendingPickup} pendingStore={pendingStore} isHeld={(pickable != null && pickable.IsHeld)} active={isActiveAndEnabled}";
+        $"itemId={itemId} worldAvailable={worldAvailable} pendingPickup={pendingPickup} pendingStore={pendingStore} pendingThrow={pendingThrow} pendingStoreSlot={pendingStoreSlotIndex} isHeld={(pickable != null && pickable.IsHeld)} active={isActiveAndEnabled}";
 
     private PickableItem pickable;
     private NetworkInteractable networkInteractable;
@@ -37,6 +37,8 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
     private bool worldAvailable = true;
     private bool pendingPickup;
     private bool pendingStore;
+    private bool pendingThrow;
+    private int pendingStoreSlotIndex = -1;
     private bool subscribedNetwork;
     private bool subscribedGameState;
     private ItemStateBroadcastPayload latestState;
@@ -149,9 +151,9 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
         NetworkManager.Instance?.SendPlayerInteract(itemId, "item.pickup");
     }
 
-    public void RequestStore()
+    public void RequestStore(int slotIndex = -1)
     {
-        DebugRoute($"RequestStore {DebugState}");
+        DebugRoute($"RequestStore slot={slotIndex} {DebugState}");
         if (pendingStore) return;
 
         EnsureLocalPlayerRefs();
@@ -162,8 +164,46 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
         }
 
         pendingStore = true;
-        DebugRoute($"Sending item.store {itemId}");
-        NetworkManager.Instance?.SendPlayerInteract(itemId, "item.store");
+        pendingStoreSlotIndex = slotIndex;
+        DebugRoute($"Sending item.store {itemId} slot={slotIndex}");
+        if (slotIndex >= 0)
+            NetworkManager.Instance?.SendPlayerInteract(itemId, "item.store", slotIndex);
+        else
+            NetworkManager.Instance?.SendPlayerInteract(itemId, "item.store");
+    }
+
+    /// <summary>
+    /// Voluntarily drop this route tool back into the world. Server validates
+    /// ownership, picks the drop position, and broadcasts <c>item:state</c>.
+    /// The local client only flips a pending flag so we don't double-send while
+    /// we wait for the authoritative response.
+    /// </summary>
+    public void RequestThrow()
+    {
+        DebugRoute($"RequestThrow {DebugState}");
+        if (pendingThrow) return;
+
+        var net = NetworkManager.Instance;
+        if (net == null)
+        {
+            DebugRoute("Throw blocked: NetworkManager unavailable");
+            return;
+        }
+
+        EnsureLocalPlayerRefs();
+
+        var gsm = GameStateManager.Instance;
+        var holdsStored = gsm != null && HasLocalInventorySlot(gsm.LocalInventorySlots);
+
+        if (!holdsStored)
+        {
+            DebugRoute("Throw blocked: route tool must be stored in a slot first");
+            return;
+        }
+
+        pendingThrow = true;
+        DebugRoute($"Sending item.throw {itemId}");
+        net.SendPlayerInteract(itemId, "item.throw");
     }
 
     private void HandleItemState(ItemStateBroadcastPayload payload)
@@ -173,15 +213,19 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
         latestState = payload;
         pendingPickup = false;
         pendingStore = false;
+        pendingThrow = false;
 
         DebugRoute($"item:state state={payload.state} holder={payload.holderUserId ?? "null"} spawnArea={payload.spawnAreaId ?? "null"} pos={payload.position}");
         ApplyNetworkState(payload);
+        pendingStoreSlotIndex = -1;
     }
 
     private void HandleNetworkError(ErrorPayload _)
     {
         pendingPickup = false;
         pendingStore = false;
+        pendingThrow = false;
+        pendingStoreSlotIndex = -1;
         DebugRoute($"Network error cleared pending flags: {_?.message ?? "unknown"}");
     }
 
@@ -320,10 +364,32 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
             localHeldInput.onItemStored.Invoke(pickable);
         }
 
-        if (localInventory != null && !localInventory.Contains(pickable))
-            localInventory.TryAdd(pickable);
+        if (localInventory != null)
+        {
+            var slotIndex = ResolveLocalInventorySlotIndex();
+            if (slotIndex >= 0)
+                localInventory.SetAt(pickable, slotIndex);
+            else if (!localInventory.Contains(pickable))
+                localInventory.TryAdd(pickable);
+        }
 
         pickable.OnStoredInInventory(false);
+    }
+
+    private int ResolveLocalInventorySlotIndex()
+    {
+        var gsm = GameStateManager.Instance;
+        var slots = gsm != null ? gsm.LocalInventorySlots : null;
+        if (slots != null)
+        {
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i] != null && slots[i].itemId == itemId)
+                    return i;
+            }
+        }
+
+        return pendingStoreSlotIndex >= 0 ? pendingStoreSlotIndex : -1;
     }
 
     private void HideWorldVisual()

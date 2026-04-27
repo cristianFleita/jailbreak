@@ -130,7 +130,7 @@ export type RouteItemLifecycle =
   | 'spawned'     // available at a spawn area in the world
   | 'held'        // in a player's hand
   | 'stored'      // in a player's inventory slot
-  | 'dropped'     // on the floor (after capture, not after voluntary throw in MVP)
+  | 'dropped'     // on the floor after capture, abandon, or voluntary item.throw
   | 'respawning'  // being returned to a spawn area after anti-softlock delay
 
 // ============================================================================
@@ -326,7 +326,8 @@ export interface PlayerMovePayload {
 /**
  * Union of every `player:interact` action the server accepts.
  * Legacy molestia items use 'pickup' | 'use' | 'drop' (see handleItemPickup).
- * Route tools use 'item.pickup' | 'item.store' (authoritative hand/slots).
+ * Route tools use 'item.pickup' | 'item.store' | 'item.throw'
+ * (authoritative hand/slots; voluntary throw is stored-slot only).
  * Route missions (Phase D) will add 'route1.*' start/stop actions.
  */
 export type PlayerInteractAction =
@@ -335,6 +336,7 @@ export type PlayerInteractAction =
   | 'drop'
   | 'item.pickup'
   | 'item.store'
+  | 'item.throw'
   | 'route1.search_clue.start'
   | 'route1.search_clue.stop'
   | 'route1.disable_server.start'
@@ -348,6 +350,7 @@ export interface PlayerInteractPayload {
   playerId: string
   objectId: string
   action: PlayerInteractAction
+  slotIndex?: number
 }
 
 export interface GuardMarkPayload {
@@ -462,6 +465,21 @@ export interface RoomStatePayload {
   hostUserId: string
   status: GameRoomState['status']
   players: Array<{ userId: string; displayName: string; role: PlayerRole; isHost: boolean }>
+}
+
+export interface RoomListEntryPayload {
+  roomId: string
+  hostUserId: string
+  hostDisplayName: string
+  status: GameRoomState['status']
+  playerCount: number
+  maxPlayers: number
+  createdAt: number
+  players: RoomStatePayload['players']
+}
+
+export interface RoomListPayload {
+  rooms: RoomListEntryPayload[]
 }
 
 export interface RoomPlayerJoinedPayload {

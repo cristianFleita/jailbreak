@@ -100,6 +100,14 @@ mergeInto(LibraryManager.library, {
         window.unityInstance.SendMessage(window._jbGoName, 'OnRoomState', JSON.stringify(data));
       });
 
+      window._jbSocket.on('room:list:response', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnRoomList', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('room:list:update', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnRoomList', JSON.stringify(data));
+      });
+
       window._jbSocket.on('room:player-joined', function (data) {
         window.unityInstance.SendMessage(window._jbGoName, 'OnRoomPlayerJoined', JSON.stringify(data));
       });
@@ -263,6 +271,11 @@ mergeInto(LibraryManager.library, {
       window._jbSocket.emit('room:start');
   },
 
+  SocketListRooms: function() {
+    if (window._jbSocket && window._jbSocket.connected)
+      window._jbSocket.emit('room:list');
+  },
+
   SocketLeaveRoom: function() {
     if (window._jbSocket && window._jbSocket.connected)
       window._jbSocket.emit('room:leave');
@@ -297,6 +310,13 @@ mergeInto(LibraryManager.library, {
     var action   = UTF8ToString(actionPtr);
     if (window._jbSocket && window._jbSocket.connected)
       window._jbSocket.emit('player:interact', { objectId: objectId, action: action });
+  },
+
+  SocketSendInteractWithSlot: function(objectIdPtr, actionPtr, slotIndex) {
+    var objectId = UTF8ToString(objectIdPtr);
+    var action   = UTF8ToString(actionPtr);
+    if (window._jbSocket && window._jbSocket.connected)
+      window._jbSocket.emit('player:interact', { objectId: objectId, action: action, slotIndex: slotIndex });
   },
 
   SocketSendPlayerAction: function(objectIdPtr, actionPtr) {

@@ -26,9 +26,9 @@ import {
 } from '../types.js'
 
 /**
- * Critical route tools that cannot be voluntarily thrown or dropped in MVP.
- * On capture/disconnect these are returned to the world at the player's last
- * known position so the route cannot softlock.
+ * Critical route tools that use the authoritative hand/slot lifecycle.
+ * They can be voluntarily thrown through `item.throw`; legacy `drop` remains
+ * blocked so old clients cannot bypass the route inventory contract.
  */
 export const CRITICAL_ROUTE_ITEM_IDS: readonly RouteItemId[] = [
   'route1_cutters',
@@ -141,6 +141,18 @@ function firstEmptySlotIndex(player: PlayerState): number {
   return slots.findIndex((s) => s === null || s === undefined)
 }
 
+function resolveStoreSlotIndex(player: PlayerState, requestedSlotIndex?: number): number {
+  const slots = player.inventorySlots ?? []
+
+  if (requestedSlotIndex === undefined || requestedSlotIndex === null) {
+    return firstEmptySlotIndex(player)
+  }
+
+  if (!Number.isInteger(requestedSlotIndex)) return -1
+  if (requestedSlotIndex < 0 || requestedSlotIndex >= slots.length) return -1
+  return requestedSlotIndex
+}
+
 function buildSlotSync(item: ItemState): InventorySlotSync {
   return {
     itemId: (item.itemId ?? item.id) as RouteItemId,
@@ -200,11 +212,13 @@ export type StoreResult =
   | { success: false; reason: string }
 
 /**
- * Moves the player's held item into the first empty inventory slot.
+ * Moves the player's held item into a requested inventory slot, or the first
+ * empty slot when no slot is requested by an older client.
  */
 export function storeHeldItem(
   state: GameRoomState,
-  player: PlayerState
+  player: PlayerState,
+  requestedSlotIndex?: number
 ): StoreResult {
   ensurePrisonerInventorySlots(player)
 
@@ -215,9 +229,15 @@ export function storeHeldItem(
   if (slots.length === 0) {
     return { success: false, reason: 'No inventory slots available for this role' }
   }
-  const slotIndex = firstEmptySlotIndex(player)
+  const slotIndex = resolveStoreSlotIndex(player, requestedSlotIndex)
   if (slotIndex < 0) {
-    return { success: false, reason: 'Inventory full' }
+    const reason = requestedSlotIndex === undefined || requestedSlotIndex === null
+      ? 'Inventory full'
+      : 'Invalid inventory slot'
+    return { success: false, reason }
+  }
+  if (slots[slotIndex] !== null && slots[slotIndex] !== undefined) {
+    return { success: false, reason: 'Inventory slot occupied' }
   }
 
   const itemId = player.heldItemId
@@ -329,5 +349,60 @@ export function dropItemAt(
   item.position = { ...position }
   item.isPickedUp = false
   item.pickedUpBy = undefined
+  return item
+}
+
+/**
+ * Removes a single itemId from the player's hand or any inventory slot.
+ * Returns true if anything was cleared. Used by the voluntary throw flow
+ * (mission gates re-evaluate via `findPlayerWithItem`, so dropping the
+ * cutters/wrench rolls back `find_cutters` / `find_wrench` automatically).
+ */
+export function removeItemFromInventory(
+  player: PlayerState,
+  itemId: string
+): boolean {
+  if (!itemId) return false
+  let mutated = false
+
+  if (player.heldItemId === itemId) {
+    player.heldItemId = null
+    mutated = true
+  }
+
+  const slots = player.inventorySlots ?? []
+  for (let i = 0; i < slots.length; i++) {
+    if (slots[i]?.itemId === itemId) {
+      slots[i] = null
+      mutated = true
+    }
+  }
+  player.inventorySlots = slots
+
+  return mutated
+}
+
+/**
+ * Voluntary single-item drop. Removes the item from the player's hand or
+ * slot, marks the world ItemState as `dropped` at `position`, and broadcasts
+ * `item:state`. Returns the updated ItemState, or null if the player did not
+ * actually hold the item.
+ *
+ * Callers should follow up with `notifyRoute1InventoryChanged(room)` so the
+ * mission checklist rolls back immediately instead of waiting for the next
+ * tick that mutates an active interaction.
+ */
+export function dropInventoryItem(
+  io: Server,
+  roomId: string,
+  state: GameRoomState,
+  player: PlayerState,
+  itemId: string,
+  position: Vector3 = player.position
+): ItemState | null {
+  if (!removeItemFromInventory(player, itemId)) return null
+
+  const item = dropItemAt(state, itemId, position)
+  if (item) broadcastItemState(io, roomId, item)
   return item
 }

@@ -1,7 +1,7 @@
 # JAILBREAK — Game Design Document
 
-**Version:** 1.6
-**Fecha:** 26 de abril de 2026
+**Version:** 1.7
+**Fecha:** 27 de abril de 2026
 **Plataforma:** PC (Unity WebGL)
 **Jugadores:** 2–4 online
 **Motor:** Unity 6 LTS
@@ -61,7 +61,7 @@
 
 1. **Seguir rutina** — Estar en la zona correcta según la fase actual. Imitar comportamiento de NPCs (caminar, sentarse, comer). Desviarse genera sospecha visual.
 2. **Recoger objetos** — Aprovechar momentos seguros para tomar ítems de escape. Máximo 2 slots de inventario. Los objetos son visibles brevemente al recogerlos.
-3. **Cooperar en escape** — Cada ruta de escape necesita 3 ítems/acciones de diferentes jugadores. Comunicación vía señales en el juego (golpes en pared, tos).
+3. **Cooperar en escape** — Cada ruta de escape necesita 3 ítems/acciones de diferentes jugadores. Comunicación vía voz diegética de proximidad: útil para coordinar, pero riesgosa porque el guardia también puede escuchar si está cerca. Señales simples como golpes/tos quedan como post-MVP.
 4. **Ser enfocado** — El guardia logra acercarse y sostener la mira sobre el preso durante un instante corto para intentar capturarlo.
 5. **Romper foco / alejarse** — Ganar distancia, cortar línea de visión o usar el tráfico de NPCs para impedir que el guardia complete la captura.
 6. **Volver a rutina** — Retomar comportamiento creíble dentro de la fase actual. El guardia pierde la oportunidad y debe volver a leer la situación.
@@ -213,7 +213,7 @@ La jornada es el "reloj" de la partida. Cada fase dura un tiempo real fijo y ocu
 | **Movimiento errático** | Correr cuando los NPCs caminan, cambiar dirección bruscamente | Medio — puede ser lag o confusión |
 | **Interacción con objeto** | Recoger un ítem de escape (animación breve visible) | Alto — si el guardia ve la animación |
 | **No seguir rutina** | Estar de pie cuando los NPCs están sentados, no usar herramienta en trabajo | Medio — el guardia debe comparar |
-| **Comunicación** | Golpes en pared o tos entre presos | Bajo — el guardia escucha pero no sabe quién |
+| **Comunicación** | Voz de proximidad entre presos o señales sonoras post-MVP | Bajo/Medio — el guardia escucha si está cerca, pero no sabe automáticamente quién habló |
 | **Proximidad sospechosa** | Dos presos jugadores cerca por mucho tiempo | Bajo — puede ser coincidencia |
 
 ### 4.3 Transiciones entre Fases
@@ -251,9 +251,10 @@ Además, el ~40% de los NPCs toma un **desvío por pasillo** antes de llegar a s
 
 - **2 slots** de inventario máximo.
 - Los pickables de ruta se recogen instantáneamente con **[INTERACTUAR]** (tecla E) y quedan en la mano.
-- Los objetos en mano se guardan con **[GUARDAR]** (tecla F) en el primer slot libre.
+- El preso selecciona slot con **K** (anterior) y **L** (siguiente). Cambiar de slot no guarda, equipa, intercambia ni tira objetos.
+- Los objetos en mano se guardan con **[GUARDAR]** (tecla F) en el slot seleccionado.
 - Las interacciones de misión usan la barra de progreso contextual del mundo.
-- Los objetos **no se dropean** voluntariamente (evitar griefing).
+- Las herramientas críticas de ruta solo se sueltan voluntariamente con **G** si ya están guardadas en el slot seleccionado. Un objeto en mano no puede dropearse directamente: primero debe guardarse en un slot.
 - Si un preso es capturado, sus objetos caen al suelo. Otro preso puede recogerlos.
 
 ### 5.2 Objetos de Escape (por Ruta)
@@ -281,8 +282,8 @@ Además, el ~40% de los NPCs toma un **desvío por pasillo** antes de llegar a s
 
 | Objeto | Ubicación | Mecánica | Efecto en inventario |
 |--------|-----------|----------|---------------------|
-| **Pinzas** (`route1_cutters`) | Spawn areas definidas por Unity, elegidas por backend | Pickup instantáneo con E, queda en mano; F guarda en slot | Requeridas para sabotear servidor |
-| **Llave francesa** (`route1_wrench`) | Spawn areas definidas por Unity, elegidas por backend | Pickup instantáneo con E, queda en mano; F guarda en slot | Requerida por quien inicia apertura del conducto |
+| **Pinzas** (`route1_cutters`) | Spawn areas definidas por Unity, elegidas por backend | Pickup instantáneo con E, queda en mano; K/L selecciona slot; F guarda en slot seleccionado; G suelta solo desde slot | Requeridas para sabotear servidor |
+| **Llave francesa** (`route1_wrench`) | Spawn areas definidas por Unity, elegidas por backend | Pickup instantáneo con E, queda en mano; K/L selecciona slot; F guarda en slot seleccionado; G suelta solo desde slot | Requerida por quien inicia apertura del conducto |
 
 **Spawn backend-driven:** Unity define spawn areas con `spawnAreaId`, `zoneId`, posición y allowed items. El backend activa una pinza y una llave por partida. Si una herramienta crítica queda inaccesible, se devuelve al mundo o se respawnea.
 
@@ -602,14 +603,44 @@ Todos los jugadores juegan en **primera persona (FPS)**. No hay opción de terce
 | Sonido | Tipo | Rango audible | Quién lo escucha |
 |--------|------|---------------|-----------------|
 | Pasos corriendo | 3D posicional | 15m | Todos |
-| Golpes en pared (señal) | 3D posicional | 10m | Todos (el guardia también) |
-| Tos (señal) | 3D posicional | 8m | Todos |
+| Voz normal (push-to-talk) | 3D posicional | 10m | Todos los cercanos, incluido el guardia |
+| Golpes en pared (señal post-MVP) | 3D posicional | 10m | Todos (el guardia también) |
+| Tos (señal post-MVP) | 3D posicional | 8m | Todos |
 | Recoger objeto | 3D posicional | 5m | Todos cercanos |
 | Alarma de servidor incorrecto | 3D / cue filtrado | Por zona | Guardia y cercanos según implementación |
 | Metal de conducto | 3D posicional | 10m | Todos cercanos |
 | Risa de NPCs (jabón) | 3D posicional | 12m | Todos |
 
-### 11.3 Música
+### 11.3 Voz Diegética de Proximidad
+
+La voz en partida es una mecánica de riesgo y deducción, no un canal privado de equipo.
+
+**Configuración default:**
+- **Voz espacial 3D por proximidad**, audible por todos los jugadores cercanos.
+- El guardia puede escuchar a los presos si está dentro del rango audible, pero no recibe nombre, marcador, subtítulo ni indicador de quién habló.
+- Los presos pueden escuchar al guardia si el guardia habla cerca de ellos.
+- Push-to-talk por defecto con **V**. Voice activation queda como opción de accesibilidad o setting casual.
+- No hay canal global privado entre presos durante la partida default.
+- Lobby, resultados y revancha pueden usar voz global no espacial para comodidad social.
+
+**Rangos iniciales:**
+
+| Modo | Rango | Uso |
+|------|-------|-----|
+| Voz normal | 10m | Modo MVP recomendado |
+| Susurro | 3–4m | Post-MVP si se quiere más profundidad táctica |
+| Grito | 15–18m | Post-MVP; útil para humor/pánico, muy delator |
+
+**Reglas de gameplay:**
+- La voz debe competir con el ambiente de prisión: ventiladores, pasos, metal, alarmas y murmullos.
+- Paredes, puertas y pisos reducen volumen con oclusión simple. En MVP alcanza con una reducción por raycast o por zona.
+- Las cámaras de seguridad no transmiten voz. El guardia debe patrullar físicamente para escuchar conversaciones.
+- Los presos capturados no pueden hablar con presos vivos durante la partida; pueden pasar a canal de espectadores o quedar muteados hasta post-game.
+- Si el sistema de voz no está disponible, el juego sigue siendo jugable con HUD de Ruta 1, pero pierde una capa importante de cooperación bajo presión.
+
+**Spec y plan:** ver `design/gdd/voz-diegetica-proximidad.md`.
+
+### 11.4 Música
 
 - **No hay música durante gameplay** — la ausencia de música aumenta la tensión.
 - **Stinger musical** en eventos clave: captura, escape, motín, inicio/fin de partida.
@@ -708,10 +739,15 @@ El HUD de gameplay se implementa en Unity UI Toolkit. El prompt contextual y la 
 | Sprint | Shift | x | | |
 | Agacharse | C (toggle) | x | | |
 | Interactuar / Recoger | E | x | | |
+| Seleccionar slot anterior | K | | x | |
+| Seleccionar slot siguiente | L | | x | |
+| Guardar objeto en slot seleccionado | F | | x | |
+| Soltar herramienta del slot seleccionado | G | | x | |
 | Usar objeto | Q | | x | |
 | Capturar sospechoso (mantener 0.5s) | Click izq. | | | x |
 | Modo cámaras | TAB | | | x |
-| Señal (golpe/tos) | F | | x | |
+| Voz push-to-talk | V | x | | |
+| Señal (golpe/tos) | TBD post-MVP | | x | |
 | Activar motín | M (hold 3 seg) | | x (solo si disponible) | |
 
 ---
@@ -771,9 +807,14 @@ Unity maneja **toda** la lógica del juego: lobby, partida, resultados, revancha
 | `world:state` | Servidor → Todos | Props públicos: ventilación, conductos abiertos |
 | `item:state` | Servidor → Todos | Estado de pickables: spawned/held/stored/dropped/respawning |
 | `player:state` | Servidor → Todos | Incluye `heldItemId` e `inventorySlots` |
+| `voice:join` | Cliente → Servidor | Solicita entrar al canal de voz de la sala |
+| `voice:signal` | Cliente ↔ Servidor ↔ Cliente | Señalización WebRTC o SDK de voz; no transporta audio crudo por Socket.io |
+| `voice:leave` | Cliente → Servidor | Sale del canal de voz o limpia conexión al abandonar/reconectar |
 | `game:end` | Servidor → Todos | `{ winner: 'prisoners' | 'guard', reason }` |
 | `riot:available` | Servidor → Presos | `{}` |
 | `riot:activate` | Cliente → Servidor | `{}` |
+
+**Nota de voz:** el audio de voz no debe viajar por Socket.io como stream crudo. Socket.io puede servir para señalización, permisos de sala y ciclo de vida; el transporte de audio debe ser WebRTC, un SDK de voz compatible con WebGL o una capa equivalente optimizada para baja latencia.
 
 ### 14.4 Optimización de Red
 
@@ -890,7 +931,8 @@ Siempre **20 personajes en total** para mantener consistencia visual y de perfor
 | Polish de Ruta 1 (cues, props, reconnect, anti-softlock) | P1 | 1.5 días | Ruta 1 |
 | Cámara de seguridad del guardia (HUD + lógica) | P1 | 1.5 días | — |
 | Audio: pasos, ambiente, risas NPCs, alarmas | P1 | 1 día | — |
-| Señales entre presos (golpes en pared — audio 3D) | P2 | 0.5 día | Audio |
+| Voz diegética de proximidad (PTT + señalización + espacialización básica) | P1 | 2 días | Audio + Rooms |
+| Señales entre presos (golpes en pared / tos) | P3 | 0.5 día | Audio |
 | UI/HUD completo por rol | P1 | 1.5 días | — |
 | Lobby y asignación aleatoria de roles | P1 | 1 día | Rooms |
 | **Entregable:** Juego con Ruta 1 completa, audio, UI completa | | | |
@@ -911,7 +953,8 @@ Siempre **20 personajes en total** para mantener consistencia visual y de perfor
 | Feature | Impacto si se corta | Alternativa |
 |---------|---------------------|-------------|
 | Rutas de escape 2+ | Bajo para MVP — Ruta 1 es la ruta implementable | Dejar como TODO post-MVP |
-| Señales entre presos | Bajo — pueden usar Discord | Eliminar |
+| Señales entre presos | Bajo — la voz de proximidad cubre la comunicación principal | Eliminar |
+| Voz diegética de proximidad | Medio/Alto — baja cooperación e inmersión; presos pueden recurrir a Discord fuera del juego | Mantener PTT sin oclusión ni modos susurro/grito |
 | Interacciones futuras de celdas/lavandería | Medio — reduce variedad futura | Mantener como props sin gameplay de ruta |
 | Cámara de seguridad | Alto — pierde herramienta clave del guardia | Implementar versión minimal (1 cámara fija) |
 

@@ -238,7 +238,7 @@ Camera:
   field of view: 60
   orthographic: 0
   orthographic size: 5
-  m_Depth: 0
+  m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -284,7 +284,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -837,6 +837,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeldItemInput
   throwKey: 323
   storeKey: 102
+  dropKey: 103
   holdPointName: mixamorig:RightHandIndex1
   handConstraint: {fileID: 6234039667381567122}
   ikTarget: {fileID: 4207496087293817558}
@@ -886,8 +887,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d268673175c94d719876a17a454d987, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventoryInput
-  nextKey: 275
-  previousKey: 276
+  nextKey: 108
+  previousKey: 107
 --- !u!114 &1854472795264178381
 MonoBehaviour:
   m_ObjectHideFlags: 0

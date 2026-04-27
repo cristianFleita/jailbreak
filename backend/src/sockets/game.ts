@@ -13,6 +13,7 @@ import {
   stopGameLoop,
   buildRoomPlayersPayload,
   buildRoomStatePayload,
+  buildRoomListPayload,
   findSocketByUserId,
   listRooms,
 } from '../game/room-manager.js'
@@ -65,6 +66,13 @@ function requireAuth(socket: Socket, cb: () => void): void {
     return
   }
   cb()
+}
+
+/**
+ * Broadcasts the current public room browser state to all connected clients.
+ */
+function emitRoomListUpdate(io: Server): void {
+  io.emit('room:list:update', buildRoomListPayload())
 }
 
 /**
@@ -182,7 +190,10 @@ export function setupGameSockets(io: Server) {
     // ==================================================================
     socket.on('room:list', () => {
       requireAuth(socket, () => {
+        // Keep the legacy array event for the React wrapper, and send a
+        // JsonUtility-friendly wrapper event for Unity/WebGL.
         socket.emit('room:list', listRooms())
+        socket.emit('room:list:response', buildRoomListPayload())
       })
     })
 
@@ -254,6 +265,7 @@ export function setupGameSockets(io: Server) {
 
           // Send full room state
           socket.emit('room:state', buildRoomStatePayload(room))
+          emitRoomListUpdate(io)
 
           console.log(`[ROOM] "${roomName}" created by ${user.displayName}`)
         } catch (err) {
@@ -360,6 +372,7 @@ export function setupGameSockets(io: Server) {
 
           // Send full room state to the joining player
           socket.emit('room:state', buildRoomStatePayload(room))
+          emitRoomListUpdate(io)
 
           console.log(`[ROOM] ${user.displayName} joined "${payload.roomId}" as ${player.role}`)
         } catch (err) {
@@ -430,6 +443,7 @@ export function setupGameSockets(io: Server) {
             reason: 'kicked',
             players: buildRoomPlayersPayload(room),
           })
+          emitRoomListUpdate(io)
 
           console.log(`[ROOM] ${user.displayName} kicked ${payload.targetUserId} from "${currentRoomId}"`)
         } catch (err) {
@@ -482,6 +496,7 @@ export function setupGameSockets(io: Server) {
           assignRandomRoles(room.state)
 
           transitionToActive(io, room)
+          emitRoomListUpdate(io)
 
           console.log(`[ROOM] "${currentRoomId}" started by ${user.displayName}`)
         } catch (err) {
@@ -551,7 +566,15 @@ export function setupGameSockets(io: Server) {
     // ==================================================================
     // GAMEPLAY: player:interact
     // ==================================================================
-    socket.on('player:interact', ({ objectId, action }: { objectId: string; action: PlayerInteractAction }) => {
+    socket.on('player:interact', ({
+      objectId,
+      action,
+      slotIndex,
+    }: {
+      objectId: string
+      action: PlayerInteractAction
+      slotIndex?: number
+    }) => {
       if (!currentRoomId) return
 
       try {
@@ -567,6 +590,7 @@ export function setupGameSockets(io: Server) {
           playerId: interactUser?.userId ?? socket.id,
           objectId,
           action,
+          slotIndex,
           timestamp: Date.now(),
         })
       } catch (err) {
@@ -807,6 +831,7 @@ function handleLeaveRoom(
       clearRoomSlots(roomId)
       clearSpawnAreaRegistration(roomId)
       destroyRoom(roomId)
+      emitRoomListUpdate(io)
       return
     }
 
@@ -825,6 +850,8 @@ function handleLeaveRoom(
       clearSpawnAreaRegistration(roomId)
       destroyRoom(roomId)
     }
+
+    emitRoomListUpdate(io)
   } catch (err) {
     console.error(`[ERROR] handleLeaveRoom: ${err}`)
   }

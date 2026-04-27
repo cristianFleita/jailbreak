@@ -2,7 +2,7 @@
 
 > **Status**: Designed for Implementation
 > **Author**: Cris + Codex
-> **Last Updated**: 2026-04-24
+> **Last Updated**: 2026-04-27
 > **Implements Pillar**: Cooperacion bajo presion
 
 ## Overview
@@ -46,9 +46,11 @@ Las misiones se muestran como checklist resumida para presos, pero el backend no
 
 - Los pickables se agarran instantaneamente con `E`.
 - Al agarrar un pickable queda en la mano.
-- Con `F` se guarda en el primer slot disponible.
+- Con `K` y `L` se cambia el slot seleccionado sin otros efectos secundarios.
+- Con `F` se guarda el item en mano en el slot seleccionado.
+- Con `G` se suelta voluntariamente solo la herramienta critica guardada en el slot seleccionado.
 - Los presos tienen 2 slots.
-- Las herramientas criticas no se dropean ni se tiran voluntariamente en MVP.
+- Las herramientas criticas en mano no se pueden dropear directamente; primero deben guardarse en un slot.
 - Si un preso es capturado o desconecta con una herramienta critica, el backend la devuelve al mundo o la respawnea para evitar softlocks.
 - El backend persiste `heldItemId` e `inventorySlots`; al refrescar con F5 se reconstruye mano + inventario.
 
@@ -188,7 +190,8 @@ Todas las acciones usan `player:interact` para mantener un unico canal de input.
 | Action | Object ID | Uso |
 |---|---|---|
 | `item.pickup` | `route1_cutters` / `route1_wrench` | Pedir pickup autoritativo y poner item en mano |
-| `item.store` | item ID | Guardar item held en slot de inventario |
+| `item.store` | item ID + `slotIndex` | Guardar item held en el slot seleccionado |
+| `item.throw` | item ID | Soltar item solo si esta guardado en algun slot; backend rechaza herramientas en mano |
 | `route1.search_clue.start` | `guard_desk_1..4` | Empezar busqueda de pista |
 | `route1.search_clue.stop` | `guard_desk_1..4` | Cancelar busqueda |
 | `route1.disable_server.start` | `server_1..12` | Empezar sabotaje |
@@ -248,8 +251,9 @@ Reglas:
 Ajustes esperados:
 
 - `ItemInventory` queda en 2 slots para presos.
-- `F` guarda el item held mediante evento autoritativo `item.store`.
-- Throw/drop voluntario se deshabilita para herramientas criticas de ruta.
+- `K` / `L` cambian el slot seleccionado.
+- `F` guarda el item held en el slot seleccionado mediante evento autoritativo `item.store` con `slotIndex`.
+- `G` envia `item.throw` solo para la herramienta critica guardada en el slot seleccionado; no funciona desde la mano.
 
 ### Pickable prefabs
 

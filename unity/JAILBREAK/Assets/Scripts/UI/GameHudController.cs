@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using Jailbreak.Network;
 using UnityEngine;
 using UnityEngine.UIElements;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 namespace Jailbreak.UI
 {
@@ -38,12 +41,14 @@ namespace Jailbreak.UI
         private VisualElement _heldItemIcon;
         private VisualElement _toastPanel;
         private VisualElement _guardErrorPanel;
+        private Label _route1ToggleHint;
         private Label _phaseLabel;
         private Label _timeLabel;
         private Label _roleLabel;
         private Label _heldItemLabel;
         private Label _toastLabel;
         private Label _guardErrorLabel;
+        private bool _route1Collapsed;
 
         private HudSlot _slot0;
         private HudSlot _slot1;
@@ -52,8 +57,10 @@ namespace Jailbreak.UI
 
         private GameStateManager _gsm;
         private NetworkManager _net;
+        private ItemInventory _localInventory;
         private bool _gsmBound;
         private bool _netBound;
+        private bool _localInventoryBound;
         private bool _legacyHudDisabled;
 
         private string _phaseName;
@@ -74,6 +81,7 @@ namespace Jailbreak.UI
             CacheElements();
             BuildMissionRows();
             TryBindSystems();
+            TryBindLocalInventory();
             DisableLegacyInventoryHud();
             RefreshAll();
         }
@@ -81,14 +89,31 @@ namespace Jailbreak.UI
         private void OnDisable()
         {
             UnbindSystems();
+            UnbindLocalInventory();
             if (Instance == this) Instance = null;
+        }
+
+        private void ToggleRoute1Collapsed()
+        {
+            _route1Collapsed = !_route1Collapsed;
+            ApplyRoute1CollapsedState();
+        }
+
+        private void ApplyRoute1CollapsedState()
+        {
+            if (_routeChecklist != null)
+                _routeChecklist.style.display = _route1Collapsed ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_route1ToggleHint != null)
+                _route1ToggleHint.text = _route1Collapsed ? "[TAB] SHOW" : "[TAB] HIDE";
         }
 
         private void Update()
         {
             TryBindSystems();
+            TryBindLocalInventory();
             RefreshTimer();
             RefreshToast();
+            HandleRoute1ToggleInput();
 
             if (Time.unscaledTime < _nextSlowRefresh) return;
             _nextSlowRefresh = Time.unscaledTime + 0.5f;
@@ -96,6 +121,26 @@ namespace Jailbreak.UI
             var role = _gsm != null ? _gsm.LocalRole : null;
             if (_lastRenderedRole != role)
                 RefreshAll();
+        }
+
+        private void HandleRoute1ToggleInput()
+        {
+            if (!WasTabPressedThisFrame()) return;
+            if (_route1Panel == null || _route1Panel.style.display == DisplayStyle.None) return;
+            ToggleRoute1Collapsed();
+        }
+
+        private static bool WasTabPressedThisFrame()
+        {
+#if ENABLE_INPUT_SYSTEM
+            var keyboard = Keyboard.current;
+            if (keyboard != null) return keyboard.tabKey.wasPressedThisFrame;
+#endif
+#if ENABLE_LEGACY_INPUT_MANAGER
+            return Input.GetKeyDown(KeyCode.Tab);
+#else
+            return false;
+#endif
         }
 
         private void CacheElements()
@@ -117,6 +162,8 @@ namespace Jailbreak.UI
             _toastLabel = _root.Q<Label>("HudToastLabel");
             _guardErrorPanel = _root.Q<VisualElement>("GuardErrorPanel");
             _guardErrorLabel = _root.Q<Label>("GuardErrorLabel");
+            _route1ToggleHint = _root.Q<Label>("Route1ToggleHint");
+            ApplyRoute1CollapsedState();
 
             _slot0 = new HudSlot(
                 _root.Q<VisualElement>("InventorySlot0"),
@@ -202,7 +249,7 @@ namespace Jailbreak.UI
             rowRoot.Add(track);
             _routeChecklist.Add(rowRoot);
 
-            _missions[id] = new MissionRow(rowRoot, marker, titleLabel, progressLabel, track, fill);
+            _missions[id] = new MissionRow(rowRoot, marker, titleLabel, progressLabel, track, fill, title);
         }
 
         private void TryBindSystems()
@@ -237,6 +284,43 @@ namespace Jailbreak.UI
                 if (_net.CachedGameReconnect != null)
                     HandleGameReconnect(_net.CachedGameReconnect);
             }
+        }
+
+        private void TryBindLocalInventory()
+        {
+            if (_localInventoryBound && _localInventory != null) return;
+
+            var root = FindLocalPlayerRoot();
+            var inventory = root != null ? root.GetComponent<ItemInventory>() : null;
+            if (inventory == null) return;
+
+            _localInventory = inventory;
+            _localInventory.onSlotSelected.AddListener(HandleLocalSlotSelected);
+            _localInventoryBound = true;
+            RefreshInventory();
+        }
+
+        private void UnbindLocalInventory()
+        {
+            if (_localInventoryBound && _localInventory != null)
+                _localInventory.onSlotSelected.RemoveListener(HandleLocalSlotSelected);
+
+            _localInventoryBound = false;
+            _localInventory = null;
+        }
+
+        private static Transform FindLocalPlayerRoot()
+        {
+#if UNITY_2023_1_OR_NEWER
+            var managers = UnityEngine.Object.FindObjectsByType<InteractionManager>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+#else
+            var managers = UnityEngine.Object.FindObjectsOfType<InteractionManager>();
+#endif
+            foreach (var manager in managers)
+                if (manager != null && manager.enabled)
+                    return manager.transform.root;
+
+            return null;
         }
 
         private void UnbindSystems()
@@ -364,8 +448,9 @@ namespace Jailbreak.UI
 
             SetHeldItem(_gsm.LocalHeldItemId);
             var slots = _gsm.LocalInventorySlots;
-            SetSlot(_slot0, slots != null && slots.Length > 0 ? slots[0] : null);
-            SetSlot(_slot1, slots != null && slots.Length > 1 ? slots[1] : null);
+            var selectedIndex = _localInventory != null ? _localInventory.SelectedIndex : 0;
+            SetSlot(_slot0, slots != null && slots.Length > 0 ? slots[0] : null, selectedIndex == 0);
+            SetSlot(_slot1, slots != null && slots.Length > 1 ? slots[1] : null, selectedIndex == 1);
         }
 
         private void SetHeldItem(string itemId)
@@ -376,7 +461,7 @@ namespace Jailbreak.UI
             SetIcon(_heldItemIcon, hasItem ? IconForItem(itemId) : null);
         }
 
-        private void SetSlot(HudSlot slot, InventorySlotData data)
+        private void SetSlot(HudSlot slot, InventorySlotData data, bool selected = false)
         {
             if (slot == null) return;
 
@@ -388,7 +473,26 @@ namespace Jailbreak.UI
             SetIcon(slot.icon, hasItem ? IconForItem(itemId) : null);
 
             if (slot.root != null)
+            {
                 slot.root.style.opacity = hasItem ? 1f : 0.72f;
+                slot.root.style.backgroundColor = selected
+                    ? new Color(1f, 0.72f, 0.28f, 0.18f)
+                    : new Color(1f, 1f, 1f, 0.08f);
+                slot.root.style.borderTopWidth = selected ? 2 : 1;
+                slot.root.style.borderRightWidth = selected ? 2 : 1;
+                slot.root.style.borderBottomWidth = selected ? 2 : 1;
+                slot.root.style.borderLeftWidth = selected ? 2 : 1;
+                var borderColor = selected
+                    ? new Color(1f, 0.82f, 0.38f, 1f)
+                    : new Color(1f, 1f, 1f, 0.14f);
+                slot.root.style.borderTopColor = borderColor;
+                slot.root.style.borderRightColor = borderColor;
+                slot.root.style.borderBottomColor = borderColor;
+                slot.root.style.borderLeftColor = borderColor;
+            }
+
+            if (slot.label != null)
+                slot.label.style.color = selected ? Color.white : new Color(0.77f, 0.85f, 0.92f);
         }
 
         private Sprite IconForItem(string itemId)
@@ -435,20 +539,20 @@ namespace Jailbreak.UI
             if (_missions.Count == 0) return;
 
             var missions = state != null ? state.missions : null;
-            var clueTitle = state != null && state.clueFound && !string.IsNullOrEmpty(state.correctServerId)
-                ? $"Clue: {ServerDisplayName(state.correctServerId)}"
-                : "Clue: Server ?";
+            var transformerSuffix = state != null && state.clueFound && !string.IsNullOrEmpty(state.correctServerId)
+                ? $"(Target: {ServerDisplayName(state.correctServerId)})"
+                : null;
 
-            ApplyMission("find_cutters", GetMissionStatus(missions, "find_cutters", "available"), "Cutters", 0f, false);
-            ApplyMission("find_clue", GetMissionStatus(missions, "find_clue", "available"), clueTitle,
+            ApplyMission("find_cutters", GetMissionStatus(missions, "find_cutters", "available"), null, 0f, false);
+            ApplyMission("find_clue", GetMissionStatus(missions, "find_clue", "available"), transformerSuffix,
                 ProgressForAction(state, "route1.search_clue"), true);
-            ApplyMission("disable_server", GetMissionStatus(missions, "disable_server", "locked"), "Server",
+            ApplyMission("disable_server", GetMissionStatus(missions, "disable_server", "locked"), transformerSuffix,
                 ProgressForAction(state, "route1.disable_server"), true);
-            ApplyMission("find_wrench", GetMissionStatus(missions, "find_wrench", "available"), "Wrench", 0f, false);
+            ApplyMission("find_wrench", GetMissionStatus(missions, "find_wrench", "available"), null, 0f, false);
 
             var ventProgress = Mathf.Max(ProgressForAction(state, "route1.open_vent"), MaxVentProgress(state));
-            ApplyMission("open_vent", GetMissionStatus(missions, "open_vent", "locked"), "Vent", ventProgress, true);
-            ApplyMission("escape", GetMissionStatus(missions, "escape", "locked"), "Escape",
+            ApplyMission("open_vent", GetMissionStatus(missions, "open_vent", "locked"), null, ventProgress, true);
+            ApplyMission("escape", GetMissionStatus(missions, "escape", "locked"), null,
                 ProgressForAction(state, "route1.escape"), true);
         }
 
@@ -495,13 +599,13 @@ namespace Jailbreak.UI
             return best;
         }
 
-        private void ApplyMission(string id, string status, string title, float progress, bool canShowProgress)
+        private void ApplyMission(string id, string status, string suffix, float progress, bool canShowProgress)
         {
             if (!_missions.TryGetValue(id, out var row)) return;
 
             status = string.IsNullOrEmpty(status) ? "locked" : status;
             row.marker.text = MarkerForStatus(status);
-            row.title.text = title;
+            row.title.text = string.IsNullOrEmpty(suffix) ? row.baseTitle : $"{row.baseTitle} {suffix}";
 
             var color = ColorForStatus(status);
             row.marker.style.color = color;
@@ -539,10 +643,10 @@ namespace Jailbreak.UI
 
         private static string ServerDisplayName(string serverId)
         {
-            if (string.IsNullOrEmpty(serverId)) return "Server ?";
+            if (string.IsNullOrEmpty(serverId)) return "Transformer ?";
             const string prefix = "server_";
             return serverId.StartsWith(prefix, StringComparison.Ordinal)
-                ? $"Server {serverId.Substring(prefix.Length)}"
+                ? $"Transformer {serverId.Substring(prefix.Length).ToUpperInvariant()}"
                 : serverId;
         }
 
@@ -560,6 +664,11 @@ namespace Jailbreak.UI
         private void HandleLocalInventoryChanged()
         {
             RefreshVisibility();
+            RefreshInventory();
+        }
+
+        private void HandleLocalSlotSelected(int _)
+        {
             RefreshInventory();
         }
 
@@ -600,7 +709,7 @@ namespace Jailbreak.UI
             if (!payload.success) return;
 
             if (!payload.isPlayer)
-                ShowToast($"Wrong target! Errors {_guardErrorCount}/{_guardErrorThreshold}");
+                ShowToast($"Wrong target! Mistakes {_guardErrorCount}/{_guardErrorThreshold}");
         }
 
         private void RefreshGuardErrors()
@@ -643,7 +752,7 @@ namespace Jailbreak.UI
         private void HandlePhaseWarning(PhaseWarningPayload data)
         {
             if (data == null || _timeLabel == null) return;
-            _timeLabel.text = $"NEXT: {data.nextPhaseName} {Mathf.CeilToInt(data.warningInSeconds)}s";
+            _timeLabel.text = $"NEXT PHASE IN {FormatSeconds(data.warningInSeconds)} ({data.nextPhaseName})";
         }
 
         private void HandleGameReconnect(GameReconnectPayload data)
@@ -687,7 +796,7 @@ namespace Jailbreak.UI
 
             var elapsed = Mathf.Max(0f, Time.realtimeSinceStartup - _phaseStartedAtRealtime);
             var remaining = Mathf.Max(0f, _phaseDuration - elapsed);
-            _timeLabel.text = FormatSeconds(remaining);
+            _timeLabel.text = $"NEXT PHASE IN {FormatSeconds(remaining)}";
         }
 
         private static string FormatSeconds(float seconds)
@@ -720,6 +829,7 @@ namespace Jailbreak.UI
             public readonly Label progress;
             public readonly VisualElement track;
             public readonly VisualElement fill;
+            public readonly string baseTitle;
 
             public MissionRow(
                 VisualElement root,
@@ -727,7 +837,8 @@ namespace Jailbreak.UI
                 Label title,
                 Label progress,
                 VisualElement track,
-                VisualElement fill
+                VisualElement fill,
+                string baseTitle
             )
             {
                 this.root = root;
@@ -736,6 +847,7 @@ namespace Jailbreak.UI
                 this.progress = progress;
                 this.track = track;
                 this.fill = fill;
+                this.baseTitle = baseTitle;
             }
         }
     }

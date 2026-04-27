@@ -127,6 +127,129 @@
     scale: 0.95;
 }
 
+/* --- ROOM BROWSER --- */
+.browser-section {
+    width: 90%;
+    min-height: 90px;
+    margin: 10px;
+    align-items: center;
+}
+
+.secondary-btn {
+    width: 240px;
+    height: 54px;
+    margin-bottom: 12px;
+    background-color: rgb(42, 45, 50);
+    border-color: rgb(225, 150, 50);
+    border-width: 2px;
+    color: rgb(225, 150, 50);
+    font-size: 18px;
+    -unity-font-style: bold;
+}
+
+.secondary-btn:hover {
+    background-color: rgb(58, 60, 66);
+    scale: 1.03;
+}
+
+.room-browser-panel {
+    width: 100%;
+    min-height: 300px;
+    max-height: 430px;
+    padding: 18px;
+    background-color: rgb(25, 27, 31);
+    border-color: rgb(105, 105, 105);
+    border-width: 2px;
+}
+
+.room-browser-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.room-browser-title {
+    color: rgb(225, 150, 50);
+    font-size: 22px;
+    -unity-font-style: bold;
+}
+
+.refresh-btn {
+    width: 130px;
+    height: 42px;
+    background-color: rgb(50, 55, 62);
+    border-color: rgb(150, 150, 150);
+    border-width: 1px;
+    color: rgb(225, 225, 225);
+    font-size: 14px;
+    -unity-font-style: bold;
+}
+
+.room-list {
+    flex-grow: 1;
+    min-height: 170px;
+}
+
+.room-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 62px;
+    margin-bottom: 8px;
+    padding-left: 14px;
+    padding-right: 12px;
+    background-color: rgb(34, 37, 42);
+    border-color: rgb(70, 74, 82);
+    border-width: 1px;
+}
+
+.room-row-main {
+    flex-grow: 1;
+}
+
+.room-name-text {
+    color: rgb(240, 240, 240);
+    font-size: 19px;
+    -unity-font-style: bold;
+}
+
+.room-meta-text {
+    color: rgb(170, 170, 170);
+    font-size: 13px;
+    margin-top: 3px;
+}
+
+.room-player-count {
+    width: 70px;
+    color: rgb(225, 150, 50);
+    font-size: 16px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.room-join-btn {
+    width: 100px;
+    height: 42px;
+    margin-left: 8px;
+    background-color: rgb(225, 150, 50);
+    border-width: 0;
+    color: rgb(20, 22, 25);
+    font-size: 15px;
+    -unity-font-style: bold;
+}
+
+.room-join-btn:hover {
+    background-color: rgb(245, 172, 70);
+    scale: 1.03;
+}
+
+.room-empty-text {
+    color: rgb(170, 170, 170);
+    font-size: 16px;
+    -unity-text-align: middle-center;
+    margin-top: 10px;
+}
+
 /* --- GLOBAL STATUS --- */
 .status-text {
     font-size: 16px;

@@ -179,17 +179,17 @@ Los documentos anteriores mezclaban fusibles, escritorios/cajones, duraciones y 
 
 ## ADR-007: Ruta 1 Fase B — Herramientas Criticas con Mano/Slots Autoritativos
 
-**Status**: Implemented
+**Status**: Implemented; refined by ADR-028
 **Date**: 2026-04-24
 
 ### Decision
 
 Implementar Fase B con el backend como fuente de verdad para las herramientas criticas de Ruta 1:
 - `item.pickup` mueve `route1_cutters` / `route1_wrench` a `PlayerState.heldItemId`.
-- `item.store` mueve el item en mano al primer slot libre de `PlayerState.inventorySlots`.
+- `item.store` mueve el item en mano a `PlayerState.inventorySlots`; ADR-028 refina el contrato para usar el slot seleccionado cuando el cliente manda `slotIndex`.
 - Los presos tienen 2 slots; el guardia mantiene inventario vacio.
 - Unity solo parenta/guarda visualmente una herramienta despues de recibir `item:state` / `player:state`.
-- `route1_cutters` y `route1_wrench` no se pueden tirar voluntariamente.
+- `route1_cutters` y `route1_wrench` no se pueden tirar directamente desde la mano; ADR-028 permite soltarlas voluntariamente solo desde un slot seleccionado.
 - Captura, abandono explicito o expiracion del timeout de reconexion devuelven herramientas criticas al mundo como `dropped`.
 
 ### Why
@@ -207,7 +207,7 @@ Evita duplicados entre clientes, resuelve carreras de pickup desde el servidor y
 
 ## ADR-008: Ruta 1 — Separar Pickup en Mano de Progreso Legacy
 
-**Status**: Implemented
+**Status**: Implemented; refined by ADR-028
 **Date**: 2026-04-24
 
 ### Decision
@@ -611,3 +611,123 @@ El comportamiento debe seguir el mismo patrón que mesas, gabinetes y lavanderí
 - Cada cama/catre debe tener `SleepInteractable` y `SleepAction.sleepPoint` dentro de los bounds de su `cell_area_XX`.
 - Si no hay cama disponible, Unity no reproduce una animación falsa de sueño en medio de la celda; cae a idle.
 - Al terminar, reasignar o destruir el NPC, se libera la reserva de la cama.
+
+## ADR-024: Lobby room browser usa payload envuelto y broadcasts de disponibilidad
+
+**Status**: Implemented
+**Date**: 2026-04-26
+
+### Decision
+
+El browser de salas del lobby usa un contrato nuevo `RoomListPayload` con raíz `{ rooms: [...] }`.
+
+- El backend mantiene el `room:list` legacy como array para no romper el wrapper React existente.
+- Unity consume `room:list:response` para refresh manual y `room:list:update` para cambios live.
+- La lista pública incluye solo salas joinables: `status === 'lobby'` y `playerCount < maxPlayers`.
+- El backend emite `room:list:update` cuando una sala se crea, alguien se une, alguien es kickeado, el host inicia partida, un jugador deja el lobby o la sala se destruye.
+- Unity mantiene el flujo en `LobbyScene`, agregando un panel plegable dentro de `LobbyScreen.uxml` en vez de crear una escena nueva.
+
+### Why
+
+Unity `JsonUtility` no deserializa arrays en la raíz de forma cómoda, y el cliente web ya dependía del evento legacy. Separar respuesta legacy y payload envuelto permite agregar el browser sin romper contratos existentes.
+
+### Implications
+
+- Cualquier cliente nuevo debe preferir `room:list:response` / `room:list:update`.
+- La lista no muestra partidas activas ni salas llenas; el join por ID sigue existiendo para compatibilidad y casos directos.
+- Cambios futuros de metadata visible de sala deben extender `RoomListEntryPayload`, no `RoomStatePayload`.
+
+## ADR-025: Route tool voluntary drop uses `item.throw`
+
+**Status**: Implemented
+**Date**: 2026-04-26
+
+### Decision
+
+Las herramientas críticas de Ruta 1 se pueden tirar voluntariamente solo mediante la acción nueva `item.throw`, y solo si ya están guardadas en un slot de inventario.
+
+- El backend valida que el item sea crítico y que el jugador lo tenga guardado en un slot.
+- `item.throw` usa `dropInventoryItem(...)`, limpia el slot, marca el `ItemState` como `dropped`, emite `item:state`, cancela interacciones activas de Ruta 1 para ese jugador y recalcula misiones.
+- El drop voluntario queda en el mundo en la posición calculada frente al jugador para que otro preso pueda recogerlo.
+- No se agenda respawn automático para `item.throw`; los respawns anti-softlock siguen reservados para captura, leave/disconnect o timers existentes.
+- La acción legacy `drop` sigue rechazando herramientas críticas para no saltearse el contrato autoritativo de hand/slots.
+- Unity usa `HeldItemInput.dropKey = G` para pedir `NetworkRoutePickable.RequestThrow()` solo desde la herramienta de ruta guardada en el slot seleccionado.
+
+### Why
+
+Separar `item.throw` de `drop` permite sumar transferencia voluntaria de herramientas sin reabrir el flujo legacy de inventario, que no actualiza correctamente misiones, HUD, reconexión ni `item:state`. Exigir que la herramienta esté en un slot evita que el input de drop compita con el estado visual de "item en mano" y hace explícita la intención del jugador: primero guardar, luego soltar.
+
+### Implications
+
+- Los prefabs de herramientas de ruta deben conservar `NetworkRoutePickable.itemId` igual al item autoritativo.
+- El HUD se actualiza por `player:state` y `item:state`; Unity no mueve localmente la herramienta hasta confirmación del servidor.
+- El slot seleccionado se documenta en ADR-028; cualquier cliente nuevo debe mandar `slotIndex` para `item.store` y solo emitir `item.throw` desde slots.
+
+## ADR-026: Match voice uses diegetic proximity audio
+
+**Status**: Designed
+**Date**: 2026-04-27
+
+### Decision
+
+La voz en partida sera diegetica, espacial y audible por proximidad para todos los roles. No habra canal privado global entre presos en el modo default. El guardia puede escuchar presos si esta dentro del rango audible, pero no recibe nombre, marcador, subtitulo ni posicion exacta del hablante. La tecla default de push-to-talk sera `V`. Las senales de golpe/tos pasan a post-MVP.
+
+### Why
+
+La comunicacion debe reforzar los pilares de tension asimetrica, engano social y cooperacion bajo presion. Si los presos tienen voz privada global, Ruta 1 se coordina sin riesgo y el guardia pierde una capa de deduccion. Si el guardia escucha todo globalmente, se vuelve omnisciente y castiga demasiado la fantasia de infiltracion.
+
+### Implications
+
+- La voz debe transportarse por WebRTC, un SDK de voz compatible o una capa equivalente; Socket.io solo debe usarse para signaling/control, no para audio crudo.
+- Unity/WebGL debe exponer poses de jugadores a la capa de audio para atenuacion espacial.
+- Capturados no pueden hablar con presos vivos durante la partida.
+- Lobby/post-game pueden usar voz global no espacial para comodidad social.
+- El plan de implementacion vive en `design/gdd/voz-diegetica-proximidad.md`.
+
+## ADR-027: Prisoner inventory controls use K/L navigation and G drop
+
+**Status**: Implemented
+**Date**: 2026-04-27
+
+### Decision
+
+El jugador preso navega sus slots de inventario con `K` y `L`, y tira voluntariamente herramientas de Ruta 1 con `G`.
+
+- `InventoryInput.previousKey` usa `K`.
+- `InventoryInput.nextKey` usa `L`.
+- `HeldItemInput.dropKey` usa `G`.
+- El prefab `Prisoner.prefab` serializa esos defaults para que la escena no dependa solo de valores de script.
+
+### Why
+
+Las flechas no estaban alineadas con el control deseado para alternar slots, y el drop de herramientas criticas necesitaba quedar cableado en el prefab real del jugador.
+
+### Implications
+
+- Nuevos prefabs de jugador que copien el comportamiento del preso deben incluir `HeldItemInput`, `ItemInventory` e `InventoryInput` con estos bindings.
+- El backend sigue siendo autoritativo: `G` solo solicita `item.throw`; la posicion final se confirma por `item:state`.
+
+## ADR-028: Route inventory store/drop uses the selected slot
+
+**Status**: Implemented
+**Date**: 2026-04-27
+
+### Decision
+
+El inventario de herramientas de Ruta 1 separa navegacion, guardado y drop por slot.
+
+- `K` y `L` solo cambian el slot seleccionado; no equipan, no guardan y no hacen swap.
+- `F` guarda la herramienta en mano en el slot seleccionado.
+- `G` no tira herramientas desde la mano; solo tira la herramienta del slot seleccionado.
+- Unity envia `slotIndex` en `player:interact` cuando usa `item.store`.
+- El backend respeta `slotIndex` si viene presente, y conserva fallback al primer slot libre para clientes viejos.
+
+### Why
+
+El jugador debe poder decidir explicitamente donde guardar una herramienta y desde que slot tirarla, sin que la navegacion de slots tenga efectos secundarios de inventario.
+
+### Implications
+
+- El HUD debe reflejar el slot seleccionado localmente, aunque el contenido del inventario siga viniendo del estado autoritativo del backend.
+- Cualquier cliente nuevo que implemente `item.store` deberia mandar `slotIndex`.
+- `item.throw` sigue identificando el item por `itemId`; el backend rechaza el throw si ese item no esta almacenado en un slot.

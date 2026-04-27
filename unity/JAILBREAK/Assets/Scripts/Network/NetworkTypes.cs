@@ -256,6 +256,25 @@ namespace Jailbreak.Network
     }
 
     [Serializable]
+    public class RoomListEntryPayload
+    {
+        public string roomId;
+        public string hostUserId;
+        public string hostDisplayName;
+        public string status;
+        public int playerCount;
+        public int maxPlayers;
+        public long createdAt;
+        public RoomPlayerInfo[] players;
+    }
+
+    [Serializable]
+    public class RoomListPayload
+    {
+        public RoomListEntryPayload[] rooms;
+    }
+
+    [Serializable]
     public class RoomPlayerJoinedPayload
     {
         public string userId;
