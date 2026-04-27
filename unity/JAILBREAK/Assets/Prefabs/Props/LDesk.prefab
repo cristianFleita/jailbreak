@@ -30,7 +30,7 @@ Transform:
   m_GameObject: {fileID: 3029658040701648733}
   serializedVersion: 2
   m_LocalRotation: {x: -0.036575742, y: -0.7061602, z: -0.7061602, w: 0.036575742}
-  m_LocalPosition: {x: 0.00818, y: 0.00135, z: -0}
+  m_LocalPosition: {x: 0.00168, y: 0.01107, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -55,8 +55,8 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.005
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Radius: 0.00643812
+  m_Center: {x: 0.0014381192, y: 2.92998e-11, z: 6.2903515e-12}
 --- !u!114 &2204492554538405221
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -122,6 +122,7 @@ MonoBehaviour:
   priority: 0
   prisonersOnly: 1
   activeStateTag: Route1Action
+  routeObjectId: 
   debugLogs: 0
 --- !u!1001 &4753396933465429935
 PrefabInstance:
