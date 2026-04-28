@@ -130,6 +130,9 @@ namespace Jailbreak.Player
         // ─── Catch handler ──────────────────────────────────────────────────
         private void HandlePlayerCaught(string targetId)
         {
+            // Spectator mode is a prisoner-only experience — the guard never enters it.
+            if (!IsLocalPrisoner()) return;
+
             var localId = NetworkManager.Instance?.LocalPlayerId;
 
             if (!string.IsNullOrEmpty(localId) && targetId == localId)
@@ -143,6 +146,12 @@ namespace Jailbreak.Player
                 Cycle(+1);
         }
 
+        private static bool IsLocalPrisoner()
+        {
+            var role = GameStateManager.Instance?.LocalRole;
+            return role == "prisoner";
+        }
+
         private void HandleGameEnd(string _)
         {
             ExitSpectatorMode();
@@ -150,6 +159,7 @@ namespace Jailbreak.Player
 
         private void DetectReconnectAsCaptured()
         {
+            if (!IsLocalPrisoner()) return;
             var gsm = GameStateManager.Instance;
             if (gsm == null) return;
             if (!gsm.GameActive) return;
@@ -362,6 +372,7 @@ namespace Jailbreak.Player
         private void OnGUI()
         {
             if (!IsSpectating) return;
+            if (!IsLocalPrisoner()) return;
 
             const int padding = 16;
             int barH = 56;

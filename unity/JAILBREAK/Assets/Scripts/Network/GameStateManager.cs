@@ -266,6 +266,17 @@ namespace Jailbreak.Network
                 // if (_stateRecvCount % 20 == 1)
                 //     Debug.Log($"[GSM] RECV remote player:state #{_stateRecvCount} id={p.id} pos={p.position} state={p.movementState}");
 
+                // Captured prisoners are still broadcast (with isAlive=false) so the
+                // server stays the source of truth across reconnects. Don't re-spawn
+                // their avatar — and if we still have one around (e.g. F5 reconnect
+                // arriving before the original guard:catch was processed), tear it down.
+                if (!p.isAlive)
+                {
+                    if (RemotePlayerGameObjects.ContainsKey(p.id))
+                        DespawnRemotePlayer(p.id);
+                    continue;
+                }
+
                 if (!RemotePlayerGameObjects.ContainsKey(p.id))
                 {
                     SpawnRemotePlayer(p.id, p);
@@ -425,6 +436,7 @@ namespace Jailbreak.Network
             foreach (var (id, player) in Players)
             {
                 if (player.userId == localId) continue;  // Don't spawn self
+                if (!player.isAlive) continue;           // Don't spawn captured prisoners
                 if (RemotePlayerGameObjects.ContainsKey(id)) continue;  // Already spawned
 
                 SpawnRemotePlayer(id, player);
