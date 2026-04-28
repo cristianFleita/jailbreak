@@ -18,6 +18,7 @@ import { getUser, setUserStatus } from './user-identity.js'
 import { initializeRouteState } from './routes/route-registry.js'
 import { broadcastAllRouteItemStates } from './systems/route-inventory.js'
 import { clearSpawnAreaRegistration } from './systems/spawn-areas.js'
+import { TutorialManager, cleanupTutorialBeforeActive } from './systems/tutorial.js'
 
 /**
  * Default game configuration (tuning knobs from design doc).
@@ -103,11 +104,28 @@ export function destroyRoom(roomId: string): void {
   if (room.tickLoopInterval) clearInterval(room.tickLoopInterval)
   if (room.phaseLoopInterval) clearInterval(room.phaseLoopInterval)
 
+  // Cancel any in-flight tutorial timers (host-quit during tutorial). Use
+  // cancel() not forceEnd() so we do NOT fire tutorial:end / transitionToActive
+  // on a room that is about to be removed from the registry.
+  const tutorialManager = (room as any).tutorialManager as TutorialManager | undefined
+  if (tutorialManager) {
+    tutorialManager.cancel()
+    ;(room as any).tutorialManager = undefined
+  }
+
   // Drop any pending spawn-area respawn timers for this room.
   clearSpawnAreaRegistration(roomId)
 
   activeRooms.delete(roomId)
   console.log(`[ROOM] Destroyed room "${roomId}"`)
+}
+
+/**
+ * Returns the active tutorial manager for a room, if any. Used by the socket
+ * layer to forward `tutorial:mission:complete` events.
+ */
+export function getTutorialManager(room: GameRoom): TutorialManager | undefined {
+  return (room as any).tutorialManager as TutorialManager | undefined
 }
 
 // ============================================================================
@@ -344,9 +362,18 @@ export function initializeNPCs(room: GameRoom, count?: number): void {
 const JAIL_ROUTINE_START_DELAY_MS = 2000
 
 export function transitionToActive(io: Server, room: GameRoom): void {
-  if (room.state.status !== 'lobby') {
+  // Tutorial → active is the normal post-Fase-A path; lobby → active is kept
+  // for tests and any future flow that wants to skip the training round.
+  if (room.state.status !== 'lobby' && room.state.status !== 'tutorial') {
     console.warn(`Cannot transition room "${room.state.id}" from ${room.state.status} to active`)
     return
+  }
+
+  // Tutorial-to-active hand-off: scrub any tutorial-only mutations off the
+  // player records before the real match seeds inventory + items.
+  if (room.state.status === 'tutorial') {
+    cleanupTutorialBeforeActive(room.state)
+    ;(room as any).tutorialManager = undefined
   }
 
   startGame(room.state)
@@ -401,6 +428,46 @@ export function transitionToActive(io: Server, room: GameRoom): void {
     }
     gm.jailRoutine.start()
   }, JAIL_ROUTINE_START_DELAY_MS)
+}
+
+/**
+ * Transitions a lobby room into the tutorial training round (Fase A).
+ *
+ * Preconditions: roles must already have been assigned by the caller — the
+ * tutorial fans out role-specific mission lists. The tutorial manager owns
+ * its own timers; when the 60s end, it invokes the onComplete callback to
+ * hand off to {@link transitionToActive}.
+ *
+ * Pass `tutorialOptions` to override duration / seed / clock for tests.
+ */
+export function transitionToTutorial(
+  io: Server,
+  room: GameRoom,
+  tutorialOptions?: { durationSeconds?: number; tickIntervalMs?: number; seed?: number; now?: () => number }
+): TutorialManager | null {
+  if (room.state.status !== 'lobby') {
+    console.warn(
+      `Cannot transition room "${room.state.id}" from ${room.state.status} to tutorial`
+    )
+    return null
+  }
+
+  const manager = new TutorialManager(io, room, {
+    ...tutorialOptions,
+    onComplete: () => {
+      const current = activeRooms.get(room.state.id)
+      if (!current) return
+      // Drop the manager BEFORE transitioning so transitionToActive's lobby
+      // status gate flips cleanly without re-entering the tutorial branch.
+      ;(current as any).tutorialManager = undefined
+      transitionToActive(io, current)
+    },
+  })
+
+  ;(room as any).tutorialManager = manager
+  manager.start()
+  console.log(`[ROOM] "${room.state.id}" transitioned to TUTORIAL`)
+  return manager
 }
 
 // ============================================================================

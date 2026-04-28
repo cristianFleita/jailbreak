@@ -88,6 +88,17 @@
 - [ ] Scene setup: add `ZoneRegistry` entries for `yard`, `yard_benches`, `yard_exercise`, and `cell_area_01..08`.
 - [ ] Scene setup: ensure each bed/catre has `SleepInteractable` + `SleepAction.sleepPoint` and sits inside its `cell_area_XX` bounds.
 
+## Tutorial — Fase B-E Unity:
+- [x] Network: Unity receives `tutorial:start`, `tutorial:state`, and `tutorial:end`, and sends `tutorial:mission:complete`.
+- [x] Scene flow: `RoomScreenController` loads `Tutorial` on tutorial start and preserves `GameScene` loading for real match starts.
+- [x] Runtime: added local-only tutorial scene, mission, NPC routine, guard capture, prisoner mission tracking, world cue, inventory drop, and progress interactable controllers.
+- [x] UI Toolkit: rebuilt prisoner and guard tutorial HUD documents with runtime-bound mission rows, timer, controls, toasts, guard focus, guard errors, and world cues.
+- [x] Movement: tutorial local players now use real `PlayerNetworkSync` activation, backend accepts tutorial `player:move`, and Unity spawns/interpolates remote tutorial avatars from `player:state`.
+- [x] Build settings: added `Assets/Scenes/Tutorial.unity` before `GameScene`.
+- [x] Verification: backend TypeScript, focused `tutorial.test.ts`, Unity `msbuild Assembly-CSharp.csproj`, `xmllint` for both tutorial UXML files, and `git diff --check` passed.
+- [ ] Scene setup: add `TutorialSceneController`, `TutorialNpcRoutineController`, role UI documents, role spawn points, tutorial areas/interactables, NPC route points, and baked NavMesh in `Tutorial.unity`.
+- [ ] Manual QA: run a host/client tutorial flow in Unity/WebGL and confirm both roles complete missions and transition to `GameScene`.
+
 ## Backlog:
 - [ ] Unit tests (state, validation, room-manager)
 - [ ] Integration tests (game-loop, socket-events)
