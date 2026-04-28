@@ -442,6 +442,22 @@ namespace Jailbreak.Network
         public float  graceSeconds;
     }
 
+    /// <summary>
+    /// Public match scoreboard delivered ~once per second on the `match:status`
+    /// event. Both prisoners and guards receive the same payload — no
+    /// role-restricted route data is included.
+    /// </summary>
+    [Serializable]
+    public class MatchStatusPayload
+    {
+        public float remainingSeconds;
+        public float totalMatchSeconds;
+        public int   prisonersRemaining;
+        public int   prisonersTotal;
+        public int   caughtCount;
+        public int   escapedCount;
+    }
+
     /// <summary>Included in game:reconnect when jail routine is active.</summary>
     [Serializable]
     public class JailPhaseSnapshot

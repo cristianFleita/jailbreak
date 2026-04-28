@@ -221,6 +221,7 @@ export class JailRoutineSystem {
 
   private currentPhase: JailPhaseNumber = 1
   private phaseStartedAt = 0
+  private routineStartedAt = 0
   private warningEmitted = false
   private lastReassignAt = 0
   private zoneCheckDoneAt = 0
@@ -246,14 +247,33 @@ export class JailRoutineSystem {
 
   start(): void {
     this.currentPhase = 1
-    this.phaseStartedAt = Date.now()
+    const now = Date.now()
+    this.phaseStartedAt = now
+    this.routineStartedAt = now
     this.warningEmitted = false
-    this.lastReassignAt = Date.now()
+    this.lastReassignAt = now
     this.zoneCheckDoneAt = 0
     this.zoneCheckedPlayers.clear()
     this.routineCompleted = false
     this.emitPhaseStart()
     console.log('[JAIL] Routine started → Phase 1 (Breakfast)')
+  }
+
+  /** Sum of every jail phase duration — total scheduled match length in seconds. */
+  static getTotalMatchDurationSeconds(): number {
+    return JAIL_PHASES.reduce((sum, p) => sum + p.duration, 0)
+  }
+
+  /** Seconds since `start()` was called. Returns 0 before the routine starts. */
+  getMatchElapsedSeconds(): number {
+    if (this.routineStartedAt === 0) return 0
+    return Math.max(0, (Date.now() - this.routineStartedAt) / 1000)
+  }
+
+  /** Seconds left until the jail routine reaches end-of-match. */
+  getMatchRemainingSeconds(): number {
+    const total = JailRoutineSystem.getTotalMatchDurationSeconds()
+    return Math.max(0, total - this.getMatchElapsedSeconds())
   }
 
   isRoutineComplete(): boolean {

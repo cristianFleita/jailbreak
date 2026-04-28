@@ -14,6 +14,7 @@ import {
   buildRoomPlayersPayload,
   buildRoomStatePayload,
   buildRoomListPayload,
+  buildMatchStatus,
   findSocketByUserId,
   listRooms,
   getTutorialManager,
@@ -173,6 +174,7 @@ export function setupGameSockets(io: Server) {
                   npcAssignments: gm.jailRoutine.buildReconnectAssignments(),
                 } : undefined,
               })
+              socket.emit('match:status', buildMatchStatus(roomForReconnect))
             }
 
             io.to(profile.currentRoomId).emit('player-reconnected', {
@@ -347,6 +349,7 @@ export function setupGameSockets(io: Server) {
                   npcAssignments: gm2.jailRoutine.buildReconnectAssignments(),
                 } : undefined,
               })
+              socket.emit('match:status', buildMatchStatus(room))
             }
 
             io.to(payload.roomId).emit('player-reconnected', {

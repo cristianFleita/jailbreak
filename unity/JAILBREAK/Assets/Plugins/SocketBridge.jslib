@@ -148,6 +148,10 @@ mergeInto(LibraryManager.library, {
         window.unityInstance.SendMessage(window._jbGoName, 'OnGameEnd', JSON.stringify(data));
       });
 
+      window._jbSocket.on('match:status', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnMatchStatus', JSON.stringify(data));
+      });
+
       window._jbSocket.on('game:reconnect', function (data) {
         window.unityInstance.SendMessage(window._jbGoName, 'OnGameReconnect', JSON.stringify(data));
       });

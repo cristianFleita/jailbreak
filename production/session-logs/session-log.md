@@ -1699,3 +1699,20 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260428_021320
+### Commits
+3ee3773 Merge pull request #12 from cristianFleita/tutorial
+b874ca6 chore: tutorial
+### Uncommitted Changes
+backend/src/game/room-manager.ts
+backend/src/game/systems/jail-routine.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+unity/JAILBREAK/Assets/Scripts/Network/NetworkManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/UI/GameHudController.cs
+unity/JAILBREAK/Assets/UI/Screens/GameGUI.uxml
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

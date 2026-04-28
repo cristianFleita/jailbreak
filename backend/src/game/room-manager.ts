@@ -11,9 +11,11 @@ import { Server } from 'socket.io'
 import {
   GameRoom, GameRoomState, GameConfig, NPCPositionUpdate, PlayerStateUpdate,
   RoomListPayload, RoomStatePayload, PlayerRole, EscapeRouteSelectedPayload,
+  MatchStatusPayload,
 } from './types.js'
 import { createGameRoomState, advanceTick, computeNPCDelta, spawnNPCs, startGame, endGame } from './state.js'
 import { GameManager } from './systems/game-manager.js'
+import { JailRoutineSystem } from './systems/jail-routine.js'
 import { getUser, setUserStatus } from './user-identity.js'
 import { initializeRouteState } from './routes/route-registry.js'
 import { broadcastAllRouteItemStates } from './systems/route-inventory.js'
@@ -191,6 +193,51 @@ export function buildRoomListPayload(): RoomListPayload {
 }
 
 /**
+ * Builds the public match scoreboard (timer + prisoner count) used by the
+ * `match:status` broadcast. Both roles see the same payload — no route data
+ * leaks here.
+ */
+export function buildMatchStatus(room: GameRoom): MatchStatusPayload {
+  const totalMatchSeconds = JailRoutineSystem.getTotalMatchDurationSeconds()
+  const gm = (room as any).gameManager as GameManager | undefined
+  const remainingSeconds = gm?.jailRoutine
+    ? gm.jailRoutine.getMatchRemainingSeconds()
+    : totalMatchSeconds
+
+  let prisonersTotal = 0
+  let caughtCount = 0
+  const livePrisonerUserIds: string[] = []
+  for (const player of room.state.players.values()) {
+    if (player.role !== 'prisoner') continue
+    prisonersTotal++
+    if (!player.isAlive) caughtCount++
+    else livePrisonerUserIds.push(player.userId)
+  }
+
+  const escapedSet = new Set(room.state.route1?.escapedPlayerIds ?? [])
+  let escapedCount = 0
+  let prisonersRemaining = 0
+  for (const userId of livePrisonerUserIds) {
+    if (escapedSet.has(userId)) escapedCount++
+    else prisonersRemaining++
+  }
+  // Account for prisoners who escaped AND are no longer alive (edge cases).
+  for (const userId of escapedSet) {
+    const player = room.state.playersByUserId.get(userId)
+    if (player && !player.isAlive) escapedCount++
+  }
+
+  return {
+    remainingSeconds: Math.round(remainingSeconds),
+    totalMatchSeconds,
+    prisonersRemaining,
+    prisonersTotal,
+    caughtCount,
+    escapedCount,
+  }
+}
+
+/**
  * Finds a player's socketId by their userId within a room.
  * Iterates the socket-keyed players map to return the actual socket ID.
  */
@@ -268,6 +315,9 @@ export function startGameLoop(io: Server, room: GameRoom): void {
 
   let npcBroadcastCounter = 0
   const npcBroadcastThreshold = config.tickRate / npcSendRate // emit NPC every N ticks
+  // match:status broadcast cadence — once per second is plenty for a UI label.
+  let matchStatusCounter = 0
+  const matchStatusThreshold = Math.max(1, config.tickRate)
 
   room.tickLoopInterval = setInterval(() => {
     try {
@@ -310,6 +360,13 @@ export function startGameLoop(io: Server, room: GameRoom): void {
       }
 
       io.to(state.id).emit('player:state', playerStatePayload)
+
+      // ========== Broadcast match status (~1Hz) ==========
+      matchStatusCounter++
+      if (matchStatusCounter >= matchStatusThreshold) {
+        io.to(state.id).emit('match:status', buildMatchStatus(room))
+        matchStatusCounter = 0
+      }
 
       // ========== Broadcast NPC positions every Nth tick (delta compressed) ==========
       npcBroadcastCounter++
@@ -410,6 +467,10 @@ export function transitionToActive(io: Server, room: GameRoom): void {
     npcs: Array.from(room.state.npcs.values()),
     phase: room.state.phase,
   })
+
+  // Initial match scoreboard so the HUD shows the correct prisoner count and
+  // total match length even before the jail routine has fired its first tick.
+  io.to(room.state.id).emit('match:status', buildMatchStatus(room))
 
   console.log(`[ROOM] "${room.state.id}" transitioned to ACTIVE`)
 

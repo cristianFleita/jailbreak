@@ -439,6 +439,20 @@ export interface RiotAvailablePayload {
   errorsCount: number
 }
 
+/**
+ * Public scoreboard delivered to every player ~once per second.
+ * Lets prisoners and guards both see how the match is progressing without
+ * leaking role-restricted route data.
+ */
+export interface MatchStatusPayload {
+  remainingSeconds: number   // seconds until the jail routine reaches end-of-match
+  totalMatchSeconds: number  // total scheduled match length (sum of jail phase durations)
+  prisonersRemaining: number // role=prisoner ∧ alive ∧ not yet escaped
+  prisonersTotal: number     // total prisoners assigned at match start
+  caughtCount: number        // prisoners no longer alive (caught by guards)
+  escapedCount: number       // prisoners that completed Route 1 escape
+}
+
 // ============================================================================
 // Auth & Room Lobby Payloads (Client → Server)
 // ============================================================================

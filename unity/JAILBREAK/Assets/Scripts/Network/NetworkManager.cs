@@ -49,6 +49,7 @@ namespace Jailbreak.Network
         public GameStartPayload CachedGameStart { get; private set; }
         public GameReconnectPayload CachedGameReconnect { get; private set; }
         public PhaseJailStartPayload CachedPhaseJailStart { get; private set; }
+        public MatchStatusPayload    CachedMatchStatus    { get; private set; }
         public TutorialStartPayload CachedTutorialStart { get; private set; }
         public TutorialStatePayload CachedTutorialState { get; private set; }
         public TutorialEndPayload CachedTutorialEnd { get; private set; }
@@ -84,6 +85,7 @@ namespace Jailbreak.Network
         public event Action<RiotAvailablePayload>     OnRiotAvailableEvent;
         public event Action<PlayerActionBroadcast>    OnPlayerActionEvent;
         public event Action<GameEndPayload>           OnGameEndEvent;
+        public event Action<MatchStatusPayload>       OnMatchStatusEvent;
         public event Action<ErrorPayload>             OnNetworkErrorEvent;
 
         // ─── Events: Jail Routine / NPC Phase System ────────────────────────
@@ -641,6 +643,17 @@ namespace Jailbreak.Network
             });
         }
 
+        public void OnMatchStatus(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<MatchStatusPayload>(json);
+                if (data == null) return;
+                CachedMatchStatus = data;
+                OnMatchStatusEvent?.Invoke(data);
+            });
+        }
+
         public void OnGameReconnect(string json)
         {
             _mainThreadQueue.Enqueue(() =>
@@ -1057,6 +1070,17 @@ namespace Jailbreak.Network
                 {
                     SetState(ConnectionState.PostGame);
                     if (data != null) OnGameEndEvent?.Invoke(data);
+                });
+            });
+
+            SafeOn("match:status", r =>
+            {
+                var data = DeserializePayload<MatchStatusPayload>(r);
+                if (data == null) return;
+                _mainThreadQueue.Enqueue(() =>
+                {
+                    CachedMatchStatus = data;
+                    OnMatchStatusEvent?.Invoke(data);
                 });
             });
 
