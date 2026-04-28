@@ -790,3 +790,31 @@ The tutorial must teach real movement and let players see each other before the 
 - `TutorialSceneController` calls `PlayerNetworkSync.TeleportToSpawn(...)` instead of disabling networking.
 - `tutorial:start` includes the room roster so Unity can spawn remote tutorial avatars before the first movement update.
 - Tutorial movement mutates backend player positions temporarily, so `cleanupTutorialBeforeActive(...)` restores every player to their assigned real match spawn before `GameScene` begins.
+
+## ADR-032: Emote system for social stealth disguise
+
+**Status**: Implemented
+**Date**: 2026-04-28
+
+### Decision
+
+Implement an emote system that lets prisoners perform NPC-like animations to blend in with the crowd. The system uses a B-key hold-to-open panel with categorized emote buttons built procedurally in UI Toolkit.
+
+- 10 emotes mapped to existing `Character.controller` states: Talk, Whisper, Salute, Dismiss, Surprised, Angry, Push-ups, Sit-ups, Crunches, Dance.
+- `EmoteSystem` lives on the local player and drives animations via `Animator.CrossFadeInFixedTime`.
+- Emotes play for a configured duration (looping or one-shot) and cancel on any WASD input.
+- Cursor unlocks via `CursorLockManager.RequestUnlock(this)` when the panel opens and re-locks when closed.
+- Movement is frozen during panel display via `PlayerInputController`.
+- Network sync uses dual path: `player:move.movementState` broadcasts `emote_<StateName>` for remote `PlayerAnimationController`, and `player:action` broadcasts `{objectId: "emote_system", action: "emote_start:<StateName>"}` for `RemoteInteractionHandler` as immediate backup.
+- `RemoteInteractionHandler` handles `emote_system` before the `NetworkInteractable.Find` lookup since emotes are not scene objects.
+
+### Why
+
+The GDD requires prisoners to blend in with NPC routines to avoid guard detection. An emote panel gives players agency to perform the same animations NPCs use, creating readable social stealth opportunities without depending on proximity-triggered automatic disguise.
+
+### Implications
+
+- `EmoteSystem` must be added to the local player prefab alongside `PlayerInputController`.
+- `EmotePanelController` must be added to the same UIDocument GameObject as `GameHudController`.
+- Backend already forwards `player:action` and `player:move` without changes; no backend modification needed.
+- Future emotes (e.g., eating, sleeping) can be added to `EmoteSystem.Catalogue` and will automatically appear in the panel.

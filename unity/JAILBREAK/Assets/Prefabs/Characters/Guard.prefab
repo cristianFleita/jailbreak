@@ -389,6 +389,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6cb696e425964fb6a59049f18634282, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5759259856633932211}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6cb696e425964fb6a59049f18634282, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4488410028999716743}
   m_SourcePrefab: {fileID: 100100000, guid: f6cb696e425964fb6a59049f18634282, type: 3}
 --- !u!4 &375352217839852315 stripped
 Transform:
@@ -525,3 +528,15 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   fpsCamera: {fileID: 7618073176523805264}
+--- !u!114 &4488410028999716743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1044365033193046433}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8490010b414fc44c78b25ca13ed43e91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Player.EmoteSystem

@@ -55,6 +55,7 @@ namespace Jailbreak.Player
         private CharacterController _cc;
         private FPSCameraController _fpsCam;
         private SitInteraction      _sitInteraction;
+        private EmoteSystem         _emoteSystem;
         private float   _verticalVelocity;
         private bool    _crouchToggled;
         private Vector3 _horizontalVelocity;
@@ -64,6 +65,7 @@ namespace Jailbreak.Player
             _cc = GetComponent<CharacterController>();
             _fpsCam = GetComponentInChildren<FPSCameraController>();
             _sitInteraction = GetComponent<SitInteraction>();
+            _emoteSystem = GetComponent<EmoteSystem>();
         }
 
         private void Update()
@@ -72,6 +74,15 @@ namespace Jailbreak.Player
 
             // Freeze input while seated — SitInteraction owns the avatar.
             if (_sitInteraction != null && _sitInteraction.IsSitting)
+            {
+                MoveInput = Vector2.zero;
+                CurrentState = MovementState.Idle;
+                _horizontalVelocity = Vector3.zero;
+                return;
+            }
+
+            // Freeze movement while the emote panel is open (cursor is free for clicking).
+            if (_emoteSystem != null && _emoteSystem.IsPanelOpen)
             {
                 MoveInput = Vector2.zero;
                 CurrentState = MovementState.Idle;
