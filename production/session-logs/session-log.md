@@ -1746,3 +1746,15 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260428_134937
+### Commits
+f50fbaa Merge pull request #14 from cristianFleita/feat-spectator
+5519f01 fix: spectator UI shows on guard
+f40bffa chore: add camera spectator
+81d5c83 Merge pull request #13 from cristianFleita/adjust-game-ui
+### Uncommitted Changes
+unity/JAILBREAK/Assets/UI/Screens/GameGUI.uxml
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
