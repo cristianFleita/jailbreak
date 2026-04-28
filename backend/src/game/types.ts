@@ -561,6 +561,14 @@ export interface TutorialStartPayload {
   role: PlayerRole
   seed: number
   missions: TutorialMissionId[]
+  /** Full role roster so Unity can spawn local/remote tutorial avatars before the first player:state. */
+  players: PlayerState[]
+  /**
+   * Authoritative routine assignments for the 3 tutorial NPCs. Same shape as
+   * the real `phase:jail:start` payload — Unity matches each `actionId`
+   * against a scene-authored routine template. Deterministic from `seed`.
+   */
+  npcAssignments: NPCAssignment[]
 }
 
 /**

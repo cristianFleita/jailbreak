@@ -27,6 +27,7 @@ namespace Jailbreak.Player
         private int     _sendCount;
         private Vector3 _spawnPosition;
         private bool    _needsActivation;
+        private bool    _forceInitialSend;
 
         private void Awake()
         {
@@ -49,6 +50,7 @@ namespace Jailbreak.Player
             _spawnPosition = spawnPos;
             _hasSpawned = true;
             _needsActivation = true;
+            _forceInitialSend = true;
 
             Debug.Log($"[PNS] Teleported to spawn: {spawnPos} (feet offset +{feetOffset:F2})");
         }
@@ -65,6 +67,12 @@ namespace Jailbreak.Player
                 transform.position = _spawnPosition;
                 _cc.enabled = true;
                 if (_input != null) _input.InputEnabled = true;
+
+                if (_forceInitialSend)
+                {
+                    _forceInitialSend = false;
+                    SendMove(net, transform.position, GetMovementState());
+                }
                 return;
             }
 

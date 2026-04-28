@@ -19,7 +19,9 @@ import { addPlayer, assignRandomRoles } from '../../state.js'
 import {
   GUARD_MISSION_IDS,
   PRISONER_MISSION_IDS,
+  TUTORIAL_NPC_TEMPLATE_IDS,
   TutorialManager,
+  buildTutorialNpcAssignments,
   buildTutorialState,
   cleanupTutorialBeforeActive,
   getMissionsForRole,
@@ -145,6 +147,21 @@ describe('Tutorial — pure helpers', () => {
     expect(state.completedByUserId.size).toBe(0)
   })
 
+  it('buildTutorialNpcAssignments returns the two capture-practice targets in fixed order', () => {
+    const a = buildTutorialNpcAssignments(42, 60)
+    const b = buildTutorialNpcAssignments(99, 60)
+    // Two NPCs, fixed actionId order, fixed npcIds — seed should NOT change it
+    // since the guard's capture practice needs the same setup every match.
+    expect(a).toEqual(b)
+    expect(a).toHaveLength(2)
+    expect(a.map(x => x.actionId)).toEqual([...TUTORIAL_NPC_TEMPLATE_IDS])
+    expect(a.map(x => x.npcId)).toEqual(['tutorial_npc_01', 'tutorial_npc_02'])
+    for (const entry of a) {
+      expect(entry.loop).toBe(true)
+      expect(entry.duration).toBe(60)
+    }
+  })
+
   it('cleanupTutorialBeforeActive zeroes inventory and drops tutorial state', () => {
     const room = setupRoomWithPlayers('tut-room-cleanup')
     const prisoner = room.state.players.get('sock_p1')!
@@ -207,11 +224,20 @@ describe('TutorialManager — start + emits', () => {
     expect(guardPayload.duration).toBe(60)
     expect(guardPayload.seed).toBe(12345)
     expect(guardPayload.missions).toEqual([...GUARD_MISSION_IDS])
+    expect(guardPayload.players).toHaveLength(3)
 
     const prisonerEmit = startEmits.find(e => e.socketId === 'sock_p1')!
     const prisonerPayload = prisonerEmit.payload as TutorialStartPayload
     expect(prisonerPayload.role).toBe('prisoner')
     expect(prisonerPayload.missions).toEqual([...PRISONER_MISSION_IDS])
+    expect(prisonerPayload.players.map(p => p.userId)).toEqual([HOST, P1, P2])
+
+    // Every player receives the same authoritative NPC assignment list — two
+    // capture-practice targets in a fixed order (innocent first, suspicious
+    // second) so the guard's training is predictable.
+    expect(prisonerPayload.npcAssignments).toHaveLength(2)
+    expect(guardPayload.npcAssignments).toEqual(prisonerPayload.npcAssignments)
+    expect(prisonerPayload.npcAssignments.map(a => a.actionId)).toEqual([...TUTORIAL_NPC_TEMPLATE_IDS])
   })
 
   it('refuses to start from a non-lobby status', () => {

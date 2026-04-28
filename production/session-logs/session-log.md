@@ -1611,3 +1611,91 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260427_161523
+### Commits
+0f79202 chore: tutorial phase A
+de188d3 Merge pull request #11 from cristianFleita/bug-fixes
+09920bc fix: desk and sit point adjustments
+### Uncommitted Changes
+.DS_Store
+backend/src/game/state.ts
+backend/src/game/systems/__tests__/tutorial.test.ts
+backend/src/game/systems/tutorial.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+memory/decisions.md
+memory/progress.md
+memory/session-log.md
+unity/.DS_Store
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Plugins/SocketBridge.jslib
+unity/JAILBREAK/Assets/Prefabs/Props/Shelf.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Shelf_Brown.prefab
+unity/JAILBREAK/Assets/Scripts/Network/NetworkManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Scripts/UI/RoomScreenController.cs
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260427_162351
+### Commits
+0f79202 chore: tutorial phase A
+de188d3 Merge pull request #11 from cristianFleita/bug-fixes
+09920bc fix: desk and sit point adjustments
+### Uncommitted Changes
+.DS_Store
+backend/src/game/state.ts
+backend/src/game/systems/__tests__/tutorial.test.ts
+backend/src/game/systems/tutorial.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+memory/decisions.md
+memory/progress.md
+memory/session-log.md
+production/session-logs/session-log.md
+unity/.DS_Store
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Plugins/SocketBridge.jslib
+unity/JAILBREAK/Assets/Prefabs/Props/Shelf.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Shelf_Brown.prefab
+unity/JAILBREAK/Assets/Scripts/Network/NetworkManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Scripts/UI/RoomScreenController.cs
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260427_211158
+### Commits
+0f79202 chore: tutorial phase A
+### Uncommitted Changes
+.DS_Store
+backend/src/game/state.ts
+backend/src/game/systems/__tests__/tutorial.test.ts
+backend/src/game/systems/tutorial.ts
+backend/src/game/types.ts
+backend/src/sockets/game.ts
+memory/decisions.md
+memory/progress.md
+memory/session-log.md
+production/session-logs/session-log.md
+unity/.DS_Store
+unity/JAILBREAK/Assets/Editor/WebGLBuildScript.cs
+unity/JAILBREAK/Assets/Plugins/SocketBridge.jslib
+unity/JAILBREAK/Assets/Prefabs/Props/Shelf.prefab
+unity/JAILBREAK/Assets/Prefabs/Props/Shelf_Brown.prefab
+unity/JAILBREAK/Assets/Scripts/Network/NetworkManager.cs
+unity/JAILBREAK/Assets/Scripts/Network/NetworkTypes.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerNetworkSync.cs
+unity/JAILBREAK/Assets/Scripts/UI/RoomScreenController.cs
+unity/JAILBREAK/Assets/Settings/PC_RPAsset.asset
+unity/JAILBREAK/ProjectSettings/EditorBuildSettings.asset
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

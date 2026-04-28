@@ -132,6 +132,18 @@ mergeInto(LibraryManager.library, {
         window.unityInstance.SendMessage(window._jbGoName, 'OnGameStart', JSON.stringify(data));
       });
 
+      window._jbSocket.on('tutorial:start', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnTutorialStart', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('tutorial:state', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnTutorialState', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('tutorial:end', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnTutorialEnd', JSON.stringify(data));
+      });
+
       window._jbSocket.on('game:end', function (data) {
         window.unityInstance.SendMessage(window._jbGoName, 'OnGameEnd', JSON.stringify(data));
       });
@@ -329,6 +341,17 @@ mergeInto(LibraryManager.library, {
   SocketSendRiotActivate: function() {
     if (window._jbSocket && window._jbSocket.connected)
       window._jbSocket.emit('riot:activate');
+  },
+
+  SocketSendTutorialMissionComplete: function(jsonPtr) {
+    var json = UTF8ToString(jsonPtr);
+    if (window._jbSocket && window._jbSocket.connected) {
+      try {
+        window._jbSocket.emit('tutorial:mission:complete', JSON.parse(json));
+      } catch (e) {
+        console.error('[SocketBridge] SendTutorialMissionComplete parse error:', e);
+      }
+    }
   },
 
   SocketSendNPCSyncState: function(jsonPtr) {

@@ -49,6 +49,9 @@ namespace Jailbreak.Network
         public GameStartPayload CachedGameStart { get; private set; }
         public GameReconnectPayload CachedGameReconnect { get; private set; }
         public PhaseJailStartPayload CachedPhaseJailStart { get; private set; }
+        public TutorialStartPayload CachedTutorialStart { get; private set; }
+        public TutorialStatePayload CachedTutorialState { get; private set; }
+        public TutorialEndPayload CachedTutorialEnd { get; private set; }
 
         // ─── Events: Auth & Room Lobby ───────────────────────────────────────
         public event Action<AuthRegisteredPayload>    OnAuthRegisteredEvent;
@@ -60,6 +63,9 @@ namespace Jailbreak.Network
         public event Action<RoomKickedPayload>        OnRoomKickedEvent;
         public event Action<RoomDestroyedPayload>     OnRoomDestroyedEvent;
         public event Action<GameStartPayload>         OnGameStartEvent;
+        public event Action<TutorialStartPayload>     OnTutorialStartEvent;
+        public event Action<TutorialStatePayload>     OnTutorialStateEvent;
+        public event Action<TutorialEndPayload>       OnTutorialEndEvent;
 
         // ─── Events: Connection & Gameplay ──────────────────────────────────
         public event Action                           OnConnectedEvent;
@@ -130,6 +136,7 @@ namespace Jailbreak.Network
         [DllImport("__Internal")] private static extern void   SocketSendInteractWithSlot(string objectId, string action, int slotIndex);
         [DllImport("__Internal")] private static extern void   SocketSendPlayerAction(string objectId, string action);
         [DllImport("__Internal")] private static extern void   SocketSendRiotActivate();
+        [DllImport("__Internal")] private static extern void   SocketSendTutorialMissionComplete(string json);
         [DllImport("__Internal")] private static extern void   SocketSendNPCSyncState(string json);
         [DllImport("__Internal")] private static extern void   SocketSendRegisterSpawnAreas(string json);
         [DllImport("__Internal")] private static extern void   SocketDisconnect();
@@ -376,6 +383,19 @@ namespace Jailbreak.Network
 #endif
         }
 
+        public void SendTutorialMissionComplete(string missionId)
+        {
+            if (string.IsNullOrEmpty(missionId) || !IsAuthenticated) return;
+
+            var payload = new TutorialMissionCompletePayload { missionId = missionId };
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketSendTutorialMissionComplete(JsonUtility.ToJson(payload));
+#else
+            try { _socket?.Emit("tutorial:mission:complete", new { missionId }); }
+            catch (Exception ex) { Debug.LogError($"[NET] SendTutorialMissionComplete: {ex}"); }
+#endif
+        }
+
         public void SendNPCSyncState(NPCSyncStatePayload payload)
         {
             if (!IsInGame() || !IsHost) return;
@@ -543,6 +563,53 @@ namespace Jailbreak.Network
                     CachedGameStart = data;
                     OnGameStartEvent?.Invoke(data);
                 }
+            });
+        }
+
+        public void OnTutorialStart(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                SetState(ConnectionState.InGame);
+                CachedTutorialEnd = null;
+                var data = JsonUtility.FromJson<TutorialStartPayload>(json);
+                if (data != null)
+                {
+                    CachedTutorialStart = data;
+                    CachedTutorialState = new TutorialStatePayload
+                    {
+                        remainingSeconds = data.duration,
+                        completedMissionIds = Array.Empty<string>()
+                    };
+                    OnTutorialStartEvent?.Invoke(data);
+                }
+            });
+        }
+
+        public void OnTutorialState(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<TutorialStatePayload>(json);
+                if (data == null) return;
+                CachedTutorialState = data;
+                OnTutorialStateEvent?.Invoke(data);
+            });
+        }
+
+        public void OnTutorialEnd(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<TutorialEndPayload>(json);
+                if (data == null) return;
+                CachedTutorialEnd = data;
+                CachedTutorialState = new TutorialStatePayload
+                {
+                    remainingSeconds = 0f,
+                    completedMissionIds = CachedTutorialState?.completedMissionIds ?? Array.Empty<string>()
+                };
+                OnTutorialEndEvent?.Invoke(data);
             });
         }
 
@@ -920,6 +987,53 @@ namespace Jailbreak.Network
                         OnGameStartEvent?.Invoke(data);
                     }
                 });
+            });
+
+            SafeOn("tutorial:start", r =>
+            {
+                var data = DeserializePayload<TutorialStartPayload>(r);
+                _mainThreadQueue.Enqueue(() =>
+                {
+                    SetState(ConnectionState.InGame);
+                    CachedTutorialEnd = null;
+                    if (data != null)
+                    {
+                        CachedTutorialStart = data;
+                        CachedTutorialState = new TutorialStatePayload
+                        {
+                            remainingSeconds = data.duration,
+                            completedMissionIds = Array.Empty<string>()
+                        };
+                        OnTutorialStartEvent?.Invoke(data);
+                    }
+                });
+            });
+
+            SafeOn("tutorial:state", r =>
+            {
+                var data = DeserializePayload<TutorialStatePayload>(r);
+                if (data != null)
+                    _mainThreadQueue.Enqueue(() =>
+                    {
+                        CachedTutorialState = data;
+                        OnTutorialStateEvent?.Invoke(data);
+                    });
+            });
+
+            SafeOn("tutorial:end", r =>
+            {
+                var data = DeserializePayload<TutorialEndPayload>(r);
+                if (data != null)
+                    _mainThreadQueue.Enqueue(() =>
+                    {
+                        CachedTutorialEnd = data;
+                        CachedTutorialState = new TutorialStatePayload
+                        {
+                            remainingSeconds = 0f,
+                            completedMissionIds = CachedTutorialState?.completedMissionIds ?? Array.Empty<string>()
+                        };
+                        OnTutorialEndEvent?.Invoke(data);
+                    });
             });
 
             SafeOn("player:state", r =>

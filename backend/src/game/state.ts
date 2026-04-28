@@ -165,6 +165,25 @@ export function assignRandomRoles(state: GameRoomState): void {
 }
 
 /**
+ * Restores players to the spawn waypoints assigned by assignRandomRoles().
+ * Tutorial movement is allowed before the real match, so transition-to-active
+ * must put everyone back at their proper game spawn.
+ */
+export function resetPlayersToAssignedSpawns(state: GameRoomState): void {
+  for (const player of state.players.values()) {
+    const spawn = player.spawnWaypointId === GUARD_SPAWN.id
+      ? GUARD_SPAWN
+      : CELL_DOOR_SPAWNS.find(slot => slot.id === player.spawnWaypointId)
+
+    if (!spawn) continue
+
+    player.position = { ...spawn.position }
+    player.velocity = { x: 0, y: 0, z: 0 }
+    player.movementState = 'idle'
+  }
+}
+
+/**
  * Removes a player from the game state (disconnect or timeout).
  */
 export function removePlayer(state: GameRoomState, playerId: string): void {

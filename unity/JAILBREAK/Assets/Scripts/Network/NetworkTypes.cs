@@ -314,6 +314,40 @@ namespace Jailbreak.Network
         public PhaseData phase;
     }
 
+    // ─── Tutorial Payloads (Fase A backend contract) ───────────────────────
+
+    [Serializable]
+    public class TutorialStartPayload
+    {
+        public float duration;
+        public string role;
+        public int seed;
+        public string[] missions;
+        public PlayerStateData[] players;
+        /// <summary>Authoritative tutorial NPC routine assignments (3 entries).
+        /// Each <c>actionId</c> maps to a scene-authored RoutineTemplate.</summary>
+        public NPCAssignmentData[] npcAssignments;
+    }
+
+    [Serializable]
+    public class TutorialStatePayload
+    {
+        public float remainingSeconds;
+        public string[] completedMissionIds;
+    }
+
+    [Serializable]
+    public class TutorialMissionCompletePayload
+    {
+        public string missionId;
+    }
+
+    [Serializable]
+    public class TutorialEndPayload
+    {
+        public string nextScene;
+    }
+
     // ─── Event Payloads (Client → Server) ────────────────────────────────────
 
     [Serializable]

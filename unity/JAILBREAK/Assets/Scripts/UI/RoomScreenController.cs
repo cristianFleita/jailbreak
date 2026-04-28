@@ -14,6 +14,7 @@ namespace Jailbreak.UI
     {
         [SerializeField] private UIDocument uiDocument;
         [SerializeField] private string lobbySceneName = "LobbyScene";
+        [SerializeField] private string tutorialSceneName = "Tutorial";
         [SerializeField] private string gameSceneName = "GameScene";
 
         private Label _roomNameLabel;
@@ -61,6 +62,7 @@ namespace Jailbreak.UI
             net.OnRoomPlayerLeftEvent += OnPlayerLeft;
             net.OnRoomKickedEvent += OnKicked;
             net.OnRoomDestroyedEvent += OnRoomDestroyed;
+            net.OnTutorialStartEvent += OnTutorialStart;
             net.OnGameStartEvent += OnGameStart;
             net.OnNetworkErrorEvent += OnNetworkError;
             net.OnDisconnectedEvent += OnDisconnected;
@@ -82,6 +84,7 @@ namespace Jailbreak.UI
                 net.OnRoomPlayerLeftEvent -= OnPlayerLeft;
                 net.OnRoomKickedEvent -= OnKicked;
                 net.OnRoomDestroyedEvent -= OnRoomDestroyed;
+                net.OnTutorialStartEvent -= OnTutorialStart;
                 net.OnGameStartEvent -= OnGameStart;
                 net.OnNetworkErrorEvent -= OnNetworkError;
                 net.OnDisconnectedEvent -= OnDisconnected;
@@ -125,6 +128,20 @@ namespace Jailbreak.UI
         {
             Debug.Log("[RoomScreen] Game starting!");
 
+            UnsubscribeRoomEvents();
+            SceneManager.LoadScene(gameSceneName);
+        }
+
+        private void OnTutorialStart(TutorialStartPayload payload)
+        {
+            Debug.Log($"[RoomScreen] Tutorial starting as {payload.role}");
+
+            UnsubscribeRoomEvents();
+            SceneManager.LoadScene(tutorialSceneName);
+        }
+
+        private void UnsubscribeRoomEvents()
+        {
             var net = NetworkManager.Instance;
             if (net != null)
             {
@@ -133,12 +150,11 @@ namespace Jailbreak.UI
                 net.OnRoomPlayerLeftEvent -= OnPlayerLeft;
                 net.OnRoomKickedEvent -= OnKicked;
                 net.OnRoomDestroyedEvent -= OnRoomDestroyed;
+                net.OnTutorialStartEvent -= OnTutorialStart;
                 net.OnGameStartEvent -= OnGameStart;
                 net.OnNetworkErrorEvent -= OnNetworkError;
                 net.OnDisconnectedEvent -= OnDisconnected;
             }
-
-            SceneManager.LoadScene(gameSceneName);
         }
 
         private void OnNetworkError(ErrorPayload error)

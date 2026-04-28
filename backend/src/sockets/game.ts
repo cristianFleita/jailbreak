@@ -536,7 +536,7 @@ export function setupGameSockets(io: Server) {
 
       try {
         const room = getRoom(currentRoomId)
-        if (!room || room.state.status !== 'active') return
+        if (!room || (room.state.status !== 'active' && room.state.status !== 'tutorial')) return
 
         handlePlayerMove({
           io,
@@ -546,6 +546,14 @@ export function setupGameSockets(io: Server) {
           payload,
           timestamp: Date.now(),
         })
+
+        // The normal game loop is not running while status === 'tutorial',
+        // so relay player positions immediately for remote tutorial avatars.
+        if (room.state.status === 'tutorial') {
+          io.to(currentRoomId).emit('player:state', {
+            players: Array.from(room.state.players.values()),
+          })
+        }
       } catch (err) {
         console.error(`[ERROR] player:move: ${err}`)
       }

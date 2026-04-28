@@ -1,0 +1,66 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="TutorialRoot" picking-mode="Ignore" style="flex-grow: 1; width: 100%; height: 100%; padding-top: 14px; padding-right: 14px; padding-bottom: 14px; padding-left: 14px; justify-content: space-between;">
+        <ui:VisualElement name="TopBar" picking-mode="Ignore" style="flex-direction: row; justify-content: space-between; align-items: flex-start;">
+            <ui:VisualElement name="RoleCard" picking-mode="Ignore" style="width: 360px; background-color: rgba(10, 14, 17, 0.78); padding-top: 10px; padding-right: 12px; padding-bottom: 10px; padding-left: 12px; border-left-width: 4px; border-left-color: rgb(93, 210, 135); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
+                <ui:Label name="HeaderRoleLabel" text="ROLE: PRISONER" style="-unity-font-style: bold; font-size: 15px; color: rgb(255, 255, 255);"/>
+                <ui:Label name="ObjectiveTitleLabel" text="Main Objective:" style="-unity-font-style: bold; font-size: 12px; color: rgb(255, 255, 255); margin-top: 6px;"/>
+                <ui:Label name="ObjectiveBodyLabel" text="Escape the facility at all costs." style="font-size: 11px; color: rgb(196, 222, 211); white-space: normal; margin-top: 2px;"/>
+                <ui:Label name="SurviveTitleLabel" text="How to Survive:" style="-unity-font-style: bold; font-size: 12px; color: rgb(255, 255, 255); margin-top: 8px;"/>
+                <ui:Label text="- Stay Hidden: Blend in with other prisoners to avoid suspicion." style="font-size: 11px; color: rgb(196, 222, 211); white-space: normal; margin-top: 3px;"/>
+                <ui:Label text="- Avoid Detection: If a guard spots you out of place, it's over." style="font-size: 11px; color: rgb(196, 222, 211); white-space: normal; margin-top: 3px;"/>
+                <ui:Label text="- Follow the Plan: Complete the tasks on your screen to pave your way out." style="font-size: 11px; color: rgb(196, 222, 211); white-space: normal; margin-top: 3px;"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="TimerCard" picking-mode="Ignore" style="background-color: rgba(10, 14, 17, 0.78); padding-top: 10px; padding-right: 16px; padding-bottom: 10px; padding-left: 16px; border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
+                <ui:Label name="TimerLabel" text="GAME STARTS IN 01:30" style="-unity-font-style: bold; font-size: 16px; color: rgb(255, 255, 255); -unity-text-align: middle-center;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="CenterLayer" picking-mode="Ignore" style="flex-grow: 1; align-items: center; justify-content: flex-start; padding-top: 74px;">
+            <ui:VisualElement name="Toast" picking-mode="Ignore" style="display: none; max-width: 560px; background-color: rgba(10, 14, 17, 0.86); padding-top: 8px; padding-right: 14px; padding-bottom: 8px; padding-left: 14px; border-left-width: 3px; border-left-color: rgb(255, 198, 90); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
+                <ui:Label name="ToastLabel" text="" style="-unity-font-style: bold; font-size: 12px; color: rgb(255, 255, 255); white-space: normal; -unity-text-align: middle-center;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="BottomBar" picking-mode="Ignore" style="flex-direction: row; justify-content: space-between; align-items: flex-end;">
+            <ui:VisualElement name="LeftStack" picking-mode="Ignore" style="flex-direction: column;">
+                <ui:VisualElement name="InventoryPanel" picking-mode="Ignore" style="width: 228px; background-color: rgba(10, 14, 17, 0.78); padding-top: 8px; padding-right: 8px; padding-bottom: 8px; padding-left: 8px; margin-bottom: 8px; border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
+                    <ui:Label name="InventoryTitle" text="INVENTORY" style="-unity-font-style: bold; font-size: 11px; color: rgb(255, 255, 255); margin-bottom: 6px;"/>
+                    <ui:VisualElement name="HeldItem" picking-mode="Ignore" style="height: 44px; flex-direction: row; align-items: center; background-color: rgba(255, 255, 255, 0.08); padding-top: 4px; padding-right: 5px; padding-bottom: 4px; padding-left: 5px; margin-bottom: 6px; border-top-left-radius: 3px; border-top-right-radius: 3px; border-bottom-right-radius: 3px; border-bottom-left-radius: 3px;">
+                        <ui:VisualElement name="HeldItemIcon" picking-mode="Ignore" style="width: 32px; height: 32px; background-color: rgba(0, 0, 0, 0.28); -unity-background-scale-mode: scale-to-fit; margin-right: 6px;"/>
+                        <ui:VisualElement picking-mode="Ignore" style="flex-grow: 1;">
+                            <ui:Label name="HeldItemCaption" text="HELD" style="font-size: 9px; color: rgb(161, 178, 196);"/>
+                            <ui:Label name="HeldItemLabel" text="Empty hand" style="-unity-font-style: bold; font-size: 11px; color: rgb(255, 255, 255); white-space: normal;"/>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="InventorySlots" picking-mode="Ignore" style="flex-direction: row;">
+                        <ui:VisualElement name="InventorySlot0" picking-mode="Ignore" style="width: 70px; height: 50px; background-color: rgba(255, 255, 255, 0.08); padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px; margin-right: 6px; border-top-left-radius: 3px; border-top-right-radius: 3px; border-bottom-right-radius: 3px; border-bottom-left-radius: 3px;">
+                            <ui:VisualElement name="InventorySlot0Icon" picking-mode="Ignore" style="align-self: center; width: 28px; height: 28px; background-color: rgba(0, 0, 0, 0.28); -unity-background-scale-mode: scale-to-fit;"/>
+                            <ui:Label name="InventorySlot0Label" text="Empty" style="font-size: 9px; color: rgb(196, 216, 235); -unity-text-align: middle-center; margin-top: 2px;"/>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="InventorySlot1" picking-mode="Ignore" style="width: 70px; height: 50px; background-color: rgba(255, 255, 255, 0.08); padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px; border-top-left-radius: 3px; border-top-right-radius: 3px; border-bottom-right-radius: 3px; border-bottom-left-radius: 3px;">
+                            <ui:VisualElement name="InventorySlot1Icon" picking-mode="Ignore" style="align-self: center; width: 28px; height: 28px; background-color: rgba(0, 0, 0, 0.28); -unity-background-scale-mode: scale-to-fit;"/>
+                            <ui:Label name="InventorySlot1Label" text="Empty" style="font-size: 9px; color: rgb(196, 216, 235); -unity-text-align: middle-center; margin-top: 2px;"/>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="ControlsPanel" picking-mode="Ignore" style="width: 300px; background-color: rgba(10, 14, 17, 0.72); padding-top: 10px; padding-right: 12px; padding-bottom: 10px; padding-left: 12px; border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
+                    <ui:Label text="CONTROLS" style="-unity-font-style: bold; font-size: 11px; color: rgb(255, 255, 255); margin-bottom: 5px;"/>
+                    <ui:Label text="WASD + Mouse  Move and look" style="font-size: 10px; color: rgb(205, 220, 226);"/>
+                    <ui:Label text="Shift  Sprint when it is worth the risk" style="font-size: 10px; color: rgb(205, 220, 226);"/>
+                    <ui:Label text="E  Interact, search, sit, hide" style="font-size: 10px; color: rgb(205, 220, 226);"/>
+                    <ui:Label text="TAB  Show or hide missions" style="font-size: 10px; color: rgb(205, 220, 226);"/>
+                    <ui:Label text="K / L  Select inventory slot" style="font-size: 10px; color: rgb(205, 220, 226);"/>
+                    <ui:Label text="F  Store held item    G  Drop selected slot" style="font-size: 10px; color: rgb(205, 220, 226); white-space: normal;"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="MissionPanel" picking-mode="Ignore" style="width: 420px; max-height: 520px; background-color: rgba(10, 14, 17, 0.78); padding-top: 10px; padding-right: 12px; padding-bottom: 10px; padding-left: 12px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgba(255, 255, 255, 0.14); border-right-color: rgba(255, 255, 255, 0.14); border-bottom-color: rgba(255, 255, 255, 0.14); border-left-color: rgba(255, 255, 255, 0.14); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
+                <ui:VisualElement name="MissionHeader" picking-mode="Ignore" style="flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <ui:Label name="MissionTitle" text="Prisoner Missions" style="-unity-font-style: bold; font-size: 13px; color: rgb(255, 255, 255);"/>
+                    <ui:Label name="CollapseHint" text="[TAB] HIDE" style="-unity-font-style: bold; font-size: 10px; color: rgb(196, 222, 211);"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="MissionList" picking-mode="Ignore" style="flex-direction: column;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

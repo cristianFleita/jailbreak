@@ -288,3 +288,20 @@
   - Included guard tutorial missions around observing NPC routine, practicing focus capture, learning the 3 wrong-accusation loss condition, and reading world cues.
   - Attempted the required local Ollama documentation review, but `ollama` was not available in PATH.
   - Recorded ADR-029 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Tutorial Fase B-E implementation** (2026-04-27):
+  - Read `memory/progress.md`, `design/gdd/tutorial-plan.md`, backend tutorial contracts, network bridge code, existing player/NPC/interactable scripts, and existing tutorial UI Toolkit documents.
+  - Wired Unity networking for `tutorial:start`, `tutorial:state`, `tutorial:end`, and `tutorial:mission:complete` in both WebGL bridge and editor SocketIO paths.
+  - Updated the room flow so `tutorial:start` loads `Tutorial` while `game:start` still loads `GameScene` for direct/fallback active-match starts.
+  - Added tutorial runtime controllers for scene orchestration, local player spawn, local-only mission tracking, prisoner inventory/drop practice, guard focus capture practice, NPC mini routines, world cue zones, and reusable progress interactables.
+  - Rebuilt `TutorialPrisonerGUI.uxml` and `TutorialGuardGUI.uxml` as role-specific UI Toolkit HUDs with timer, missions, controls, toasts, guard focus, error count, and world cue surfaces.
+  - Added `Assets/Scenes/Tutorial.unity` to Unity build settings before `GameScene`.
+  - Verified Unity C# with `msbuild Assembly-CSharp.csproj`, validated both UXML files with `xmllint`, and ran `git diff --check`; Unity compile passed with existing warnings only.
+  - Recorded ADR-030 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Tutorial movement and broadcast fix** (2026-04-27):
+  - Diagnosed frozen tutorial players as the tutorial spawner disabling `PlayerNetworkSync`, which also left `PlayerInputController.InputEnabled` false because the normal `TeleportToSpawn` activation path never ran.
+  - Kept real movement networking enabled in `TutorialSceneController`, initialized local players with `PlayerNetworkSync.TeleportToSpawn(...)`, and added initial position send after spawn activation.
+  - Extended `tutorial:start` with the room player roster and added tutorial remote-player spawning/updating inside `TutorialSceneController`.
+  - Allowed backend `player:move` while room status is `tutorial` and immediately relayed `player:state` because the normal active game loop is not running yet.
+  - Added cleanup so tutorial movement positions are reset to assigned real match spawns before transition to `GameScene`.
+  - Verified backend TypeScript with bundled Node, focused `tutorial.test.ts` (`21/21`), Unity C# via `msbuild Assembly-CSharp.csproj`, and `git diff --check`.
+  - Recorded ADR-031 in `memory/decisions.md`.

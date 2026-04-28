@@ -20,6 +20,7 @@ import { Server } from 'socket.io'
 import {
   GameRoom,
   GameRoomState,
+  NPCAssignment,
   PlayerRole,
   PlayerState,
   TutorialEndPayload,
@@ -30,9 +31,10 @@ import {
   TutorialStartPayload,
   TutorialStatePayload,
 } from '../types.js'
+import { resetPlayersToAssignedSpawns } from '../state.js'
 
 /** Total tutorial duration. The spec calls for 60s, but we expose it for tuning + tests. */
-export const TUTORIAL_DURATION_SECONDS = 60
+export const TUTORIAL_DURATION_SECONDS = 90
 export const TUTORIAL_TICK_INTERVAL_MS = 1000
 
 export const PRISONER_MISSION_IDS: readonly TutorialPrisonerMissionId[] = [
@@ -67,6 +69,45 @@ export function isMissionAllowedForRole(role: PlayerRole, missionId: TutorialMis
 }
 
 /**
+ * Tutorial NPC templates. Scope is deliberately small: two NPCs whose only
+ * job is to give the guard a moving target for capture practice.
+ *   - innocent_walker:  loops a benign path. Catching it counts as a mistake
+ *                       (mission G4 — "the error costs").
+ *   - suspicious_walker: looks off-routine. Catching it counts as a valid
+ *                        capture (mission G3 — "capture by focus").
+ * Prisoners can ignore them entirely; the scene's other interactables drive
+ * the prisoner missions.
+ */
+export const TUTORIAL_NPC_TEMPLATE_IDS = [
+  'tutorial_innocent_walker',
+  'tutorial_suspicious_walker',
+] as const
+
+export type TutorialNpcTemplateId = (typeof TUTORIAL_NPC_TEMPLATE_IDS)[number]
+
+/**
+ * Builds the 2 authoritative NPC assignments for a tutorial round. Output is
+ * deterministic in `seed` — same seed yields the same npcId → template
+ * mapping so all clients agree without further sync. The mapping is fixed
+ * (innocent first, suspicious second) so the guard's capture practice is
+ * predictable across every match.
+ */
+export function buildTutorialNpcAssignments(_seed: number, durationSeconds: number): NPCAssignment[] {
+  const assignments: NPCAssignment[] = []
+  for (let i = 0; i < TUTORIAL_NPC_TEMPLATE_IDS.length; i++) {
+    assignments.push({
+      npcId: `tutorial_npc_${String(i + 1).padStart(2, '0')}`,
+      actionId: TUTORIAL_NPC_TEMPLATE_IDS[i],
+      animTrigger: 'walk',
+      duration: durationSeconds,
+      loop: true,
+      walkSpeedMult: 1.0,
+    })
+  }
+  return assignments
+}
+
+/**
  * Builds the initial tutorial state and writes it into the room. Pure helper
  * exposed for tests.
  */
@@ -86,7 +127,7 @@ export function buildTutorialState(now: number, durationSeconds: number, seed: n
  *   - inventory (held + slots)
  *   - tutorial errors / captures (none persisted on the player record today)
  *   - interaction progress (likewise client-only at this stage)
- *   - position (handled by transitionToActive's spawn assignment)
+ *   - position (restored here to the real spawn assigned before tutorial)
  *
  * We also drop the room's tutorial state object.
  */
@@ -100,6 +141,7 @@ export function cleanupTutorialBeforeActive(state: GameRoomState): void {
       player.inventorySlots = []
     }
   }
+  resetPlayersToAssignedSpawns(state)
   state.tutorial = undefined
 }
 
@@ -163,12 +205,15 @@ export class TutorialManager {
     this.room.state.status = 'tutorial'
     this.room.state.tutorial = buildTutorialState(now, this.durationSeconds, this.seed)
 
+    const npcAssignments = buildTutorialNpcAssignments(this.seed, this.durationSeconds)
     for (const [socketId, player] of this.room.state.players) {
       const payload: TutorialStartPayload = {
         duration: this.durationSeconds,
         role: player.role,
         seed: this.seed,
         missions: [...getMissionsForRole(player.role)],
+        players: Array.from(this.room.state.players.values()),
+        npcAssignments,
       }
       this.io.to(socketId).emit('tutorial:start', payload)
     }
@@ -259,6 +304,8 @@ export class TutorialManager {
       role,
       seed: this.seed,
       missions: [...getMissionsForRole(role)],
+      players: Array.from(this.room.state.players.values()),
+      npcAssignments: buildTutorialNpcAssignments(this.seed, this.durationSeconds),
     }
   }
 
