@@ -1716,3 +1716,11 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260428_124150
+### Commits
+81d5c83 Merge pull request #13 from cristianFleita/adjust-game-ui
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
