@@ -1758,3 +1758,48 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260428_161927
+### Commits
+81601d0 Merge pull request #15 from cristianFleita/UI-v2
+bf903d0 chore: adjust lobby ui
+ff23403 chore: adjust game GUI
+f50fbaa Merge pull request #14 from cristianFleita/feat-spectator
+5519f01 fix: spectator UI shows on guard
+f40bffa chore: add camera spectator
+81d5c83 Merge pull request #13 from cristianFleita/adjust-game-ui
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Meshes/Wall.mat
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner 1.prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner 1.prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Map/Wall.prefab
+unity/JAILBREAK/Assets/Scenes/Actions.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Assets/Settings/DefaultVolumeProfile.asset
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260428_162630
+### Commits
+81601d0 Merge pull request #15 from cristianFleita/UI-v2
+bf903d0 chore: adjust lobby ui
+ff23403 chore: adjust game GUI
+f50fbaa Merge pull request #14 from cristianFleita/feat-spectator
+5519f01 fix: spectator UI shows on guard
+f40bffa chore: add camera spectator
+81d5c83 Merge pull request #13 from cristianFleita/adjust-game-ui
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Meshes/Wall.mat
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner 1.prefab
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner 1.prefab.meta
+unity/JAILBREAK/Assets/Prefabs/Map/Wall.prefab
+unity/JAILBREAK/Assets/Scenes/Actions.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity
+unity/JAILBREAK/Assets/Scenes/SampleScene.unity.meta
+unity/JAILBREAK/Assets/Settings/DefaultVolumeProfile.asset
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

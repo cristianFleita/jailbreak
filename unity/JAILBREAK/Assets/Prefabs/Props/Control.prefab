@@ -185,11 +185,20 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3671e4ae96a284b38a86b87688210a75, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 2440247325813944683}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3671e4ae96a284b38a86b87688210a75, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 8989328899493821388}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 3671e4ae96a284b38a86b87688210a75, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4863809806250382039}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 3671e4ae96a284b38a86b87688210a75, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3870415344525066758}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 3671e4ae96a284b38a86b87688210a75, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2877590622442788630}
   m_SourcePrefab: {fileID: 100100000, guid: 3671e4ae96a284b38a86b87688210a75, type: 3}
 --- !u!1 &7265976110327491409 stripped
 GameObject:
@@ -217,8 +226,145 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.015862178, y: 0.0049326206, z: 0.02}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3870415344525066758
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7265976110327491409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d99b6595ed1e445778aea65e4e6bb5f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RimGlowController
+  targetRenderer: {fileID: 9211289188906093188}
+  rimGlowMaterial: {fileID: 2100000, guid: c45d00da823e84639b8fef48df19dba7, type: 2}
+  transitionDuration: 0.5
+  holdOnDuration: 0.5
+  holdOffDuration: 0.2
+  autoStart: 0
+  rimColor: {r: 0, g: 0.6, b: 1, a: 1}
+  rimPower: 3
+  rimIntensity: 2
+  rimOffset: 0
+  flickerEnabled: 0
+  flickerSpeed: 6
+  flickerMin: 0.2
+  flickerMax: 1
+  flickerSharpness: 4
+--- !u!114 &2877590622442788630
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7265976110327491409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2972e4741b414bddba44041576320a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Interactions.Route1.Route1ServerVfxController
+  glowController: {fileID: 3870415344525066758}
+  sparksVfx: {fileID: 1225664942572519096}
+  serverInteractable: {fileID: 2050124567399755640}
+  wrongMatchRadius: 1.5
+  prisonersOnlyGlow: 1
+  debugLogs: 0
 --- !u!4 &8042934609790054891 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3671e4ae96a284b38a86b87688210a75, type: 3}
   m_PrefabInstance: {fileID: 7499767814187013632}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &9211289188906093188 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 3671e4ae96a284b38a86b87688210a75, type: 3}
+  m_PrefabInstance: {fileID: 7499767814187013632}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &9066633247414095801
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 8042934609790054891}
+    m_Modifications:
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7841128844113359105, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: playOnAwake
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+      propertyPath: m_Name
+      value: Sparks flashing yellow
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+--- !u!198 &1225664942572519096 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 7841128844113359105, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+  m_PrefabInstance: {fileID: 9066633247414095801}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2440247325813944683 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6633422804981235410, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+  m_PrefabInstance: {fileID: 9066633247414095801}
   m_PrefabAsset: {fileID: 0}

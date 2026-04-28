@@ -211,13 +211,67 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6613564583440620140}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5557245599262035361}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5510694841706139316}
   m_SourcePrefab: {fileID: 100100000, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
+--- !u!23 &3373588739710028326 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
+  m_PrefabInstance: {fileID: 4112051117319132834}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &3878049415461809139 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
   m_PrefabInstance: {fileID: 4112051117319132834}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &5557245599262035361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3878049415461809139}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d99b6595ed1e445778aea65e4e6bb5f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RimGlowController
+  targetRenderer: {fileID: 3373588739710028326}
+  rimGlowMaterial: {fileID: 2100000, guid: c45d00da823e84639b8fef48df19dba7, type: 2}
+  transitionDuration: 0.5
+  holdOnDuration: 0.5
+  holdOffDuration: 0.2
+  autoStart: 0
+  rimColor: {r: 0, g: 0.6, b: 1, a: 1}
+  rimPower: 3
+  rimIntensity: 2
+  rimOffset: 0
+  flickerEnabled: 0
+  flickerSpeed: 6
+  flickerMin: 0.2
+  flickerMax: 1
+  flickerSharpness: 4
+--- !u!114 &5510694841706139316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3878049415461809139}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a84dbac41c08d4a8fa818b1d71f3fac7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Interactions.Route1.Route1VentVfxController
+  glowController: {fileID: 5557245599262035361}
+  ventInteractable: {fileID: 2214673934911723737}
+  prisonersOnlyGlow: 1
+  debugLogs: 0
 --- !u!4 &4510999104883749193 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: afabc3e193bd0416e9c54bad956a05ea, type: 3}
