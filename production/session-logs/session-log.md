@@ -1716,3 +1716,33 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260428_124150
+### Commits
+81d5c83 Merge pull request #13 from cristianFleita/adjust-game-ui
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260428_130501
+### Commits
+f40bffa chore: add camera spectator
+81d5c83 Merge pull request #13 from cristianFleita/adjust-game-ui
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260428_132345
+### Commits
+f40bffa chore: add camera spectator
+81d5c83 Merge pull request #13 from cristianFleita/adjust-game-ui
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/Network/GameStateManager.cs
+unity/JAILBREAK/Assets/Scripts/Player/SpectatorController.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
