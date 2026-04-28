@@ -203,7 +203,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -609,6 +609,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeldItemInput
   throwKey: 323
   storeKey: 102
+  dropKey: 103
   holdPointName: mixamorig:RightHandIndex1
   handConstraint: {fileID: 1669301554819997446}
   ikTarget: {fileID: 8668989185764937530}
@@ -681,6 +682,11 @@ MonoBehaviour:
   interactableLayer:
     serializedVersion: 2
     m_Bits: 64
+  obstructionLayer:
+    serializedVersion: 2
+    m_Bits: 1
+  sightOriginOffset: {x: 0, y: 1, z: 0}
+  sightSkin: 0.05
   prompt: {fileID: 0}
   arrowPrefab: {fileID: 0}
   debugDetection: 0
