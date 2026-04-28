@@ -30,6 +30,8 @@ namespace Jailbreak.UI
 
         private void OnEnable()
         {
+            CursorLockManager.RequestUnlock(this);
+
             var root = uiDocument.rootVisualElement;
 
             _roomNameLabel = root.Q<Label>("room-name-label");
@@ -73,6 +75,8 @@ namespace Jailbreak.UI
 
         private void OnDisable()
         {
+            CursorLockManager.ReleaseUnlock(this);
+
             if (_startGameBtn != null) _startGameBtn.clicked -= OnStartGame;
             if (_leaveBtn != null) _leaveBtn.clicked -= OnLeaveRoom;
 

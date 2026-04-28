@@ -148,6 +148,10 @@ mergeInto(LibraryManager.library, {
         window.unityInstance.SendMessage(window._jbGoName, 'OnGameEnd', JSON.stringify(data));
       });
 
+      window._jbSocket.on('match:status', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnMatchStatus', JSON.stringify(data));
+      });
+
       window._jbSocket.on('game:reconnect', function (data) {
         window.unityInstance.SendMessage(window._jbGoName, 'OnGameReconnect', JSON.stringify(data));
       });
@@ -398,5 +402,31 @@ mergeInto(LibraryManager.library, {
 
   SocketIsConnected: function() {
     return (window._jbSocket && window._jbSocket.connected) ? 1 : 0;
+  },
+
+  /**
+   * Force the browser to release pointer lock and show the system cursor.
+   *
+   * Unity's `Cursor.lockState = None` is unreliable on WebGL: the browser
+   * keeps pointer lock until it next processes a user gesture, which can
+   * trap the cursor across scene loads. Calling document.exitPointerLock()
+   * directly is the canonical fix.
+   */
+  JbReleasePointerLock: function() {
+    try {
+      if (document.pointerLockElement || document.exitPointerLock) {
+        if (typeof document.exitPointerLock === 'function') {
+          document.exitPointerLock();
+        }
+      }
+      // Also force the cursor visible at the canvas level — some browsers
+      // keep `cursor: none` on the WebGL canvas after lock release.
+      var canvas = document.querySelector('canvas');
+      if (canvas) {
+        canvas.style.cursor = 'auto';
+      }
+    } catch (e) {
+      console.warn('[CursorBridge] exitPointerLock failed:', e);
+    }
   },
 });

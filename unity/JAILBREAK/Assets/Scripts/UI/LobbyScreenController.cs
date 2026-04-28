@@ -32,6 +32,11 @@ namespace Jailbreak.UI
 
         private void OnEnable()
         {
+            // Menu scene → cursor MUST be free for clicks. Hold our own unlock
+            // token so the manager doesn't relock when a previous gameplay
+            // scene's last token was released during scene unload.
+            CursorLockManager.RequestUnlock(this);
+
             var root = uiDocument.rootVisualElement;
 
             _createRoomBtn = root.Q<Button>("create-room-btn");
@@ -74,6 +79,8 @@ namespace Jailbreak.UI
 
         private void OnDisable()
         {
+            CursorLockManager.ReleaseUnlock(this);
+
             if (_createRoomBtn != null) _createRoomBtn.clicked -= OnCreateRoom;
             if (_joinRoomBtn != null) _joinRoomBtn.clicked -= OnJoinRoom;
             if (_browseRoomsBtn != null) _browseRoomsBtn.clicked -= OnBrowseRooms;

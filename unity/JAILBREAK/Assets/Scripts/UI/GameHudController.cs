@@ -41,6 +41,7 @@ namespace Jailbreak.UI
         private VisualElement _heldItemIcon;
         private VisualElement _toastPanel;
         private VisualElement _guardErrorPanel;
+        private VisualElement _matchInfoPanel;
         private Label _route1ToggleHint;
         private Label _phaseLabel;
         private Label _timeLabel;
@@ -48,7 +49,11 @@ namespace Jailbreak.UI
         private Label _heldItemLabel;
         private Label _toastLabel;
         private Label _guardErrorLabel;
+        private Label _matchPrisonersLabel;
+        private Label _matchTimeLabel;
         private bool _route1Collapsed;
+        private MatchStatusPayload _matchStatus;
+        private bool _hasMatchStatus;
 
         private HudSlot _slot0;
         private HudSlot _slot1;
@@ -74,6 +79,7 @@ namespace Jailbreak.UI
         private float _toastHideAtRealtime;
         private int _guardErrorCount;
         private int _guardErrorThreshold = 3;
+        private float _matchStatusReceivedAtRealtime;
 
         private void OnEnable()
         {
@@ -113,6 +119,7 @@ namespace Jailbreak.UI
             TryBindSystems();
             TryBindLocalInventory();
             RefreshTimer();
+            RefreshMatchTimer();
             RefreshToast();
             HandleRoute1ToggleInput();
 
@@ -163,6 +170,9 @@ namespace Jailbreak.UI
             _toastLabel = _root.Q<Label>("HudToastLabel");
             _guardErrorPanel = _root.Q<VisualElement>("GuardErrorPanel");
             _guardErrorLabel = _root.Q<Label>("GuardErrorLabel");
+            _matchInfoPanel = _root.Q<VisualElement>("MatchInfoPanel");
+            _matchPrisonersLabel = _root.Q<Label>("MatchPrisonersLabel");
+            _matchTimeLabel = _root.Q<Label>("MatchTimeLabel");
             _route1ToggleHint = _root.Q<Label>("Route1ToggleHint");
             ApplyRoute1CollapsedState();
 
@@ -278,12 +288,15 @@ namespace Jailbreak.UI
                 _net.OnGameReconnectEvent += HandleGameReconnect;
                 _net.OnGameEndEvent += HandleGameEndPayload;
                 _net.OnGuardCatchResultEvent += HandleGuardCatchResult;
+                _net.OnMatchStatusEvent += HandleMatchStatus;
                 _netBound = true;
 
                 if (_net.CachedPhaseJailStart != null)
                     HandleJailPhaseStarted(_net.CachedPhaseJailStart);
                 if (_net.CachedGameReconnect != null)
                     HandleGameReconnect(_net.CachedGameReconnect);
+                if (_net.CachedMatchStatus != null)
+                    HandleMatchStatus(_net.CachedMatchStatus);
             }
         }
 
@@ -343,6 +356,7 @@ namespace Jailbreak.UI
                 _net.OnGameReconnectEvent -= HandleGameReconnect;
                 _net.OnGameEndEvent -= HandleGameEndPayload;
                 _net.OnGuardCatchResultEvent -= HandleGuardCatchResult;
+                _net.OnMatchStatusEvent -= HandleMatchStatus;
             }
 
             _gsmBound = false;
@@ -397,6 +411,7 @@ namespace Jailbreak.UI
             RefreshPhaseLabel();
             RefreshTimer();
             RefreshGuardErrors();
+            RefreshMatchStatus();
         }
 
         private void RefreshVisibility()
@@ -744,6 +759,62 @@ namespace Jailbreak.UI
                 _guardErrorLabel.style.color = new Color(1f, 0.78f, 0.36f);
             else
                 _guardErrorLabel.style.color = Color.white;
+        }
+
+        private void HandleMatchStatus(MatchStatusPayload payload)
+        {
+            if (payload == null) return;
+            _matchStatus = payload;
+            _hasMatchStatus = true;
+            _matchStatusReceivedAtRealtime = Time.realtimeSinceStartup;
+            RefreshMatchStatus();
+        }
+
+        private void RefreshMatchStatus()
+        {
+            if (_matchPrisonersLabel != null)
+            {
+                if (_hasMatchStatus && _matchStatus != null)
+                {
+                    var label = $"{_matchStatus.prisonersRemaining}/{_matchStatus.prisonersTotal}";
+                    if (_matchStatus.escapedCount > 0) label += $" • {_matchStatus.escapedCount} ESC";
+                    _matchPrisonersLabel.text = label;
+                    _matchPrisonersLabel.style.color = _matchStatus.prisonersRemaining == 0
+                        ? new Color(1f, 0.42f, 0.42f)
+                        : Color.white;
+                }
+                else
+                {
+                    _matchPrisonersLabel.text = "--/--";
+                    _matchPrisonersLabel.style.color = Color.white;
+                }
+            }
+
+            RefreshMatchTimer();
+        }
+
+        // Smooth interpolation between server updates so the seconds-counter
+        // ticks down without visible 1-second jumps. Resyncs each broadcast.
+        private void RefreshMatchTimer()
+        {
+            if (_matchTimeLabel == null) return;
+
+            if (!_hasMatchStatus || _matchStatus == null)
+            {
+                _matchTimeLabel.text = "--:--";
+                return;
+            }
+
+            var sinceUpdate = Mathf.Max(0f, Time.realtimeSinceStartup - _matchStatusReceivedAtRealtime);
+            var remaining = Mathf.Max(0f, _matchStatus.remainingSeconds - sinceUpdate);
+            _matchTimeLabel.text = remaining <= 0f ? "00:00" : FormatSeconds(remaining);
+
+            if (remaining <= 30f)
+                _matchTimeLabel.style.color = new Color(1f, 0.42f, 0.42f);
+            else if (remaining <= 60f)
+                _matchTimeLabel.style.color = new Color(1f, 0.78f, 0.36f);
+            else
+                _matchTimeLabel.style.color = Color.white;
         }
 
         private void HandleGameEndPayload(GameEndPayload payload)

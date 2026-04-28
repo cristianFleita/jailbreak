@@ -1,3 +1,4 @@
+using Jailbreak.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -67,7 +68,11 @@ namespace Jailbreak.Player
             // Don't process mouse/camera until input is enabled (player is positioned)
             if (_input != null && !_input.InputEnabled) return;
 
-            // Lock cursor on first active frame
+            // Honor whatever overlays (pause menu, end-game) are asking for —
+            // only re-lock the cursor when no consumer wants it free.
+            if (!CursorLockManager.ShouldBeLocked)
+                return;
+
             if (Cursor.lockState != CursorLockMode.Locked)
             {
                 Cursor.lockState = CursorLockMode.Locked;

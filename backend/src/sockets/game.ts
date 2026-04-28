@@ -14,6 +14,9 @@ import {
   buildRoomPlayersPayload,
   buildRoomStatePayload,
   buildRoomListPayload,
+  buildMatchStatus,
+  evaluateLeaveWinCondition,
+  endMatchAndCleanup,
   findSocketByUserId,
   listRooms,
   getTutorialManager,
@@ -173,6 +176,7 @@ export function setupGameSockets(io: Server) {
                   npcAssignments: gm.jailRoutine.buildReconnectAssignments(),
                 } : undefined,
               })
+              socket.emit('match:status', buildMatchStatus(roomForReconnect))
             }
 
             io.to(profile.currentRoomId).emit('player-reconnected', {
@@ -347,6 +351,7 @@ export function setupGameSockets(io: Server) {
                   npcAssignments: gm2.jailRoutine.buildReconnectAssignments(),
                 } : undefined,
               })
+              socket.emit('match:status', buildMatchStatus(room))
             }
 
             io.to(payload.roomId).emit('player-reconnected', {
@@ -814,6 +819,21 @@ function handleLeaveRoom(
       // never arrive (see Phase D anti-griefing requirement).
       const gmLeave = (room as any).gameManager
       gmLeave?.route1?.cancelPlayerInteractions(userId)
+
+      // Win-by-leave: the guard quitting hands the prisoners the match, and
+      // the last prisoner quitting hands it to the guards. Evaluate BEFORE
+      // removing the player so the leaver still counts in `players`.
+      const winResult = evaluateLeaveWinCondition(room.state, player)
+      if (winResult) {
+        // No item-drop dance — the room is being destroyed and clients are
+        // routed to the EndGame scene by `game:end`. Skipping the drop also
+        // avoids broadcasting item-state changes for a doomed world.
+        endMatchAndCleanup(io, room, winResult.winner, winResult.reason)
+        console.log(
+          `[ROOM] ${isHost ? 'Host' : 'Player'} ${userId} ${reason} active game "${roomId}" — match ended (${winResult.winner} win, ${winResult.reason})`
+        )
+        return
+      }
 
       if (reason === 'left') {
         dropCriticalRouteItemsForPlayer(

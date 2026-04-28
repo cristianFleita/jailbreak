@@ -5,12 +5,27 @@
                 <ui:Label name="PhaseLabel" text="PHASE: WAITING" style="-unity-font-style: bold; font-size: 12px; color: rgb(255, 255, 255); white-space: normal;"/>
                 <ui:Label name="RoleLabel" text="ROLE: --" style="font-size: 10px; color: rgb(196, 216, 235); margin-top: 2px;"/>
             </ui:VisualElement>
-            <ui:VisualElement name="GuardErrorPanel" picking-mode="Ignore" style="display: none; flex-direction: row; align-items: center; background-color: rgba(0, 0, 0, 0.62); padding-top: 6px; padding-right: 10px; padding-bottom: 6px; padding-left: 10px; border-left-width: 3px; border-left-color: rgb(229, 92, 92); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
-                <ui:Label name="GuardErrorCaption" text="MISTAKES" style="font-size: 9px; color: rgb(255, 196, 196); margin-right: 6px; -unity-font-style: bold;"/>
-                <ui:Label name="GuardErrorLabel" text="0/3" style="-unity-font-style: bold; font-size: 14px; color: rgb(255, 255, 255); -unity-text-align: middle-center;"/>
+            <ui:VisualElement name="HudTopCenter" picking-mode="Ignore" style="flex-direction: column; align-items: center; flex-grow: 1;">
+                <ui:VisualElement name="MatchInfoPanel" picking-mode="Ignore" style="flex-direction: row; align-items: center; background-color: rgba(0, 0, 0, 0.72); padding-top: 6px; padding-right: 12px; padding-bottom: 6px; padding-left: 12px; border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px; border-left-width: 3px; border-left-color: rgb(255, 203, 92);">
+                    <ui:VisualElement name="MatchPrisonersBlock" picking-mode="Ignore" style="flex-direction: column; align-items: center; margin-right: 16px;">
+                        <ui:Label name="MatchPrisonersCaption" text="PRISONERS LEFT" style="font-size: 9px; color: rgb(196, 216, 235); -unity-font-style: bold; letter-spacing: 1px;"/>
+                        <ui:Label name="MatchPrisonersLabel" text="--/--" style="-unity-font-style: bold; font-size: 16px; color: rgb(255, 255, 255); -unity-text-align: middle-center;"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="MatchTimeBlock" picking-mode="Ignore" style="flex-direction: column; align-items: center;">
+                        <ui:Label name="MatchTimeCaption" text="MATCH ENDS IN" style="font-size: 9px; color: rgb(196, 216, 235); -unity-font-style: bold; letter-spacing: 1px;"/>
+                        <ui:Label name="MatchTimeLabel" text="--:--" style="-unity-font-style: bold; font-size: 16px; color: rgb(255, 255, 255); -unity-text-align: middle-center;"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="GuardErrorPanel" picking-mode="Ignore" style="display: none; flex-direction: row; align-items: center; background-color: rgba(0, 0, 0, 0.62); padding-top: 6px; padding-right: 10px; padding-bottom: 6px; padding-left: 10px; margin-top: 4px; border-left-width: 3px; border-left-color: rgb(229, 92, 92); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
+                    <ui:Label name="GuardErrorCaption" text="MISTAKES" style="font-size: 9px; color: rgb(255, 196, 196); margin-right: 6px; -unity-font-style: bold;"/>
+                    <ui:Label name="GuardErrorLabel" text="0/3" style="-unity-font-style: bold; font-size: 14px; color: rgb(255, 255, 255); -unity-text-align: middle-center;"/>
+                </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="TimerPanel" picking-mode="Ignore" style="background-color: rgba(0, 0, 0, 0.62); padding-top: 6px; padding-right: 10px; padding-bottom: 6px; padding-left: 10px; border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
-                <ui:Label name="TimeLabel" text="--:--" style="-unity-font-style: bold; font-size: 14px; color: rgb(255, 255, 255); -unity-text-align: middle-center;"/>
+            <ui:VisualElement name="HudTopRight" picking-mode="Ignore" style="flex-direction: column; align-items: flex-end;">
+                <ui:VisualElement name="TimerPanel" picking-mode="Ignore" style="background-color: rgba(0, 0, 0, 0.62); padding-top: 6px; padding-right: 10px; padding-bottom: 6px; padding-left: 10px; border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
+                    <ui:Label name="TimeLabel" text="--:--" style="-unity-font-style: bold; font-size: 14px; color: rgb(255, 255, 255); -unity-text-align: middle-center;"/>
+                </ui:VisualElement>
+                <ui:Button name="PauseMenuBtn" text="MENU [ESC]" style="margin-top: 6px; padding-top: 5px; padding-right: 10px; padding-bottom: 5px; padding-left: 10px; -unity-font-style: bold; font-size: 11px; color: rgb(255, 255, 255); background-color: rgba(0, 0, 0, 0.62); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgba(255, 255, 255, 0.18); border-right-color: rgba(255, 255, 255, 0.18); border-bottom-color: rgba(255, 255, 255, 0.18); border-left-color: rgba(255, 255, 255, 0.18); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;"/>
             </ui:VisualElement>
         </ui:VisualElement>
 
@@ -48,6 +63,16 @@
                     <ui:Label name="Route1ToggleHint" text="[TAB]" style="font-size: 9px; color: rgb(196, 216, 235); margin-left: 6px; -unity-font-style: bold;"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="RouteChecklist" picking-mode="Ignore" style="flex-direction: column;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="PausePanel" style="display: none; position: absolute; left: 0; top: 0; right: 0; bottom: 0; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.78);">
+            <ui:VisualElement name="PauseCard" style="min-width: 320px; max-width: 420px; background-color: rgba(20, 24, 30, 0.96); padding-top: 18px; padding-right: 22px; padding-bottom: 18px; padding-left: 22px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgba(255, 255, 255, 0.16); border-right-color: rgba(255, 255, 255, 0.16); border-bottom-color: rgba(255, 255, 255, 0.16); border-left-color: rgba(255, 255, 255, 0.16); border-top-left-radius: 6px; border-top-right-radius: 6px; border-bottom-right-radius: 6px; border-bottom-left-radius: 6px;">
+                <ui:Label name="PauseTitle" text="PAUSED" style="-unity-font-style: bold; font-size: 22px; color: rgb(255, 255, 255); -unity-text-align: middle-center; letter-spacing: 2px; margin-bottom: 4px;"/>
+                <ui:Label name="PauseHint" text="Match continues for everyone else." style="font-size: 11px; color: rgb(196, 216, 235); -unity-text-align: middle-center; margin-bottom: 16px; white-space: normal;"/>
+                <ui:Button name="PauseResumeBtn" text="RESUME" style="margin-top: 4px; padding-top: 9px; padding-right: 12px; padding-bottom: 9px; padding-left: 12px; -unity-font-style: bold; font-size: 13px; color: rgb(20, 24, 30); background-color: rgb(255, 203, 92); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;"/>
+                <ui:Button name="PauseLeaveBtn" text="LEAVE MATCH" style="margin-top: 8px; padding-top: 9px; padding-right: 12px; padding-bottom: 9px; padding-left: 12px; -unity-font-style: bold; font-size: 13px; color: rgb(255, 255, 255); background-color: rgba(229, 92, 92, 0.85); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;"/>
+                <ui:Label name="PauseLeaveWarning" text="Leaving ends the match for your team." style="font-size: 10px; color: rgb(255, 196, 196); -unity-text-align: middle-center; margin-top: 8px; white-space: normal;"/>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
