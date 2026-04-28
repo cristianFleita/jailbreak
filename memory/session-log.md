@@ -305,3 +305,14 @@
   - Added cleanup so tutorial movement positions are reset to assigned real match spawns before transition to `GameScene`.
   - Verified backend TypeScript with bundled Node, focused `tutorial.test.ts` (`21/21`), Unity C# via `msbuild Assembly-CSharp.csproj`, and `git diff --check`.
   - Recorded ADR-031 in `memory/decisions.md`.
+
+### 2026-04-28
+- **Unity Specialist + Network Programmer — Emote/Animation Panel for Social Stealth** (2026-04-28):
+  - Analyzed `Character.controller` animator states and identified 10 NPC-like animations suitable for player disguise: social (Talk, Whisper, Salute, Dismiss, Surprised, Angry) and exercise (Push-ups, Sit-ups, Crunches, Dance).
+  - Created `EmoteSystem.cs` on the local player with emote catalogue, `CrossFadeInFixedTime` playback, duration/loop management, early cancel on WASD, cursor lock/unlock via `CursorLockManager`, and dual-path network broadcast.
+  - Created `EmotePanelController.cs` as a procedural UI Toolkit panel with categorized emote buttons, hover effects, section headers, cancel hint, and B-key hold-to-open input.
+  - Modified `PlayerAnimationController.cs` to skip locomotion crossfades during local emotes and handle remote `emote_` movementState prefixes for multiplayer replay.
+  - Modified `PlayerInputController.cs` to freeze movement while the emote panel is open.
+  - Modified `PlayerNetworkSync.cs` to broadcast emote states as `movementState` (e.g., `emote_Talking`) and force-send on state change regardless of position delta.
+  - Modified `RemoteInteractionHandler.cs` to handle `emote_system` actions before `NetworkInteractable` lookup, replaying emote animations on remote avatars.
+  - Recorded ADR-032 in `memory/decisions.md`.

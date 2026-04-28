@@ -581,6 +581,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6083010214213717352}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 796174128562470730}
   m_SourcePrefab: {fileID: 100100000, guid: 95f474a6999504cab8d278219818a844, type: 3}
 --- !u!4 &2049139925346365888 stripped
 Transform:
@@ -756,6 +759,11 @@ MonoBehaviour:
   interactableLayer:
     serializedVersion: 2
     m_Bits: 64
+  obstructionLayer:
+    serializedVersion: 2
+    m_Bits: 1
+  sightOriginOffset: {x: 0, y: 1, z: 0}
+  sightSkin: 0.05
   prompt: {fileID: 0}
   arrowPrefab: {fileID: 0}
   debugDetection: 1
@@ -953,6 +961,18 @@ MonoBehaviour:
   - m_Rig: {fileID: 4004176579587694646}
     m_Active: 1
   m_Effectors: []
+--- !u!114 &796174128562470730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4896770664015057812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8490010b414fc44c78b25ca13ed43e91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Player.EmoteSystem
 --- !u!4 &5241911055874754862 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 95f474a6999504cab8d278219818a844, type: 3}

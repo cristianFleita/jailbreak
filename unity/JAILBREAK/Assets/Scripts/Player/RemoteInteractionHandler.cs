@@ -59,6 +59,29 @@ namespace Jailbreak.Player
             if (data == null || string.IsNullOrEmpty(PlayerId)) return;
             if (data.playerId != PlayerId) return; // Not for this avatar
 
+            // ── Emote system (remote emote animations) ──────────────────────
+            // EmoteSystem broadcasts with objectId="emote_system" — this is
+            // NOT a scene NetworkInteractable, so handle before the NI lookup.
+            if (data.objectId == "emote_system")
+            {
+                var animator = GetComponentInChildren<Animator>();
+                if (animator != null)
+                {
+                    if (data.action.StartsWith("emote_start:"))
+                    {
+                        string animState = data.action.Substring("emote_start:".Length);
+                        animator.CrossFadeInFixedTime(animState, 0.15f, 0);
+                        Debug.Log($"[RemoteInteract] '{PlayerId}' → emote '{animState}'");
+                    }
+                    else if (data.action == "emote_stop")
+                    {
+                        animator.CrossFadeInFixedTime("Idle", 0.25f, 0);
+                        Debug.Log($"[RemoteInteract] '{PlayerId}' → emote stop");
+                    }
+                }
+                return;
+            }
+
             var ni = NetworkInteractable.Find(data.objectId);
             if (ni == null)
             {

@@ -60,6 +60,7 @@ namespace Jailbreak.Player
         private RemotePlayerSync      _remote;
         private CharacterController   _characterController;
         private CarryFoodInteraction  _carryFood;
+        private EmoteSystem           _emoteSystem;
 
         private string _currentAnimState  = "";
         private float  _currentStrafeBlend = 0f;
@@ -109,11 +110,36 @@ namespace Jailbreak.Player
             // Lazy-init for components added dynamically after Awake (e.g. RemotePlayerSync)
             if (_remote == null)
                 _remote = GetComponent<RemotePlayerSync>();
+            if (_emoteSystem == null)
+                _emoteSystem = GetComponent<EmoteSystem>();
 
             bool isLocal = _input != null;   // Unity's overloaded null check handles destroyed components
 
+            // ── 0. Emote override ─────────────────────────────────────────────────
+            // When the local player is emoting, EmoteSystem owns the Animator state.
+            // For remote players, emotes arrive as movementState "emote_<StateName>".
+            if (isLocal && _emoteSystem != null && _emoteSystem.ShouldBlockLocomotionAnim())
+            {
+                // Skip all locomotion logic — emote is driving the Animator.
+                return;
+            }
+
             // ── 1. Resolve movement state ─────────────────────────────────────────
             string rawState = ResolveRawMovementState(isLocal);
+
+            // ── 1b. Remote emote handling ─────────────────────────────────────────
+            // If the raw state starts with "emote_", it's a remote emote broadcast.
+            if (!isLocal && rawState != null && rawState.StartsWith("emote_"))
+            {
+                string emoteAnimState = rawState.Substring(6); // strip "emote_" prefix
+                if (_currentAnimState != emoteAnimState)
+                {
+                    Debug.Log($"[AnimController] REMOTE '{gameObject.name}': emote → {emoteAnimState}");
+                    _animator.CrossFadeInFixedTime(emoteAnimState, _crossfadeDuration, 0);
+                    _currentAnimState = emoteAnimState;
+                }
+                return; // Don't process locomotion while remote is emoting
+            }
 
             // ── 2. Map to Animator state name ─────────────────────────────────────
             bool   isGrounded    = _characterController != null

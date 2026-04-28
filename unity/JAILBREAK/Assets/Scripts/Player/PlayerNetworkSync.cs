@@ -17,6 +17,7 @@ namespace Jailbreak.Player
 
         private CharacterController _cc;
         private PlayerInputController _input;
+        private EmoteSystem _emoteSystem;
 
         // Send-on-change tracking
         private Vector3 _lastSentPosition;
@@ -31,8 +32,9 @@ namespace Jailbreak.Player
 
         private void Awake()
         {
-            _cc    = GetComponent<CharacterController>();
+            _cc = GetComponent<CharacterController>();
             _input = GetComponent<PlayerInputController>();
+            _emoteSystem = GetComponent<EmoteSystem>();
             if (_cc == null) Debug.LogError("[PNS] CharacterController not found");
             if (_input == null) Debug.LogError("[PNS] PlayerInputController not found");
         }
@@ -84,7 +86,15 @@ namespace Jailbreak.Player
             // Rate-limit while moving
             if (isMoving && (now - _lastSentTime < minSendInterval)) return;
 
-            if (isMoving)
+            // Force-send on state change (e.g. idle → emote_Talking, emote → idle)
+            bool stateChanged = currentState != _lastSentState;
+
+            if (stateChanged)
+            {
+                SendMove(net, currentPos, currentState);
+                _wasMovingLastFrame = isMoving;
+            }
+            else if (isMoving)
             {
                 // Player is pressing WASD — send position if it changed enough
                 if (Vector3.Distance(currentPos, _lastSentPosition) >= positionThreshold)
@@ -126,6 +136,13 @@ namespace Jailbreak.Player
 
         private string GetMovementState()
         {
+            // Emote state takes priority over normal locomotion
+            if (_emoteSystem != null)
+            {
+                var emoteState = _emoteSystem.GetEmoteMovementState();
+                if (!string.IsNullOrEmpty(emoteState)) return emoteState;
+            }
+
             if (_input == null) return "idle";
 
             switch (_input.CurrentState)
