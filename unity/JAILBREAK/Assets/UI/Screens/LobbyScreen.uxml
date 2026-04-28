@@ -39,13 +39,15 @@
 
             <ui:VisualElement name="browse-section" class="browser-section">
                 <ui:Button name="browse-rooms-btn" text="VIEW ROOMS" class="secondary-btn"/>
-                <ui:VisualElement name="room-browser-section" class="room-browser-panel" style="display: none;">
-                    <ui:VisualElement class="room-browser-header">
-                        <ui:Label text="AVAILABLE ROOMS" class="room-browser-title"/>
+                <ui:VisualElement name="room-browser-section" class="room-browser-section" style="display: none;">
+                    <!-- Outer framed panel: title "AVAILABLE ROOMS" is baked into the sprite -->
+                    <ui:VisualElement name="room-browser-frame" class="room-browser-frame">
                         <ui:Button name="refresh-rooms-btn" text="REFRESH" class="refresh-btn"/>
+                        <ui:VisualElement name="room-browser-content" class="room-browser-content">
+                            <ui:ScrollView name="room-list" class="room-list"/>
+                            <ui:Label name="room-list-empty-label" text="No rooms available" class="room-empty-text"/>
+                        </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:ScrollView name="room-list" class="room-list"/>
-                    <ui:Label name="room-list-empty-label" text="No rooms available" class="room-empty-text"/>
                 </ui:VisualElement>
             </ui:VisualElement>
             
