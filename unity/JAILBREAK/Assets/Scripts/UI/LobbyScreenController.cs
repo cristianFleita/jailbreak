@@ -247,16 +247,23 @@ namespace Jailbreak.UI
                 metaLabel.AddToClassList("room-meta-text");
                 main.Add(metaLabel);
 
+                var pill = new VisualElement();
+                pill.AddToClassList("room-player-pill");
+
+                var icon = new VisualElement();
+                icon.AddToClassList("room-player-icon");
+                pill.Add(icon);
+
                 var countLabel = new Label($"{room.playerCount}/{room.maxPlayers}");
                 countLabel.AddToClassList("room-player-count");
+                pill.Add(countLabel);
 
                 var joinButton = new Button(() => OnJoinListedRoom(roomId));
-                joinButton.text = "JOIN";
                 joinButton.AddToClassList("room-join-btn");
                 joinButton.SetEnabled(room.status == "lobby" && room.playerCount < room.maxPlayers);
 
                 row.Add(main);
-                row.Add(countLabel);
+                row.Add(pill);
                 row.Add(joinButton);
 
                 _roomList.Add(row);

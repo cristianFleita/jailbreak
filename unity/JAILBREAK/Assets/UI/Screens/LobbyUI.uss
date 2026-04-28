@@ -1,4 +1,3 @@
-/* --- ROOT & BACKGROUND --- */
 .screen-root {
     width: 100%;
     height: 100%;
@@ -10,7 +9,6 @@
     flex-direction: column;
 }
 
-/* --- TOP BAR LAYOUT --- */
 .top-bar {
     flex-direction: row;
     width: 100%;
@@ -19,11 +17,22 @@
     margin-bottom: 20px;
 }
 
-.top-bar-spacer { flex: 1; }
-.header-container { flex: 1; align-items: center; justify-content: flex-start; }
-.profile-container { flex: 1; align-items: flex-end; padding-right: 40px; }
+.top-bar-spacer {
+    flex: 1;
+}
 
-/* --- HEADER LOGO --- */
+.header-container {
+    flex: 1;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.profile-container {
+    flex: 1;
+    align-items: flex-end;
+    padding-right: 40px;
+}
+
 .logo-icon {
     width: 400px;
     height: 150px;
@@ -31,7 +40,6 @@
     background-color: transparent;
 }
 
-/* --- PLAYER PROFILE PANEL --- */
 .profile-panel {
     width: 350px;
     height: 130px;
@@ -42,47 +50,42 @@
     -unity-background-scale-mode: scale-to-fit;
 }
 
-/* Only the text remains, pushed perfectly into the dark slot */
 .profile-text {
     font-size: 18px;
     color: rgb(225, 150, 50);
-    margin-top: 55px; 
+    margin-top: 55px;
     -unity-font-style: bold;
 }
 
-/* --- MAIN CONTENT (RESPONSIVE SCROLLING & SIDE-BY-SIDE) --- */
 .content-area {
     flex-grow: 1;
     width: 100%;
 }
 
-/* CRITICAL: Target the ScrollView's internal content container for wrapping */
 .content-area .unity-scroll-view__content-container {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    min-height: 100%; /* Ensures vertical centering when no scrolling is needed */
-    padding-bottom: 40px; /* Padding for when users scroll down */
+    min-height: 100%;
+    padding-bottom: 40px;
 }
 
-/* --- LARGE METAL PANELS --- */
 .main-panel {
     width: 500px;
-    height: 350px; 
+    height: 350px;
     margin: 20px;
     background-color: transparent;
     border-width: 0;
     align-items: center;
-    justify-content: flex-start; 
+    justify-content: flex-start;
     -unity-background-scale-mode: scale-to-fit;
 }
 
-/* --- INPUT FIELDS --- */
 .input-container {
     width: 380px;
     height: 50px;
-    margin-top: 185px; /* Pushes into the dark slot below the baked label */
+    margin-top: 185px;
     align-items: center;
     justify-content: center;
 }
@@ -92,7 +95,6 @@
     height: 100%;
 }
 
-/* High specificity to override Unity's default white input boxes */
 .input-field .unity-text-field__input {
     background-color: transparent;
     background-image: none;
@@ -108,11 +110,10 @@
     color: rgb(255, 255, 255);
 }
 
-/* --- ACTION BUTTONS --- */
 .action-btn {
     width: 280px;
     height: 70px;
-    margin-top: 35px; /* Positions the button directly into the button slot cutout */
+    margin-top: 35px;
     background-color: transparent;
     border-width: 0;
     transition-duration: 0.1s;
@@ -127,7 +128,6 @@
     scale: 0.95;
 }
 
-/* --- ROOM BROWSER --- */
 .browser-section {
     width: 90%;
     min-height: 90px;
@@ -152,105 +152,144 @@
     scale: 1.03;
 }
 
-.room-browser-panel {
+.room-browser-section {
     width: 100%;
-    min-height: 300px;
-    max-height: 430px;
-    padding: 18px;
-    background-color: rgb(25, 27, 31);
-    border-color: rgb(105, 105, 105);
-    border-width: 2px;
-}
-
-.room-browser-header {
-    flex-direction: row;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
 }
 
-.room-browser-title {
-    color: rgb(225, 150, 50);
-    font-size: 22px;
-    -unity-font-style: bold;
+.room-browser-frame {
+    width: 100%;
+    min-height: 320px;
+    max-height: 460px;
+    padding-top: 78px;
+    padding-right: 28px;
+    padding-bottom: 26px;
+    padding-left: 28px;
+    background-color: rgba(20, 22, 25, 0.55);
+    -unity-background-scale-mode: stretch-to-fill;
+    background-image: url("project://database/Assets/UI/Sprites/lobby-screen-list-rooms-sprites.png?fileID=1780312201&guid=0dbf7cc16127c465e8fdb893519b8d89&type=3#lobby-screen-list-rooms-sprites_0");
+}
+
+.room-browser-content {
+    flex-grow: 1;
 }
 
 .refresh-btn {
+    position: absolute;
+    top: 22px;
+    right: 26px;
     width: 130px;
-    height: 42px;
-    background-color: rgb(50, 55, 62);
-    border-color: rgb(150, 150, 150);
+    height: 38px;
+    background-color: rgba(50, 55, 62, 0.85);
+    border-color: rgb(180, 120, 50);
     border-width: 1px;
-    color: rgb(225, 225, 225);
-    font-size: 14px;
+    color: rgb(245, 215, 170);
+    font-size: 13px;
     -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.refresh-btn:hover {
+    scale: 1.03;
 }
 
 .room-list {
     flex-grow: 1;
-    min-height: 170px;
+    min-height: 200px;
 }
 
 .room-row {
     flex-direction: row;
     align-items: center;
-    min-height: 62px;
-    margin-bottom: 8px;
-    padding-left: 14px;
-    padding-right: 12px;
-    background-color: rgb(34, 37, 42);
-    border-color: rgb(70, 74, 82);
-    border-width: 1px;
+    min-height: 70px;
+    margin-bottom: 10px;
+    padding-left: 22px;
+    padding-right: 16px;
+    background-color: rgba(45, 48, 54, 0.8);
+    -unity-background-scale-mode: stretch-to-fill;
+    background-image: url("project://database/Assets/UI/Sprites/room-screen-spreadsheet.png?fileID=151541509&guid=19920e34ac2a1471f9a687ec84c80c61&type=3#room-screen-spreadsheet_0");
 }
 
 .room-row-main {
     flex-grow: 1;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .room-name-text {
-    color: rgb(240, 240, 240);
+    color: rgb(245, 230, 210);
     font-size: 19px;
     -unity-font-style: bold;
+    letter-spacing: 1px;
 }
 
 .room-meta-text {
-    color: rgb(170, 170, 170);
-    font-size: 13px;
-    margin-top: 3px;
+    color: rgb(0, 0, 0);
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.room-player-pill {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    min-width: 86px;
+    padding-left: 10px;
+    padding-right: 12px;
+    margin-right: 12px;
+    background-color: rgba(20, 22, 25, 0.75);
+    border-color: rgba(255, 255, 255, 0.08);
+    border-width: 1px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    background-image: url("project://database/Assets/UI/Sprites/lobby-screen-list-rooms-sprites.png?fileID=-1670298919&guid=0dbf7cc16127c465e8fdb893519b8d89&type=3#lobby-screen-list-rooms-sprites_2");
+}
+
+.room-player-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    -unity-background-scale-mode: scale-to-fit;
+    background-color: rgba(255, 255, 255, 0);
 }
 
 .room-player-count {
-    width: 70px;
-    color: rgb(225, 150, 50);
-    font-size: 16px;
+    color: rgb(240, 240, 240);
+    font-size: 15px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
 }
 
 .room-join-btn {
-    width: 100px;
-    height: 42px;
-    margin-left: 8px;
+    width: 96px;
+    height: 40px;
     background-color: rgb(225, 150, 50);
     border-width: 0;
     color: rgb(20, 22, 25);
     font-size: 15px;
     -unity-font-style: bold;
+    letter-spacing: 1px;
+    background-image: url("project://database/Assets/UI/Sprites/lobby-screen-list-rooms-sprites.png?fileID=-780673250&guid=0dbf7cc16127c465e8fdb893519b8d89&type=3#lobby-screen-list-rooms-sprites_3");
 }
 
 .room-join-btn:hover {
-    background-color: rgb(245, 172, 70);
     scale: 1.03;
+}
+
+.room-join-btn:disabled {
+    opacity: 0.4;
 }
 
 .room-empty-text {
     color: rgb(170, 170, 170);
     font-size: 16px;
     -unity-text-align: middle-center;
-    margin-top: 10px;
+    margin-top: 14px;
 }
 
-/* --- GLOBAL STATUS --- */
 .status-text {
     font-size: 16px;
     color: rgb(200, 50, 50);
