@@ -1,7 +1,7 @@
+using Jailbreak.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
-using Cursor = UnityEngine.Cursor;
 
 namespace Jailbreak.Game
 {
@@ -22,8 +22,7 @@ namespace Jailbreak.Game
 
         private void Start()
         {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            CursorLockManager.RequestUnlock(this);
 
             var root = GetComponent<UIDocument>().rootVisualElement;
 
@@ -83,6 +82,7 @@ namespace Jailbreak.Game
             {
                 _returnButton.clicked -= OnReturnToLobbyClicked;
             }
+            CursorLockManager.ReleaseUnlock(this);
         }
 
         private void OnReturnToLobbyClicked()

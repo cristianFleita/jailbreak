@@ -25,6 +25,8 @@ namespace Jailbreak.UI
 
         private void OnEnable()
         {
+            CursorLockManager.RequestUnlock(this);
+
             var root = uiDocument.rootVisualElement;
 
             _startBtn    = root.Q<Button>("start-btn");
@@ -63,6 +65,8 @@ namespace Jailbreak.UI
 
         private void OnDisable()
         {
+            CursorLockManager.ReleaseUnlock(this);
+
             if (_startBtn != null)
                 _startBtn.clicked -= OnStartClicked;
 

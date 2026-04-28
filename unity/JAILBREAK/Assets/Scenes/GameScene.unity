@@ -18148,6 +18148,7 @@ GameObject:
   - component: {fileID: 847580260}
   - component: {fileID: 847580259}
   - component: {fileID: 847580258}
+  - component: {fileID: 847580261}
   m_Layer: 0
   m_Name: HUD
   m_TagString: Untagged
@@ -18211,6 +18212,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &847580261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 847580257}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bc55c48fc0794bfbbb2b616e0d2836b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.UI.PauseMenuController
+  lobbySceneName: LobbyScene
 --- !u!1 &851250368
 GameObject:
   m_ObjectHideFlags: 0
