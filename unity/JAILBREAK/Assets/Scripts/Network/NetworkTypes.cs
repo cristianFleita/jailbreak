@@ -375,6 +375,40 @@ namespace Jailbreak.Network
         public string action;
     }
 
+    [Serializable]
+    public class ThrowableThrowPayload
+    {
+        public string itemKind;
+        public SVector3 origin;
+        public SVector3 direction;
+        public float force;
+    }
+
+    [Serializable]
+    public class ThrowableThrowBroadcast : ThrowableThrowPayload
+    {
+        public string throwerId;
+    }
+
+    [Serializable]
+    public class ThrowableHitPayload
+    {
+        public string targetGuardId;
+        public string itemKind;
+        public SVector3 hitPosition;
+        public float stunDuration;
+    }
+
+    [Serializable]
+    public class GuardStunPayload
+    {
+        public string guardId;
+        public string attackerId;
+        public string itemKind;
+        public float duration;
+        public SVector3 hitPosition;
+    }
+
     // ─── Jail Routine / NPC Phase System ─────────────────────────────────────
     // Mirrors backend types.ts: NPCAssignment, PhaseJailStartPayload, etc.
 

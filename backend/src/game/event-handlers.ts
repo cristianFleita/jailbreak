@@ -11,6 +11,9 @@ import {
   PlayerInteractAction,
   PlayerMovePayload,
   GuardMarkPayload,
+  ThrowableHitPayload,
+  ThrowableItemKind,
+  ThrowableThrowPayload,
   Vector3,
 } from './types.js'
 import { updatePlayerMovement, removePlayer, distance, endGame } from './state.js'
@@ -670,6 +673,111 @@ export function handlePlayerAction(context: PlayerActionContext): void {
     objectId,
     action,
   })
+}
+
+// ============================================================================
+// throwable:throw / throwable:hit handlers
+// ============================================================================
+
+const THROWABLE_ITEM_KINDS = new Set<ThrowableItemKind>([
+  'food_plate',
+  'clothes_bundle',
+  'folded_clothes',
+  'container',
+])
+
+const MIN_THROW_FORCE = 1
+const MAX_THROW_FORCE = 30
+const MIN_STUN_SECONDS = 0.25
+const MAX_STUN_SECONDS = 5
+const STUN_HIT_DEBOUNCE_MS = 900
+
+const recentThrowableHits = new Map<string, number>()
+
+export interface ThrowableThrowContext {
+  io: Server
+  roomId: string
+  room: GameRoom
+  socketId: string
+  payload: ThrowableThrowPayload
+  timestamp: number
+}
+
+export interface ThrowableHitContext {
+  io: Server
+  roomId: string
+  room: GameRoom
+  socketId: string
+  payload: ThrowableHitPayload
+  timestamp: number
+}
+
+export function handleThrowableThrow(context: ThrowableThrowContext): void {
+  const { io, roomId, room, socketId, payload } = context
+
+  const player = room.state.players.get(socketId)
+  if (!player || player.role !== 'prisoner' || !player.isAlive) return
+  if (!isValidThrowableKind(payload?.itemKind)) return
+  if (!isFiniteVector(payload.origin) || !isFiniteVector(payload.direction)) return
+
+  // Keep the server's reconnect-safe hand state in sync with the local throw.
+  // The client has already detached the prop for responsiveness.
+  player.carrying = null
+
+  io.to(roomId).except(socketId).emit('throwable:throw', {
+    throwerId: player.userId,
+    itemKind: payload.itemKind,
+    origin: payload.origin,
+    direction: normalizeVector(payload.direction),
+    force: clamp(payload.force, MIN_THROW_FORCE, MAX_THROW_FORCE),
+  })
+}
+
+export function handleThrowableHit(context: ThrowableHitContext): void {
+  const { io, roomId, room, socketId, payload, timestamp } = context
+
+  const attacker = room.state.players.get(socketId)
+  if (!attacker || attacker.role !== 'prisoner' || !attacker.isAlive) return
+  if (!isValidThrowableKind(payload?.itemKind)) return
+  if (!payload.targetGuardId || !isFiniteVector(payload.hitPosition)) return
+
+  const guard = room.state.playersByUserId.get(payload.targetGuardId)
+  if (!guard || guard.role !== 'guard' || !guard.isAlive) return
+
+  const debounceKey = `${attacker.userId}:${guard.userId}:${payload.itemKind}`
+  const lastHitAt = recentThrowableHits.get(debounceKey) ?? 0
+  if (timestamp - lastHitAt < STUN_HIT_DEBOUNCE_MS) return
+  recentThrowableHits.set(debounceKey, timestamp)
+
+  io.to(roomId).emit('guard:stun', {
+    guardId: guard.userId,
+    attackerId: attacker.userId,
+    itemKind: payload.itemKind,
+    duration: clamp(payload.stunDuration, MIN_STUN_SECONDS, MAX_STUN_SECONDS),
+    hitPosition: payload.hitPosition,
+  })
+}
+
+function isValidThrowableKind(kind: string | undefined): kind is ThrowableItemKind {
+  return !!kind && THROWABLE_ITEM_KINDS.has(kind as ThrowableItemKind)
+}
+
+function isFiniteVector(v: Vector3 | undefined): v is Vector3 {
+  return !!v
+    && Number.isFinite(v.x)
+    && Number.isFinite(v.y)
+    && Number.isFinite(v.z)
+}
+
+function normalizeVector(v: Vector3): Vector3 {
+  const mag = Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
+  if (mag <= 0.0001) return { x: 0, y: 0, z: 1 }
+  return { x: v.x / mag, y: v.y / mag, z: v.z / mag }
+}
+
+function clamp(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return min
+  return Math.max(min, Math.min(max, value))
 }
 
 // ============================================================================

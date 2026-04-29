@@ -367,6 +367,34 @@ export interface PlayerInteractPayload {
   slotIndex?: number
 }
 
+export type ThrowableItemKind = 'food_plate' | 'clothes_bundle' | 'folded_clothes' | 'container'
+
+export interface ThrowableThrowPayload {
+  itemKind: ThrowableItemKind
+  origin: Vector3
+  direction: Vector3
+  force: number
+}
+
+export interface ThrowableThrowBroadcast extends ThrowableThrowPayload {
+  throwerId: string
+}
+
+export interface ThrowableHitPayload {
+  targetGuardId: string
+  itemKind: ThrowableItemKind
+  hitPosition: Vector3
+  stunDuration: number
+}
+
+export interface GuardStunPayload {
+  guardId: string
+  attackerId: string
+  itemKind: ThrowableItemKind
+  duration: number
+  hitPosition: Vector3
+}
+
 export interface GuardMarkPayload {
   guardId: string
   targetId: string

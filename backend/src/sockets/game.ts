@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io'
 import {
-  NPCSyncStatePayload, PlayerInteractAction, PlayerMovePayload, Vector3,
+  NPCSyncStatePayload, PlayerInteractAction, PlayerMovePayload, ThrowableHitPayload, ThrowableThrowPayload, Vector3,
   AuthRegisterPayload, RoomCreatePayload, RoomJoinPayload, RoomKickPayload,
   RegisterSpawnAreasPayload, TutorialMissionCompletePayload,
 } from '../game/types.js'
@@ -29,6 +29,8 @@ import {
   handlePlayerAction,
   handleGuardCatch,
   handleGuardMark,
+  handleThrowableHit,
+  handleThrowableThrow,
   handleRiotActivate,
   checkGameEndCondition,
   handleNPCSyncState,
@@ -644,6 +646,52 @@ export function setupGameSockets(io: Server) {
         })
       } catch (err) {
         console.error(`[ERROR] player:action: ${err}`)
+      }
+    })
+
+    // ==================================================================
+    // GAMEPLAY: throwable:throw
+    // ==================================================================
+    socket.on('throwable:throw', (payload: ThrowableThrowPayload) => {
+      if (!currentRoomId) return
+
+      try {
+        const room = getRoom(currentRoomId)
+        if (!room || room.state.status !== 'active') return
+
+        handleThrowableThrow({
+          io,
+          roomId: currentRoomId,
+          room,
+          socketId: socket.id,
+          payload,
+          timestamp: Date.now(),
+        })
+      } catch (err) {
+        console.error(`[ERROR] throwable:throw: ${err}`)
+      }
+    })
+
+    // ==================================================================
+    // GAMEPLAY: throwable:hit
+    // ==================================================================
+    socket.on('throwable:hit', (payload: ThrowableHitPayload) => {
+      if (!currentRoomId) return
+
+      try {
+        const room = getRoom(currentRoomId)
+        if (!room || room.state.status !== 'active') return
+
+        handleThrowableHit({
+          io,
+          roomId: currentRoomId,
+          room,
+          socketId: socket.id,
+          payload,
+          timestamp: Date.now(),
+        })
+      } catch (err) {
+        console.error(`[ERROR] throwable:hit: ${err}`)
       }
     })
 

@@ -184,6 +184,14 @@ mergeInto(LibraryManager.library, {
         window.unityInstance.SendMessage(window._jbGoName, 'OnPlayerAction', JSON.stringify(data));
       });
 
+      window._jbSocket.on('throwable:throw', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnThrowableThrow', JSON.stringify(data));
+      });
+
+      window._jbSocket.on('guard:stun', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnGuardStun', JSON.stringify(data));
+      });
+
       window._jbSocket.on('game:error', function (data) {
         window.unityInstance.SendMessage(window._jbGoName, 'OnNetworkError', JSON.stringify(data));
       });
@@ -340,6 +348,28 @@ mergeInto(LibraryManager.library, {
     var action   = UTF8ToString(actionPtr);
     if (window._jbSocket && window._jbSocket.connected)
       window._jbSocket.emit('player:action', { objectId: objectId, action: action });
+  },
+
+  SocketSendThrowableThrow: function(jsonPtr) {
+    var json = UTF8ToString(jsonPtr);
+    if (window._jbSocket && window._jbSocket.connected) {
+      try {
+        window._jbSocket.emit('throwable:throw', JSON.parse(json));
+      } catch (e) {
+        console.error('[SocketBridge] SendThrowableThrow parse error:', e);
+      }
+    }
+  },
+
+  SocketSendThrowableHit: function(jsonPtr) {
+    var json = UTF8ToString(jsonPtr);
+    if (window._jbSocket && window._jbSocket.connected) {
+      try {
+        window._jbSocket.emit('throwable:hit', JSON.parse(json));
+      } catch (e) {
+        console.error('[SocketBridge] SendThrowableHit parse error:', e);
+      }
+    }
   },
 
   SocketSendRiotActivate: function() {
