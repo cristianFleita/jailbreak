@@ -41,6 +41,7 @@ import {
   restorePlayerConnection,
   consumeExpiredDisconnectedSlot,
   clearRoomSlots,
+  getPendingDisconnectedPlayers,
 } from '../game/reconnection.js'
 import {
   dropCriticalRouteItemsForPlayer,
@@ -868,22 +869,19 @@ function handleLeaveRoom(
       const gmLeave = (room as any).gameManager
       gmLeave?.route1?.cancelPlayerInteractions(userId)
 
-      // Win-by-leave: the guard quitting hands the prisoners the match, and
-      // the last prisoner quitting hands it to the guards. Evaluate BEFORE
-      // removing the player so the leaver still counts in `players`.
-      const winResult = evaluateLeaveWinCondition(room.state, player)
-      if (winResult) {
-        // No item-drop dance — the room is being destroyed and clients are
-        // routed to the EndGame scene by `game:end`. Skipping the drop also
-        // avoids broadcasting item-state changes for a doomed world.
-        endMatchAndCleanup(io, room, winResult.winner, winResult.reason)
-        console.log(
-          `[ROOM] ${isHost ? 'Host' : 'Player'} ${userId} ${reason} active game "${roomId}" — match ended (${winResult.winner} win, ${winResult.reason})`
-        )
-        return
-      }
-
       if (reason === 'left') {
+        // UI exit is final — guard quitting hands prisoners the match, last
+        // prisoner quitting hands it to the guards. Evaluate BEFORE removing
+        // the player so the leaver still counts in `players`.
+        const winResult = evaluateLeaveWinCondition(room.state, player)
+        if (winResult) {
+          endMatchAndCleanup(io, room, winResult.winner, winResult.reason)
+          console.log(
+            `[ROOM] ${isHost ? 'Host' : 'Player'} ${userId} left active game "${roomId}" — match ended (${winResult.winner} win, ${winResult.reason})`
+          )
+          return
+        }
+
         dropCriticalRouteItemsForPlayer(
           io,
           roomId,
@@ -895,8 +893,12 @@ function handleLeaveRoom(
         gmLeave?.route1?.notifyInventoryChanged()
         setUserStatus(userId, 'idle')
       } else {
+        // Socket disconnect (F5 / network drop) — DO NOT end the match here.
+        // Reserve the slot for `reconnectTimeout` seconds; if the player
+        // re-auths inside the window, the game continues uninterrupted. The
+        // win condition is re-checked only after the slot truly expires.
         markPlayerDisconnected(roomId, player, room.config.reconnectTimeout)
-        scheduleDisconnectedCriticalItemRelease(io, roomId, userId, room.config.reconnectTimeout)
+        scheduleDisconnectExpiry(io, roomId, userId, room.config.reconnectTimeout)
       }
 
       removePlayer(room.state, socket.id)
@@ -972,7 +974,16 @@ function handleLeaveRoom(
   }
 }
 
-function scheduleDisconnectedCriticalItemRelease(
+/**
+ * Fires once the 30s reconnection window has elapsed without the player
+ * re-auth-ing. Releases their critical route items AND re-evaluates the
+ * leave-win condition that was deliberately skipped at disconnect time.
+ *
+ * If the player reconnected before expiry, `consumeExpiredDisconnectedSlot`
+ * returns null (the slot was already cleaned up by `restorePlayerConnection`)
+ * and this is a no-op.
+ */
+function scheduleDisconnectExpiry(
   io: Server,
   roomId: string,
   userId: string,
@@ -981,11 +992,12 @@ function scheduleDisconnectedCriticalItemRelease(
   setTimeout(() => {
     try {
       const expiredPlayer = consumeExpiredDisconnectedSlot(roomId, userId)
-      if (!expiredPlayer) return
+      if (!expiredPlayer) return // reconnected in time
 
       const room = getRoom(roomId)
       if (!room || room.state.status !== 'active') return
 
+      // 1) Release critical route tools so the world isn't softlocked.
       const dropped = dropCriticalRouteItemsForPlayer(
         io,
         roomId,
@@ -1003,8 +1015,66 @@ function scheduleDisconnectedCriticalItemRelease(
       if (dropped.length > 0) {
         console.log(`[RECONNECT] Released expired critical route tools for ${userId}: ${dropped.join(', ')}`)
       }
+
+      // 2) Now — and only now — apply the leave-win rules deferred at
+      //    disconnect. Counts both live players and OTHER pending slots so
+      //    simultaneous F5s don't end the match prematurely.
+      const winResult = evaluateExpiredDisconnectWinCondition(room.state, expiredPlayer, roomId)
+      if (winResult) {
+        endMatchAndCleanup(io, room, winResult.winner, winResult.reason)
+        console.log(
+          `[RECONNECT] Slot expired without reconnect (${userId}, ${expiredPlayer.role}) — match ended (${winResult.winner} win, ${winResult.reason})`
+        )
+      }
     } catch (err) {
-      console.error(`[ERROR] scheduleDisconnectedCriticalItemRelease: ${err}`)
+      console.error(`[ERROR] scheduleDisconnectExpiry: ${err}`)
     }
   }, reconnectTimeoutSeconds * 1000 + 100)
+}
+
+/**
+ * Win check applied after a reconnection slot expires. Mirrors
+ * `evaluateLeaveWinCondition` but operates on a *removed* player whose slot
+ * just timed out, and includes still-pending disconnected slots so a
+ * simultaneous-F5 scenario doesn't end the match while another player can
+ * still come back.
+ *
+ *   - Guard slot expired → prisoners win, unless another guard is live or
+ *     still pending in their own slot (multi-guard not used today, but kept
+ *     for future-proofing).
+ *   - Prisoner slot expired → guards win only if no live alive prisoner
+ *     remains AND no other prisoner has a pending slot.
+ */
+function evaluateExpiredDisconnectWinCondition(
+  state: import('../game/types.js').GameRoomState,
+  expiredPlayer: import('../game/types.js').PlayerState,
+  roomId: string
+): { winner: 'prisoners' | 'guards'; reason: string } | null {
+  if (state.status !== 'active') return null
+
+  const pending = getPendingDisconnectedPlayers(roomId)
+
+  if (expiredPlayer.role === 'guard') {
+    let guardsLeft = 0
+    for (const p of state.players.values()) if (p.role === 'guard') guardsLeft++
+    for (const p of pending) if (p.role === 'guard') guardsLeft++
+    if (guardsLeft === 0) {
+      return { winner: 'prisoners', reason: 'guard-left' }
+    }
+    return null
+  }
+
+  // Prisoner expired. Count alive prisoners on the field + pending alive
+  // prisoners in slots. If both are zero → guards win.
+  let alivePrisoners = 0
+  for (const p of state.players.values()) {
+    if (p.role === 'prisoner' && p.isAlive) alivePrisoners++
+  }
+  for (const p of pending) {
+    if (p.role === 'prisoner' && p.isAlive) alivePrisoners++
+  }
+  if (alivePrisoners === 0) {
+    return { winner: 'guards', reason: 'all-prisoners-left' }
+  }
+  return null
 }
