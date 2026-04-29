@@ -1,8 +1,8 @@
 /**
  * Route inventory tests (Phase F regression coverage).
  *
- * Covers the authoritative hand/slot state that the UI Toolkit HUD reads:
- * pickup, store, race rejection, reconnect snapshots and capture/abandon drops.
+ * Covers the authoritative slot state that the UI Toolkit HUD reads:
+ * pickup, legacy store, race rejection, reconnect snapshots and capture/abandon drops.
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -14,6 +14,7 @@ import { Route1System } from '../systems/route1-system.js'
 import { clearSpawnAreaRegistration } from '../systems/spawn-areas.js'
 import {
   dropCriticalRouteItemsForPlayer,
+  pickupToFirstAvailableSlot,
   pickupToHand,
   storeHeldItem,
 } from '../systems/route-inventory.js'
@@ -80,6 +81,64 @@ afterEach(() => {
 })
 
 describe('Route inventory (Phase F)', () => {
+  it('picks a route tool directly into the first empty prisoner slot', () => {
+    const state = makeRoom('room-route-inventory-pickup-slot')
+    const prisoner = makePlayer(state, 'sock-a', 'user-a')
+
+    const result = pickupToFirstAvailableSlot(state, prisoner, 'route1_cutters_a')
+
+    expect(result.success).toBe(true)
+    expect(result.success && result.slotIndex).toBe(0)
+    expect(prisoner.heldItemId).toBeNull()
+    expect(prisoner.inventorySlots?.[0]?.itemId).toBe('route1_cutters_a')
+    expect(prisoner.inventorySlots?.[1]).toBeNull()
+    expect(state.items.get('route1_cutters_a')?.state).toBe('stored')
+    expect(state.items.get('route1_cutters_a')?.holderUserId).toBe('user-a')
+  })
+
+  it('uses the next empty slot when the first slot is occupied on direct pickup', () => {
+    const state = makeRoom('room-route-inventory-pickup-slot-next')
+    const prisoner = makePlayer(state, 'sock-a', 'user-a')
+
+    pickupToFirstAvailableSlot(state, prisoner, 'route1_cutters_a')
+    const result = pickupToFirstAvailableSlot(state, prisoner, 'route1_wrench_a')
+
+    expect(result.success).toBe(true)
+    expect(result.success && result.slotIndex).toBe(1)
+    expect(prisoner.heldItemId).toBeNull()
+    expect(prisoner.inventorySlots?.[0]?.itemId).toBe('route1_cutters_a')
+    expect(prisoner.inventorySlots?.[1]?.itemId).toBe('route1_wrench_a')
+    expect(state.items.get('route1_wrench_a')?.state).toBe('stored')
+  })
+
+  it('handles item.pickup as direct first-slot storage through the player interaction handler', () => {
+    const state = makeRoom('room-route-inventory-handler-pickup-slot')
+    const prisoner = makePlayer(state, 'sock-a', 'user-a')
+    const route1 = new Route1System(state)
+    const room = makeGameRoom(state, route1)
+    const io = mockIo()
+
+    handlePlayerInteract({
+      io,
+      roomId: state.id,
+      room,
+      socketId: 'sock-a',
+      playerId: 'user-a',
+      objectId: 'route1_cutters_a',
+      action: 'item.pickup',
+      timestamp: Date.now(),
+    })
+
+    expect(prisoner.heldItemId).toBeNull()
+    expect(prisoner.inventorySlots?.[0]?.itemId).toBe('route1_cutters_a')
+    expect(state.items.get('route1_cutters_a')?.state).toBe('stored')
+    expect(state.route1?.missions.find_cutters).toBe('complete')
+    expect(io.emit).toHaveBeenCalledWith('item:state', expect.objectContaining({
+      itemId: 'route1_cutters_a',
+      state: 'stored',
+    }))
+  })
+
   it('picks a route tool into the authoritative hand', () => {
     const state = makeRoom('room-route-inventory-pickup')
     const prisoner = makePlayer(state, 'sock-a', 'user-a')
@@ -270,13 +329,26 @@ describe('Route inventory (Phase F)', () => {
     }))
   })
 
-  it('allows soap to be dropped directly from hand', () => {
-    const state = makeRoom('room-route-inventory-soap-hand-drop')
+  it('picks soap directly into a slot and drops it from storage', () => {
+    const state = makeRoom('room-route-inventory-soap-slot-drop')
     const prisoner = makePlayer(state, 'sock-a', 'user-a')
     const room = makeGameRoom(state)
     const io = mockIo()
 
-    pickupToHand(state, prisoner, 'route1_soap_a')
+    handlePlayerInteract({
+      io,
+      roomId: state.id,
+      room,
+      socketId: 'sock-a',
+      playerId: 'user-a',
+      objectId: 'route1_soap_a',
+      action: 'item.pickup',
+      timestamp: Date.now(),
+    })
+
+    expect(prisoner.heldItemId).toBeNull()
+    expect(prisoner.inventorySlots?.[0]?.itemId).toBe('route1_soap_a')
+    expect(state.items.get('route1_soap_a')?.state).toBe('stored')
 
     handlePlayerInteract({
       io,
@@ -290,6 +362,7 @@ describe('Route inventory (Phase F)', () => {
     })
 
     expect(prisoner.heldItemId).toBeNull()
+    expect(prisoner.inventorySlots?.[0]).toBeNull()
     expect(state.items.get('route1_soap_a')?.state).toBe('dropped')
     expect(io.emit).toHaveBeenCalledWith('item:state', expect.objectContaining({
       itemId: 'route1_soap_a',

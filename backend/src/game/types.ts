@@ -57,7 +57,7 @@ export interface PlayerState {
   carrying?: string | null // e.g. "food_plate" — visual prop parented to player's hand (reconnect-safe)
 
   // ── Authoritative inventory (Ruta 1 / Phase A contract) ─────────────────
-  // heldItemId: item currently in hand (after pickup with E, before store with F)
+  // heldItemId: legacy route item currently in hand. Normal pickups auto-store.
   // inventorySlots: fixed-length array (2 for prisoners). Slots may contain null.
   heldItemId?: string | null
   inventorySlots?: (InventorySlotSync | null)[]

@@ -367,3 +367,11 @@
   - Set the active flashlight arm `TwoBoneIKConstraint` target rotation weight to `1` on the same three prefabs so the rig owns wrist orientation during outage flashlight use.
   - Kept backend/network protocol unchanged because outage state is already synced through `WorldStatePayload.ventilationPowered` and consumed by `PowerOutageNetworkBridge`.
   - Recorded ADR-037 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Route item auto-store and flashlight-only F input** (2026-04-29):
+  - Read `memory/progress.md` and traced backend route inventory/event handlers plus Unity `NetworkRoutePickable`, `HeldItemInput`, `PickUpInteractable`, route item prefabs, and container throw path.
+  - Added backend direct first-empty-slot pickup via `pickupToFirstAvailableSlot`; `item.pickup` now stores cutters, wrench, and soap immediately and broadcasts `item:state state=stored`.
+  - Removed hand-drop allowance for tracked route items; soap now follows the same stored-then-drop flow as the tools before becoming an active slip prop.
+  - Updated Unity route pickup so the hand no longer needs to be empty, route items no longer wait for F storage, and local inventory-full checks block pickup early.
+  - Reserved F for flashlight by setting prisoner `HeldItemInput.storeKey` to `None`, removing store-key handling from live input/HUD text, and keeping container as a hand-held throw-only pickable.
+  - Verified backend focused tests (`route-inventory.test.ts`, `throwables.test.ts`) passed `20/20`, backend TypeScript compiled, full backend Vitest suite passed `221/221`, Unity `msbuild Assembly-CSharp.csproj` succeeded with existing warnings, and `git diff --check` passed.
+  - Recorded ADR-038 in `memory/decisions.md`.

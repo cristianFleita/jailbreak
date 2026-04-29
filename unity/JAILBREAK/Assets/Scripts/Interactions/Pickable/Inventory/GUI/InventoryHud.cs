@@ -63,9 +63,6 @@ public class InventoryHUD : MonoBehaviour
 
         var sb = new StringBuilder();
         sb.AppendLine($"[{heldInput.ThrowKey}] Throw");
-        sb.AppendLine(inventory.IsFull()
-            ? "Inventory full"
-            : $"[{heldInput.StoreKey}] Store");
 
         heldActionsText.text = sb.ToString();
     }

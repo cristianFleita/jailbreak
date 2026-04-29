@@ -343,7 +343,7 @@ MonoBehaviour:
   interactKey: 101
   allowedInStates: []
   holdPointName: mixamorig:RightHandIndex1
-  allowDropFromHand: 1
+  allowDropFromHand: 0
   debugLogs: 0
 --- !u!4 &802548538503462182 stripped
 Transform:

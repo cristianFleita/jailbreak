@@ -31,7 +31,7 @@ import {
   dropInventoryItem,
   isCriticalRouteItem,
   isTrackedRouteItem,
-  pickupToHand,
+  pickupToFirstAvailableSlot,
   storeHeldItem,
 } from './systems/route-inventory.js'
 import {
@@ -333,7 +333,7 @@ function handleRouteItemPickup(
     }
   }
 
-  const result = pickupToHand(room.state, player, stableItemId)
+  const result = pickupToFirstAvailableSlot(room.state, player, stableItemId)
   if (!result.success) {
     console.warn(`[PICKUP] ${player.userId} rejected ${stableItemId}: ${result.reason}`)
     io.to(socketId).emit('game:error', { message: result.reason })
@@ -345,7 +345,7 @@ function handleRouteItemPickup(
 
   broadcastItemState(io, roomId, result.item)
   notifyRoute1InventoryChanged(room)
-  console.log(`[PICKUP] ${player.userId} picked up ${stableItemId} to hand`)
+  console.log(`[PICKUP] ${player.userId} picked up ${stableItemId} into slot ${result.slotIndex}`)
 }
 
 function handleRoute1Action(
@@ -467,8 +467,7 @@ function handleRouteItemThrow(
   }
 
   const hasInSlot = playerHasItemInSlot(player, stableItemId)
-  const hasInHand = player.heldItemId === stableItemId
-  if (!hasInSlot && !(hasInHand && canDropTrackedItemFromHand(stableItemId))) {
+  if (!hasInSlot) {
     console.warn(`[THROW] ${player.userId} tried to drop ${stableItemId} without an allowed source`)
     io.to(socketId).emit('game:error', { message: 'Store the item in a slot before dropping it' })
     return
@@ -498,10 +497,6 @@ function handleRouteItemThrow(
 
 function playerHasItemInSlot(player: PlayerState, itemId: string): boolean {
   return (player.inventorySlots ?? []).some((slot) => slot?.itemId === itemId)
-}
-
-function canDropTrackedItemFromHand(itemId: string): boolean {
-  return itemId === 'route1_soap' || itemId.startsWith('route1_soap_')
 }
 
 function handleItemPickup(io: Server, roomId: string, room: GameRoom, playerId: string, itemId: string, item: any): void {

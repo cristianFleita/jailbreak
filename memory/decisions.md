@@ -926,3 +926,27 @@ Character flashlight prefab instances are parented to each character's active fl
 - `Prisoner.prefab`, `Guard.prefab`, and `Prisoner-NPC.prefab` keep using the existing `FlashlightController` and `PowerOutage` event flow.
 - No backend or socket protocol change is required; outage state remains authoritative through `WorldStatePayload.ventilationPowered`.
 - Flashlight beam tuning should now be done by adjusting each prefab's `ItemOrigin` transform / flashlight local offset, not by editing `Character.controller`.
+
+## ADR-038: Route pickups auto-store and F is flashlight-only
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+Route-managed pickup props (`route1_cutters`, `route1_wrench`, and `route1_soap`) are stored directly into the first available prisoner inventory slot on `item.pickup`. The normal pickup path no longer places these items in the player's hand and no longer requires K/L slot selection followed by F.
+
+F is reserved for flashlight toggling. Route items can still be voluntarily dropped from an inventory slot through the existing route item drop flow. Legacy `item.store` / hand state remains in code only for compatibility with older snapshots and stale clients.
+
+The container remains a hand-held pickable and is thrown with the normal throw input when the player chooses; it is not auto-stored when another pickable is targeted.
+
+### Why
+
+The previous hand-to-slot step made route item collection too fiddly and conflicted with flashlight input. Direct first-slot storage keeps the backend authoritative, removes the F conflict, and preserves the existing item lifecycle broadcasts for HUD/reconnect.
+
+### Implications
+
+- Backend `item.pickup` now broadcasts `item:state` with `state: "stored"` for cutters, wrench, and soap.
+- `Soap.prefab` no longer allows hand dropping; soap is dropped from storage before it becomes an active slip trap.
+- Prisoner prefabs serialize `HeldItemInput.storeKey` as `None`; `HeldItemInput` ignores store input in gameplay.
+- `PickUpInteractable` no longer auto-stores or auto-throws the currently held hand item when trying to pick up another local-only prop.
