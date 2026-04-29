@@ -47,7 +47,6 @@ namespace Jailbreak.Player
             // Social — mirrors NPC_ANIM.TALK_STANDING / WHISPER / SALUTE / DISMISS / SURPRISE / ARGUE
             new EmoteEntry { id = "talking",        displayName = "Talk",      animatorState = "Talking",       icon = "...", duration = 4f,   loops = true,  category = EmoteCategory.Social   },
             new EmoteEntry { id = "telling_secret", displayName = "Whisper",   animatorState = "TellingSecret", icon = "Shh", duration = 3f,   loops = true,  category = EmoteCategory.Social   },
-            new EmoteEntry { id = "salute",         displayName = "Salute",    animatorState = "Salute",        icon = "o7",  duration = 2.5f, loops = false, category = EmoteCategory.Social   },
             new EmoteEntry { id = "dismissing",     displayName = "Dismiss",   animatorState = "Dismissing",    icon = "Bye", duration = 2f,   loops = false, category = EmoteCategory.Social   },
             new EmoteEntry { id = "surprised",      displayName = "Surprised", animatorState = "Surprised",     icon = "!?",  duration = 2f,   loops = false, category = EmoteCategory.Social   },
             new EmoteEntry { id = "angry",          displayName = "Angry",     animatorState = "Angry",         icon = "Grr", duration = 3f,   loops = true,  category = EmoteCategory.Social   },

@@ -197,7 +197,6 @@ namespace Jailbreak.UI
             var socialGrid = CreateGrid();
             AddEmoteButton(socialGrid, "talking");
             AddEmoteButton(socialGrid, "telling_secret");
-            AddEmoteButton(socialGrid, "salute");
             AddEmoteButton(socialGrid, "dismissing");
             AddEmoteButton(socialGrid, "surprised");
             AddEmoteButton(socialGrid, "angry");

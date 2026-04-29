@@ -18,7 +18,6 @@
                 <ui:Label name="TimerLabel" text="GAME STARTS IN 01:30" style="-unity-font-style: bold; font-size: 16px; color: rgb(255, 255, 255); -unity-text-align: middle-center;"/>
             </ui:VisualElement>
         </ui:VisualElement>
-
         <ui:VisualElement name="CenterLayer" picking-mode="Ignore" style="flex-grow: 1; align-items: center; justify-content: center;">
             <ui:VisualElement name="FocusPanel" picking-mode="Ignore" style="width: 110px; align-items: center;">
                 <ui:Label text="+" style="-unity-font-style: bold; font-size: 22px; color: rgb(255, 255, 255); -unity-text-align: middle-center;"/>
@@ -34,17 +33,14 @@
                 <ui:Label name="ToastLabel" text="" style="-unity-font-style: bold; font-size: 12px; color: rgb(255, 255, 255); white-space: normal; -unity-text-align: middle-center;"/>
             </ui:VisualElement>
         </ui:VisualElement>
-
         <ui:VisualElement name="BottomBar" picking-mode="Ignore" style="flex-direction: row; justify-content: space-between; align-items: flex-end;">
             <ui:VisualElement name="ControlsPanel" picking-mode="Ignore" style="width: 310px; background-color: rgba(10, 14, 17, 0.72); padding-top: 10px; padding-right: 12px; padding-bottom: 10px; padding-left: 12px; border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
                 <ui:Label text="CONTROLS" style="-unity-font-style: bold; font-size: 11px; color: rgb(255, 255, 255); margin-bottom: 5px;"/>
                 <ui:Label text="WASD + Mouse  Move and look" style="font-size: 10px; color: rgb(224, 214, 214);"/>
                 <ui:Label text="Shift  Sprint to reposition" style="font-size: 10px; color: rgb(224, 214, 214);"/>
-                <ui:Label text="E  Inspect safe practice props" style="font-size: 10px; color: rgb(224, 214, 214);"/>
                 <ui:Label text="Left Click Hold  Focus capture" style="font-size: 10px; color: rgb(224, 214, 214);"/>
-                <ui:Label name="CueLabel" text="Cue: watch routine first" style="-unity-font-style: bold; font-size: 10px; color: rgb(255, 216, 128); margin-top: 6px; white-space: normal;"/>
+                <ui:Label text="B  Hold to open the emote panel" style="font-size: 10px; color: rgb(255, 203, 92); -unity-font-style: bold; white-space: normal;"/>
             </ui:VisualElement>
-
             <ui:VisualElement name="MissionPanel" picking-mode="Ignore" style="width: 430px; max-height: 500px; background-color: rgba(10, 14, 17, 0.78); padding-top: 10px; padding-right: 12px; padding-bottom: 10px; padding-left: 12px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgba(255, 255, 255, 0.14); border-right-color: rgba(255, 255, 255, 0.14); border-bottom-color: rgba(255, 255, 255, 0.14); border-left-color: rgba(255, 255, 255, 0.14); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
                 <ui:VisualElement name="MissionHeader" picking-mode="Ignore" style="flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                     <ui:Label name="MissionTitle" text="Guard Missions" style="-unity-font-style: bold; font-size: 13px; color: rgb(255, 255, 255);"/>
