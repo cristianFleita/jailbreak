@@ -375,3 +375,24 @@
   - Reserved F for flashlight by setting prisoner `HeldItemInput.storeKey` to `None`, removing store-key handling from live input/HUD text, and keeping container as a hand-held throw-only pickable.
   - Verified backend focused tests (`route-inventory.test.ts`, `throwables.test.ts`) passed `20/20`, backend TypeScript compiled, full backend Vitest suite passed `221/221`, Unity `msbuild Assembly-CSharp.csproj` succeeded with existing warnings, and `git diff --check` passed.
   - Recorded ADR-038 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Pickup failure toast feedback** (2026-04-29):
+  - Read `memory/progress.md`, used focused-fix workflow, and traced `GameHudController.ShowToast`, `NetworkRoutePickable`, `InteractionManager`, and backend pickup distance errors.
+  - Added full-slot pickup toast feedback in `NetworkRoutePickable` for both local inventory-full checks and backend `Inventory full` errors.
+  - Added distance pickup toast feedback for backend `Distance ... exceeds max ...` errors.
+  - Added an outer pickup hint radius in `InteractionManager` so pressing E near, but outside, pickup range shows `Move closer to pick that up` instead of silently doing nothing.
+  - Verified Unity C# via `msbuild Assembly-CSharp.csproj` and `git diff --check`; build passed with existing warnings only.
+  - Recorded ADR-039 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Prisoner tutorial item flow simplification** (2026-04-29):
+  - Read `memory/progress.md` and traced backend tutorial mission allowlists, Unity tutorial mission rows, tutorial pickup/drop input, and `TutorialPrisonerGUI.uxml`.
+  - Reduced prisoner tutorial missions to `p1_grab_item` and `p2_drop_item` on the backend and in Unity.
+  - Updated tutorial item pickup so E stores directly into the first available inventory slot and no longer teaches hand-held F storage.
+  - Updated prisoner tutorial controls to list `F` as flashlight on/off and `G` as item drop, removing K/L slot-select and F save/store copy.
+  - Verified focused backend `tutorial.test.ts` (`22/22`), backend TypeScript, Unity C# via `msbuild Assembly-CSharp.csproj`, prisoner UXML parsing, and scoped `git diff --check`.
+  - Recorded ADR-040 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Prisoner tutorial interactables restored without drop mission** (2026-04-29):
+  - Read `memory/progress.md` and rechecked backend tutorial mission allowlists, Unity mission definitions, tutorial signal emitters, and drop input.
+  - Restored prisoner missions for plan review, food/sit/sink blend-in, sprinting, item grab, risky progress interactables, and cart hiding.
+  - Removed the stored-item drop mission from backend allowlists and Unity completion handling; `ItemDropped` is now ignored by the mission controller.
+  - Kept the direct E item grab flow and F-as-flashlight controls intact.
+  - Verified focused backend `tutorial.test.ts` (`22/22`), backend TypeScript, prisoner UXML parsing, Unity C# via `msbuild Assembly-CSharp.csproj`, and scoped `git diff --check`.
+  - Recorded ADR-041 in `memory/decisions.md`.

@@ -1,10 +1,15 @@
 using Jailbreak.Network;
+using Jailbreak.UI;
 using UnityEngine;
 
 [RequireComponent(typeof(PickableItem))]
 [RequireComponent(typeof(NetworkInteractable))]
 public class NetworkRoutePickable : MonoBehaviour, IInteractable
 {
+    private const float FeedbackSeconds = 2.4f;
+    private const string InventoryFullFeedback = "Inventory slots are full";
+    private const string MoveCloserFeedback = "Move closer to pick that up";
+
     [Header("Route Item")]
     public string itemId = "route1_wrench";
     public string itemType = "route_tool";
@@ -142,6 +147,7 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
         if (localInventory != null && localInventory.IsFull())
         {
             DebugRoute("Pickup blocked: local inventory is full");
+            ShowPickupFeedback(InventoryFullFeedback);
             return;
         }
 
@@ -221,11 +227,31 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
 
     private void HandleNetworkError(ErrorPayload _)
     {
+        if (pendingPickup)
+            ShowPickupFeedback(FeedbackMessageForPickupError(_?.message));
+
         pendingPickup = false;
         pendingStore = false;
         pendingThrow = false;
         pendingStoreSlotIndex = -1;
         DebugRoute($"Network error cleared pending flags: {_?.message ?? "unknown"}");
+    }
+
+    private static string FeedbackMessageForPickupError(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return null;
+
+        var normalized = message.ToLowerInvariant();
+        if (normalized.Contains("inventory full")) return InventoryFullFeedback;
+        if (normalized.Contains("distance") && normalized.Contains("exceeds")) return MoveCloserFeedback;
+
+        return null;
+    }
+
+    private static void ShowPickupFeedback(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return;
+        GameHudController.Instance?.ShowToast(message, FeedbackSeconds);
     }
 
     private void HandleLocalInventoryChanged()

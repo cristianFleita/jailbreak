@@ -46,7 +46,6 @@ namespace Jailbreak.Tutorial
         private float _fallbackEndsAt;
         private float _toastHideAt;
         private int _foodStep;
-        private bool _changedSlotBeforeStore;
         private bool _localReadySent;
         private int _readyCount;
         private int _totalCount;
@@ -214,8 +213,7 @@ namespace Jailbreak.Tutorial
                 Add("p1_review_route", "Review the plan", "Press TAB once to expand or hide your training checklist.");
                 Add("p2_food_flow", "Blend in", "Take food, sit at the table, then leave the tray at the sink.");
                 Add("p3_sprint", "Sprint with intent", "Hold Shift while moving for at least 1 second.");
-                Add("p4_store_item", "Pick up contraband", "Walk up to the tool and press E to grab it.");
-                Add("p5_drop_item", "Drop from a slot", "Select the stored tool and press G to drop it under control.");
+                Add("p4_grab_item", "Grab the item", "Walk up to the item and press E.");
                 Add("p7_hide_cart", "Break line of sight", "Hide in a laundry cart for a few seconds.");
             }
 
@@ -351,6 +349,9 @@ namespace Jailbreak.Tutorial
         {
             switch (signal)
             {
+                case TutorialMissionEvents.ReviewRoute:
+                    Complete("p1_review_route");
+                    break;
                 case TutorialMissionEvents.FoodPicked:
                     _foodStep = Mathf.Max(_foodStep, 1);
                     break;
@@ -367,15 +368,11 @@ namespace Jailbreak.Tutorial
                     ShowToast("Tool cache searched. Walk up and press E to grab it.");
                     break;
                 case TutorialMissionEvents.ItemPicked:
-                    Complete("p4_store_item");
-                    break;
-                case TutorialMissionEvents.SlotChanged:
-                    _changedSlotBeforeStore = true;
+                    Complete("p4_grab_item");
                     break;
                 case TutorialMissionEvents.ItemStored:
                     break;
                 case TutorialMissionEvents.ItemDropped:
-                    Complete("p5_drop_item");
                     break;
                 case TutorialMissionEvents.DeskSearched:
                 case TutorialMissionEvents.PowerDisabled:
@@ -420,7 +417,6 @@ namespace Jailbreak.Tutorial
             {
                 _collapsed = !_collapsed;
                 TutorialMissionEvents.Emit(TutorialMissionEvents.ReviewRoute);
-                Complete("p1_review_route");
                 ApplyCollapsedState();
             }
         }

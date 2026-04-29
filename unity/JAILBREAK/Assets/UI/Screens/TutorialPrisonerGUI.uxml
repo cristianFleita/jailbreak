@@ -52,9 +52,9 @@
                     <ui:Label text="WASD + Mouse  Move and look" style="font-size: 10px; color: rgb(205, 220, 226);"/>
                     <ui:Label text="Shift  Sprint when it is worth the risk" style="font-size: 10px; color: rgb(205, 220, 226);"/>
                     <ui:Label text="E  Interact, search, sit, hide" style="font-size: 10px; color: rgb(205, 220, 226);"/>
+                    <ui:Label text="F  Turn flashlight on/off" style="font-size: 10px; color: rgb(205, 220, 226);"/>
                     <ui:Label text="TAB  Show or hide missions" style="font-size: 10px; color: rgb(205, 220, 226);"/>
-                    <ui:Label text="K / L  Select inventory slot" style="font-size: 10px; color: rgb(205, 220, 226);"/>
-                    <ui:Label text="F  Store held item    G  Drop selected slot" style="font-size: 10px; color: rgb(205, 220, 226); white-space: normal;"/>
+                    <ui:Label text="G  Drop item" style="font-size: 10px; color: rgb(205, 220, 226); white-space: normal;"/>
                     <ui:Label text="B  Hold to open the emote panel (blend in)" style="font-size: 10px; color: rgb(255, 203, 92); -unity-font-style: bold; white-space: normal;"/>
                 </ui:VisualElement>
             </ui:VisualElement>

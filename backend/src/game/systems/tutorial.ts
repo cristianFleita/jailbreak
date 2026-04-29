@@ -42,8 +42,7 @@ export const PRISONER_MISSION_IDS: readonly TutorialPrisonerMissionId[] = [
   'p1_review_route',
   'p2_food_flow',
   'p3_sprint',
-  'p4_store_item',
-  'p5_drop_item',
+  'p4_grab_item',
   'p6_risky_action',
   'p7_hide_cart',
 ] as const

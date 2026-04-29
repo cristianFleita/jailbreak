@@ -950,3 +950,61 @@ The previous hand-to-slot step made route item collection too fiddly and conflic
 - `Soap.prefab` no longer allows hand dropping; soap is dropped from storage before it becomes an active slip trap.
 - Prisoner prefabs serialize `HeldItemInput.storeKey` as `None`; `HeldItemInput` ignores store input in gameplay.
 - `PickUpInteractable` no longer auto-stores or auto-throws the currently held hand item when trying to pick up another local-only prop.
+
+## ADR-039: Pickup failures use HUD toast feedback
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+Failed item pickup attempts show short HUD toasts through `GameHudController.ShowToast`. Route item pickup shows `Inventory slots are full` when local authoritative slots are full or the backend returns `Inventory full`. Distance failures from the backend and local E presses just outside pickup range show `Move closer to pick that up`.
+
+### Why
+
+Pickup failures were previously silent, which made auto-store feel broken when slots were full or when the server rejected stale/out-of-range positions. Reusing the existing HUD toast keeps feedback consistent with Route 1 interaction blockers.
+
+### Implications
+
+- `NetworkRoutePickable` translates pickup-specific `game:error` messages into player-facing toasts.
+- `InteractionManager` checks for nearby pickup candidates in a small outer radius when E is pressed and no current prompt exists.
+- No backend protocol change is needed; backend validation remains authoritative.
+
+## ADR-040: Prisoner tutorial item missions are grab and drop only
+
+**Status**: Superseded by ADR-041
+**Date**: 2026-04-29
+
+### Decision
+
+The prisoner tutorial exposes only two item missions: `p1_grab_item` and `p2_drop_item`. Pressing E on the tutorial item stores it directly into the first available prisoner inventory slot, and pressing G drops an inventory item. F is documented as flashlight toggle only.
+
+### Why
+
+The live route item flow no longer uses hand-held storage or F-to-save behavior. Keeping the tutorial on the old K/L/F flow would teach the wrong controls and conflict with flashlight input.
+
+### Implications
+
+- Backend tutorial mission allowlists and tests accept only the two prisoner item mission IDs.
+- Unity prisoner tutorial rows only show "Grab the item" and "Drop the item".
+- `TutorialPickupInteractable` no longer places the tutorial item in hand before storage.
+- `TutorialPrisonerGUI.uxml` lists F as flashlight on/off and G as item drop.
+
+## ADR-041: Prisoner tutorial restores interactions and removes drop mission
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+The prisoner tutorial mission checklist includes the broader interaction training again: review the plan, blend in with food/sit/sink, sprint, grab the item, finish a risky progress interactable, and hide in a cart. The stored-item drop action remains available as a control, but it is not a mission and the backend no longer accepts a prisoner drop mission ID.
+
+### Why
+
+The tutorial still needs to teach core prisoner interactables, not only the item flow. The old drop-with-G mission overemphasized inventory handling after route items moved to direct E pickup and F became flashlight-only.
+
+### Implications
+
+- Backend prisoner mission IDs are `p1_review_route`, `p2_food_flow`, `p3_sprint`, `p4_grab_item`, `p6_risky_action`, and `p7_hide_cart`.
+- Unity completes restored missions from the existing tutorial signals: TAB review, food/sit/sink state edges, sprint tracking, item pickup, desk/power progress, and hide cart.
+- `ItemDropped` no longer completes any tutorial mission, though G can still be listed as an available control.
