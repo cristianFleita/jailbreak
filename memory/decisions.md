@@ -864,3 +864,25 @@ Guard-only behavior makes the prank useful as an escape tool without creating gr
 - `Soap.prefab` owns `NetworkInteractable`, `NetworkRoutePickable`, and `SoapSlipTrigger`; `NetworkRoutePickable.allowDropFromHand` is enabled.
 - `Guard.prefab` must keep `GuardStunFeedback` and use `Character.controller`; soap stuns use `IsFalling`/fall sequence instead of the generic stun bool.
 - `Character.controller` now includes direct-play `Fall`, `FallenIdle`, and `StandingUp` states, and `Fall.anim` has horizontal hip translation flattened so the character does not snap back after the fall.
+
+## ADR-035: Progress-driven prop SFX replace Animator-bool prop audio
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+World props that make sound during interactions use `ProgressInteractableLoopingSfx`, not `AnimatorBoolLoopingSfx`. The component can start/stop a `LoopingSfx` from local `ProgressAction` events, remote `player:action` broadcasts, Route 1 local visuals, and NPC/script-driven action points.
+
+`GameAudioBridge` now treats false guard captures as `guard:catch success=true, isPlayer=false` and plays an angry NPC one-shot. Wrong Route 1 power-supply sabotage uses `world:cue server_wrong_alarm` and plays a 4-second alarm on the guard client.
+
+### Why
+
+The props do not own the player/NPC Animator, so watching an Animator bool on the prefab was brittle and often impossible to configure. The actual source of truth is the interaction lifecycle: progress start/stop, route start/stop, and network replay.
+
+### Implications
+
+- `Desk`, `WashingMachine`, `Sink`, and `LDesk` prefabs now own `ProgressInteractableLoopingSfx` alongside their existing `LoopingSfx`.
+- `Sink` no longer plays only a completion one-shot; it loops sink audio for the duration of the action.
+- `LDesk` uses `revisar-cajones.mp3`; `Desk` uses `working-table.mp3`; `WashingMachine` uses `washing-machine.mp3`; `Sink` uses `dirty-plates-sink.mp3`.
+- Global bridge cues in `GameScene` are 2D so the guard hears false-capture and alarm feedback regardless of listener position.

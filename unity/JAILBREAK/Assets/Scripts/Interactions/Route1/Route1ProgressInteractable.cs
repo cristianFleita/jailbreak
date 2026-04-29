@@ -1,4 +1,5 @@
 using Jailbreak.Network;
+using Jailbreak.Audio;
 using Jailbreak.Player;
 using Jailbreak.UI;
 using UnityEngine;
@@ -65,6 +66,7 @@ namespace Jailbreak.Interactions.Route1
         private CharacterController localController;
         private InteractionManager localInteractionManager;
         private Transform localActorRoot;
+        private ProgressInteractableLoopingSfx loopingSfx;
         private bool isLocalActive;
         private bool pendingStart;
         private bool pendingStop;
@@ -80,6 +82,7 @@ namespace Jailbreak.Interactions.Route1
         {
             progressPointAction = GetComponent<ProgressPointAction>();
             networkInteractable = GetComponent<NetworkInteractable>();
+            loopingSfx = GetComponentInChildren<ProgressInteractableLoopingSfx>(true);
 
             if (string.IsNullOrEmpty(progressLabel)) progressLabel = DefaultProgressLabel;
             if (string.IsNullOrEmpty(startLabel)) startLabel = DefaultStartLabel;
@@ -280,6 +283,7 @@ namespace Jailbreak.Interactions.Route1
             float initial = GetInitialProgress(GameStateManager.Instance != null ? GameStateManager.Instance.Route1State : null);
             SetProgress(initial);
             progressBar?.Show(progressLabel, initial);
+            loopingSfx?.PlayLocal();
             OnLocalInteractionStarted(GameStateManager.Instance != null ? GameStateManager.Instance.Route1State : null);
             DebugRoute($"Started local visual for {StartAction} on visual={NetworkId} route={RouteObjectId}");
             return true;
@@ -307,6 +311,7 @@ namespace Jailbreak.Interactions.Route1
 
             SetProgress(0f);
             progressBar?.Hide();
+            loopingSfx?.StopLocal();
 
             localAnimator = null;
             localController = null;

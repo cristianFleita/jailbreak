@@ -45,6 +45,7 @@ namespace Jailbreak.Audio
 
         private AudioSource _src;
         private Coroutine _fadeRoutine;
+        private Coroutine _timedStopRoutine;
 
         private void Awake()
         {
@@ -59,6 +60,7 @@ namespace Jailbreak.Audio
 
         private void OnDisable()
         {
+            if (_timedStopRoutine != null) { StopCoroutine(_timedStopRoutine); _timedStopRoutine = null; }
             if (_fadeRoutine != null) { StopCoroutine(_fadeRoutine); _fadeRoutine = null; }
             if (_src != null) _src.Stop();
         }
@@ -90,7 +92,13 @@ namespace Jailbreak.Audio
         {
             if (_src == null || clip == null) return;
             if (_src.clip != clip) _src.clip = clip;
+            _src.loop = true;
 
+            if (_timedStopRoutine != null)
+            {
+                StopCoroutine(_timedStopRoutine);
+                _timedStopRoutine = null;
+            }
             if (_fadeRoutine != null) StopCoroutine(_fadeRoutine);
 
             if (!_src.isPlaying)
@@ -109,12 +117,26 @@ namespace Jailbreak.Audio
         {
             if (_src == null || !_src.isPlaying) return;
 
+            if (_timedStopRoutine != null)
+            {
+                StopCoroutine(_timedStopRoutine);
+                _timedStopRoutine = null;
+            }
             if (_fadeRoutine != null) StopCoroutine(_fadeRoutine);
 
             if (fadeOutSeconds > 0f)
                 _fadeRoutine = StartCoroutine(FadeTo(0f, fadeOutSeconds, true));
             else
                 _src.Stop();
+        }
+
+        public void PlayForSeconds(float seconds)
+        {
+            Play();
+            if (_src == null || !_src.isPlaying) return;
+
+            if (_timedStopRoutine != null) StopCoroutine(_timedStopRoutine);
+            _timedStopRoutine = StartCoroutine(StopAfter(Mathf.Max(0f, seconds)));
         }
 
         /// <summary>Smoothly set the runtime volume (overrides inspector value until next Play).</summary>
@@ -126,6 +148,14 @@ namespace Jailbreak.Audio
             if (_fadeRoutine != null) StopCoroutine(_fadeRoutine);
             if (fadeSeconds <= 0f) { _src.volume = volume; return; }
             _fadeRoutine = StartCoroutine(FadeTo(volume, fadeSeconds, false));
+        }
+
+        private IEnumerator StopAfter(float seconds)
+        {
+            if (seconds > 0f)
+                yield return new WaitForSeconds(seconds);
+            _timedStopRoutine = null;
+            Stop();
         }
 
         private IEnumerator FadeTo(float target, float seconds, bool stopAtEnd)

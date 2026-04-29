@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -30,10 +31,22 @@ namespace Jailbreak.Audio
         public AudioRolloffMode rolloff = AudioRolloffMode.Linear;
 
         private AudioSource _src;
+        private Coroutine _timedRoutine;
 
         private void Awake()
         {
             _src = GetComponent<AudioSource>();
+            ApplySettingsToSource();
+        }
+
+        private void OnValidate()
+        {
+            if (_src == null) _src = GetComponent<AudioSource>();
+            if (_src != null) ApplySettingsToSource();
+        }
+
+        private void ApplySettingsToSource()
+        {
             _src.playOnAwake = false;
             _src.loop = false;
             _src.outputAudioMixerGroup = mixerGroup;
@@ -63,8 +76,56 @@ namespace Jailbreak.Audio
         public void PlayClip(AudioClip clip)
         {
             if (clip == null || _src == null) return;
+            if (_timedRoutine != null)
+            {
+                StopCoroutine(_timedRoutine);
+                _timedRoutine = null;
+            }
+            if (_src.loop) _src.Stop();
+            _src.loop = false;
             _src.pitch = 1f + Random.Range(-pitchVariance, pitchVariance);
             _src.PlayOneShot(clip, volume);
+        }
+
+        /// <summary>Play a selected clip as a temporary loop, then stop it.</summary>
+        public void PlayLoopForSeconds(float seconds)
+        {
+            if (clips == null || clips.Length == 0) return;
+            int i = clips.Length == 1 ? 0 : Random.Range(0, clips.Length);
+            PlayLoopForSeconds(clips[i], seconds);
+        }
+
+        public void PlayLoopForSeconds(AudioClip clip, float seconds)
+        {
+            if (clip == null || _src == null) return;
+            if (_timedRoutine != null) StopCoroutine(_timedRoutine);
+
+            _src.Stop();
+            _src.clip = clip;
+            _src.loop = true;
+            _src.volume = volume;
+            _src.pitch = 1f + Random.Range(-pitchVariance, pitchVariance);
+            _src.Play();
+            _timedRoutine = StartCoroutine(StopAfter(Mathf.Max(0f, seconds)));
+        }
+
+        public void Stop()
+        {
+            if (_timedRoutine != null)
+            {
+                StopCoroutine(_timedRoutine);
+                _timedRoutine = null;
+            }
+            if (_src == null) return;
+            _src.Stop();
+            _src.loop = false;
+        }
+
+        private IEnumerator StopAfter(float seconds)
+        {
+            if (seconds > 0f)
+                yield return new WaitForSeconds(seconds);
+            Stop();
         }
 
         /// <summary>

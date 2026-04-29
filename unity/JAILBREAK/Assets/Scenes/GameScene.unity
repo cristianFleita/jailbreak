@@ -33002,7 +33002,7 @@ MonoBehaviour:
   wrongMarkOneShot: {fileID: 757700206}
   wrongServerOneShot: {fileID: 1280475175}
   securityAlarmLoop: {fileID: 0}
-  alarmStartsAtErrorCount: 1
+  wrongPowerSupplyAlarmSeconds: 4
   ambience: {fileID: 416742439}
   missionCompleteOneShot: {fileID: 1827115453}
   playMissionCompleteOnGameEnd: 1
@@ -56940,11 +56940,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.OneShotSfx
   clips:
+  - {fileID: 8300000, guid: 5ff518527da2049429ca4ac038aeefdb, type: 3}
+  - {fileID: 8300000, guid: 3b650734325ab4b66a14025c15cf5963, type: 3}
   - {fileID: 8300000, guid: f5b2b74cda9bf4ec7a0c8fe6b70d48fa, type: 3}
   mixerGroup: {fileID: 0}
   volume: 1
   pitchVariance: 0.05
-  spatialBlend: 1
+  spatialBlend: 0
   minDistance: 2
   maxDistance: 20
   rolloff: 1
@@ -99380,7 +99382,7 @@ MonoBehaviour:
   mixerGroup: {fileID: 0}
   volume: 1
   pitchVariance: 0.05
-  spatialBlend: 1
+  spatialBlend: 0
   minDistance: 2
   maxDistance: 20
   rolloff: 1
@@ -136658,7 +136660,7 @@ MonoBehaviour:
   mixerGroup: {fileID: 0}
   volume: 1
   pitchVariance: 0.05
-  spatialBlend: 1
+  spatialBlend: 0
   minDistance: 2
   maxDistance: 20
   rolloff: 1

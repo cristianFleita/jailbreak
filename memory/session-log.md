@@ -346,3 +346,11 @@
   - Added focused backend coverage for hand-dropping soap and consuming dropped soap into a room-wide guard stun; updated spawn-area tests to include a soap spawn slot.
   - Verified backend full Vitest suite (`203/203`), backend TypeScript via explicit nvm Node v22 `tsc`, and `git diff --check`.
   - Recorded ADR-034 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Audio bridge and prop interaction SFX cleanup** (2026-04-29):
+  - Read `memory/progress.md` and traced `GameAudioBridge`, `guard:catch`, Route 1 `world:cue`, `ProgressAction`, `player:action` replay, and requested prop prefabs.
+  - Fixed false guard capture audio by handling `guard:catch` payloads with `success=true` and `isPlayer=false`, playing randomized angry prisoner clips instead of starting the alarm.
+  - Changed wrong Route 1 power-supply sabotage to play a 4-second guard alarm via `world:cue server_wrong_alarm`; configured GameScene bridge cues as 2D so they are audible globally.
+  - Added `ProgressInteractableLoopingSfx` and wired `Desk`, `WashingMachine`, `Sink`, and `LDesk` to progress/network/Route 1 action lifecycles instead of prefab Animator bools.
+  - Extended NPC work-table and washer character-side interactions to start/stop the prop loop while NPCs use those stations.
+  - Verified Unity C# with `msbuild Assembly-CSharp.csproj` and `git diff --check`; build passed with existing warnings only.
+  - Recorded ADR-035 in `memory/decisions.md`.

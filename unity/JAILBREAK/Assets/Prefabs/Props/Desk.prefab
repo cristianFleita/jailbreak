@@ -159,13 +159,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 7836010778410094476}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc5216b4d495f4ab696bb8a105a256cc, type: 3}
+  m_Script: {fileID: 11500000, guid: 9f3cb4d5a6e84f65b5d310fd0ccaf4a9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.AnimatorBoolLoopingSfx
-  animator: {fileID: 0}
-  boolName: 
-  loop: {fileID: 0}
-  invert: 0
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.ProgressInteractableLoopingSfx
+  loop: {fileID: 552712119945723954}
+  progressAction: {fileID: 2240825409829407146}
+  listenToProgressAction: 1
+  networkInteractable: {fileID: 98940137815392887}
+  listenToPlayerActionBroadcasts: 1
+  startActions:
+  - startWork
+  stopActions:
+  - stopWork
+  debugLogs: 0
 --- !u!82 &6496361149252131347
 AudioSource:
   m_ObjectHideFlags: 0
