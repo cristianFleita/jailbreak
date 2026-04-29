@@ -360,3 +360,10 @@
   - Connected the existing scene `Alarm` `LoopingSfx` to `GameAudioBridge.securityAlarmLoop`, set it to 2D/global, and added a local wrong-server completion fallback while keeping the guard `world:cue` path.
   - Verified Unity C# with `msbuild Assembly-CSharp.csproj` and `git diff --check`; build passed with existing warnings only.
   - Recorded ADR-036 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Power outage flashlight rig stabilization** (2026-04-29):
+  - Read `memory/progress.md` and traced `FlashlightController`, `PowerOutage`, `PowerOutageNetworkBridge`, the three requested character prefabs, and `Character.controller`.
+  - Diagnosed the flashlight drift as a rig authoring issue: flashlight props were parented to animated hand-tip bones while the active flashlight `TwoBoneIKConstraint` only solved target position, allowing `Character.controller` wrist rotation to move the beam.
+  - Reparented the flashlight prefab instance in `Prisoner.prefab`, `Guard.prefab`, and `Prisoner-NPC.prefab` to each active flashlight `ItemOrigin` IK target.
+  - Set the active flashlight arm `TwoBoneIKConstraint` target rotation weight to `1` on the same three prefabs so the rig owns wrist orientation during outage flashlight use.
+  - Kept backend/network protocol unchanged because outage state is already synced through `WorldStatePayload.ventilationPowered` and consumed by `PowerOutageNetworkBridge`.
+  - Recorded ADR-037 in `memory/decisions.md`.

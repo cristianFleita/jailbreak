@@ -907,3 +907,22 @@ Some authored prefabs place `sfx` as a sibling of the interactable child, so chi
 - `LDesk`/server sabotage audio works even when the `sfx` child is a sibling of the `Interactable` child.
 - Sink audio now plays for NPC food-drop actions as well as player interactions.
 - `GameScene` wires the existing `Alarm` `LoopingSfx` into `GameAudioBridge.securityAlarmLoop` and sets it to 2D/global playback.
+
+## ADR-037: Flashlight props are owned by IK targets, not animated hand bones
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+Character flashlight prefab instances are parented to each character's active flashlight IK target (`ItemOrigin`) instead of the animated hand-tip bone. The flashlight arm `TwoBoneIKConstraint` uses target rotation weight `1` so the rig owns both the hand position and wrist orientation while the flashlight is active.
+
+### Why
+
+`Character.controller` locomotion and interaction clips animate the hand skeleton directly. When the flashlight prop is a child of the animated hand tip but the IK constraint only solves position, controller states can rotate the wrist and drag the beam off its outage pose. Parenting the prop to the IK target makes the prop share the same stable source that the rig solves toward.
+
+### Implications
+
+- `Prisoner.prefab`, `Guard.prefab`, and `Prisoner-NPC.prefab` keep using the existing `FlashlightController` and `PowerOutage` event flow.
+- No backend or socket protocol change is required; outage state remains authoritative through `WorldStatePayload.ventilationPowered`.
+- Flashlight beam tuning should now be done by adjusting each prefab's `ItemOrigin` transform / flashlight local offset, not by editing `Character.controller`.
