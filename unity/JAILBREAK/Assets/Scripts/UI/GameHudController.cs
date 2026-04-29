@@ -535,6 +535,7 @@ namespace Jailbreak.UI
             if (string.IsNullOrEmpty(itemId)) return null;
             if (itemId.StartsWith("route1_cutters", StringComparison.Ordinal)) return "route1_cutters";
             if (itemId.StartsWith("route1_wrench",  StringComparison.Ordinal)) return "route1_wrench";
+            if (itemId.StartsWith("route1_soap",    StringComparison.Ordinal)) return "route1_soap";
             return itemId;
         }
 
@@ -544,6 +545,7 @@ namespace Jailbreak.UI
             {
                 case "route1_cutters": return "Cutters";
                 case "route1_wrench": return "Wrench";
+                case "route1_soap": return "Soap";
                 default: return string.IsNullOrEmpty(key) ? "Empty hand" : key;
             }
         }
@@ -554,6 +556,7 @@ namespace Jailbreak.UI
             {
                 case "route1_cutters": return "Cutters";
                 case "route1_wrench": return "Wrench";
+                case "route1_soap": return "Soap";
                 default: return string.IsNullOrEmpty(key) ? "Empty" : key;
             }
         }

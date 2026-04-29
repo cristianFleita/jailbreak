@@ -190,6 +190,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ThrowHitHandler
   stunDuration: 3
   animationVar: IsStunned
+  itemKind: container
+  broadcastThrow: 1
+  reportGuardHit: 1
+  fallbackThrowForce: 12
 --- !u!65 &636744752333813452
 BoxCollider:
   m_ObjectHideFlags: 0

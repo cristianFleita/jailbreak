@@ -8,9 +8,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createGameRoomState } from '../state.js'
 import { defaultGameConfig } from '../room-manager.js'
-import { handlePlayerInteract } from '../event-handlers.js'
+import { handlePlayerInteract, handleThrowableHit } from '../event-handlers.js'
 import { initializeRouteState } from '../routes/route-registry.js'
 import { Route1System } from '../systems/route1-system.js'
+import { clearSpawnAreaRegistration } from '../systems/spawn-areas.js'
 import {
   dropCriticalRouteItemsForPlayer,
   pickupToHand,
@@ -267,6 +268,74 @@ describe('Route inventory (Phase F)', () => {
       itemId: 'route1_wrench_a',
       state: 'dropped',
     }))
+  })
+
+  it('allows soap to be dropped directly from hand', () => {
+    const state = makeRoom('room-route-inventory-soap-hand-drop')
+    const prisoner = makePlayer(state, 'sock-a', 'user-a')
+    const room = makeGameRoom(state)
+    const io = mockIo()
+
+    pickupToHand(state, prisoner, 'route1_soap_a')
+
+    handlePlayerInteract({
+      io,
+      roomId: state.id,
+      room,
+      socketId: 'sock-a',
+      playerId: 'user-a',
+      objectId: 'route1_soap_a',
+      action: 'item.throw',
+      timestamp: Date.now(),
+    })
+
+    expect(prisoner.heldItemId).toBeNull()
+    expect(state.items.get('route1_soap_a')?.state).toBe('dropped')
+    expect(io.emit).toHaveBeenCalledWith('item:state', expect.objectContaining({
+      itemId: 'route1_soap_a',
+      state: 'dropped',
+    }))
+  })
+
+  it('consumes dropped soap and broadcasts guard stun on slip', () => {
+    const state = makeRoom('room-route-inventory-soap-slip')
+    const prisoner = makePlayer(state, 'sock-a', 'user-a')
+    const guard = makePlayer(state, 'sock-guard', 'guard-user', 'guard')
+    const room = makeGameRoom(state)
+    const io = mockIo()
+    const soap = state.items.get('route1_soap_a')!
+
+    soap.state = 'dropped'
+    soap.position = { ...guard.position }
+
+    handleThrowableHit({
+      io,
+      roomId: state.id,
+      room,
+      socketId: 'sock-a',
+      payload: {
+        itemId: 'route1_soap_a',
+        targetGuardId: 'guard-user',
+        itemKind: 'soap',
+        hitPosition: { ...guard.position },
+        stunDuration: 4,
+      },
+      timestamp: Date.now(),
+    })
+
+    expect(soap.state).toBe('respawning')
+    expect(io.emit).toHaveBeenCalledWith('item:state', expect.objectContaining({
+      itemId: 'route1_soap_a',
+      state: 'respawning',
+    }))
+    expect(io.emit).toHaveBeenCalledWith('guard:stun', expect.objectContaining({
+      guardId: 'guard-user',
+      attackerId: prisoner.userId,
+      itemKind: 'soap',
+      duration: 4,
+    }))
+
+    clearSpawnAreaRegistration(state.id)
   })
 
   it('handles item.store into a requested slot through the player interaction handler', () => {

@@ -18,6 +18,10 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
     [Header("Hold Point")]
     public string holdPointName = "mixamorig:RightHandIndex1";
 
+    [Header("Drop Rules")]
+    [Tooltip("Allow this item to be dropped directly from the player's hand with the drop key. Route tools keep this off; prank props such as soap can turn it on.")]
+    public bool allowDropFromHand = false;
+
     [Header("Debug")]
     public bool debugLogs = false;
 
@@ -27,6 +31,7 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
     public Transform Transform => transform;
     public bool CanInteract => worldAvailable && !pendingPickup && !pickable.IsHeld;
     public string[] AllowedInStates => allowedInStates;
+    public bool CanDropFromHand => allowDropFromHand;
     public string DebugState =>
         $"itemId={itemId} worldAvailable={worldAvailable} pendingPickup={pendingPickup} pendingStore={pendingStore} pendingThrow={pendingThrow} pendingStoreSlot={pendingStoreSlotIndex} isHeld={(pickable != null && pickable.IsHeld)} active={isActiveAndEnabled}";
 
@@ -173,7 +178,7 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// Voluntarily drop this route tool back into the world. Server validates
+    /// Voluntarily drop this route item back into the world. Server validates
     /// ownership, picks the drop position, and broadcasts <c>item:state</c>.
     /// The local client only flips a pending flag so we don't double-send while
     /// we wait for the authoritative response.
@@ -194,10 +199,12 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
 
         var gsm = GameStateManager.Instance;
         var holdsStored = gsm != null && HasLocalInventorySlot(gsm.LocalInventorySlots);
+        var holdsInHand = allowDropFromHand
+            && ((gsm != null && gsm.LocalHeldItemId == itemId) || (localHeldInput != null && localHeldInput.HasItem && pickable.IsHeld));
 
-        if (!holdsStored)
+        if (!holdsStored && !holdsInHand)
         {
-            DebugRoute("Throw blocked: route tool must be stored in a slot first");
+            DebugRoute("Throw blocked: item must be stored in a slot before dropping");
             return;
         }
 

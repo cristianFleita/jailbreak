@@ -54,6 +54,12 @@ const AREAS_A: SpawnAreaRegistration[] = [
     position: { x: 8, y: 0, z: 0 },
     allowedItemIds: ['route1_cutters', 'route1_wrench'],
   },
+  {
+    spawnAreaId: 'laundry_soap_slot',
+    zoneId: 'laundry',
+    position: { x: -2, y: 0, z: 1 },
+    allowedItemIds: ['route1_soap'],
+  },
 ]
 
 describe('Spawn Areas (Phase C)', () => {
@@ -73,9 +79,9 @@ describe('Spawn Areas (Phase C)', () => {
 
       expect(result.skipped).toBe(false)
       expect(result.rejected).toEqual([])
-      expect(result.accepted).toHaveLength(3)
+      expect(result.accepted).toHaveLength(4)
       expect(hasSpawnAreasRegistered(state)).toBe(true)
-      expect(state.spawnAreas!.size).toBe(3)
+      expect(state.spawnAreas!.size).toBe(4)
 
       clearSpawnAreaRegistration('room-a')
     })

@@ -76,7 +76,7 @@ export type RouteItemType = 'route_tool' | string
  * `route1_cutters_b`). Mission gates check by kind so any matching instance
  * counts as satisfying the requirement.
  */
-export type RouteItemKind = 'route1_cutters' | 'route1_wrench'
+export type RouteItemKind = 'route1_cutters' | 'route1_wrench' | 'route1_soap'
 
 export interface InventorySlotSync {
   itemId: RouteItemId        // unique instance id (e.g. route1_cutters_a)
@@ -365,6 +365,35 @@ export interface PlayerInteractPayload {
   objectId: string
   action: PlayerInteractAction
   slotIndex?: number
+}
+
+export type ThrowableItemKind = 'food_plate' | 'clothes_bundle' | 'folded_clothes' | 'container' | 'soap'
+
+export interface ThrowableThrowPayload {
+  itemKind: ThrowableItemKind
+  origin: Vector3
+  direction: Vector3
+  force: number
+}
+
+export interface ThrowableThrowBroadcast extends ThrowableThrowPayload {
+  throwerId: string
+}
+
+export interface ThrowableHitPayload {
+  itemId?: string
+  targetGuardId: string
+  itemKind: ThrowableItemKind
+  hitPosition: Vector3
+  stunDuration: number
+}
+
+export interface GuardStunPayload {
+  guardId: string
+  attackerId: string
+  itemKind: ThrowableItemKind
+  duration: number
+  hitPosition: Vector3
 }
 
 export interface GuardMarkPayload {

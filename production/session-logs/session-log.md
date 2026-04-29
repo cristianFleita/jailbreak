@@ -1900,3 +1900,88 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260429_051030
+### Commits
+3349ceb chore: throw and stun guard
+d3b3800 Merge pull request #19 from cristianFleita/feat-sound
+d49bc24 chore: npc footsteps
+4380110 chore: intro sound till tutorial
+5f3dace chore: sound wip
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/StunAction.cs
+unity/JAILBREAK/Assets/Scripts/Player/GuardStunFeedback.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_052645
+### Commits
+3349ceb chore: throw and stun guard
+d3b3800 Merge pull request #19 from cristianFleita/feat-sound
+d49bc24 chore: npc footsteps
+4380110 chore: intro sound till tutorial
+5f3dace chore: sound wip
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/NetworkThrowableProjectile.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/StunAction.cs
+unity/JAILBREAK/Assets/Scripts/Player/GuardStunFeedback.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_055548
+### Commits
+3349ceb chore: throw and stun guard
+d3b3800 Merge pull request #19 from cristianFleita/feat-sound
+d49bc24 chore: npc footsteps
+4380110 chore: intro sound till tutorial
+5f3dace chore: sound wip
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/NetworkThrowableProjectile.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/StunAction.cs
+unity/JAILBREAK/Assets/Scripts/Player/GuardStunFeedback.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerAnimationController.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_061205
+### Commits
+3349ceb chore: throw and stun guard
+d3b3800 Merge pull request #19 from cristianFleita/feat-sound
+d49bc24 chore: npc footsteps
+4380110 chore: intro sound till tutorial
+5f3dace chore: sound wip
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/NetworkThrowableProjectile.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/StunAction.cs
+unity/JAILBREAK/Assets/Scripts/Player/GuardStunFeedback.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerAnimationController.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_062736
+### Commits
+3349ceb chore: throw and stun guard
+d3b3800 Merge pull request #19 from cristianFleita/feat-sound
+d49bc24 chore: npc footsteps
+4380110 chore: intro sound till tutorial
+5f3dace chore: sound wip
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/NetworkThrowableProjectile.cs
+unity/JAILBREAK/Assets/Scripts/Interactions/Pickable/StunAction.cs
+unity/JAILBREAK/Assets/Scripts/Player/GuardStunFeedback.cs
+unity/JAILBREAK/Assets/Scripts/Player/PlayerAnimationController.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

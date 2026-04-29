@@ -31,6 +31,7 @@ interface RouteDefinition {
 export interface RouteItemInstance {
   instanceId: RouteItemId
   kind: RouteItemKind
+  itemType?: string
 }
 
 export const ROUTE1_ITEM_INSTANCES: readonly RouteItemInstance[] = [
@@ -38,6 +39,7 @@ export const ROUTE1_ITEM_INSTANCES: readonly RouteItemInstance[] = [
   { instanceId: 'route1_cutters_b', kind: 'route1_cutters' },
   { instanceId: 'route1_wrench_a',  kind: 'route1_wrench' },
   { instanceId: 'route1_wrench_b',  kind: 'route1_wrench' },
+  { instanceId: 'route1_soap_a',    kind: 'route1_soap', itemType: 'prank_item' },
 ]
 
 const REGISTRY: RouteDefinition[] = [
@@ -50,7 +52,7 @@ const REGISTRY: RouteDefinition[] = [
       // them via item:state updates. Pickup validation tolerates placeholder
       // positions; Unity is the source of proximity in this phase.
       for (const inst of ROUTE1_ITEM_INSTANCES) {
-        ensureItemState(state, inst.instanceId, 'route_tool', undefined, inst.kind)
+        ensureItemState(state, inst.instanceId, inst.itemType ?? 'route_tool', undefined, inst.kind)
       }
     },
   },

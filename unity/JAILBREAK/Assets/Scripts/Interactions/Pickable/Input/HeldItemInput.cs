@@ -97,6 +97,13 @@ public class HeldItemInput : MonoBehaviour
     /// </summary>
     private bool TryRouteDrop()
     {
+        var heldRoute = heldItem != null ? heldItem.GetComponent<NetworkRoutePickable>() : null;
+        if (heldRoute != null && heldRoute.CanDropFromHand)
+        {
+            heldRoute.RequestThrow();
+            return true;
+        }
+
         if (inventory != null)
         {
             var slot = inventory.GetAt(inventory.SelectedIndex);

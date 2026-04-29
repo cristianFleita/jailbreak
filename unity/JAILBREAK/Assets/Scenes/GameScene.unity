@@ -6222,6 +6222,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1348013224}
+  - {fileID: 1367521210}
   - {fileID: 1736450973}
   - {fileID: 1035710812}
   - {fileID: 989798976}
@@ -105174,6 +105175,55 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
+--- !u!1 &1367521209
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1367521210}
+  - component: {fileID: 1367521211}
+  m_Layer: 0
+  m_Name: SpawnArea_Laundry_Soap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1367521210
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1367521209}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -21.928, y: 0.034, z: 16.239}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 92679797}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1367521211
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1367521209}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f4a1d6c2b3e4a77b9c5de8a4f52c901, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Interactions.Pickable.RouteSpawnArea
+  spawnAreaId: route1_soap
+  zoneId: laundry
+  allowedItemIds:
+  - route1_soap
+  spawnPoint: {fileID: 0}
 --- !u!43 &1368405346
 Mesh:
   m_ObjectHideFlags: 0
@@ -122102,6 +122152,8 @@ MonoBehaviour:
     prefab: {fileID: 409235672718471057, guid: c6922dbe8005f4a36bb1fc31a28ecc33, type: 3}
   - itemId: route1_wrench
     prefab: {fileID: 5027419353655981081, guid: a72e57ab03be0422094a01ce0e5beb42, type: 3}
+  - itemId: route1_soap_a
+    prefab: {fileID: 29529619525904284, guid: 383bab671626e425cb57c485daab63d6, type: 3}
   scanDelaySeconds: 0.25
   continuousRescan: 0
   debugLogs: 0

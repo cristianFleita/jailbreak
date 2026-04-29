@@ -11,6 +11,9 @@ import {
   PlayerInteractAction,
   PlayerMovePayload,
   GuardMarkPayload,
+  ThrowableHitPayload,
+  ThrowableItemKind,
+  ThrowableThrowPayload,
   Vector3,
 } from './types.js'
 import { updatePlayerMovement, removePlayer, distance, endGame } from './state.js'
@@ -27,6 +30,7 @@ import {
   dropCriticalRouteItemsForPlayer,
   dropInventoryItem,
   isCriticalRouteItem,
+  isTrackedRouteItem,
   pickupToHand,
   storeHeldItem,
 } from './systems/route-inventory.js'
@@ -314,7 +318,7 @@ function handleRouteItemPickup(
   const item = room.state.items.get(objectId)
   const stableItemId = item?.itemId ?? item?.id ?? objectId
 
-  if (!item || !isCriticalRouteItem(stableItemId)) {
+  if (!item || !isTrackedRouteItem(stableItemId)) {
     console.warn(`[PICKUP] ${player.userId} requested unmanaged route item ${objectId}`)
     io.to(socketId).emit('game:error', { message: 'Route item not found' })
     return
@@ -406,8 +410,8 @@ function handleRouteItemStore(
     return
   }
 
-  if (!isCriticalRouteItem(player.heldItemId)) {
-    io.to(socketId).emit('game:error', { message: 'No route tool in hand' })
+  if (!isTrackedRouteItem(player.heldItemId)) {
+    io.to(socketId).emit('game:error', { message: 'No route item in hand' })
     return
   }
 
@@ -456,14 +460,16 @@ function handleRouteItemThrow(
 ): void {
   const stableItemId = resolveStableItemId(room, objectId)
 
-  if (!isCriticalRouteItem(stableItemId)) {
-    console.warn(`[THROW] ${player.userId} requested non-route throw ${objectId}`)
-    io.to(socketId).emit('game:error', { message: 'That item cannot be thrown' })
+  if (!isTrackedRouteItem(stableItemId)) {
+    console.warn(`[THROW] ${player.userId} requested unmanaged item drop ${objectId}`)
+    io.to(socketId).emit('game:error', { message: 'That item cannot be dropped' })
     return
   }
 
-  if (!playerHasItemInSlot(player, stableItemId)) {
-    console.warn(`[THROW] ${player.userId} tried to throw ${stableItemId} without storing it first`)
+  const hasInSlot = playerHasItemInSlot(player, stableItemId)
+  const hasInHand = player.heldItemId === stableItemId
+  if (!hasInSlot && !(hasInHand && canDropTrackedItemFromHand(stableItemId))) {
+    console.warn(`[THROW] ${player.userId} tried to drop ${stableItemId} without an allowed source`)
     io.to(socketId).emit('game:error', { message: 'Store the item in a slot before dropping it' })
     return
   }
@@ -492,6 +498,10 @@ function handleRouteItemThrow(
 
 function playerHasItemInSlot(player: PlayerState, itemId: string): boolean {
   return (player.inventorySlots ?? []).some((slot) => slot?.itemId === itemId)
+}
+
+function canDropTrackedItemFromHand(itemId: string): boolean {
+  return itemId === 'route1_soap' || itemId.startsWith('route1_soap_')
 }
 
 function handleItemPickup(io: Server, roomId: string, room: GameRoom, playerId: string, itemId: string, item: any): void {
@@ -670,6 +680,159 @@ export function handlePlayerAction(context: PlayerActionContext): void {
     objectId,
     action,
   })
+}
+
+// ============================================================================
+// throwable:throw / throwable:hit handlers
+// ============================================================================
+
+const THROWABLE_ITEM_KINDS = new Set<ThrowableItemKind>([
+  'food_plate',
+  'clothes_bundle',
+  'folded_clothes',
+  'container',
+  'soap',
+])
+
+const MIN_THROW_FORCE = 1
+const MAX_THROW_FORCE = 30
+const MIN_STUN_SECONDS = 0.25
+const MAX_STUN_SECONDS = 5
+const STUN_HIT_DEBOUNCE_MS = 900
+
+const recentThrowableHits = new Map<string, number>()
+
+export interface ThrowableThrowContext {
+  io: Server
+  roomId: string
+  room: GameRoom
+  socketId: string
+  payload: ThrowableThrowPayload
+  timestamp: number
+}
+
+export interface ThrowableHitContext {
+  io: Server
+  roomId: string
+  room: GameRoom
+  socketId: string
+  payload: ThrowableHitPayload
+  timestamp: number
+}
+
+export function handleThrowableThrow(context: ThrowableThrowContext): void {
+  const { io, roomId, room, socketId, payload } = context
+
+  const player = room.state.players.get(socketId)
+  if (!player || player.role !== 'prisoner' || !player.isAlive) return
+  if (!isValidThrowableKind(payload?.itemKind)) return
+  if (!isFiniteVector(payload.origin) || !isFiniteVector(payload.direction)) return
+
+  // Keep the server's reconnect-safe hand state in sync with the local throw.
+  // The client has already detached the prop for responsiveness.
+  player.carrying = null
+
+  io.to(roomId).except(socketId).emit('throwable:throw', {
+    throwerId: player.userId,
+    itemKind: payload.itemKind,
+    origin: payload.origin,
+    direction: normalizeVector(payload.direction),
+    force: clamp(payload.force, MIN_THROW_FORCE, MAX_THROW_FORCE),
+  })
+}
+
+export function handleThrowableHit(context: ThrowableHitContext): void {
+  const { io, roomId, room, socketId, payload, timestamp } = context
+
+  const attacker = room.state.players.get(socketId)
+  if (!attacker || attacker.role !== 'prisoner' || !attacker.isAlive) return
+  if (!isValidThrowableKind(payload?.itemKind)) return
+  if (!payload.targetGuardId || !isFiniteVector(payload.hitPosition)) return
+
+  const guard = room.state.playersByUserId.get(payload.targetGuardId)
+  if (!guard || guard.role !== 'guard' || !guard.isAlive) return
+
+  if (payload.itemKind === 'soap') {
+    handleSoapSlip(io, roomId, room, attacker, guard, payload)
+    return
+  }
+
+  const debounceKey = `${attacker.userId}:${guard.userId}:${payload.itemKind}`
+  const lastHitAt = recentThrowableHits.get(debounceKey) ?? 0
+  if (timestamp - lastHitAt < STUN_HIT_DEBOUNCE_MS) return
+  recentThrowableHits.set(debounceKey, timestamp)
+
+  io.to(roomId).emit('guard:stun', {
+    guardId: guard.userId,
+    attackerId: attacker.userId,
+    itemKind: payload.itemKind,
+    duration: clamp(payload.stunDuration, MIN_STUN_SECONDS, MAX_STUN_SECONDS),
+    hitPosition: payload.hitPosition,
+  })
+}
+
+const SOAP_SLIP_MAX_DISTANCE = 2.25
+
+function handleSoapSlip(
+  io: Server,
+  roomId: string,
+  room: GameRoom,
+  reporter: PlayerState,
+  guard: PlayerState,
+  payload: ThrowableHitPayload
+): void {
+  const itemId = payload.itemId
+  if (!itemId || !isTrackedRouteItem(itemId)) return
+  if (!(itemId === 'route1_soap' || itemId.startsWith('route1_soap_'))) return
+
+  const item = room.state.items.get(itemId)
+  if (!item) return
+
+  const lifecycle = item.state ?? 'spawned'
+  if (lifecycle !== 'spawned' && lifecycle !== 'dropped') return
+
+  // Server-side sanity check: the guard must be close to the authoritative soap
+  // position. Unity owns the exact trigger, this just rejects obvious bad reports.
+  if (distance(guard.position, item.position) > SOAP_SLIP_MAX_DISTANCE) return
+
+  item.state = 'respawning'
+  item.holderUserId = undefined
+  item.isPickedUp = false
+  item.pickedUpBy = undefined
+  broadcastItemState(io, roomId, item)
+  scheduleCriticalItemRespawn(io, roomId, room.state, itemId as RouteItemId)
+
+  io.to(roomId).emit('guard:stun', {
+    guardId: guard.userId,
+    attackerId: reporter.userId,
+    itemKind: payload.itemKind,
+    duration: clamp(payload.stunDuration, MIN_STUN_SECONDS, MAX_STUN_SECONDS),
+    hitPosition: payload.hitPosition,
+  })
+
+  console.log(`[SOAP] ${reporter.userId} tripped guard ${guard.userId} with ${itemId}`)
+}
+
+function isValidThrowableKind(kind: string | undefined): kind is ThrowableItemKind {
+  return !!kind && THROWABLE_ITEM_KINDS.has(kind as ThrowableItemKind)
+}
+
+function isFiniteVector(v: Vector3 | undefined): v is Vector3 {
+  return !!v
+    && Number.isFinite(v.x)
+    && Number.isFinite(v.y)
+    && Number.isFinite(v.z)
+}
+
+function normalizeVector(v: Vector3): Vector3 {
+  const mag = Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
+  if (mag <= 0.0001) return { x: 0, y: 0, z: 1 }
+  return { x: v.x / mag, y: v.y / mag, z: v.z / mag }
+}
+
+function clamp(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return min
+  return Math.max(min, Math.min(max, value))
 }
 
 // ============================================================================

@@ -84,6 +84,8 @@ namespace Jailbreak.Network
         public event Action<ItemPickupPayload>        OnItemPickupEvent;
         public event Action<RiotAvailablePayload>     OnRiotAvailableEvent;
         public event Action<PlayerActionBroadcast>    OnPlayerActionEvent;
+        public event Action<ThrowableThrowBroadcast>  OnThrowableThrowEvent;
+        public event Action<GuardStunPayload>         OnGuardStunEvent;
         public event Action<GameEndPayload>           OnGameEndEvent;
         public event Action<MatchStatusPayload>       OnMatchStatusEvent;
         public event Action<ErrorPayload>             OnNetworkErrorEvent;
@@ -137,6 +139,8 @@ namespace Jailbreak.Network
         [DllImport("__Internal")] private static extern void   SocketSendInteract(string objectId, string action);
         [DllImport("__Internal")] private static extern void   SocketSendInteractWithSlot(string objectId, string action, int slotIndex);
         [DllImport("__Internal")] private static extern void   SocketSendPlayerAction(string objectId, string action);
+        [DllImport("__Internal")] private static extern void   SocketSendThrowableThrow(string json);
+        [DllImport("__Internal")] private static extern void   SocketSendThrowableHit(string json);
         [DllImport("__Internal")] private static extern void   SocketSendRiotActivate();
         [DllImport("__Internal")] private static extern void   SocketSendTutorialMissionComplete(string json);
         [DllImport("__Internal")] private static extern void   SocketSendNPCSyncState(string json);
@@ -372,6 +376,30 @@ namespace Jailbreak.Network
             SocketSendPlayerAction(objectId, action);
 #else
             _socket?.Emit("player:action", new { objectId, action });
+#endif
+        }
+
+        public void SendThrowableThrow(ThrowableThrowPayload payload)
+        {
+            if (!IsInGame()) return;
+            if (payload == null || string.IsNullOrEmpty(payload.itemKind)) return;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketSendThrowableThrow(JsonUtility.ToJson(payload));
+#else
+            try { _socket.EmitStringAsJSON("throwable:throw", JsonUtility.ToJson(payload)); }
+            catch (Exception ex) { Debug.LogError($"[NET] SendThrowableThrow: {ex}"); }
+#endif
+        }
+
+        public void SendThrowableHit(ThrowableHitPayload payload)
+        {
+            if (!IsInGame()) return;
+            if (payload == null || string.IsNullOrEmpty(payload.targetGuardId) || string.IsNullOrEmpty(payload.itemKind)) return;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketSendThrowableHit(JsonUtility.ToJson(payload));
+#else
+            try { _socket.EmitStringAsJSON("throwable:hit", JsonUtility.ToJson(payload)); }
+            catch (Exception ex) { Debug.LogError($"[NET] SendThrowableHit: {ex}"); }
 #endif
         }
 
@@ -710,6 +738,24 @@ namespace Jailbreak.Network
             {
                 var data = JsonUtility.FromJson<PlayerActionBroadcast>(json);
                 if (data != null) OnPlayerActionEvent?.Invoke(data);
+            });
+        }
+
+        public void OnThrowableThrow(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<ThrowableThrowBroadcast>(json);
+                if (data != null) OnThrowableThrowEvent?.Invoke(data);
+            });
+        }
+
+        public void OnGuardStun(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<GuardStunPayload>(json);
+                if (data != null) OnGuardStunEvent?.Invoke(data);
             });
         }
 
@@ -1103,6 +1149,8 @@ namespace Jailbreak.Network
             SafeOn("item:pickup",     r => { var d = DeserializePayload<ItemPickupPayload>(r);   if (d != null) _mainThreadQueue.Enqueue(() => OnItemPickupEvent?.Invoke(d)); });
             SafeOn("riot:available",  r => { var d = DeserializePayload<RiotAvailablePayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnRiotAvailableEvent?.Invoke(d)); });
             SafeOn("player:action",   r => { var d = DeserializePayload<PlayerActionBroadcast>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnPlayerActionEvent?.Invoke(d)); });
+            SafeOn("throwable:throw", r => { var d = DeserializePayload<ThrowableThrowBroadcast>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnThrowableThrowEvent?.Invoke(d)); });
+            SafeOn("guard:stun",      r => { var d = DeserializePayload<GuardStunPayload>(r); if (d != null) _mainThreadQueue.Enqueue(() => OnGuardStunEvent?.Invoke(d)); });
 
             // ── Jail Routine ────────────────────────────────────────────────
             SafeOn("phase:start",     r =>

@@ -64,7 +64,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e18ef1db454d848d9864399ed06a82b3, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::SlipTriggerReceiver
   onTriggerEntered:
     m_PersistentCalls:
@@ -174,6 +174,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 435ad9fc8113d4c5495454ca15e7d042, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5364228779182213413}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 435ad9fc8113d4c5495454ca15e7d042, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 881254019600000001}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 435ad9fc8113d4c5495454ca15e7d042, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 881254019600000002}
   m_SourcePrefab: {fileID: 100100000, guid: 435ad9fc8113d4c5495454ca15e7d042, type: 3}
 --- !u!1 &29529619525904284 stripped
 GameObject:
@@ -238,7 +244,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fb49f436e42604281b863ba20167ecc0, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::PickableItem
   holdPositionOffset: {x: 0, y: 0, z: 0}
   holdRotationOffset: {x: 0, y: 0, z: 0}
@@ -305,6 +311,40 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ThrowHitHandler
   stunDuration: 3
   animationVar: IsStunned
+--- !u!114 &881254019600000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 29529619525904284}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4a6e0a11cce4f4aa8baa6a0d5a1b11a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkInteractable
+  networkId: route1_soap_a
+--- !u!114 &881254019600000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 29529619525904284}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b9c7e1a4d4a58a7648e67a9b9e241, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkRoutePickable
+  itemId: route1_soap_a
+  itemType: prank_item
+  actionLabel: Pick Up
+  priority: 20
+  interactKey: 101
+  allowedInStates: []
+  holdPointName: mixamorig:RightHandIndex1
+  allowDropFromHand: 1
+  debugLogs: 0
 --- !u!4 &802548538503462182 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 435ad9fc8113d4c5495454ca15e7d042, type: 3}

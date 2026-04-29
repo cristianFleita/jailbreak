@@ -44,6 +44,8 @@ public class CarryFoldedClothesInteraction : MonoBehaviour
     /// <summary>True while the folded clothes are visually in the player's hand.</summary>
     public bool IsCarrying => !string.IsNullOrEmpty(CarryingId);
 
+    [System.NonSerialized] public bool SuppressSync;
+
     private Animator animator;
     private GameObject foldedInstance;
     private Coroutine putDownRoutine;
@@ -82,6 +84,8 @@ public class CarryFoldedClothesInteraction : MonoBehaviour
     /// </summary>
     public void SyncFromServer(string serverCarryingId)
     {
+        if (SuppressSync) return;
+
         bool isFolded = serverCarryingId == FoldedClothesId;
         if (isFolded && !IsCarrying)       ApplyPickUp(FoldedClothesId);
         else if (!isFolded && IsCarrying)  ApplyDrop(playAnimation: false);

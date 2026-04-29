@@ -13,6 +13,7 @@ public class ControlMareo : MonoBehaviour
 
     void Update()
     {
+        if (volumenMareo == null) return;
         volumenMareo.weight = Mathf.Lerp(volumenMareo.weight, targetWeight, Time.deltaTime * smoothness);
     }
 

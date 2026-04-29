@@ -42,7 +42,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aeda7bfbf984f2a4da5ab4b8967b115d, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Unity.Animation.Rigging::UnityEngine.Animations.Rigging.TwoBoneIKConstraint
   m_Weight: 1
   m_Data:
@@ -832,6 +832,9 @@ PrefabInstance:
       addedObject: {fileID: 2692123336512131797}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 9127031445096731011}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 4839974027546783951}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
       insertIndex: -1
@@ -1143,6 +1146,27 @@ MonoBehaviour:
   onItemStored:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &9127031445096731011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4896770664015057812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8735aa7d6b44b2f8c69e9215d7c1a01, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CarriedThrowableController
+  throwKey: 323
+  containerPrefab: {fileID: 7684322930120449572, guid: d520121a8bf284d21a53f62cec6cb656, type: 3}
+  aimTransform: {fileID: 0}
+  throwForce: 12
+  spawnForwardOffset: 0.7
+  spawnUpOffset: 0.15
+  stunDuration: 3
+  projectileLifetime: 8
+  fallbackColliderRadius: 0.28
 --- !u!114 &4839974027546783951
 MonoBehaviour:
   m_ObjectHideFlags: 0
