@@ -1,4 +1,5 @@
 using System.Collections;
+using Jailbreak.Audio;
 using Jailbreak.Network;
 using UnityEngine;
 
@@ -14,6 +15,15 @@ namespace Jailbreak.Player
         [Header("Local Camera Effect")]
         public ControlMareo mareoController;
         public GameObject mareoPrefab;
+
+        [Header("SFX")]
+        [Tooltip("Played when the guard is stunned by a thrown item (non-soap).")]
+        public AudioClip hitClip;
+        [Tooltip("Played when the guard slips on soap and falls.")]
+        public AudioClip soapFallClip;
+        [Range(0f, 1f)] public float sfxVolume = 1f;
+        public float sfxMinDistance = 2f;
+        public float sfxMaxDistance = 20f;
 
         private StunAction stunAction;
         private RemotePlayerSync remoteSync;
@@ -58,12 +68,21 @@ namespace Jailbreak.Player
             }
 
             float duration = payload.duration > 0f ? payload.duration : fallbackDuration;
-            string animatorParam = payload.itemKind == "soap" ? soapAnimatorBoolParam : animatorBoolParam;
+            bool isSoap = payload.itemKind == "soap";
+            string animatorParam = isSoap ? soapAnimatorBoolParam : animatorBoolParam;
 
             stunAction.ApplyStun(duration, animatorParam);
+            PlayStunSfx(isSoap);
 
             if (IsLocalGuard())
                 PlayLocalMareo(duration);
+        }
+
+        private void PlayStunSfx(bool isSoap)
+        {
+            AudioClip clip = isSoap ? soapFallClip : hitClip;
+            if (clip == null) return;
+            OneShotSfx.PlayAt(clip, transform.position, sfxVolume, null, sfxMinDistance, sfxMaxDistance);
         }
 
         private void PlayLocalMareo(float duration)

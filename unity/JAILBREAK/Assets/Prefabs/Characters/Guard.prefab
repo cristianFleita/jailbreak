@@ -728,6 +728,11 @@ MonoBehaviour:
   soapAnimatorBoolParam: IsFalling
   mareoController: {fileID: 0}
   mareoPrefab: {fileID: 4370267070898374827, guid: dc2b09bee1e6e403188425b59aa5badc, type: 3}
+  hitClip: {fileID: 8300000, guid: b57e14491168d4c02824b276d6a72645, type: 3}
+  soapFallClip: {fileID: 8300000, guid: eadc6b407932441d6bf6f606731a7352, type: 3}
+  sfxVolume: 1
+  sfxMinDistance: 2
+  sfxMaxDistance: 20
 --- !u!114 &4488410028999716743
 MonoBehaviour:
   m_ObjectHideFlags: 0

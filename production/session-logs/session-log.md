@@ -2068,3 +2068,44 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260429_200137
+### Commits
+d554e28 chore: add yard texture
+dc33811 chore: adjust tutorial + popup for full inventory
+982b302 chore: adjust grab items
+f01a0e8 chore: prisoner crosshair on hud
+65f6559 chore: enable/disable flashlight with F
+4f7b71b fix: flashlight position
+38c4e82 fix: ui fixes
+baf6b5b chore: skip tutorial when all players are ready
+1351a66 chore: adjust animations
+5a79e39 fix: sounds
+1d75110 fix: wrong mark, laundry sfx
+### Uncommitted Changes
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_200247
+### Commits
+d554e28 chore: add yard texture
+dc33811 chore: adjust tutorial + popup for full inventory
+982b302 chore: adjust grab items
+f01a0e8 chore: prisoner crosshair on hud
+65f6559 chore: enable/disable flashlight with F
+4f7b71b fix: flashlight position
+38c4e82 fix: ui fixes
+baf6b5b chore: skip tutorial when all players are ready
+1351a66 chore: adjust animations
+5a79e39 fix: sounds
+1d75110 fix: wrong mark, laundry sfx
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard.prefab
+unity/JAILBREAK/Assets/Scripts/Player/GuardStunFeedback.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
