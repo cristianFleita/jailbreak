@@ -418,6 +418,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7995848821450153205}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95f474a6999504cab8d278219818a844, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4148236700380998106}
   m_SourcePrefab: {fileID: 100100000, guid: 95f474a6999504cab8d278219818a844, type: 3}
 --- !u!4 &2688719084118508173 stripped
 Transform:
@@ -734,6 +737,33 @@ MonoBehaviour:
   flashlightLight: {fileID: 548511325816417933}
   armRig: {fileID: 5593697751608398776}
   powerOutage: {fileID: 0}
+--- !u!114 &4148236700380998106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4896770664015057812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de15415e5a9654bce85632a056d50cfd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.NPCFootstepsAudio
+  agent: {fileID: -5265632265596839312}
+  runLoopClip: {fileID: 8300000, guid: b5458758ba9854691bf1b52db0bdd1fb, type: 3}
+  walkLoopClip: {fileID: 0}
+  mixerGroup: {fileID: 0}
+  runVolume: 0.9
+  walkVolume: 0.6
+  runPitch: 1
+  walkPitch: 0.85
+  minDistance: 1.5
+  maxDistance: 12
+  rolloff: 1
+  silentSpeed: 0.4
+  runSpeed: 4.5
+  alsoPlayWhileWalking: 0
+  fadeSeconds: 0.08
 --- !u!4 &5241911055874754862 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 95f474a6999504cab8d278219818a844, type: 3}

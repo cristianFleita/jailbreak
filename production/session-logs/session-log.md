@@ -1832,3 +1832,71 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260428_201042
+### Commits
+3541719 Merge pull request #18 from cristianFleita/feat-power-outage
+865e68c chore: power outage
+16ea918 Merge pull request #17 from cristianFleita/feat-emote-panel
+bf9e2fb chore: emote panel
+c238bd8 Merge pull request #16 from cristianFleita/vfx
+4325e53 chore: glow + sparkles vfx
+81601d0 Merge pull request #15 from cristianFleita/UI-v2
+bf903d0 chore: adjust lobby ui
+ff23403 chore: adjust game GUI
+f50fbaa Merge pull request #14 from cristianFleita/feat-spectator
+5519f01 fix: spectator UI shows on guard
+f40bffa chore: add camera spectator
+81d5c83 Merge pull request #13 from cristianFleita/adjust-game-ui
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_004814
+### Commits
+5f3dace chore: sound wip
+3541719 Merge pull request #18 from cristianFleita/feat-power-outage
+865e68c chore: power outage
+16ea918 Merge pull request #17 from cristianFleita/feat-emote-panel
+bf9e2fb chore: emote panel
+c238bd8 Merge pull request #16 from cristianFleita/vfx
+4325e53 chore: glow + sparkles vfx
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/Audio/IntroMusicController.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_005659
+### Commits
+4380110 chore: intro sound till tutorial
+5f3dace chore: sound wip
+3541719 Merge pull request #18 from cristianFleita/feat-power-outage
+865e68c chore: power outage
+16ea918 Merge pull request #17 from cristianFleita/feat-emote-panel
+bf9e2fb chore: emote panel
+c238bd8 Merge pull request #16 from cristianFleita/vfx
+4325e53 chore: glow + sparkles vfx
+### Uncommitted Changes
+production/session-logs/session-log.md
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_012017
+### Commits
+4380110 chore: intro sound till tutorial
+5f3dace chore: sound wip
+3541719 Merge pull request #18 from cristianFleita/feat-power-outage
+865e68c chore: power outage
+16ea918 Merge pull request #17 from cristianFleita/feat-emote-panel
+bf9e2fb chore: emote panel
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner-NPC.prefab
+unity/JAILBREAK/Assets/Scenes/GameScene.unity
+unity/JAILBREAK/Assets/Scripts/Audio/GameAudioBridge.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
