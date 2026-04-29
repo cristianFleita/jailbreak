@@ -1,3 +1,4 @@
+using Jailbreak.Network;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 
@@ -17,7 +18,23 @@ public class FlashlightController : MonoBehaviour
     [Tooltip("Optional explicit PowerOutage reference. Leave empty to auto-discover the scene's instance at runtime.")]
     public PowerOutage powerOutage;
 
+    [Header("Toggle Settings")]
+    [Tooltip("Key used by the local player to toggle the flashlight on/off during a power outage.")]
+    public KeyCode toggleKey = KeyCode.F;
+
+    [Tooltip("If true, this controller listens for local input. Set false for remote/NPC characters.")]
+    public bool isLocalPlayer = false;
+
+    /// <summary>True when the flashlight beam is active (model may still show — arm raised).</summary>
+    public bool IsFlashlightOn { get; private set; }
+
     private PowerOutage subscribedSource;
+
+    /// <summary>
+    /// Tracks whether the player has manually turned the light off.
+    /// Reset when a new outage starts or power is restored.
+    /// </summary>
+    private bool isManuallyOff;
 
     private void OnEnable()
     {
@@ -39,7 +56,59 @@ public class FlashlightController : MonoBehaviour
             SubscribeIfNeeded();
             if (subscribedSource != null) SyncInitialState();
         }
+
+        // ── Local player toggle input ────────────────────────────────────────
+        if (isLocalPlayer && subscribedSource != null && subscribedSource.IsBlackedOut)
+        {
+            if (InputSystemKey.WasPressedThisFrame(toggleKey))
+            {
+                ToggleFlashlight();
+            }
+        }
     }
+
+    // ─── Toggle API ──────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Toggles the flashlight on/off. Only meaningful during a power outage.
+    /// For local players this also broadcasts the state to the network.
+    /// </summary>
+    public void ToggleFlashlight()
+    {
+        if (subscribedSource == null || !subscribedSource.IsBlackedOut) return;
+
+        if (isManuallyOff)
+        {
+            isManuallyOff = false;
+            TurnOnFlashlight();
+        }
+        else
+        {
+            isManuallyOff = true;
+            TurnOffFlashlight();
+        }
+
+        // Broadcast to other players
+        if (isLocalPlayer)
+        {
+            BroadcastFlashlightState(!isManuallyOff);
+        }
+    }
+
+    /// <summary>
+    /// Called by RemoteInteractionHandler to apply another player's
+    /// flashlight state on this avatar.
+    /// </summary>
+    public void SetFlashlightOn(bool on)
+    {
+        if (subscribedSource == null || !subscribedSource.IsBlackedOut) return;
+
+        isManuallyOff = !on;
+        if (on) TurnOnFlashlight();
+        else    TurnOffFlashlight();
+    }
+
+    // ─── Power outage event handlers ─────────────────────────────────────────
 
     private void SubscribeIfNeeded()
     {
@@ -68,8 +137,17 @@ public class FlashlightController : MonoBehaviour
         else StowFlashlight();
     }
 
-    private void HandlePowerOutage() => TurnOnFlashlight();
-    private void HandlePowerRestored() => StowFlashlight();
+    private void HandlePowerOutage()
+    {
+        isManuallyOff = false;   // reset on every new outage
+        TurnOnFlashlight();
+    }
+
+    private void HandlePowerRestored()
+    {
+        isManuallyOff = false;
+        StowFlashlight();
+    }
 
     private static PowerOutage FindPowerOutage()
     {
@@ -80,8 +158,11 @@ public class FlashlightController : MonoBehaviour
 #endif
     }
 
+    // ─── Visual state helpers ────────────────────────────────────────────────
+
     public void StowFlashlight()
     {
+        IsFlashlightOn = false;
         if (armRig != null) armRig.weight = 0f;
 
         if (flashlightModel != null) flashlightModel.SetActive(false);
@@ -90,6 +171,7 @@ public class FlashlightController : MonoBehaviour
 
     public void TurnOnFlashlight()
     {
+        IsFlashlightOn = true;
         if (flashlightModel != null) flashlightModel.SetActive(true);
         if (flashlightLight != null) flashlightLight.enabled = true;
 
@@ -98,9 +180,21 @@ public class FlashlightController : MonoBehaviour
 
     public void TurnOffFlashlight()
     {
+        IsFlashlightOn = false;
         if (flashlightModel != null) flashlightModel.SetActive(true);
         if (flashlightLight != null) flashlightLight.enabled = false;
 
         if (armRig != null) armRig.weight = 1f;
+    }
+
+    // ─── Network broadcast ──────────────────────────────────────────────────
+
+    private void BroadcastFlashlightState(bool on)
+    {
+        var net = NetworkManager.Instance;
+        if (net == null) return;
+
+        net.SendPlayerAction("flashlight_system", on ? "flashlight_on" : "flashlight_off");
+        Debug.Log($"[Flashlight] Broadcast → {(on ? "ON" : "OFF")}");
     }
 }
