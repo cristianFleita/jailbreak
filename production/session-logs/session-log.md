@@ -2050,3 +2050,21 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260429_161924
+### Commits
+65f6559 chore: enable/disable flashlight with F
+4f7b71b fix: flashlight position
+38c4e82 fix: ui fixes
+baf6b5b chore: skip tutorial when all players are ready
+1351a66 chore: adjust animations
+5a79e39 fix: sounds
+1d75110 fix: wrong mark, laundry sfx
+a0c7e1f chore: fix input error on webgl build
+c7f15d3 chore: add emote panel info + add loop to animations
+f9ec436 fix: instant game end on refresh guard page
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner.prefab
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
