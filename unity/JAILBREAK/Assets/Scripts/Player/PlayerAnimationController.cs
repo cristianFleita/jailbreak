@@ -75,6 +75,17 @@ namespace Jailbreak.Player
         private bool _hasParamSpeed  = false;
         private bool _hasParamLand   = false;
 
+        /// <summary>
+        /// Invalidates the cached "_currentAnimState" so the next Update issues a
+        /// CrossFade even if the resolved target matches the previous one. Called
+        /// after external systems (e.g. StunAction) seize the Animator to play a
+        /// one-shot sequence, so locomotion can resume cleanly.
+        /// </summary>
+        public void ResetCachedState()
+        {
+            _currentAnimState = "";
+        }
+
         // ── Unity lifecycle ───────────────────────────────────────────────────────
         private void Awake()
         {

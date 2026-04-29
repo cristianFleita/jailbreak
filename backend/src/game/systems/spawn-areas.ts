@@ -28,7 +28,7 @@ import {
   ensureItemState,
   getItemKind,
   inferItemKind,
-  isCriticalRouteItem,
+  isTrackedRouteItem,
 } from './route-inventory.js'
 
 // Per-room flag: true once spawn areas have been registered for the match.
@@ -202,7 +202,7 @@ export function placeCriticalItemsInSpawnAreas(
   const targets: RouteItemId[] = targetItemIds
     ? targetItemIds.slice()
     : Array.from(state.items.values())
-        .filter((it) => isCriticalRouteItem(it.itemId ?? it.id))
+        .filter((it) => isTrackedRouteItem(it.itemId ?? it.id))
         .map((it) => (it.itemId ?? it.id) as RouteItemId)
 
   const placed: RouteItemId[] = []
@@ -273,7 +273,7 @@ export function respawnCriticalItem(
   state: GameRoomState,
   itemId: RouteItemId
 ): boolean {
-  if (!isCriticalRouteItem(itemId)) return false
+  if (!isTrackedRouteItem(itemId)) return false
   if (!state.spawnAreas || state.spawnAreas.size === 0) return false
 
   const item = state.items.get(itemId)
@@ -322,7 +322,7 @@ export function scheduleCriticalItemRespawn(
   itemId: RouteItemId,
   delaySeconds: number = DEFAULT_RESPAWN_DELAY_SECONDS
 ): void {
-  if (!isCriticalRouteItem(itemId)) return
+  if (!isTrackedRouteItem(itemId)) return
 
   const key = respawnKey(roomId, itemId)
   const existing = respawnTimers.get(key)
@@ -336,7 +336,7 @@ export function scheduleCriticalItemRespawn(
     const item = state.items.get(itemId)
     if (!item) return
     const lifecycle = item.state ?? 'spawned'
-    if (lifecycle !== 'dropped') return
+    if (lifecycle !== 'dropped' && lifecycle !== 'respawning') return
 
     respawnCriticalItem(io, roomId, state, itemId)
   }, Math.max(1, delaySeconds) * 1000)

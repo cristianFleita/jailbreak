@@ -9,6 +9,7 @@ namespace Jailbreak.Player
         [Header("Stun")]
         public float fallbackDuration = 3f;
         public string animatorBoolParam = "IsStunned";
+        public string soapAnimatorBoolParam = "IsFalling";
 
         [Header("Local Camera Effect")]
         public ControlMareo mareoController;
@@ -46,11 +47,20 @@ namespace Jailbreak.Player
             if (payload == null || string.IsNullOrEmpty(payload.guardId)) return;
 
             string representedId = ResolveRepresentedGuardId();
-            if (string.IsNullOrEmpty(representedId) || payload.guardId != representedId) return;
+            if (string.IsNullOrEmpty(representedId)) return;
+            if (payload.guardId != representedId) return;
+
+            if (stunAction == null)
+            {
+                stunAction = GetComponent<StunAction>();
+                if (stunAction == null)
+                    stunAction = gameObject.AddComponent<StunAction>();
+            }
 
             float duration = payload.duration > 0f ? payload.duration : fallbackDuration;
-            if (stunAction != null)
-                stunAction.ApplyStun(duration, animatorBoolParam);
+            string animatorParam = payload.itemKind == "soap" ? soapAnimatorBoolParam : animatorBoolParam;
+
+            stunAction.ApplyStun(duration, animatorParam);
 
             if (IsLocalGuard())
                 PlayLocalMareo(duration);

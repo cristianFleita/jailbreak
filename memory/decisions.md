@@ -842,3 +842,25 @@ The laundry/food props are not route inventory items and were already synchroniz
 ### 2026-04-29 follow-up
 
 The same throwable network path now includes the legacy `Container` pickable as `itemKind: "container"`. `Container.prefab` keeps its existing `PickableItem` throw behavior, while `ThrowHitHandler` broadcasts `throwable:throw` and reports `throwable:hit` when it collides with a guard. Carried food/laundry projectiles now use an unscaled runtime physics wrapper with the visual prefab nested underneath; this prevents hand-display scales such as `Food` at `200x` from creating huge colliders and pushing the player upward.
+
+## ADR-034: Soap prank is a tracked route item that only trips player guards
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+`route1_soap_a` is a route-managed prank prop, not a mission-critical tool. Prisoners can pick it up and drop it directly from hand, while cutters/wrench keep the store-before-drop rule. When an active soap trigger detects a guard, Unity reports a `throwable:hit` payload with `itemKind: "soap"` and the soap `itemId`; the backend validates prisoner reporter, guard target, item lifecycle, and guard distance from the authoritative soap position before broadcasting `guard:stun` to the room and moving the soap to `respawning`.
+
+The soap affects player guards only. It intentionally does not trip NPC prisoners or prisoner players for the MVP.
+
+### Why
+
+Guard-only behavior makes the prank useful as an escape tool without creating grief loops against teammates or destabilizing NPC social-stealth routines. Reusing the existing route item lifecycle gives reconnect-safe pickup/drop/state hydration, and reusing `guard:stun` keeps the fall animation synchronized for all clients.
+
+### Implications
+
+- Scene spawn registration must include a spawn area for `route1_soap` or exact item id `route1_soap_a`.
+- `Soap.prefab` owns `NetworkInteractable`, `NetworkRoutePickable`, and `SoapSlipTrigger`; `NetworkRoutePickable.allowDropFromHand` is enabled.
+- `Guard.prefab` must keep `GuardStunFeedback` and use `Character.controller`; soap stuns use `IsFalling`/fall sequence instead of the generic stun bool.
+- `Character.controller` now includes direct-play `Fall`, `FallenIdle`, and `StandingUp` states, and `Fall.anim` has horizontal hip translation flattened so the character does not snap back after the fall.

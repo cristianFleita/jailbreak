@@ -78,9 +78,11 @@ public class NetworkThrowableProjectile : MonoBehaviour
         if (string.IsNullOrEmpty(targetGuardId)) return;
         if (targetGuardId == throwerUserId) return;
 
+        // string animParam = itemKind == "soap" ? "IsFalling" : "IsStunned";
         var stun = other.transform.root.GetComponent<StunAction>();
         if (stun != null)
             stun.ApplyStun(stunDuration, "IsStunned");
+            // stun.ApplyStun(stunDuration, animParam);
 
         if (!reportHits) return;
         if (Time.time - lastHitReportAt < HitReportCooldown) return;

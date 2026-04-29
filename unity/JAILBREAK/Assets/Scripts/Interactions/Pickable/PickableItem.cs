@@ -118,6 +118,10 @@ public class PickableItem : MonoBehaviour, IPickable
 
         if (value)
         {
+            held = false;
+            wasThrown = false;
+            ownerCC = null;
+            transform.SetParent(null);
             rb.isKinematic = false;
             rb.useGravity = true;
             rb.linearVelocity = Vector3.zero;

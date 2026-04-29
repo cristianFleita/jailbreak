@@ -393,6 +393,7 @@ namespace Jailbreak.Network
     [Serializable]
     public class ThrowableHitPayload
     {
+        public string itemId;
         public string targetGuardId;
         public string itemKind;
         public SVector3 hitPosition;

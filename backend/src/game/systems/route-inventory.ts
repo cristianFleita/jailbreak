@@ -37,6 +37,15 @@ export const CRITICAL_ROUTE_ITEM_KINDS: readonly RouteItemKind[] = [
 ]
 
 /**
+ * Networked pickables that use the authoritative hand/slot/world lifecycle.
+ * Some are mission-critical tools, others are utility/prank props such as soap.
+ */
+export const TRACKED_ROUTE_ITEM_KINDS: readonly RouteItemKind[] = [
+  ...CRITICAL_ROUTE_ITEM_KINDS,
+  'route1_soap',
+]
+
+/**
  * Back-compat alias — older code paths and tests reference this list.
  * Now exposes kinds rather than instance ids; instance ids are derived
  * dynamically from `state.items`.
@@ -56,10 +65,20 @@ export function isCriticalRouteItem(itemId: string | null | undefined): boolean 
   return false
 }
 
+/** True for any route-managed pickable, critical or not. */
+export function isTrackedRouteItem(itemId: string | null | undefined): boolean {
+  if (!itemId) return false
+  for (const kind of TRACKED_ROUTE_ITEM_KINDS) {
+    if (itemId === kind) return true
+    if (itemId.startsWith(kind + '_')) return true
+  }
+  return false
+}
+
 /** Infer the kind of an item id, even if `itemKind` was never set. */
 export function inferItemKind(itemId: string | null | undefined): RouteItemKind | undefined {
   if (!itemId) return undefined
-  for (const kind of CRITICAL_ROUTE_ITEM_KINDS) {
+  for (const kind of TRACKED_ROUTE_ITEM_KINDS) {
     if (itemId === kind || itemId.startsWith(kind + '_')) return kind
   }
   return undefined
@@ -134,7 +153,7 @@ export function broadcastAllRouteItemStates(
   state: GameRoomState
 ): void {
   for (const item of state.items.values()) {
-    if (item.itemId && isCriticalRouteItem(item.itemId)) {
+    if (item.itemId && isTrackedRouteItem(item.itemId)) {
       broadcastItemState(io, roomId, item)
     }
   }
@@ -146,7 +165,7 @@ export function emitAllRouteItemStatesToSocket(
   state: GameRoomState
 ): void {
   for (const item of state.items.values()) {
-    if (item.itemId && isCriticalRouteItem(item.itemId)) {
+    if (item.itemId && isTrackedRouteItem(item.itemId)) {
       io.to(socketId).emit('item:state', buildItemStateBroadcast(item))
     }
   }
@@ -263,7 +282,7 @@ export function pickupToHand(
   itemId: string
 ): PickupResult {
   if (player.role !== 'prisoner') {
-    return { success: false, reason: 'Only prisoners can pick up route tools' }
+    return { success: false, reason: 'Only prisoners can pick up route items' }
   }
   if (player.heldItemId) {
     return { success: false, reason: 'Hand is already full' }
@@ -370,14 +389,14 @@ export function takeAllPlayerItems(player: PlayerState): string[] {
 }
 
 /**
- * Clears only critical route tools from a player. This is the capture/abandon
- * path: non-route inventory remains untouched, while tools that can softlock
- * Ruta 1 become available in the world again.
+ * Clears route-managed pickables from a player. This is the capture/abandon
+ * path: non-route inventory remains untouched, while route props become
+ * available in the world again.
  */
 export function takeCriticalRouteItems(player: PlayerState): string[] {
   const itemIds: string[] = []
 
-  if (isCriticalRouteItem(player.heldItemId)) {
+  if (isTrackedRouteItem(player.heldItemId)) {
     itemIds.push(player.heldItemId!)
     player.heldItemId = null
   }
@@ -385,7 +404,7 @@ export function takeCriticalRouteItems(player: PlayerState): string[] {
   const slots = player.inventorySlots ?? []
   for (let i = 0; i < slots.length; i++) {
     const slot = slots[i]
-    if (isCriticalRouteItem(slot?.itemId)) {
+    if (isTrackedRouteItem(slot?.itemId)) {
       itemIds.push(slot!.itemId)
       slots[i] = null
     }

@@ -30,6 +30,7 @@ import {
   dropCriticalRouteItemsForPlayer,
   dropInventoryItem,
   isCriticalRouteItem,
+  isTrackedRouteItem,
   pickupToHand,
   storeHeldItem,
 } from './systems/route-inventory.js'
@@ -317,7 +318,7 @@ function handleRouteItemPickup(
   const item = room.state.items.get(objectId)
   const stableItemId = item?.itemId ?? item?.id ?? objectId
 
-  if (!item || !isCriticalRouteItem(stableItemId)) {
+  if (!item || !isTrackedRouteItem(stableItemId)) {
     console.warn(`[PICKUP] ${player.userId} requested unmanaged route item ${objectId}`)
     io.to(socketId).emit('game:error', { message: 'Route item not found' })
     return
@@ -409,8 +410,8 @@ function handleRouteItemStore(
     return
   }
 
-  if (!isCriticalRouteItem(player.heldItemId)) {
-    io.to(socketId).emit('game:error', { message: 'No route tool in hand' })
+  if (!isTrackedRouteItem(player.heldItemId)) {
+    io.to(socketId).emit('game:error', { message: 'No route item in hand' })
     return
   }
 
@@ -459,14 +460,16 @@ function handleRouteItemThrow(
 ): void {
   const stableItemId = resolveStableItemId(room, objectId)
 
-  if (!isCriticalRouteItem(stableItemId)) {
-    console.warn(`[THROW] ${player.userId} requested non-route throw ${objectId}`)
-    io.to(socketId).emit('game:error', { message: 'That item cannot be thrown' })
+  if (!isTrackedRouteItem(stableItemId)) {
+    console.warn(`[THROW] ${player.userId} requested unmanaged item drop ${objectId}`)
+    io.to(socketId).emit('game:error', { message: 'That item cannot be dropped' })
     return
   }
 
-  if (!playerHasItemInSlot(player, stableItemId)) {
-    console.warn(`[THROW] ${player.userId} tried to throw ${stableItemId} without storing it first`)
+  const hasInSlot = playerHasItemInSlot(player, stableItemId)
+  const hasInHand = player.heldItemId === stableItemId
+  if (!hasInSlot && !(hasInHand && canDropTrackedItemFromHand(stableItemId))) {
+    console.warn(`[THROW] ${player.userId} tried to drop ${stableItemId} without an allowed source`)
     io.to(socketId).emit('game:error', { message: 'Store the item in a slot before dropping it' })
     return
   }
@@ -495,6 +498,10 @@ function handleRouteItemThrow(
 
 function playerHasItemInSlot(player: PlayerState, itemId: string): boolean {
   return (player.inventorySlots ?? []).some((slot) => slot?.itemId === itemId)
+}
+
+function canDropTrackedItemFromHand(itemId: string): boolean {
+  return itemId === 'route1_soap' || itemId.startsWith('route1_soap_')
 }
 
 function handleItemPickup(io: Server, roomId: string, room: GameRoom, playerId: string, itemId: string, item: any): void {
@@ -684,6 +691,7 @@ const THROWABLE_ITEM_KINDS = new Set<ThrowableItemKind>([
   'clothes_bundle',
   'folded_clothes',
   'container',
+  'soap',
 ])
 
 const MIN_THROW_FORCE = 1
@@ -744,6 +752,11 @@ export function handleThrowableHit(context: ThrowableHitContext): void {
   const guard = room.state.playersByUserId.get(payload.targetGuardId)
   if (!guard || guard.role !== 'guard' || !guard.isAlive) return
 
+  if (payload.itemKind === 'soap') {
+    handleSoapSlip(io, roomId, room, attacker, guard, payload)
+    return
+  }
+
   const debounceKey = `${attacker.userId}:${guard.userId}:${payload.itemKind}`
   const lastHitAt = recentThrowableHits.get(debounceKey) ?? 0
   if (timestamp - lastHitAt < STUN_HIT_DEBOUNCE_MS) return
@@ -756,6 +769,48 @@ export function handleThrowableHit(context: ThrowableHitContext): void {
     duration: clamp(payload.stunDuration, MIN_STUN_SECONDS, MAX_STUN_SECONDS),
     hitPosition: payload.hitPosition,
   })
+}
+
+const SOAP_SLIP_MAX_DISTANCE = 2.25
+
+function handleSoapSlip(
+  io: Server,
+  roomId: string,
+  room: GameRoom,
+  reporter: PlayerState,
+  guard: PlayerState,
+  payload: ThrowableHitPayload
+): void {
+  const itemId = payload.itemId
+  if (!itemId || !isTrackedRouteItem(itemId)) return
+  if (!(itemId === 'route1_soap' || itemId.startsWith('route1_soap_'))) return
+
+  const item = room.state.items.get(itemId)
+  if (!item) return
+
+  const lifecycle = item.state ?? 'spawned'
+  if (lifecycle !== 'spawned' && lifecycle !== 'dropped') return
+
+  // Server-side sanity check: the guard must be close to the authoritative soap
+  // position. Unity owns the exact trigger, this just rejects obvious bad reports.
+  if (distance(guard.position, item.position) > SOAP_SLIP_MAX_DISTANCE) return
+
+  item.state = 'respawning'
+  item.holderUserId = undefined
+  item.isPickedUp = false
+  item.pickedUpBy = undefined
+  broadcastItemState(io, roomId, item)
+  scheduleCriticalItemRespawn(io, roomId, room.state, itemId as RouteItemId)
+
+  io.to(roomId).emit('guard:stun', {
+    guardId: guard.userId,
+    attackerId: reporter.userId,
+    itemKind: payload.itemKind,
+    duration: clamp(payload.stunDuration, MIN_STUN_SECONDS, MAX_STUN_SECONDS),
+    hitPosition: payload.hitPosition,
+  })
+
+  console.log(`[SOAP] ${reporter.userId} tripped guard ${guard.userId} with ${itemId}`)
 }
 
 function isValidThrowableKind(kind: string | undefined): kind is ThrowableItemKind {

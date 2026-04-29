@@ -1,4 +1,5 @@
 using UnityEngine;
+using Jailbreak.Network;
 
 [RequireComponent(typeof(PickableItem))]
 public class SoapSlipTrigger : MonoBehaviour
@@ -12,16 +13,22 @@ public class SoapSlipTrigger : MonoBehaviour
     public SlipTriggerReceiver slipReceiver;
 
     private PickableItem pickable;
+    private NetworkRoutePickable routePickable;
+    private float lastSlipReportAt = -999f;
 
     void Awake()
     {
         pickable = GetComponent<PickableItem>();
-        slipReceiver.onTriggerEntered.AddListener(OnSlipTriggerEntered);
+        routePickable = GetComponent<NetworkRoutePickable>();
+
+        if (slipReceiver != null)
+            slipReceiver.onTriggerEntered.AddListener(OnSlipTriggerEntered);
     }
 
     void OnDestroy()
     {
-        slipReceiver.onTriggerEntered.RemoveListener(OnSlipTriggerEntered);
+        if (slipReceiver != null)
+            slipReceiver.onTriggerEntered.RemoveListener(OnSlipTriggerEntered);
     }
 
     private void OnSlipTriggerEntered(Collider other)
@@ -35,10 +42,29 @@ public class SoapSlipTrigger : MonoBehaviour
             if (otherCC != null && otherCC == pickable.OwnerCC) return;
         }
 
-        var stun = other.transform.root.GetComponent<StunAction>();
-        if (stun == null) return;
+        if (!IsLocalPrisoner()) return;
+        if (Time.time - lastSlipReportAt < 0.5f) return;
 
-        stun.ApplyStun(slipStunDuration, animationVar);
-        pickable.OnConsumed();
+        string targetGuardId = NetworkThrowableProjectile.ResolveGuardId(other);
+        if (string.IsNullOrEmpty(targetGuardId)) return;
+
+        var net = NetworkManager.Instance;
+        if (net == null || routePickable == null || string.IsNullOrEmpty(routePickable.itemId)) return;
+
+        lastSlipReportAt = Time.time;
+        net.SendThrowableHit(new ThrowableHitPayload
+        {
+            itemId = routePickable.itemId,
+            targetGuardId = targetGuardId,
+            itemKind = "soap",
+            hitPosition = SVector3.FromUnity(other.ClosestPoint(transform.position)),
+            stunDuration = slipStunDuration
+        });
+    }
+
+    private static bool IsLocalPrisoner()
+    {
+        var gsm = GameStateManager.Instance;
+        return gsm != null && gsm.LocalRole == "prisoner";
     }
 }

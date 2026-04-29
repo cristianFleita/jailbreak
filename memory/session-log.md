@@ -337,3 +337,12 @@
   - Updated `NetworkThrowableProjectile` to ignore collisions with the thrower root, reducing self-collision and player-launching risk.
   - Added `container` to the backend throwable allowlist and focused tests.
   - Verified backend TypeScript, focused `throwables.test.ts` (`4/4`), Unity C# via `msbuild Assembly-CSharp.csproj`, and `git diff --check`.
+- **Unity Specialist + Network Programmer — Soap prank item and guard fall broadcast** (2026-04-29):
+  - Implemented `route1_soap_a` as a tracked route item with pickup/drop/broadcast lifecycle and direct drop from prisoner hand.
+  - Added backend soap slip validation through the existing `throwable:hit` / `guard:stun` path, including prisoner reporter, player guard target, soap lifecycle, and authoritative proximity checks.
+  - Updated Unity `SoapSlipTrigger` to report soap hits instead of applying local-only stun, and updated `GuardStunFeedback` / `StunAction` to play a fall-get-up sequence for `itemKind: "soap"`.
+  - Added `Fall`, `FallenIdle`, and `StandingUp` states to `Character.controller` and flattened horizontal hip motion in `Fall.anim` to avoid end-of-animation snapping.
+  - Configured `Soap.prefab` with `NetworkInteractable` and `NetworkRoutePickable` (`itemId: route1_soap_a`, `itemType: prank_item`, `allowDropFromHand: true`), and added HUD naming for Soap.
+  - Added focused backend coverage for hand-dropping soap and consuming dropped soap into a room-wide guard stun; updated spawn-area tests to include a soap spawn slot.
+  - Verified backend full Vitest suite (`203/203`), backend TypeScript via explicit nvm Node v22 `tsc`, and `git diff --check`.
+  - Recorded ADR-034 in `memory/decisions.md`.
