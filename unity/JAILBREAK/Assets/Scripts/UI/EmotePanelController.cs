@@ -209,6 +209,7 @@ namespace Jailbreak.UI
             AddEmoteButton(exerciseGrid, "pushup");
             AddEmoteButton(exerciseGrid, "situps");
             AddEmoteButton(exerciseGrid, "crunch");
+            AddEmoteButton(exerciseGrid, "shadowbox");
             AddEmoteButton(exerciseGrid, "dance");
             _emoteWheel.Add(exerciseGrid);
 

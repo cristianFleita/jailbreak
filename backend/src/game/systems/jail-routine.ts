@@ -22,6 +22,7 @@ import {
 } from '../types.js'
 import { generateSeed } from '../prison-layout.js'
 import { NPCPersonalitySystem } from './npc-personality.js'
+import { NPC_ANIM } from './npc-animations.js'
 
 // ─── Tuning Knobs ─────────────────────────────────────────────────────────────
 
@@ -112,13 +113,16 @@ const JAIL_PHASES: JailPhaseDef[] = [
     phase: 3, name: 'Free Time', duration: 120, zone: 'Free Time',
     subZones: ['patio', 'celdas', 'lavanderia', 'cocina'],
     actions: [
-      { actionId: 'yard_idle', type: 'IDLE', animTrigger: 'idle', zoneId: 'yard', weight: 35, minDuration: 20, maxDuration: 45 },
-      { actionId: 'yard_bench_idle', type: 'IDLE', animTrigger: 'idle', zoneId: 'yard_benches', weight: 30, minDuration: 20, maxDuration: 45 },
-      { actionId: 'yard_exercise', type: 'IDLE', animTrigger: 'exercise', zoneId: 'yard_exercise', weight: 20, minDuration: 15, maxDuration: 35 },
-      { actionId: 'yard_shadow_box', type: 'IDLE', animTrigger: 'shadowbox', zoneId: 'yard_exercise', weight: 10, minDuration: 10, maxDuration: 25 },
-      { actionId: 'yard_lean_wall', type: 'IDLE', animTrigger: 'lean_wall', zoneId: 'yard', weight: 5, minDuration: 15, maxDuration: 30 },
-      { actionId: 'cell_stand_idle', type: 'IDLE', animTrigger: 'idle', zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 60 },
-      { actionId: 'cell_sleep', type: 'IDLE', animTrigger: 'sleep', zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 60 },
+      { actionId: 'yard_idle', type: 'IDLE', animTrigger: NPC_ANIM.IDLE, zoneId: 'yard', weight: 35, minDuration: 20, maxDuration: 45 },
+      { actionId: 'yard_bench_idle', type: 'IDLE', animTrigger: NPC_ANIM.IDLE, zoneId: 'yard_benches', weight: 30, minDuration: 20, maxDuration: 45 },
+      { actionId: 'yard_exercise', type: 'IDLE', animTrigger: NPC_ANIM.EXERCISE, zoneId: 'yard_exercise', weight: 20, minDuration: 15, maxDuration: 35 },
+      { actionId: 'yard_shadow_box', type: 'IDLE', animTrigger: NPC_ANIM.SHADOWBOX, zoneId: 'yard_exercise', weight: 10, minDuration: 10, maxDuration: 25 },
+      { actionId: 'yard_lean_wall', type: 'IDLE', animTrigger: NPC_ANIM.LEAN_WALL, zoneId: 'yard', weight: 5, minDuration: 15, maxDuration: 30 },
+      { actionId: 'yard_salute_pair', type: 'SOCIAL', animTrigger: NPC_ANIM.SALUTE, zoneId: 'yard', weight: 8, minDuration: 3, maxDuration: 4 },
+      { actionId: 'yard_argue_pair', type: 'SOCIAL', animTrigger: NPC_ANIM.ARGUE, zoneId: 'yard', weight: 6, minDuration: 5, maxDuration: 9 },
+      { actionId: 'yard_dance', type: 'IDLE', animTrigger: NPC_ANIM.DANCE, zoneId: 'yard', weight: 4, minDuration: 8, maxDuration: 14 },
+      { actionId: 'cell_stand_idle', type: 'IDLE', animTrigger: NPC_ANIM.IDLE, zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 60 },
+      { actionId: 'cell_sleep', type: 'IDLE', animTrigger: NPC_ANIM.SLEEP, zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 60 },
       { actionId: 'free_cafe_sit_talk', type: 'SOCIAL', animTrigger: 'talk_seated', zoneId: 'cafeteria_seating', weight: 40, minDuration: 15, maxDuration: 40 },
       { actionId: 'free_cafe_sit_idle', type: 'IDLE', animTrigger: 'sit_idle', zoneId: 'cafeteria_seating', weight: 35, minDuration: 10, maxDuration: 30 },
       { actionId: 'free_cafe_stand_chat', type: 'SOCIAL', animTrigger: 'talk_standing', zoneId: 'cafeteria', weight: 25, minDuration: 10, maxDuration: 25 },
@@ -161,13 +165,16 @@ const JAIL_PHASES: JailPhaseDef[] = [
     phase: 6, name: 'Free Time', duration: 90, zone: 'Free Time',
     subZones: ['patio', 'celdas', 'lavanderia', 'cocina'],
     actions: [
-      { actionId: 'yard_idle', type: 'IDLE', animTrigger: 'idle', zoneId: 'yard', weight: 35, minDuration: 20, maxDuration: 40 },
-      { actionId: 'yard_bench_idle', type: 'IDLE', animTrigger: 'idle', zoneId: 'yard_benches', weight: 30, minDuration: 20, maxDuration: 40 },
-      { actionId: 'yard_exercise', type: 'IDLE', animTrigger: 'exercise', zoneId: 'yard_exercise', weight: 20, minDuration: 15, maxDuration: 30 },
-      { actionId: 'yard_shadow_box', type: 'IDLE', animTrigger: 'shadowbox', zoneId: 'yard_exercise', weight: 10, minDuration: 10, maxDuration: 20 },
-      { actionId: 'yard_lean_wall', type: 'IDLE', animTrigger: 'lean_wall', zoneId: 'yard', weight: 5, minDuration: 15, maxDuration: 25 },
-      { actionId: 'cell_stand_idle', type: 'IDLE', animTrigger: 'idle', zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 55 },
-      { actionId: 'cell_sleep', type: 'IDLE', animTrigger: 'sleep', zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 55 },
+      { actionId: 'yard_idle', type: 'IDLE', animTrigger: NPC_ANIM.IDLE, zoneId: 'yard', weight: 35, minDuration: 20, maxDuration: 40 },
+      { actionId: 'yard_bench_idle', type: 'IDLE', animTrigger: NPC_ANIM.IDLE, zoneId: 'yard_benches', weight: 30, minDuration: 20, maxDuration: 40 },
+      { actionId: 'yard_exercise', type: 'IDLE', animTrigger: NPC_ANIM.EXERCISE, zoneId: 'yard_exercise', weight: 20, minDuration: 15, maxDuration: 30 },
+      { actionId: 'yard_shadow_box', type: 'IDLE', animTrigger: NPC_ANIM.SHADOWBOX, zoneId: 'yard_exercise', weight: 10, minDuration: 10, maxDuration: 20 },
+      { actionId: 'yard_lean_wall', type: 'IDLE', animTrigger: NPC_ANIM.LEAN_WALL, zoneId: 'yard', weight: 5, minDuration: 15, maxDuration: 25 },
+      { actionId: 'yard_salute_pair', type: 'SOCIAL', animTrigger: NPC_ANIM.SALUTE, zoneId: 'yard', weight: 8, minDuration: 3, maxDuration: 4 },
+      { actionId: 'yard_argue_pair', type: 'SOCIAL', animTrigger: NPC_ANIM.ARGUE, zoneId: 'yard', weight: 6, minDuration: 5, maxDuration: 9 },
+      { actionId: 'yard_dance', type: 'IDLE', animTrigger: NPC_ANIM.DANCE, zoneId: 'yard', weight: 4, minDuration: 8, maxDuration: 14 },
+      { actionId: 'cell_stand_idle', type: 'IDLE', animTrigger: NPC_ANIM.IDLE, zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 55 },
+      { actionId: 'cell_sleep', type: 'IDLE', animTrigger: NPC_ANIM.SLEEP, zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 55 },
       { actionId: 'free_cafe_sit_talk', type: 'SOCIAL', animTrigger: 'talk_seated', zoneId: 'cafeteria_seating', weight: 40, minDuration: 15, maxDuration: 35 },
       { actionId: 'free_cafe_sit_idle', type: 'IDLE', animTrigger: 'sit_idle', zoneId: 'cafeteria_seating', weight: 35, minDuration: 10, maxDuration: 25 },
       { actionId: 'free_cafe_stand_chat', type: 'SOCIAL', animTrigger: 'talk_standing', zoneId: 'cafeteria', weight: 25, minDuration: 10, maxDuration: 25 },
@@ -194,8 +201,8 @@ const JAIL_PHASES: JailPhaseDef[] = [
   {
     phase: 8, name: 'Lockdown', duration: 60, zone: 'Cells',
     actions: [
-      { actionId: 'cell_stand_idle', type: 'IDLE', animTrigger: 'idle', zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 60 },
-      { actionId: 'cell_sleep', type: 'IDLE', animTrigger: 'sleep', zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 60 },
+      { actionId: 'cell_stand_idle', type: 'IDLE', animTrigger: NPC_ANIM.IDLE, zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 60 },
+      { actionId: 'cell_sleep', type: 'IDLE', animTrigger: NPC_ANIM.SLEEP, zoneId: 'cells', weight: 100, minDuration: 25, maxDuration: 60 },
     ],
   },
 ]
@@ -206,7 +213,7 @@ const JAIL_PHASES: JailPhaseDef[] = [
 const SUBZONE_ACTIONS: Record<string, string[]> = {
   taller: ['work_use_workbench', 'work_inspect_cabinets', 'work_talk_coworker'],
   lavanderia: ['laundry_grab_clothes', 'laundry_load_washer', 'laundry_store_clothes', 'laundry_talk_coworker'],
-  patio: ['yard_idle', 'yard_bench_idle', 'yard_exercise', 'yard_shadow_box', 'yard_lean_wall'],
+  patio: ['yard_idle', 'yard_bench_idle', 'yard_exercise', 'yard_shadow_box', 'yard_lean_wall', 'yard_salute_pair', 'yard_argue_pair', 'yard_dance'],
   celdas: ['cell_stand_idle', 'cell_sleep'],
   cocina: ['free_cafe_sit_talk', 'free_cafe_sit_idle', 'free_cafe_stand_chat'],
 }
@@ -666,7 +673,7 @@ export class JailRoutineSystem {
 
       const totalDur = consumed + 8
       assignments.push({
-        npcId, actionId: 'cafeteria_sequence', animTrigger: 'Idle',
+        npcId, actionId: 'cafeteria_sequence', animTrigger: NPC_ANIM.IDLE,
         duration: Math.min(totalDur, def.duration),
         actionSequence: steps, walkSpeedMult,
       })

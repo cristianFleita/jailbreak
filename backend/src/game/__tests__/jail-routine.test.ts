@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { addPlayer, createGameRoomState, spawnNPCs } from '../state.js'
 import { defaultGameConfig } from '../room-manager.js'
 import { JailRoutineSystem } from '../systems/jail-routine.js'
+import { isCanonicalNPCTrigger } from '../systems/npc-animations.js'
 import type { GameRoomState, JailPhaseNumber, PhaseJailStartPayload } from '../types.js'
 
 function createRoutineWithNPCs(): { state: GameRoomState; routine: JailRoutineSystem } {
@@ -137,6 +138,80 @@ describe('JailRoutineSystem', () => {
     } finally {
       randomSpy.mockRestore()
     }
+  })
+
+  describe('animation trigger parity with Unity', () => {
+    // The Unity NPCBehaviorController.MapTriggerToStateName() falls back to
+    // "Idle" on any unknown trigger string — silently. Catching it here in TS
+    // before it ships keeps the disguise feature honest: a prisoner emoting
+    // "Rummage" must look identical to an NPC at the laundry pile, which only
+    // works if the NPC trigger resolves to "Rummaging" instead of "Idle".
+    it.each([1, 2, 3, 4, 5, 6, 7, 8] as JailPhaseNumber[])(
+      'every animTrigger emitted on phase %s is canonical',
+      phase => {
+        const { routine } = createRoutineWithNPCs()
+        const payload = emitPhase(routine, phase)
+        const seen: string[] = []
+
+        for (const assignment of payload.npcAssignments) {
+          seen.push(assignment.animTrigger)
+          for (const step of assignment.actionSequence ?? []) {
+            seen.push(step.animTrigger)
+          }
+        }
+
+        expect(seen.length).toBeGreaterThan(0)
+        for (const trigger of seen) {
+          expect(
+            isCanonicalNPCTrigger(trigger),
+            `phase ${phase} emitted non-canonical animTrigger "${trigger}"`
+          ).toBe(true)
+        }
+      }
+    )
+
+    it('reassign loop only emits canonical triggers', () => {
+      const { routine } = createRoutineWithNPCs()
+      routine.start()
+
+      // Force a yard subzone phase, drain timers, and request a forced reassignment.
+      ;(routine as any).currentPhase = 3
+      ;(routine as any).phaseStartedAt = Date.now()
+      ;(routine as any).lastReassignAt = 0
+      for (const id of (routine as any).npcTimers.keys()) {
+        ;(routine as any).npcTimers.set(id, 0)
+      }
+      const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.01)
+      let reassigned: any[] = []
+      routine.onNPCReassign = ({ assignments }) => { reassigned = assignments }
+
+      try {
+        ;(routine as any).checkReassignInterval()
+        for (const a of reassigned) {
+          expect(isCanonicalNPCTrigger(a.animTrigger)).toBe(true)
+          for (const step of a.actionSequence ?? []) {
+            expect(isCanonicalNPCTrigger(step.animTrigger)).toBe(true)
+          }
+        }
+      } finally {
+        randomSpy.mockRestore()
+      }
+    })
+
+    it('exposes the new yard variety actions to the action pool', () => {
+      const { routine } = createRoutineWithNPCs()
+      const newYardActions = ['yard_salute_pair', 'yard_argue_pair', 'yard_dance']
+
+      // Force every yard NPC to roll the new entries by stubbing the weighted
+      // random to land on each action ID at least once.
+      for (const phase of [3, 6] as JailPhaseNumber[]) {
+        const def = (routine as any).getPhaseDef(phase)
+        const ids = new Set(def.actions.map((a: { actionId: string }) => a.actionId))
+        for (const expected of newYardActions) {
+          expect(ids.has(expected)).toBe(true)
+        }
+      }
+    })
   })
 
   describe('routine completion (phase 8 → game end)', () => {
