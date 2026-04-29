@@ -1985,3 +1985,33 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260429_065145
+### Commits
+28da3d5 Merge pull request #20 from cristianFleita/feat-throwable-items
+c07121d chore: soap interactable
+3349ceb chore: throw and stun guard
+d3b3800 Merge pull request #19 from cristianFleita/feat-sound
+d49bc24 chore: npc footsteps
+4380110 chore: intro sound till tutorial
+5f3dace chore: sound wip
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_065642
+### Commits
+28da3d5 Merge pull request #20 from cristianFleita/feat-throwable-items
+c07121d chore: soap interactable
+3349ceb chore: throw and stun guard
+d3b3800 Merge pull request #19 from cristianFleita/feat-sound
+d49bc24 chore: npc footsteps
+4380110 chore: intro sound till tutorial
+5f3dace chore: sound wip
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
