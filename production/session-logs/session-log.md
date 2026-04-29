@@ -2036,3 +2036,17 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260429_113315
+### Commits
+c7f15d3 chore: add emote panel info + add loop to animations
+f9ec436 fix: instant game end on refresh guard page
+2e08d0a fix: soft transition in routines for npcs
+28da3d5 Merge pull request #20 from cristianFleita/feat-throwable-items
+c07121d chore: soap interactable
+3349ceb chore: throw and stun guard
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/Audio/IntroMusicController.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
