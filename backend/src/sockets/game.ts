@@ -772,6 +772,29 @@ export function setupGameSockets(io: Server) {
     })
 
     // ==================================================================
+    // TUTORIAL: client wants to skip the tutorial (Fase A — ready-up)
+    // ==================================================================
+    socket.on('tutorial:ready', () => {
+      requireAuth(socket, () => {
+        if (!currentRoomId) return
+        try {
+          const room = getRoom(currentRoomId)
+          if (!room || room.state.status !== 'tutorial') return
+
+          const manager = getTutorialManager(room)
+          if (!manager) return
+
+          const user = getUserBySocket(socket.id)
+          if (!user) return
+
+          manager.markReady(user.userId)
+        } catch (err) {
+          console.error(`[ERROR] tutorial:ready: ${err}`)
+        }
+      })
+    })
+
+    // ==================================================================
     // GAMEPLAY: route:register_spawn_areas (host-only; Phase C-02)
     // ==================================================================
     socket.on('route:register_spawn_areas', (payloadRaw: string | RegisterSpawnAreasPayload) => {

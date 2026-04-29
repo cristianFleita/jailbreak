@@ -26,6 +26,7 @@ namespace Jailbreak.Tutorial
         private VisualElement _focusPanel;
         private VisualElement _focusFill;
         private VisualElement _toast;
+        private VisualElement _readyPanel;
         private Label _roleLabel;
         private Label _summaryLabel;
         private Label _timerLabel;
@@ -34,6 +35,8 @@ namespace Jailbreak.Tutorial
         private Label _errorsLabel;
         private Label _cueLabel;
         private Label _toastLabel;
+        private Label _readyLabel;
+        private Label _readyCountLabel;
 
         private NetworkManager _net;
         private bool _boundNetwork;
@@ -44,6 +47,9 @@ namespace Jailbreak.Tutorial
         private float _toastHideAt;
         private int _foodStep;
         private bool _changedSlotBeforeStore;
+        private bool _localReadySent;
+        private int _readyCount;
+        private int _totalCount;
 
         private bool IsGuard => string.Equals(_role, "guard", StringComparison.OrdinalIgnoreCase);
         private bool IsPrisoner => !IsGuard;
@@ -80,6 +86,7 @@ namespace Jailbreak.Tutorial
         {
             BindNetwork();
             HandleTab();
+            HandleReadyInput();
             RefreshTimer();
             RefreshToast();
         }
@@ -89,7 +96,11 @@ namespace Jailbreak.Tutorial
             if (payload == null) return;
             _remainingSeconds = payload.duration > 0f ? payload.duration : fallbackDurationSeconds;
             _fallbackEndsAt = Time.realtimeSinceStartup + _remainingSeconds;
+            _localReadySent = false;
+            _readyCount = 0;
+            _totalCount = payload.players != null ? payload.players.Length : 0;
             ApplyRole(payload.role, payload.missions);
+            RefreshReadyPanel();
         }
 
         public void ApplyRole(string role, string[] missionIds)
@@ -137,6 +148,9 @@ namespace Jailbreak.Tutorial
             _focusPanel = _root.Q<VisualElement>("FocusPanel");
             _focusFill = _root.Q<VisualElement>("FocusFill");
             _toast = _root.Q<VisualElement>("Toast");
+            _readyPanel = _root.Q<VisualElement>("ReadyPanel");
+            _readyLabel = _root.Q<Label>("ReadyLabel");
+            _readyCountLabel = _root.Q<Label>("ReadyCountLabel");
         }
 
         private void BindNetwork()
@@ -148,7 +162,11 @@ namespace Jailbreak.Tutorial
             _net.OnTutorialStartEvent += ApplyStart;
             _net.OnTutorialStateEvent += ApplyState;
             _net.OnTutorialEndEvent += HandleTutorialEnd;
+            _net.OnTutorialReadyEvent += ApplyReady;
             _boundNetwork = true;
+
+            if (_net.CachedTutorialReady != null)
+                ApplyReady(_net.CachedTutorialReady);
         }
 
         private void UnbindNetwork()
@@ -157,6 +175,7 @@ namespace Jailbreak.Tutorial
             _net.OnTutorialStartEvent -= ApplyStart;
             _net.OnTutorialStateEvent -= ApplyState;
             _net.OnTutorialEndEvent -= HandleTutorialEnd;
+            _net.OnTutorialReadyEvent -= ApplyReady;
             _boundNetwork = false;
             _net = null;
         }
@@ -471,6 +490,85 @@ namespace Jailbreak.Tutorial
         {
             _remainingSeconds = 0f;
             RefreshTimer();
+            if (_readyPanel != null)
+                _readyPanel.style.display = DisplayStyle.None;
+        }
+
+        private void HandleReadyInput()
+        {
+            if (_localReadySent) return;
+            if (_net == null || !_net.IsAuthenticated) return;
+
+            if (InputSystemKey.WasPressedThisFrame(KeyCode.Return)
+                || InputSystemKey.WasPressedThisFrame(KeyCode.KeypadEnter))
+            {
+                _localReadySent = true;
+                _net.SendTutorialReady();
+                RefreshReadyPanel();
+            }
+        }
+
+        public void ApplyReady(TutorialReadyPayload payload)
+        {
+            if (payload == null) return;
+            _readyCount = payload.readyCount;
+            _totalCount = Mathf.Max(payload.totalCount, _readyCount);
+
+            // Server-side confirmation that the local player is in the set —
+            // useful in case the local input was eaten by something.
+            if (!_localReadySent && payload.readyUserIds != null && _net != null)
+            {
+                var localId = _net.LocalPlayerId;
+                if (!string.IsNullOrEmpty(localId))
+                {
+                    foreach (var id in payload.readyUserIds)
+                    {
+                        if (id == localId)
+                        {
+                            _localReadySent = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            RefreshReadyPanel();
+        }
+
+        private void RefreshReadyPanel()
+        {
+            if (_readyPanel == null) return;
+            _readyPanel.style.display = DisplayStyle.Flex;
+
+            if (_localReadySent)
+            {
+                if (_readyLabel != null)
+                    _readyLabel.text = "WAITING FOR THE OTHER PLAYERS TO START THE GAME";
+                if (_readyCountLabel != null)
+                {
+                    _readyCountLabel.style.display = DisplayStyle.Flex;
+                    var total = Mathf.Max(_totalCount, _readyCount);
+                    _readyCountLabel.text = total > 0
+                        ? $"{_readyCount} / {total} ready"
+                        : $"{_readyCount} ready";
+                }
+            }
+            else
+            {
+                if (_readyLabel != null)
+                    _readyLabel.text = "PRESS [ENTER] TO GET READY AND SKIP TUTORIAL";
+                if (_readyCountLabel != null)
+                {
+                    if (_readyCount > 0 && _totalCount > 0)
+                    {
+                        _readyCountLabel.style.display = DisplayStyle.Flex;
+                        _readyCountLabel.text = $"{_readyCount} / {_totalCount} ready";
+                    }
+                    else
+                    {
+                        _readyCountLabel.style.display = DisplayStyle.None;
+                    }
+                }
+            }
         }
 
         private readonly struct MissionDef

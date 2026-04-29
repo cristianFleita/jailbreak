@@ -348,6 +348,14 @@ namespace Jailbreak.Network
         public string nextScene;
     }
 
+    [Serializable]
+    public class TutorialReadyPayload
+    {
+        public string[] readyUserIds;
+        public int readyCount;
+        public int totalCount;
+    }
+
     // ─── Event Payloads (Client → Server) ────────────────────────────────────
 
     [Serializable]

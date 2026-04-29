@@ -593,6 +593,8 @@ export interface TutorialRoomState {
   seed: number
   /** Per-user completion sets, keyed by userId. */
   completedByUserId: Map<string, Set<TutorialMissionId>>
+  /** Users that have marked themselves ready to skip the tutorial early. */
+  readyUserIds: Set<string>
 }
 
 /**
@@ -637,6 +639,24 @@ export interface TutorialMissionCompletePayload {
  */
 export interface TutorialEndPayload {
   nextScene: 'GameScene'
+}
+
+/**
+ * Client → Server. Player wants to skip the tutorial. Idempotent — sending it
+ * twice has no extra effect.
+ */
+export interface TutorialReadyRequestPayload {
+  ready: boolean
+}
+
+/**
+ * Server → Client. Broadcast to every player whenever the ready set changes.
+ * Once `readyCount === totalCount` the server force-ends the tutorial.
+ */
+export interface TutorialReadyPayload {
+  readyUserIds: string[]
+  readyCount: number
+  totalCount: number
 }
 
 // ============================================================================

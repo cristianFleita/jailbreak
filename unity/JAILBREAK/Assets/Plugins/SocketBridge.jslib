@@ -144,6 +144,10 @@ mergeInto(LibraryManager.library, {
         window.unityInstance.SendMessage(window._jbGoName, 'OnTutorialEnd', JSON.stringify(data));
       });
 
+      window._jbSocket.on('tutorial:ready', function (data) {
+        window.unityInstance.SendMessage(window._jbGoName, 'OnTutorialReady', JSON.stringify(data));
+      });
+
       window._jbSocket.on('game:end', function (data) {
         window.unityInstance.SendMessage(window._jbGoName, 'OnGameEnd', JSON.stringify(data));
       });
@@ -386,6 +390,11 @@ mergeInto(LibraryManager.library, {
         console.error('[SocketBridge] SendTutorialMissionComplete parse error:', e);
       }
     }
+  },
+
+  SocketSendTutorialReady: function() {
+    if (window._jbSocket && window._jbSocket.connected)
+      window._jbSocket.emit('tutorial:ready');
   },
 
   SocketSendNPCSyncState: function(jsonPtr) {
