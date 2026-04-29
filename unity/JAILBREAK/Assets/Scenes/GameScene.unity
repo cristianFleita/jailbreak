@@ -33001,7 +33001,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.GameAudioBridge
   wrongMarkOneShot: {fileID: 757700206}
   wrongServerOneShot: {fileID: 1280475175}
-  securityAlarmLoop: {fileID: 0}
+  securityAlarmLoop: {fileID: 1698346706}
   wrongPowerSupplyAlarmSeconds: 4
   ambience: {fileID: 416742439}
   missionCompleteOneShot: {fileID: 1827115453}
@@ -125639,7 +125639,7 @@ MonoBehaviour:
   mixerGroup: {fileID: 0}
   volume: 1
   pitch: 1
-  spatial: 1
+  spatial: 0
   minDistance: 2
   maxDistance: 20
   rolloff: 1

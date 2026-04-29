@@ -354,3 +354,9 @@
   - Extended NPC work-table and washer character-side interactions to start/stop the prop loop while NPCs use those stations.
   - Verified Unity C# with `msbuild Assembly-CSharp.csproj` and `git diff --check`; build passed with existing warnings only.
   - Recorded ADR-035 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Audio follow-up for Sink NPC, LDesk, and wrong power alarm** (2026-04-29):
+  - Diagnosed Sink NPC silence as the routine path bypassing `SinkInteractable`; added explicit external loop ownership from `NPCBehaviorController`.
+  - Diagnosed LDesk silence as sibling `sfx` authoring under the prefab root; updated Route 1 audio lookup to resolve from action point/root hierarchy.
+  - Connected the existing scene `Alarm` `LoopingSfx` to `GameAudioBridge.securityAlarmLoop`, set it to 2D/global, and added a local wrong-server completion fallback while keeping the guard `world:cue` path.
+  - Verified Unity C# with `msbuild Assembly-CSharp.csproj` and `git diff --check`; build passed with existing warnings only.
+  - Recorded ADR-036 in `memory/decisions.md`.

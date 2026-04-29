@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using Jailbreak.Network;
+using Jailbreak.Audio;
 
 namespace Jailbreak.NPC
 {
@@ -152,6 +153,9 @@ namespace Jailbreak.NPC
         // Bed reserved for the current sleep step. Set before navigation so
         // NPCs assigned to the same cell walk to different beds.
         private SleepInteractable _reservedSleepInteractable;
+
+        // Sink loop currently driven by this NPC's food-drop action.
+        private ProgressInteractableLoopingSfx _activeSinkLoopingSfx;
 
         // ─── Emergent behavior state ──────────────────────────────────────────
         private bool   _isPlayingEmergent;
@@ -370,6 +374,7 @@ namespace Jailbreak.NPC
                                        && newZone == (_currentStepZoneId ?? _current?.zoneId);
             if (!continuingSameSleep) StopSleepIfActive();
 
+            StopSinkIfActive();
             CleanupCurrent();
 
             if (agent != null)
@@ -771,6 +776,8 @@ namespace Jailbreak.NPC
                                            && _sequenceSteps[peekIndex].zoneId == _currentStepZoneId;
                 if (!nextIsSleepSameZone) StopSleepIfActive();
 
+                StopSinkIfActive();
+
                 // CarryClothesInteraction's grab routine self-terminates when its
                 // own duration elapses (isSearching=false → bundle attached +
                 // isCarrying=true). Nothing to stop here. Release the pile slot
@@ -820,6 +827,7 @@ namespace Jailbreak.NPC
             StopLaundryStoreIfActive();
             ReleaseLaundryGrabClothes();
             StopSleepIfActive();
+            StopSinkIfActive();
         }
 
         private void OnSequenceComplete()
@@ -874,6 +882,7 @@ namespace Jailbreak.NPC
             StopLaundryStoreIfActive();
             ReleaseLaundryGrabClothes();
             StopSleepIfActive();
+            StopSinkIfActive();
 
             _isLooping = false;
             _current   = null;
@@ -1141,6 +1150,11 @@ namespace Jailbreak.NPC
 
             if (IsLeaveFoodAction(animTrigger))
             {
+                var sink = (!string.IsNullOrEmpty(zoneId) && zoneRegistry != null)
+                    ? zoneRegistry.GetDeterministicSink(zoneId, seed)
+                    : null;
+                StartSinkLoop(sink);
+
                 var carry = GetComponent<CarryFoodInteraction>();
                 if (carry != null && carry.IsCarrying)
                     carry.TryDrop();
@@ -1457,6 +1471,27 @@ namespace Jailbreak.NPC
             return anchor.position;
         }
 
+        // ─── Sink Audio Setup ────────────────────────────────────────────────
+
+        private void StartSinkLoop(SinkInteractable sink)
+        {
+            StopSinkIfActive();
+            if (sink == null) return;
+
+            var pp = sink.GetComponent<ProgressPointAction>();
+            var actionPoint = (pp != null && pp.actionPoint != null) ? pp.actionPoint : sink.transform;
+            _activeSinkLoopingSfx = ProgressInteractableLoopingSfx.FindForActionPoint(actionPoint);
+            if (_activeSinkLoopingSfx != null)
+                _activeSinkLoopingSfx.PlayExternal(this);
+        }
+
+        private void StopSinkIfActive()
+        {
+            if (_activeSinkLoopingSfx == null) return;
+            _activeSinkLoopingSfx.StopExternal(this);
+            _activeSinkLoopingSfx = null;
+        }
+
         // ─── Laundry Store Clothes Setup ─────────────────────────────────────
 
         private LaundryStoreClothesInteraction EnsureLaundryStoreClothesInteraction()
@@ -1646,6 +1681,7 @@ namespace Jailbreak.NPC
             ReleaseLaundryWasher();
             ReleaseLaundryStore();
             ReleaseSleepInteractable();
+            StopSinkIfActive();
         }
 
         // ─── Food Carry Setup ──────────────────────────────────────────────────

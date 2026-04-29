@@ -1,4 +1,6 @@
 using Jailbreak.Network;
+using Jailbreak.Audio;
+using UnityEngine;
 
 namespace Jailbreak.Interactions.Route1
 {
@@ -19,6 +21,18 @@ namespace Jailbreak.Interactions.Route1
         protected override string UnavailableMessage(EscapeRoute1StatePayload state)
         {
             return state != null && state.serverDisabled ? "Ventilation is already off" : null;
+        }
+
+        protected override void OnLocalInteractionCompletedWithoutState(EscapeRoute1StatePayload state)
+        {
+            if (state != null && state.serverDisabled) return;
+
+#if UNITY_2023_1_OR_NEWER
+            var bridge = Object.FindFirstObjectByType<GameAudioBridge>(FindObjectsInactive.Exclude);
+#else
+            var bridge = Object.FindObjectOfType<GameAudioBridge>();
+#endif
+            bridge?.PlayWrongPowerSupplyAlarmCue();
         }
     }
 }

@@ -147,6 +147,11 @@ namespace Jailbreak.Audio
             if (missionCompleteOneShot != null) missionCompleteOneShot.Play();
         }
 
+        public void PlayWrongPowerSupplyAlarmCue()
+        {
+            PlayWrongPowerSupplyAlarm();
+        }
+
         public void StopAlarm()
         {
             if (_alarmRoutine != null)

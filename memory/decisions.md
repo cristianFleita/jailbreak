@@ -886,3 +886,24 @@ The props do not own the player/NPC Animator, so watching an Animator bool on th
 - `Sink` no longer plays only a completion one-shot; it loops sink audio for the duration of the action.
 - `LDesk` uses `revisar-cajones.mp3`; `Desk` uses `working-table.mp3`; `WashingMachine` uses `washing-machine.mp3`; `Sink` uses `dirty-plates-sink.mp3`.
 - Global bridge cues in `GameScene` are 2D so the guard hears false-capture and alarm feedback regardless of listener position.
+
+## ADR-036: Route/local fallbacks and NPC direct actions also drive prop SFX
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+Route 1 progress interactables resolve their looping prop audio from the action point/root hierarchy, not only from children of the interactable component. NPC direct actions that do not call player-facing interactables must explicitly start/stop the matching prop loop.
+
+Wrong power-supply sabotage now also has a local completion fallback that calls `GameAudioBridge.PlayWrongPowerSupplyAlarmCue()` when the completed server action did not disable ventilation. The authoritative guard-side `world:cue server_wrong_alarm` remains the network source of truth.
+
+### Why
+
+Some authored prefabs place `sfx` as a sibling of the interactable child, so child-only lookup misses valid audio components. NPC food-drop behavior goes directly through `NPCBehaviorController` instead of `SinkInteractable`, so it needs the same external loop ownership pattern already used by work tables and washing machines. The local alarm fallback makes single-client/editor testing audible while preserving the guard notification path.
+
+### Implications
+
+- `LDesk`/server sabotage audio works even when the `sfx` child is a sibling of the `Interactable` child.
+- Sink audio now plays for NPC food-drop actions as well as player interactions.
+- `GameScene` wires the existing `Alarm` `LoopingSfx` into `GameAudioBridge.securityAlarmLoop` and sets it to 2D/global playback.

@@ -82,7 +82,8 @@ namespace Jailbreak.Interactions.Route1
         {
             progressPointAction = GetComponent<ProgressPointAction>();
             networkInteractable = GetComponent<NetworkInteractable>();
-            loopingSfx = GetComponentInChildren<ProgressInteractableLoopingSfx>(true);
+            loopingSfx = ProgressInteractableLoopingSfx.FindForActionPoint(
+                progressPointAction != null ? progressPointAction.actionPoint : transform);
 
             if (string.IsNullOrEmpty(progressLabel)) progressLabel = DefaultProgressLabel;
             if (string.IsNullOrEmpty(startLabel)) startLabel = DefaultStartLabel;

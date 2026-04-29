@@ -109,7 +109,12 @@ namespace Jailbreak.Audio
             if (direct != null) return direct;
 
             var parent = actionPoint.parent;
-            return parent != null ? parent.GetComponentInChildren<ProgressInteractableLoopingSfx>(true) : null;
+            var fromParent = parent != null ? parent.GetComponentInChildren<ProgressInteractableLoopingSfx>(true) : null;
+            if (fromParent != null) return fromParent;
+
+            return actionPoint.root != null
+                ? actionPoint.root.GetComponentInChildren<ProgressInteractableLoopingSfx>(true)
+                : null;
         }
 
         private void ResolveReferences()
