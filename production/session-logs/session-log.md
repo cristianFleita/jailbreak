@@ -2015,3 +2015,24 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260429_111306
+### Commits
+2e08d0a fix: soft transition in routines for npcs
+28da3d5 Merge pull request #20 from cristianFleita/feat-throwable-items
+c07121d chore: soap interactable
+3349ceb chore: throw and stun guard
+### Uncommitted Changes
+backend/src/game/reconnection.ts
+backend/src/sockets/game.ts
+unity/JAILBREAK/Assets/Animations/Exercise/BicycleCrunch.anim
+unity/JAILBREAK/Assets/Animations/Exercise/PushUp.anim
+unity/JAILBREAK/Assets/Animations/Exercise/Situps.anim
+unity/JAILBREAK/Assets/Animations/Punching.anim
+unity/JAILBREAK/Assets/Scripts/Player/EmoteSystem.cs
+unity/JAILBREAK/Assets/Scripts/UI/EmotePanelController.cs
+unity/JAILBREAK/Assets/UI/Screens/GameGUI.uxml
+unity/JAILBREAK/Assets/UI/Screens/TutorialPrisonerGUI.uxml
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

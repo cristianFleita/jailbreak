@@ -24,35 +24,34 @@ namespace Jailbreak.Player
     public class EmoteSystem : MonoBehaviour
     {
         // ── Emote catalogue ──────────────────────────────────────────────────
+        public enum EmoteCategory { Social, Exercise, Fun }
+
         [Serializable]
         public class EmoteEntry
         {
-            public string id;             // unique key
-            public string displayName;    // shown in UI
-            public string animatorState;  // state name in Character.controller
-            public string icon;           // emoji/unicode for the wheel
-            public float  duration;       // how long the emote plays (0 = until cancelled)
-            public bool   loops;          // if true, emote loops until cancelled
+            public string id;
+            public string displayName;
+            public string animatorState;
+            public string icon;
+            public float  duration;
+            public bool   loops;
+            public EmoteCategory category;
         }
 
-        /// <summary>All available emotes. Configured in code to match Character.controller.</summary>
         public static readonly EmoteEntry[] Catalogue = new[]
         {
-            // ── Social / Blend-in ────────────────────────────────────────────
-            new EmoteEntry { id = "talking",        displayName = "Talk",          animatorState = "Talking",        icon = "💬", duration = 4f,  loops = true  },
-            new EmoteEntry { id = "telling_secret", displayName = "Whisper",       animatorState = "TellingSecret",  icon = "🤫", duration = 3f,  loops = true  },
-            new EmoteEntry { id = "salute",         displayName = "Salute",        animatorState = "Salute",         icon = "🫡", duration = 2.5f,loops = false },
-            new EmoteEntry { id = "dismissing",     displayName = "Dismiss",       animatorState = "Dismissing",     icon = "👋", duration = 2f,  loops = false },
-            new EmoteEntry { id = "surprised",      displayName = "Surprised",     animatorState = "Surprised",      icon = "😲", duration = 2f,  loops = false },
-            new EmoteEntry { id = "angry",          displayName = "Angry",         animatorState = "Angry",          icon = "😤", duration = 3f,  loops = true  },
+            new EmoteEntry { id = "talking",        displayName = "Talk",      animatorState = "Talking",       icon = "...", duration = 4f,   loops = true,  category = EmoteCategory.Social   },
+            new EmoteEntry { id = "telling_secret", displayName = "Whisper",   animatorState = "TellingSecret", icon = "Shh", duration = 3f,   loops = true,  category = EmoteCategory.Social   },
+            new EmoteEntry { id = "salute",         displayName = "Salute",    animatorState = "Salute",        icon = "o7",  duration = 2.5f, loops = false, category = EmoteCategory.Social   },
+            new EmoteEntry { id = "dismissing",     displayName = "Dismiss",   animatorState = "Dismissing",    icon = "Bye", duration = 2f,   loops = false, category = EmoteCategory.Social   },
+            new EmoteEntry { id = "surprised",      displayName = "Surprised", animatorState = "Surprised",     icon = "!?",  duration = 2f,   loops = false, category = EmoteCategory.Social   },
+            new EmoteEntry { id = "angry",          displayName = "Angry",     animatorState = "Angry",         icon = "Grr", duration = 3f,   loops = true,  category = EmoteCategory.Social   },
 
-            // ── Exercise (yard blend-in) ─────────────────────────────────────
-            new EmoteEntry { id = "pushup",         displayName = "Push-ups",      animatorState = "PushUp",         icon = "💪", duration = 5f,  loops = true  },
-            new EmoteEntry { id = "situps",         displayName = "Sit-ups",       animatorState = "Situps",         icon = "🏋", duration = 5f,  loops = true  },
-            new EmoteEntry { id = "crunch",         displayName = "Crunches",      animatorState = "BicycleCrunch",  icon = "🔥", duration = 5f,  loops = true  },
+            new EmoteEntry { id = "pushup",         displayName = "Push-ups",  animatorState = "PushUp",        icon = "Up",  duration = 5f,   loops = true,  category = EmoteCategory.Exercise },
+            new EmoteEntry { id = "situps",         displayName = "Sit-ups",   animatorState = "Situps",        icon = "Sit", duration = 5f,   loops = true,  category = EmoteCategory.Exercise },
+            new EmoteEntry { id = "crunch",         displayName = "Crunches",  animatorState = "BicycleCrunch", icon = "Abs", duration = 5f,   loops = true,  category = EmoteCategory.Exercise },
 
-            // ── Fun / Taunts ─────────────────────────────────────────────────
-            new EmoteEntry { id = "dance",          displayName = "Dance",         animatorState = "SillyDancing",   icon = "💃", duration = 6f,  loops = true  },
+            new EmoteEntry { id = "dance",          displayName = "Dance",     animatorState = "SillyDancing",  icon = "Dnc", duration = 6f,   loops = true,  category = EmoteCategory.Fun      },
         };
 
         // ── State ────────────────────────────────────────────────────────────

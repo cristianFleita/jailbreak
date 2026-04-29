@@ -269,6 +269,17 @@ namespace Jailbreak.UI
             return grid;
         }
 
+        private static Color CategoryColor(EmoteSystem.EmoteCategory cat)
+        {
+            switch (cat)
+            {
+                case EmoteSystem.EmoteCategory.Social:   return new Color(0.36f, 0.74f, 1f);
+                case EmoteSystem.EmoteCategory.Exercise: return new Color(1f, 0.55f, 0.36f);
+                case EmoteSystem.EmoteCategory.Fun:      return new Color(1f, 0.45f, 0.78f);
+            }
+            return new Color(1f, 0.8f, 0.36f);
+        }
+
         private void AddEmoteButton(VisualElement parent, string emoteId)
         {
             EmoteSystem.EmoteEntry entry = null;
@@ -276,10 +287,12 @@ namespace Jailbreak.UI
                 if (e.id == emoteId) { entry = e; break; }
             if (entry == null) return;
 
+            var accent = CategoryColor(entry.category);
+
             var btn = new Button(() => OnEmoteClicked(emoteId));
             btn.name = $"EmoteBtn_{emoteId}";
             btn.style.width = 82;
-            btn.style.height = 58;
+            btn.style.height = 64;
             btn.style.marginRight = 6;
             btn.style.marginBottom = 6;
             btn.style.backgroundColor = new Color(1f, 1f, 1f, 0.06f);
@@ -301,28 +314,52 @@ namespace Jailbreak.UI
             btn.style.paddingTop = 4;
             btn.style.paddingBottom = 4;
 
+            var iconBadge = new VisualElement();
+            iconBadge.pickingMode = PickingMode.Ignore;
+            iconBadge.style.width = 34;
+            iconBadge.style.height = 26;
+            iconBadge.style.alignItems = Align.Center;
+            iconBadge.style.justifyContent = Justify.Center;
+            iconBadge.style.backgroundColor = new Color(accent.r, accent.g, accent.b, 0.18f);
+            iconBadge.style.borderTopWidth = 1;
+            iconBadge.style.borderRightWidth = 1;
+            iconBadge.style.borderBottomWidth = 1;
+            iconBadge.style.borderLeftWidth = 1;
+            iconBadge.style.borderTopColor = new Color(accent.r, accent.g, accent.b, 0.55f);
+            iconBadge.style.borderRightColor = new Color(accent.r, accent.g, accent.b, 0.55f);
+            iconBadge.style.borderBottomColor = new Color(accent.r, accent.g, accent.b, 0.55f);
+            iconBadge.style.borderLeftColor = new Color(accent.r, accent.g, accent.b, 0.55f);
+            iconBadge.style.borderTopLeftRadius = 4;
+            iconBadge.style.borderTopRightRadius = 4;
+            iconBadge.style.borderBottomLeftRadius = 4;
+            iconBadge.style.borderBottomRightRadius = 4;
+
             var icon = new Label(entry.icon);
-            icon.style.fontSize = 20;
+            icon.style.fontSize = 13;
+            icon.style.unityFontStyleAndWeight = FontStyle.Bold;
+            icon.style.color = accent;
             icon.style.unityTextAlign = TextAnchor.MiddleCenter;
+            icon.style.letterSpacing = 1;
             icon.pickingMode = PickingMode.Ignore;
-            btn.Add(icon);
+            iconBadge.Add(icon);
+            btn.Add(iconBadge);
 
             var label = new Label(entry.displayName);
-            label.style.fontSize = 9;
+            label.style.fontSize = 11;
+            label.style.unityFontStyleAndWeight = FontStyle.Bold;
             label.style.color = Color.white;
             label.style.unityTextAlign = TextAnchor.MiddleCenter;
-            label.style.marginTop = 2;
+            label.style.marginTop = 4;
             label.pickingMode = PickingMode.Ignore;
             btn.Add(label);
 
-            // Hover effect via callbacks
             btn.RegisterCallback<MouseEnterEvent>(evt =>
             {
-                btn.style.backgroundColor = new Color(1f, 0.8f, 0.36f, 0.18f);
-                btn.style.borderTopColor = new Color(1f, 0.8f, 0.36f, 0.5f);
-                btn.style.borderRightColor = new Color(1f, 0.8f, 0.36f, 0.5f);
-                btn.style.borderBottomColor = new Color(1f, 0.8f, 0.36f, 0.5f);
-                btn.style.borderLeftColor = new Color(1f, 0.8f, 0.36f, 0.5f);
+                btn.style.backgroundColor = new Color(accent.r, accent.g, accent.b, 0.18f);
+                btn.style.borderTopColor = new Color(accent.r, accent.g, accent.b, 0.7f);
+                btn.style.borderRightColor = new Color(accent.r, accent.g, accent.b, 0.7f);
+                btn.style.borderBottomColor = new Color(accent.r, accent.g, accent.b, 0.7f);
+                btn.style.borderLeftColor = new Color(accent.r, accent.g, accent.b, 0.7f);
             });
             btn.RegisterCallback<MouseLeaveEvent>(evt =>
             {

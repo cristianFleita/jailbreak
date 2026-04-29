@@ -24,6 +24,10 @@
             </ui:VisualElement>
             <ui:VisualElement name="HudTopRight" picking-mode="Ignore" style="flex-direction: column; align-items: flex-end;">
                 <ui:Button name="PauseMenuBtn" text="MENU [ESC]" style="padding-top: 5px; padding-right: 10px; padding-bottom: 5px; padding-left: 10px; -unity-font-style: bold; font-size: 11px; color: rgb(255, 255, 255); background-color: rgba(0, 0, 0, 0.62); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgba(255, 255, 255, 0.18); border-right-color: rgba(255, 255, 255, 0.18); border-bottom-color: rgba(255, 255, 255, 0.18); border-left-color: rgba(255, 255, 255, 0.18); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;"/>
+                <ui:VisualElement name="EmoteHintPanel" picking-mode="Ignore" style="flex-direction: row; align-items: center; margin-top: 6px; background-color: rgba(0, 0, 0, 0.62); padding-top: 4px; padding-right: 8px; padding-bottom: 4px; padding-left: 8px; border-left-width: 3px; border-left-color: rgb(255, 203, 92); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">
+                    <ui:Label name="EmoteHintKey" text="HOLD B" style="-unity-font-style: bold; font-size: 10px; color: rgb(255, 203, 92); margin-right: 6px; letter-spacing: 1px;"/>
+                    <ui:Label name="EmoteHintLabel" text="Open emote panel" style="font-size: 10px; color: rgb(196, 216, 235);"/>
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 
