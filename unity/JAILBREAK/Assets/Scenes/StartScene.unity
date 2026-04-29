@@ -252,7 +252,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dfc6697a3c2a443b86a0f7b4f1db84a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.IntroMusicController
-  fadeOutOnSceneChangeSeconds: 1
+  persistInScenes:
+  - StartScene
+  - LobbyScene
+  - RoomScene
+  fadeOutOnExitSeconds: 1
 --- !u!114 &833433708
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -273,7 +277,7 @@ MonoBehaviour:
   minDistance: 2
   maxDistance: 20
   rolloff: 1
-  playOnEnable: 0
+  playOnEnable: 1
   fadeInSeconds: 0.25
   fadeOutSeconds: 0.4
 --- !u!82 &833433709
