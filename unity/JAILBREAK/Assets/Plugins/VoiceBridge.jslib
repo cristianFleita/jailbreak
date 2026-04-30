@@ -35,6 +35,10 @@ mergeInto(LibraryManager.library, {
           localStream: null,
           localSource: null,
           localMeter: null,
+          localSendGain: null,
+          localSendDestination: null,
+          localSendStream: null,
+          localSendMeter: null,
           lastTrackEnabled: null,
           listenerPose: null,
           speakerPoses: {},
@@ -144,34 +148,54 @@ mergeInto(LibraryManager.library, {
             }
           }).then(function(stream) {
             state.localStream = stream;
-            attachLocalMeter(stream);
-            setLocalTrackEnabled(false);
+            attachLocalAudioGraph(stream);
+            setTransmitEnabled(false);
             return stream;
           });
         }
 
-        function attachLocalMeter(stream) {
+        function attachLocalAudioGraph(stream) {
           var ctx = ensureAudioContext();
           if (!ctx || !stream) return;
 
-          disconnectLocalMeter();
+          disconnectLocalAudioGraph();
 
           try {
             state.localSource = ctx.createMediaStreamSource(stream);
             state.localMeter = createAudioMeter(state.localSource);
+            state.localSendGain = ctx.createGain();
+            state.localSendGain.gain.value = 0;
+            state.localSendDestination = ctx.createMediaStreamDestination();
+            state.localSource.connect(state.localSendGain);
+            state.localSendGain.connect(state.localSendDestination);
+            state.localSendMeter = createAudioMeter(state.localSendGain);
+            state.localSendStream = state.localSendDestination.stream;
           } catch (err) {
-            console.warn('[Voice] Local audio meter failed:', err);
-            disconnectLocalMeter();
+            console.warn('[Voice] Local audio graph failed:', err);
+            disconnectLocalAudioGraph();
           }
         }
 
-        function disconnectLocalMeter() {
+        function disconnectLocalAudioGraph() {
           try { if (state.localSource) state.localSource.disconnect(); } catch (_) {}
+          try { if (state.localSendGain) state.localSendGain.disconnect(); } catch (_) {}
           try {
             if (state.localMeter && state.localMeter.analyser) state.localMeter.analyser.disconnect();
           } catch (_) {}
+          try {
+            if (state.localSendMeter && state.localSendMeter.analyser) state.localSendMeter.analyser.disconnect();
+          } catch (_) {}
+          if (state.localSendStream) {
+            var tracks = state.localSendStream.getTracks();
+            for (var i = 0; i < tracks.length; i++) tracks[i].stop();
+          }
+
           state.localSource = null;
           state.localMeter = null;
+          state.localSendGain = null;
+          state.localSendDestination = null;
+          state.localSendStream = null;
+          state.localSendMeter = null;
         }
 
         function createAudioMeter(source) {
@@ -279,10 +303,10 @@ mergeInto(LibraryManager.library, {
           };
           state.peers[userId] = peer;
 
-          if (state.localStream && state.localStream.getAudioTracks().length > 0) {
-            var tracks = state.localStream.getAudioTracks();
+          if (state.localSendStream && state.localSendStream.getAudioTracks().length > 0) {
+            var tracks = state.localSendStream.getAudioTracks();
             for (var i = 0; i < tracks.length; i++) {
-              pc.addTrack(tracks[i], state.localStream);
+              pc.addTrack(tracks[i], state.localSendStream);
             }
           } else if (pc.addTransceiver) {
             pc.addTransceiver('audio', { direction: 'recvonly' });
@@ -425,12 +449,12 @@ mergeInto(LibraryManager.library, {
           state.pushToTalk = !!(payload && payload.active);
           console.log('[Voice] Push-to-talk:', state.pushToTalk ? 'on' : 'off');
           resumeAudioContext();
-          setLocalTrackEnabled(state.pushToTalk && !state.muted);
+          setTransmitEnabled(state.pushToTalk && !state.muted);
         }
 
         function setLocalMuted(payload) {
           state.muted = !!(payload && payload.muted);
-          setLocalTrackEnabled(state.pushToTalk && !state.muted);
+          setTransmitEnabled(state.pushToTalk && !state.muted);
           if (state.socket && state.socket.connected && state.joined) {
             state.socket.emit('voice:state', {
               userId: state.userId,
@@ -440,15 +464,28 @@ mergeInto(LibraryManager.library, {
           }
         }
 
-        function setLocalTrackEnabled(enabled) {
-          if (!state.localStream) return;
-          var tracks = state.localStream.getAudioTracks();
-          for (var i = 0; i < tracks.length; i++) {
-            tracks[i].enabled = !!enabled;
+        function setTransmitEnabled(enabled) {
+          var active = !!enabled;
+
+          if (state.localStream) {
+            var tracks = state.localStream.getAudioTracks();
+            for (var i = 0; i < tracks.length; i++) {
+              tracks[i].enabled = true;
+            }
           }
-          if (state.lastTrackEnabled !== !!enabled) {
-            state.lastTrackEnabled = !!enabled;
-            console.log('[Voice] Local mic track enabled:', !!enabled, 'tracks:', tracks.length);
+
+          if (state.localSendGain) {
+            if (state.localSendGain.gain.setTargetAtTime && state.audioContext) {
+              state.localSendGain.gain.setTargetAtTime(active ? 1 : 0, state.audioContext.currentTime, 0.01);
+            } else {
+              state.localSendGain.gain.value = active ? 1 : 0;
+            }
+          }
+
+          if (state.lastTrackEnabled !== active) {
+            var count = state.localSendStream ? state.localSendStream.getAudioTracks().length : 0;
+            state.lastTrackEnabled = active;
+            console.log('[Voice] Local transmit enabled:', active, 'tracks:', count);
           }
         }
 
@@ -552,9 +589,9 @@ mergeInto(LibraryManager.library, {
         }
 
         function dispose() {
-          setLocalTrackEnabled(false);
+          setTransmitEnabled(false);
           unbindAudioUnlockGestures();
-          disconnectLocalMeter();
+          disconnectLocalAudioGraph();
 
           if (state.socket && state.socket.connected && state.joined) {
             state.socket.emit('voice:leave', { roomId: state.roomId, userId: state.userId });
@@ -576,6 +613,10 @@ mergeInto(LibraryManager.library, {
           state.localStream = null;
           state.localSource = null;
           state.localMeter = null;
+          state.localSendGain = null;
+          state.localSendDestination = null;
+          state.localSendStream = null;
+          state.localSendMeter = null;
           state.joined = false;
           state.socket = null;
           state.listenerPose = null;
@@ -590,6 +631,7 @@ mergeInto(LibraryManager.library, {
         function debug() {
           var peers = {};
           var localLevel = readAudioLevel(state.localMeter);
+          var localSendLevel = readAudioLevel(state.localSendMeter);
           for (var userId in state.peers) {
             if (!Object.prototype.hasOwnProperty.call(state.peers, userId)) continue;
             var peer = state.peers[userId];
@@ -622,6 +664,19 @@ mergeInto(LibraryManager.library, {
             }
           }
 
+          var sendTracks = [];
+          if (state.localSendStream) {
+            var outboundTracks = state.localSendStream.getAudioTracks();
+            for (var j = 0; j < outboundTracks.length; j++) {
+              sendTracks.push({
+                enabled: outboundTracks[j].enabled,
+                muted: outboundTracks[j].muted,
+                readyState: outboundTracks[j].readyState,
+                label: outboundTracks[j].label
+              });
+            }
+          }
+
           return {
             roomId: state.roomId,
             userId: state.userId,
@@ -631,10 +686,14 @@ mergeInto(LibraryManager.library, {
             pushToTalk: state.pushToTalk,
             localLevel: localLevel,
             localSpeaking: localLevel > 0.01,
+            localSendLevel: localSendLevel,
+            localSending: localSendLevel > 0.01,
+            transmitGain: state.localSendGain ? state.localSendGain.gain.value : null,
             audioContextState: state.audioContext ? state.audioContext.state : 'none',
             hasListenerPose: !!state.listenerPose,
             speakerPoseCount: Object.keys(state.speakerPoses).length,
             localTracks: localTracks,
+            sendTracks: sendTracks,
             peers: peers,
             iceServers: window.JAILBREAK_VOICE_ICE_SERVERS || defaultIceServers
           };

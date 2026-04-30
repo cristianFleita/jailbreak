@@ -1089,3 +1089,22 @@ Deployed clients proved signaling, ICE, remote stream receipt, push-to-talk, and
 - On the speaking client, `localLevel > 0.01` while holding Space confirms the mic is producing waveform audio before WebRTC transport.
 - On the listening client, peer `remoteLevel > 0.01` confirms waveform audio arrived over WebRTC before proximity attenuation.
 - Peer `audibleLevel` combines received waveform with current proximity gain, showing whether the browser should be outputting audible voice.
+
+## ADR-046: Voice push-to-talk gates a Web Audio send stream
+
+**Status**: Implemented
+**Date**: 2026-04-30
+
+### Decision
+
+WebRTC now sends a `MediaStreamDestination` track produced by Web Audio instead of sending the raw microphone track directly. Push-to-talk controls a gain node in that local audio graph; the raw microphone remains enabled while voice is active, and Space gates the outgoing waveform before it reaches WebRTC.
+
+### Why
+
+Deploy debugging showed the speaker microphone had real waveform (`localLevel > 0`) while the listener's remote stream stayed at `remoteLevel: 0`, even though ICE, connection state, remote track receipt, and proximity gain were healthy. Some browser/WebRTC combinations can behave poorly when a track is added while disabled and later toggled for PTT. A continuous Web Audio send track with gain gating keeps WebRTC media flowing while preserving push-to-talk silence.
+
+### Implications
+
+- Debug now distinguishes `localLevel` (raw mic before PTT) from `localSendLevel` (outgoing WebRTC waveform after PTT gain).
+- Expected speaking state is `pushToTalk: true`, `transmitGain > 0`, `localSendLevel > 0.01`, and listener `remoteLevel > 0.01`.
+- The Unity WebGL build must be regenerated for this `.jslib` transport change to reach deployed clients.
