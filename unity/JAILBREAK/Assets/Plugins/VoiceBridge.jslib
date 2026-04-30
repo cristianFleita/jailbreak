@@ -42,6 +42,7 @@ mergeInto(LibraryManager.library, {
           lastTrackEnabled: null,
           listenerPose: null,
           speakerPoses: {},
+          voiceStates: {},
           peers: {}
         };
 
@@ -241,6 +242,10 @@ mergeInto(LibraryManager.library, {
               for (var i = 0; i < peers.length; i++) {
                 var peer = peers[i];
                 if (!peer || !peer.userId || peer.userId === state.userId) continue;
+                state.voiceStates[peer.userId] = {
+                  muted: typeof peer.muted === 'boolean' ? peer.muted : true,
+                  deafened: !!peer.deafened
+                };
                 createPeer(peer.userId, true);
               }
             },
@@ -253,8 +258,14 @@ mergeInto(LibraryManager.library, {
               closePeer(data.userId);
             },
             voiceState: function(data) {
-              if (!data || !data.userId || !state.speakerPoses[data.userId]) return;
+              if (!data || !data.userId) return;
+              state.voiceStates[data.userId] = {
+                muted: !!data.muted,
+                deafened: !!data.deafened
+              };
+              if (!state.speakerPoses[data.userId]) return;
               state.speakerPoses[data.userId].muted = !!data.muted;
+              state.speakerPoses[data.userId].deafened = !!data.deafened;
               applyPeerSpatialization(data.userId);
             }
           };
@@ -282,6 +293,7 @@ mergeInto(LibraryManager.library, {
             userId: state.userId
           });
           state.joined = true;
+          publishVoiceState();
           console.log('[Voice] Joined voice room:', state.roomId);
         }
 
@@ -304,6 +316,9 @@ mergeInto(LibraryManager.library, {
             remoteStream: null
           };
           state.peers[userId] = peer;
+          if (!state.voiceStates[userId]) {
+            state.voiceStates[userId] = { muted: true, deafened: false };
+          }
 
           var outboundTrack = getOutboundAudioTrack();
           if (outboundTrack) {
@@ -444,6 +459,7 @@ mergeInto(LibraryManager.library, {
           try { peer.pc.close(); } catch (_) {}
           delete state.peers[userId];
           delete state.speakerPoses[userId];
+          delete state.voiceStates[userId];
         }
 
         function getOutboundAudioTrack() {
@@ -453,17 +469,12 @@ mergeInto(LibraryManager.library, {
         }
 
         function applyPeerTransmitState(peer) {
-          if (!peer || !peer.sender || !peer.sender.replaceTrack) return;
+          if (!peer || !peer.sender) return;
 
           var shouldTransmit = state.pushToTalk && !state.muted;
           if (peer.transmitting === shouldTransmit) return;
 
-          var nextTrack = shouldTransmit ? getOutboundAudioTrack() : null;
           peer.transmitting = shouldTransmit;
-          peer.sender.replaceTrack(nextTrack).catch(function(err) {
-            console.warn('[Voice] replaceTrack failed:', err);
-            peer.transmitting = !shouldTransmit;
-          });
         }
 
         function applyAllTransmitStates() {
@@ -479,18 +490,22 @@ mergeInto(LibraryManager.library, {
           console.log('[Voice] Push-to-talk:', state.pushToTalk ? 'on' : 'off');
           resumeAudioContext();
           setTransmitEnabled(state.pushToTalk && !state.muted);
+          publishVoiceState();
         }
 
         function setLocalMuted(payload) {
           state.muted = !!(payload && payload.muted);
           setTransmitEnabled(state.pushToTalk && !state.muted);
-          if (state.socket && state.socket.connected && state.joined) {
-            state.socket.emit('voice:state', {
-              userId: state.userId,
-              muted: state.muted,
-              deafened: state.deafened
-            });
-          }
+          publishVoiceState();
+        }
+
+        function publishVoiceState() {
+          if (!state.socket || !state.socket.connected || !state.joined) return;
+          state.socket.emit('voice:state', {
+            userId: state.userId,
+            muted: state.muted || !state.pushToTalk,
+            deafened: state.deafened
+          });
         }
 
         function setTransmitEnabled(enabled) {
@@ -552,6 +567,13 @@ mergeInto(LibraryManager.library, {
 
         function setSpeakerPose(pose) {
           if (!pose || !pose.userId) return;
+          var voiceState = state.voiceStates[pose.userId];
+          if (voiceState) {
+            pose.muted = !!voiceState.muted;
+            pose.deafened = !!voiceState.deafened;
+          } else {
+            pose.muted = true;
+          }
           state.speakerPoses[pose.userId] = pose;
           applyPeerSpatialization(pose.userId);
         }
@@ -652,6 +674,7 @@ mergeInto(LibraryManager.library, {
           state.socket = null;
           state.listenerPose = null;
           state.speakerPoses = {};
+          state.voiceStates = {};
           state.peers = {};
           state.pushToTalk = false;
           state.muted = false;

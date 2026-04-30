@@ -1090,21 +1090,22 @@ Deployed clients proved signaling, ICE, remote stream receipt, push-to-talk, and
 - On the listening client, peer `remoteLevel > 0.01` confirms waveform audio arrived over WebRTC before proximity attenuation.
 - Peer `audibleLevel` combines received waveform with current proximity gain, showing whether the browser should be outputting audible voice.
 
-## ADR-046: Voice push-to-talk swaps the RTP sender track
+## ADR-046: Voice push-to-talk gates remote audibility over stable RTP
 
 **Status**: Implemented
 **Date**: 2026-04-30
 
 ### Decision
 
-WebRTC now uses `RTCRtpSender.replaceTrack(...)` for push-to-talk. Each peer connection creates an audio sender from the real microphone track, then Space swaps that sender between the mic track and `null`. The raw microphone remains enabled while voice is active, and the Web Audio graph is kept for local send-level diagnostics.
+WebRTC keeps a stable real microphone RTP track on each peer connection, while push-to-talk is enforced through `voice:state` metadata and remote Web Audio gain. Space publishes `muted: false`; releasing Space publishes `muted: true`. Remote clients persist this state and merge it into each incoming speaker pose before computing proximity gain. The Web Audio send graph remains only for local send-level diagnostics.
 
 ### Why
 
-Deploy debugging showed the speaker microphone had real waveform (`localLevel > 0`) and the local send gate had waveform (`localSendLevel > 0`) while the listener's remote stream stayed at `remoteLevel: 0`, even though ICE, connection state, remote track receipt, and proximity gain were healthy. Some browser/WebRTC combinations can behave poorly when a muted/generated stream is added and later opened for PTT. Replacing the RTP sender track directly gives WebRTC an explicit media-source transition.
+Deploy debugging showed the speaker microphone had real waveform (`localLevel > 0`) and the local send gate had waveform (`localSendLevel > 0`) while the listener's remote stream stayed at `remoteLevel: 0`, even though ICE, connection state, remote track receipt, and proximity gain were healthy. The tested browser path was not reliably delivering waveform after disabled/generated/removed sender transitions. Keeping the RTP source stable avoids that media-pipeline edge case; remote audibility still follows Space PTT.
 
 ### Implications
 
-- Debug now distinguishes `localLevel` (raw mic before PTT) from `localSendLevel` (intended outgoing waveform after PTT gain), and each peer reports `transmitting` plus `senderTrackReadyState`.
-- Expected speaking state is `pushToTalk: true`, peer `transmitting: true`, `senderTrackReadyState: "live"`, `localSendLevel > 0.01`, and listener `remoteLevel > 0.01`.
+- Debug now distinguishes `localLevel` (raw mic), `localSendLevel` (intended PTT send level), peer `remoteLevel` (received RTP waveform), and `audibleLevel` (received waveform after PTT/proximity gain).
+- Expected speaking state is `pushToTalk: true`, peer `transmitting: true`, `localSendLevel > 0.01`, listener `remoteLevel > 0.01`, and listener `audibleLevel > 0.01`.
+- This is audible push-to-talk, not network-private push-to-talk: the browser RTP track remains alive, but remote clients mute it locally unless Space is held.
 - The Unity WebGL build must be regenerated for this `.jslib` transport change to reach deployed clients.
