@@ -1070,3 +1070,22 @@ Deployed tests showed `[Voice] Joined voice room` while no remote voice was hear
 - Voice receive audio can start after any canvas click, movement key, Space, or touch gesture in the receiving browser.
 - Deploy troubleshooting can use `window.JailbreakVoice?.debug()` to distinguish Web Audio suspension, missing peer connection, failed ICE/TURN, no remote stream, no speaker pose, or push-to-talk track issues.
 - The Unity WebGL build must be regenerated for this bridge change to reach Vercel's `web/public/unity-build`.
+
+## ADR-045: Voice debug exposes waveform levels
+
+**Status**: Implemented
+**Date**: 2026-04-30
+
+### Decision
+
+`VoiceBridge.jslib` attaches Web Audio analyser nodes to the local microphone stream and each remote WebRTC stream. `window.JailbreakVoice.debug()` now reports `localLevel`, `localSpeaking`, per-peer `remoteLevel`, `remoteSpeaking`, and `audibleLevel`.
+
+### Why
+
+Deployed clients proved signaling, ICE, remote stream receipt, push-to-talk, and proximity gain were healthy, but players still could not hear each other. Connection-state debug cannot distinguish actual waveform audio from silence, so the bridge needs signal-level telemetry at the media layer.
+
+### Implications
+
+- On the speaking client, `localLevel > 0.01` while holding Space confirms the mic is producing waveform audio before WebRTC transport.
+- On the listening client, peer `remoteLevel > 0.01` confirms waveform audio arrived over WebRTC before proximity attenuation.
+- Peer `audibleLevel` combines received waveform with current proximity gain, showing whether the browser should be outputting audible voice.

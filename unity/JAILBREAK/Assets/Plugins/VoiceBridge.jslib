@@ -33,6 +33,8 @@ mergeInto(LibraryManager.library, {
           audioUnlockHandler: null,
           gestureListenersBound: false,
           localStream: null,
+          localSource: null,
+          localMeter: null,
           lastTrackEnabled: null,
           listenerPose: null,
           speakerPoses: {},
@@ -142,9 +144,67 @@ mergeInto(LibraryManager.library, {
             }
           }).then(function(stream) {
             state.localStream = stream;
+            attachLocalMeter(stream);
             setLocalTrackEnabled(false);
             return stream;
           });
+        }
+
+        function attachLocalMeter(stream) {
+          var ctx = ensureAudioContext();
+          if (!ctx || !stream) return;
+
+          disconnectLocalMeter();
+
+          try {
+            state.localSource = ctx.createMediaStreamSource(stream);
+            state.localMeter = createAudioMeter(state.localSource);
+          } catch (err) {
+            console.warn('[Voice] Local audio meter failed:', err);
+            disconnectLocalMeter();
+          }
+        }
+
+        function disconnectLocalMeter() {
+          try { if (state.localSource) state.localSource.disconnect(); } catch (_) {}
+          try {
+            if (state.localMeter && state.localMeter.analyser) state.localMeter.analyser.disconnect();
+          } catch (_) {}
+          state.localSource = null;
+          state.localMeter = null;
+        }
+
+        function createAudioMeter(source) {
+          if (!source || !state.audioContext || !state.audioContext.createAnalyser) return null;
+
+          var analyser = state.audioContext.createAnalyser();
+          analyser.fftSize = 512;
+          analyser.smoothingTimeConstant = 0.2;
+          source.connect(analyser);
+
+          return {
+            analyser: analyser,
+            data: new Uint8Array(analyser.fftSize)
+          };
+        }
+
+        function readAudioLevel(meter) {
+          if (!meter || !meter.analyser || !meter.data) return 0;
+
+          try {
+            meter.analyser.getByteTimeDomainData(meter.data);
+          } catch (_) {
+            return 0;
+          }
+
+          var sum = 0;
+          for (var i = 0; i < meter.data.length; i++) {
+            var centered = (meter.data[i] - 128) / 128;
+            sum += centered * centered;
+          }
+
+          var rms = Math.sqrt(sum / meter.data.length);
+          return Math.round(rms * 10000) / 10000;
         }
 
         function bindSocket() {
@@ -214,6 +274,7 @@ mergeInto(LibraryManager.library, {
             source: null,
             panner: null,
             gain: null,
+            meter: null,
             remoteStream: null
           };
           state.peers[userId] = peer;
@@ -319,6 +380,7 @@ mergeInto(LibraryManager.library, {
           disconnectAudio(peer);
           peer.remoteStream = stream;
           peer.source = ctx.createMediaStreamSource(stream);
+          peer.meter = createAudioMeter(peer.source);
           peer.gain = ctx.createGain();
           peer.gain.gain.value = 0;
 
@@ -343,9 +405,11 @@ mergeInto(LibraryManager.library, {
           try { if (peer.source) peer.source.disconnect(); } catch (_) {}
           try { if (peer.panner) peer.panner.disconnect(); } catch (_) {}
           try { if (peer.gain) peer.gain.disconnect(); } catch (_) {}
+          try { if (peer.meter && peer.meter.analyser) peer.meter.analyser.disconnect(); } catch (_) {}
           peer.source = null;
           peer.panner = null;
           peer.gain = null;
+          peer.meter = null;
         }
 
         function closePeer(userId) {
@@ -490,6 +554,7 @@ mergeInto(LibraryManager.library, {
         function dispose() {
           setLocalTrackEnabled(false);
           unbindAudioUnlockGestures();
+          disconnectLocalMeter();
 
           if (state.socket && state.socket.connected && state.joined) {
             state.socket.emit('voice:leave', { roomId: state.roomId, userId: state.userId });
@@ -509,6 +574,8 @@ mergeInto(LibraryManager.library, {
           }
 
           state.localStream = null;
+          state.localSource = null;
+          state.localMeter = null;
           state.joined = false;
           state.socket = null;
           state.listenerPose = null;
@@ -522,9 +589,12 @@ mergeInto(LibraryManager.library, {
 
         function debug() {
           var peers = {};
+          var localLevel = readAudioLevel(state.localMeter);
           for (var userId in state.peers) {
             if (!Object.prototype.hasOwnProperty.call(state.peers, userId)) continue;
             var peer = state.peers[userId];
+            var remoteLevel = readAudioLevel(peer.meter);
+            var gain = peer.gain ? peer.gain.gain.value : null;
             peers[userId] = {
               signalingState: peer.pc.signalingState,
               iceConnectionState: peer.pc.iceConnectionState,
@@ -532,7 +602,10 @@ mergeInto(LibraryManager.library, {
               connectionState: peer.pc.connectionState,
               hasRemoteStream: !!peer.remoteStream,
               hasOutputNode: !!peer.gain,
-              gain: peer.gain ? peer.gain.gain.value : null
+              gain: gain,
+              remoteLevel: remoteLevel,
+              remoteSpeaking: remoteLevel > 0.01,
+              audibleLevel: gain == null ? null : Math.round(remoteLevel * gain * 10000) / 10000
             };
           }
 
@@ -556,6 +629,8 @@ mergeInto(LibraryManager.library, {
             muted: state.muted,
             deafened: state.deafened,
             pushToTalk: state.pushToTalk,
+            localLevel: localLevel,
+            localSpeaking: localLevel > 0.01,
             audioContextState: state.audioContext ? state.audioContext.state : 'none',
             hasListenerPose: !!state.listenerPose,
             speakerPoseCount: Object.keys(state.speakerPoses).length,

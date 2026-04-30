@@ -425,3 +425,9 @@
   - Documented the deploy troubleshooting checklist in `web/README.md`.
   - Verified `.jslib` syntax with Node and `git diff --check`; Unity compile/build was not run per user request.
   - Recorded ADR-044 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Voice waveform debug meters** (2026-04-30):
+  - Added Web Audio analyser meters to `VoiceBridge.jslib` for the local microphone stream and each remote WebRTC stream.
+  - Extended `window.JailbreakVoice.debug()` with `localLevel`, `localSpeaking`, per-peer `remoteLevel`, `remoteSpeaking`, and `audibleLevel` so deploy testing can distinguish mic silence, WebRTC media silence, and proximity attenuation.
+  - Updated `web/README.md` troubleshooting notes with the expected `localLevel > 0.01`, `remoteLevel > 0.01`, and `audibleLevel > 0.01` checks.
+  - Verified `.jslib` syntax with Node and `git diff --check`; Unity compile/build was not run per user request.
+  - Recorded ADR-045 in `memory/decisions.md`.
