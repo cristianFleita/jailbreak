@@ -299,15 +299,16 @@ mergeInto(LibraryManager.library, {
             panner: null,
             gain: null,
             meter: null,
+            sender: null,
+            transmitting: null,
             remoteStream: null
           };
           state.peers[userId] = peer;
 
-          if (state.localSendStream && state.localSendStream.getAudioTracks().length > 0) {
-            var tracks = state.localSendStream.getAudioTracks();
-            for (var i = 0; i < tracks.length; i++) {
-              pc.addTrack(tracks[i], state.localSendStream);
-            }
+          var outboundTrack = getOutboundAudioTrack();
+          if (outboundTrack) {
+            peer.sender = pc.addTrack(outboundTrack, state.localStream);
+            applyPeerTransmitState(peer);
           } else if (pc.addTransceiver) {
             pc.addTransceiver('audio', { direction: 'recvonly' });
           }
@@ -445,6 +446,34 @@ mergeInto(LibraryManager.library, {
           delete state.speakerPoses[userId];
         }
 
+        function getOutboundAudioTrack() {
+          if (!state.localStream) return null;
+          var tracks = state.localStream.getAudioTracks();
+          return tracks.length > 0 ? tracks[0] : null;
+        }
+
+        function applyPeerTransmitState(peer) {
+          if (!peer || !peer.sender || !peer.sender.replaceTrack) return;
+
+          var shouldTransmit = state.pushToTalk && !state.muted;
+          if (peer.transmitting === shouldTransmit) return;
+
+          var nextTrack = shouldTransmit ? getOutboundAudioTrack() : null;
+          peer.transmitting = shouldTransmit;
+          peer.sender.replaceTrack(nextTrack).catch(function(err) {
+            console.warn('[Voice] replaceTrack failed:', err);
+            peer.transmitting = !shouldTransmit;
+          });
+        }
+
+        function applyAllTransmitStates() {
+          for (var userId in state.peers) {
+            if (Object.prototype.hasOwnProperty.call(state.peers, userId)) {
+              applyPeerTransmitState(state.peers[userId]);
+            }
+          }
+        }
+
         function setPushToTalk(payload) {
           state.pushToTalk = !!(payload && payload.active);
           console.log('[Voice] Push-to-talk:', state.pushToTalk ? 'on' : 'off');
@@ -487,6 +516,8 @@ mergeInto(LibraryManager.library, {
             state.lastTrackEnabled = active;
             console.log('[Voice] Local transmit enabled:', active, 'tracks:', count);
           }
+
+          applyAllTransmitStates();
         }
 
         function setListenerPose(pose) {
@@ -644,6 +675,8 @@ mergeInto(LibraryManager.library, {
               connectionState: peer.pc.connectionState,
               hasRemoteStream: !!peer.remoteStream,
               hasOutputNode: !!peer.gain,
+              transmitting: peer.transmitting,
+              senderTrackReadyState: peer.sender && peer.sender.track ? peer.sender.track.readyState : null,
               gain: gain,
               remoteLevel: remoteLevel,
               remoteSpeaking: remoteLevel > 0.01,

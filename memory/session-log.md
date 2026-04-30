@@ -433,8 +433,8 @@
   - Recorded ADR-045 in `memory/decisions.md`.
 - **Unity Specialist + Network Programmer — Voice WebRTC send stream fix** (2026-04-30):
   - Follow-up deploy logs showed healthy local mic waveform while the listener's remote WebRTC waveform stayed at `0`, despite connected ICE and gain near `1`.
-  - Changed `VoiceBridge.jslib` so WebRTC sends a Web Audio `MediaStreamDestination` track instead of the raw microphone track.
-  - Push-to-talk now gates the outgoing WebRTC waveform with a local gain node, avoiding browser issues around adding a disabled raw microphone track and toggling `MediaStreamTrack.enabled`.
-  - Extended debug output with `localSendLevel`, `localSending`, `transmitGain`, and `sendTracks`; updated `web/README.md` troubleshooting expectations.
+  - Changed `VoiceBridge.jslib` so push-to-talk uses `RTCRtpSender.replaceTrack(...)`, swapping each peer sender between the real mic track and `null`.
+  - Kept the local Web Audio send-level graph for diagnostics while avoiding browser issues around disabled/generated tracks staying silent remotely.
+  - Extended debug output with `localSendLevel`, `localSending`, `transmitGain`, `sendTracks`, peer `transmitting`, and peer `senderTrackReadyState`; updated `web/README.md` troubleshooting expectations.
   - Verified `.jslib` syntax with Node and `git diff --check`; Unity compile/build was not run per user request.
   - Recorded ADR-046 in `memory/decisions.md`.

@@ -72,6 +72,7 @@ Healthy two-player state while both players are alive and near each other:
 - `hasRemoteStream: true`
 - `speakerPoseCount >= 1`
 - while holding Space on the speaking client, `pushToTalk: true`,
+  peer `transmitting: true`, peer `senderTrackReadyState: "live"`,
   `transmitGain > 0`, and `localSendLevel > 0.01`
 - while speaking, the sender should show `localLevel > 0.01`
 - the listener's peer entry should show `remoteLevel > 0.01` and
@@ -82,6 +83,6 @@ press any gameplay key once in that browser. If ICE stays failed/disconnected,
 configure TURN in Vercel and redeploy the web app.
 
 `localLevel` measures microphone waveform before push-to-talk. `localSendLevel`
-measures the outgoing WebRTC waveform after push-to-talk gain. `remoteLevel`
+measures the intended outgoing waveform after push-to-talk gain. `remoteLevel`
 measures received WebRTC waveform before proximity gain. `audibleLevel` is the
 received waveform after proximity attenuation.
