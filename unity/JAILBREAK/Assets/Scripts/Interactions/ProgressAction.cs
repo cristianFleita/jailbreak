@@ -22,6 +22,11 @@ public class ProgressAction : MonoBehaviour
     public float progress;
 
     public bool IsComplete => progress >= 1f;
+    public bool IsRunning => running;
+
+    public event Action Started;
+    public event Action Completed;
+    public event Action Stopped;
 
     private bool running;
 
@@ -31,7 +36,10 @@ public class ProgressAction : MonoBehaviour
             progress = 0f;
 
         running = true;
-        animator.SetBool(animatorBoolName, true);
+        Started?.Invoke();
+
+        if (animator != null && !string.IsNullOrEmpty(animatorBoolName))
+            animator.SetBool(animatorBoolName, true);
 
         while (running && progress < 1f)
         {
@@ -41,7 +49,8 @@ public class ProgressAction : MonoBehaviour
             yield return null;
         }
 
-        animator.SetBool(animatorBoolName, false);
+        if (animator != null && !string.IsNullOrEmpty(animatorBoolName))
+            animator.SetBool(animatorBoolName, false);
 
         bool completed = progress >= 1f;
 
@@ -49,8 +58,12 @@ public class ProgressAction : MonoBehaviour
             progress = 0f;
 
         if (completed)
+        {
+            Completed?.Invoke();
             onComplete?.Invoke();
+        }
 
+        Stopped?.Invoke();
         onStop?.Invoke();
     }
 

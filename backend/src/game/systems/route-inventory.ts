@@ -1,12 +1,12 @@
 /**
- * Route Inventory — authoritative hand + 2-slot storage for route-critical tools.
+ * Route Inventory — authoritative 2-slot storage for route-critical tools.
  *
  * Spec: design/gdd/ruta-1-ventilacion-industrial.md
  * Plan: design/gdd/ruta-1-implementation-plan.md (Phase B)
  *
  * Unlike the legacy InventorySystem (4-slot, socket-keyed), this module operates
  * directly on authoritative fields in PlayerState:
- *   - heldItemId        → item currently in hand
+ *   - heldItemId        → legacy/stale route item currently in hand
  *   - inventorySlots[]  → 2-slot array for prisoners (null = empty)
  *
  * It also mutates ItemState entries in state.items and emits 'item:state'
@@ -269,6 +269,10 @@ export type PickupResult =
   | { success: true; item: ItemState }
   | { success: false; reason: string }
 
+export type PickupToSlotResult =
+  | { success: true; item: ItemState; slotIndex: number }
+  | { success: false; reason: string }
+
 /**
  * Attempts to pick up `itemId` into `player`'s hand.
  * Rules:
@@ -308,6 +312,53 @@ export function pickupToHand(
   player.heldItemId = itemId
 
   return { success: true, item }
+}
+
+/**
+ * Claims a route-managed item directly into the first empty prisoner slot.
+ * This is the normal gameplay pickup path: tools/prank props never occupy the
+ * player's hand, leaving F exclusively for the flashlight client-side.
+ */
+export function pickupToFirstAvailableSlot(
+  state: GameRoomState,
+  player: PlayerState,
+  itemId: string
+): PickupToSlotResult {
+  if (player.role !== 'prisoner') {
+    return { success: false, reason: 'Only prisoners can pick up route items' }
+  }
+
+  ensurePrisonerInventorySlots(player)
+
+  const slots = player.inventorySlots ?? []
+  if (slots.length === 0) {
+    return { success: false, reason: 'No inventory slots available for this role' }
+  }
+
+  const slotIndex = firstEmptySlotIndex(player)
+  if (slotIndex < 0) {
+    return { success: false, reason: 'Inventory full' }
+  }
+
+  const item = state.items.get(itemId)
+  if (!item) {
+    return { success: false, reason: `Unknown item ${itemId}` }
+  }
+
+  const lifecycle = item.state ?? 'spawned'
+  if (lifecycle !== 'spawned' && lifecycle !== 'dropped') {
+    return { success: false, reason: `Item ${itemId} is ${lifecycle}, not pickable` }
+  }
+
+  slots[slotIndex] = buildSlotSync(item)
+  player.inventorySlots = slots
+
+  item.state = 'stored'
+  item.holderUserId = player.userId
+  item.isPickedUp = true
+  item.pickedUpBy = player.userId
+
+  return { success: true, item, slotIndex }
 }
 
 export type StoreResult =

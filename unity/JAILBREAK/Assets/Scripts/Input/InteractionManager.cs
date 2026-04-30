@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Jailbreak.UI;
 using UnityEngine;
 
 /// <summary>
@@ -12,6 +13,8 @@ public class InteractionManager : MonoBehaviour
 {
     [Header("Detection")]
     public float detectionRadius = 2f;
+    [Tooltip("When E is pressed just outside item pickup range, show a short HUD hint instead of failing silently.")]
+    public float pickupHintRadius = 4f;
     public LayerMask interactableLayer;
 
     [Header("Line of Sight")]
@@ -78,6 +81,10 @@ public class InteractionManager : MonoBehaviour
             DebugDetection($"Interact pressed: {Describe(current)} source={selfCollider?.name ?? "null"}", true);
             current.OnInteract(selfCollider);
             OnLocalInteract?.Invoke(current);
+        }
+        else if (current == null && IsKeyPressedThisFrame(KeyCode.E) && HasNearbyPickupOutsideRange())
+        {
+            GameHudController.Instance?.ShowToast("Move closer to pick that up");
         }
     }
 
@@ -164,6 +171,41 @@ public class InteractionManager : MonoBehaviour
             DebugDetection($"No usable interactable from hits={hits.Length} candidates={candidateCount}");
 
         return best;
+    }
+
+    bool HasNearbyPickupOutsideRange()
+    {
+        float radius = Mathf.Max(pickupHintRadius, detectionRadius);
+        Collider[] hits = Physics.OverlapSphere(transform.position, radius, interactableLayer, QueryTriggerInteraction.Collide);
+
+        foreach (var hit in hits)
+        {
+            var candidates = hit.GetComponents<IInteractable>();
+            if (candidates == null || candidates.Length == 0)
+                candidates = hit.GetComponentsInParent<IInteractable>();
+
+            if (candidates == null || candidates.Length == 0) continue;
+
+            foreach (var candidate in candidates)
+            {
+                if (candidate == null) continue;
+                if (!IsPickupCandidate(candidate)) continue;
+                if (!candidate.CanInteract || !IsAllowed(candidate)) continue;
+
+                float dist = Vector3.Distance(transform.position, candidate.Transform.position);
+                if (dist <= detectionRadius) continue;
+                if (!HasLineOfSight(candidate, hit)) continue;
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    static bool IsPickupCandidate(IInteractable candidate)
+    {
+        return candidate is NetworkRoutePickable || candidate is PickUpInteractable;
     }
 
     bool HasLineOfSight(IInteractable candidate, Collider candidateHit)

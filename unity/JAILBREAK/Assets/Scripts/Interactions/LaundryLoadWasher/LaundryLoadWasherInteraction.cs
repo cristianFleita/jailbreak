@@ -1,3 +1,4 @@
+using Jailbreak.Audio;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -34,6 +35,7 @@ public class LaundryLoadWasherInteraction : MonoBehaviour
 
     private bool isWorking;
     private Transform currentActionPoint;
+    private ProgressInteractableLoopingSfx currentLoopingSfx;
     private InteractionManager interactionManager;
 
     const string ActiveState = "LoadingWasher";
@@ -64,6 +66,8 @@ public class LaundryLoadWasherInteraction : MonoBehaviour
     {
         isWorking = false;
         currentActionPoint = null;
+        if (currentLoopingSfx != null) currentLoopingSfx.StopExternal(this);
+        currentLoopingSfx = null;
 
         if (animator != null && !string.IsNullOrEmpty(animatorBoolName))
             animator.SetBool(animatorBoolName, false);
@@ -80,6 +84,8 @@ public class LaundryLoadWasherInteraction : MonoBehaviour
     {
         isWorking = true;
         currentActionPoint = actionPoint;
+        currentLoopingSfx = ProgressInteractableLoopingSfx.FindForActionPoint(actionPoint);
+        if (currentLoopingSfx != null) currentLoopingSfx.PlayExternal(this);
 
         // 1) Stop agent cleanly
         if (navMeshAgent != null && navMeshAgent.isOnNavMesh)
@@ -170,6 +176,8 @@ public class LaundryLoadWasherInteraction : MonoBehaviour
 
         if (interactionManager != null) interactionManager.PopState(ActiveState);
 
+        if (currentLoopingSfx != null) currentLoopingSfx.StopExternal(this);
+        currentLoopingSfx = null;
         currentActionPoint = null;
     }
 

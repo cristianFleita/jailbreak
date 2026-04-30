@@ -6,7 +6,8 @@ public class HeldItemInput : MonoBehaviour
 {
     [Header("Input")]
     public KeyCode throwKey = KeyCode.Mouse0;
-    public KeyCode storeKey = KeyCode.F;
+    [Tooltip("Deprecated. F is reserved for flashlight toggling; route items auto-store on pickup.")]
+    public KeyCode storeKey = KeyCode.None;
     [Tooltip("Voluntarily drop the held route tool back into the world. Server-driven for route items.")]
     public KeyCode dropKey  = KeyCode.G;
 
@@ -70,28 +71,20 @@ public class HeldItemInput : MonoBehaviour
     {
         HandleIKWeight();
 
-        // Route tools can only be dropped after being stored in a slot.
+        // Route items auto-store on pickup; G drops the selected stored route item.
         if (InputSystemKey.WasPressedThisFrame(dropKey) && TryRouteDrop())
             return;
 
         if (heldItem == null) return;
 
-        var routePickable = heldItem.GetComponent<NetworkRoutePickable>();
-        if (routePickable != null)
-        {
-            if (InputSystemKey.WasPressedThisFrame(storeKey) && CanStoreInSelectedSlot())
-                routePickable.RequestStore(SelectedSlotIndex());
-            return;
-        }
+        if (heldItem.GetComponent<NetworkRoutePickable>() != null) return;
 
         if (InputSystemKey.WasPressedThisFrame(throwKey))
             Throw();
-        else if (InputSystemKey.WasPressedThisFrame(storeKey))
-            TryStore();
     }
 
     /// <summary>
-    /// Drops the route tool in the selected inventory slot. Server is
+    /// Drops the route item in the selected inventory slot. Server is
     /// authoritative; the local client only sends the request and waits for
     /// item:state.
     /// </summary>

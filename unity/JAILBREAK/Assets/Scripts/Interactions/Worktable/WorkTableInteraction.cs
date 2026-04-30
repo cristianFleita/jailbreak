@@ -1,3 +1,4 @@
+using Jailbreak.Audio;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -39,6 +40,7 @@ public class WorkTableInteraction : MonoBehaviour
 
     private bool isWorking;
     private Transform currentActionPoint;
+    private ProgressInteractableLoopingSfx currentLoopingSfx;
 
     const string WorkingState = "working";
     private InteractionManager interactionManager;
@@ -72,6 +74,8 @@ public class WorkTableInteraction : MonoBehaviour
     {
         isWorking = false;
         currentActionPoint = null;
+        if (currentLoopingSfx != null) currentLoopingSfx.StopExternal(this);
+        currentLoopingSfx = null;
 
         if (animator != null && !string.IsNullOrEmpty(animatorBoolName))
             animator.SetBool(animatorBoolName, false);
@@ -88,6 +92,8 @@ public class WorkTableInteraction : MonoBehaviour
     {
         isWorking = true;
         currentActionPoint = actionPoint;
+        currentLoopingSfx = ProgressInteractableLoopingSfx.FindForActionPoint(actionPoint);
+        if (currentLoopingSfx != null) currentLoopingSfx.PlayExternal(this);
 
         // 1) Stop the agent cleanly BEFORE disabling, so we don't leave
         //    queued velocity that can flicker the Transform on re-enable.
@@ -173,6 +179,8 @@ public class WorkTableInteraction : MonoBehaviour
 
         if (interactionManager != null) interactionManager.PopState(WorkingState);
 
+        if (currentLoopingSfx != null) currentLoopingSfx.StopExternal(this);
+        currentLoopingSfx = null;
         currentActionPoint = null;
     }
 

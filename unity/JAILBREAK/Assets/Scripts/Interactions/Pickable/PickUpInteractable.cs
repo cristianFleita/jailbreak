@@ -36,21 +36,8 @@ public class PickUpInteractable : MonoBehaviour, IInteractable
 
         var root = source.transform.root;
         var heldInput = root.GetComponent<HeldItemInput>();
-        var inventory = root.GetComponent<ItemInventory>(); 
-
         if (heldInput == null) return;
-
-        if (heldInput.HasItem)
-        {
-            if (inventory != null && !inventory.IsFull())
-            {
-                heldInput.ForceStore();
-            }
-            else
-            {
-                heldInput.Throw();
-            }
-        }
+        if (heldInput.HasItem) return;
 
         var holdPoint = ResolveHoldPoint(root);
         if (holdPoint == null) return;

@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 namespace Jailbreak.Audio
 {
@@ -81,11 +84,32 @@ namespace Jailbreak.Audio
         private void Update()
         {
             if (!_waitingForUserGesture) return;
-            if (Input.anyKeyDown || Input.GetMouseButtonDown(0) || Input.touchCount > 0)
+            if (DetectAnyUserGesture())
             {
                 _waitingForUserGesture = false;
                 _loop.Play();
             }
+        }
+
+        private static bool DetectAnyUserGesture()
+        {
+#if ENABLE_INPUT_SYSTEM
+            var kb = Keyboard.current;
+            if (kb != null && kb.anyKey.wasPressedThisFrame) return true;
+
+            var mouse = Mouse.current;
+            if (mouse != null && (mouse.leftButton.wasPressedThisFrame
+                                || mouse.rightButton.wasPressedThisFrame
+                                || mouse.middleButton.wasPressedThisFrame))
+                return true;
+
+            var touch = Touchscreen.current;
+            if (touch != null && touch.primaryTouch.press.wasPressedThisFrame) return true;
+
+            return false;
+#else
+            return Input.anyKeyDown || Input.GetMouseButtonDown(0) || Input.touchCount > 0;
+#endif
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)

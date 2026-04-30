@@ -1,10 +1,15 @@
 using Jailbreak.Network;
+using Jailbreak.UI;
 using UnityEngine;
 
 [RequireComponent(typeof(PickableItem))]
 [RequireComponent(typeof(NetworkInteractable))]
 public class NetworkRoutePickable : MonoBehaviour, IInteractable
 {
+    private const float FeedbackSeconds = 2.4f;
+    private const string InventoryFullFeedback = "Inventory slots are full";
+    private const string MoveCloserFeedback = "Move closer to pick that up";
+
     [Header("Route Item")]
     public string itemId = "route1_wrench";
     public string itemType = "route_tool";
@@ -19,7 +24,7 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
     public string holdPointName = "mixamorig:RightHandIndex1";
 
     [Header("Drop Rules")]
-    [Tooltip("Allow this item to be dropped directly from the player's hand with the drop key. Route tools keep this off; prank props such as soap can turn it on.")]
+    [Tooltip("Deprecated: route items are stored directly on pickup and can only be dropped from an inventory slot.")]
     public bool allowDropFromHand = false;
 
     [Header("Debug")]
@@ -31,7 +36,7 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
     public Transform Transform => transform;
     public bool CanInteract => worldAvailable && !pendingPickup && !pickable.IsHeld;
     public string[] AllowedInStates => allowedInStates;
-    public bool CanDropFromHand => allowDropFromHand;
+    public bool CanDropFromHand => false;
     public string DebugState =>
         $"itemId={itemId} worldAvailable={worldAvailable} pendingPickup={pendingPickup} pendingStore={pendingStore} pendingThrow={pendingThrow} pendingStoreSlot={pendingStoreSlotIndex} isHeld={(pickable != null && pickable.IsHeld)} active={isActiveAndEnabled}";
 
@@ -139,15 +144,10 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
         }
 
         CacheLocalPlayerRefs(source.transform.root);
-        if (localHeldInput == null)
+        if (localInventory != null && localInventory.IsFull())
         {
-            DebugRoute("Pickup blocked: local HeldItemInput not found on player root");
-            return;
-        }
-
-        if (localHeldInput.HasItem)
-        {
-            DebugRoute("Pickup blocked: local hand already has an item");
+            DebugRoute("Pickup blocked: local inventory is full");
+            ShowPickupFeedback(InventoryFullFeedback);
             return;
         }
 
@@ -199,10 +199,8 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
 
         var gsm = GameStateManager.Instance;
         var holdsStored = gsm != null && HasLocalInventorySlot(gsm.LocalInventorySlots);
-        var holdsInHand = allowDropFromHand
-            && ((gsm != null && gsm.LocalHeldItemId == itemId) || (localHeldInput != null && localHeldInput.HasItem && pickable.IsHeld));
 
-        if (!holdsStored && !holdsInHand)
+        if (!holdsStored)
         {
             DebugRoute("Throw blocked: item must be stored in a slot before dropping");
             return;
@@ -229,11 +227,31 @@ public class NetworkRoutePickable : MonoBehaviour, IInteractable
 
     private void HandleNetworkError(ErrorPayload _)
     {
+        if (pendingPickup)
+            ShowPickupFeedback(FeedbackMessageForPickupError(_?.message));
+
         pendingPickup = false;
         pendingStore = false;
         pendingThrow = false;
         pendingStoreSlotIndex = -1;
         DebugRoute($"Network error cleared pending flags: {_?.message ?? "unknown"}");
+    }
+
+    private static string FeedbackMessageForPickupError(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return null;
+
+        var normalized = message.ToLowerInvariant();
+        if (normalized.Contains("inventory full")) return InventoryFullFeedback;
+        if (normalized.Contains("distance") && normalized.Contains("exceeds")) return MoveCloserFeedback;
+
+        return null;
+    }
+
+    private static void ShowPickupFeedback(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return;
+        GameHudController.Instance?.ShowToast(message, FeedbackSeconds);
     }
 
     private void HandleLocalInventoryChanged()

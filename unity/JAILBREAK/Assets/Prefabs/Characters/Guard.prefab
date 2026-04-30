@@ -135,7 +135,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
   m_RenderShadows: 1
   m_RequiresDepthTextureOption: 2
@@ -219,7 +219,8 @@ Transform:
   m_LocalPosition: {x: 3.626, y: 2.209, z: 2.418}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1641121163972218211}
   m_Father: {fileID: 3556159753878330818}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7899163866596239293
@@ -323,7 +324,7 @@ MonoBehaviour:
     m_Target: {fileID: 4916634865956366538}
     m_Hint: {fileID: 427538014050411649}
     m_TargetPositionWeight: 1
-    m_TargetRotationWeight: 0
+    m_TargetRotationWeight: 1
     m_HintWeight: 1
     m_MaintainTargetPositionOffset: 0
     m_MaintainTargetRotationOffset: 0
@@ -540,9 +541,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: f6cb696e425964fb6a59049f18634282, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6111848788006373199}
-    - targetCorrespondingSourceObject: {fileID: 7666680083751660616, guid: f6cb696e425964fb6a59049f18634282, type: 3}
-      insertIndex: 0
-      addedObject: {fileID: 1641121163972218211}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6cb696e425964fb6a59049f18634282, type: 3}
       insertIndex: -1
@@ -723,12 +721,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c946f64d0cb94a86b50e92d5a9fe31c3, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Player.GuardStunFeedback
   fallbackDuration: 3
   animatorBoolParam: IsStunned
+  soapAnimatorBoolParam: IsFalling
   mareoController: {fileID: 0}
   mareoPrefab: {fileID: 4370267070898374827, guid: dc2b09bee1e6e403188425b59aa5badc, type: 3}
+  hitClip: {fileID: 8300000, guid: b57e14491168d4c02824b276d6a72645, type: 3}
+  soapFallClip: {fileID: 8300000, guid: eadc6b407932441d6bf6f606731a7352, type: 3}
+  sfxVolume: 1
+  sfxMinDistance: 2
+  sfxMaxDistance: 20
 --- !u!114 &4488410028999716743
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -818,7 +822,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 7555555067677823160}
+    m_TransformParent: {fileID: 4916634865956366538}
     m_Modifications:
     - target: {fileID: 6216728296634556460, guid: c26e2756a505c415484aeb7c785eddf7, type: 3}
       propertyPath: m_Name
@@ -854,19 +858,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6705175803442100886, guid: c26e2756a505c415484aeb7c785eddf7, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.66446304
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6705175803442100886, guid: c26e2756a505c415484aeb7c785eddf7, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.24184473
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6705175803442100886, guid: c26e2756a505c415484aeb7c785eddf7, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.66446304
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6705175803442100886, guid: c26e2756a505c415484aeb7c785eddf7, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.24184473
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6705175803442100886, guid: c26e2756a505c415484aeb7c785eddf7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -874,11 +878,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6705175803442100886, guid: c26e2756a505c415484aeb7c785eddf7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 90
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6705175803442100886, guid: c26e2756a505c415484aeb7c785eddf7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: -40
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

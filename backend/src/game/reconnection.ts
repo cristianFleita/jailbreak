@@ -151,3 +151,22 @@ export function debugGetDisconnectedSlots(roomId: string): Array<{
     secondsUntilExpiry: Math.max(0, Math.round((slot.expiresAt - now) / 1000)),
   }))
 }
+
+/**
+ * Returns the still-pending (non-expired) disconnected player snapshots for a
+ * room. Used by the deferred win-check after F5/network-drop expiry to avoid
+ * ending the match while other players also have a live reconnection window.
+ */
+export function getPendingDisconnectedPlayers(
+  roomId: string,
+  now: number = Date.now()
+): PlayerState[] {
+  const slots = disconnectedSlots.get(roomId)
+  if (!slots) return []
+
+  const pending: PlayerState[] = []
+  for (const slot of slots.values()) {
+    if (now <= slot.expiresAt) pending.push(slot.playerState)
+  }
+  return pending
+}

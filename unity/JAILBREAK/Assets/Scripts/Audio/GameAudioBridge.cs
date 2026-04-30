@@ -8,9 +8,9 @@ namespace Jailbreak.Audio
     /// the matching audio cues. Place exactly one in GameScene.
     ///
     /// Mapped events:
-    ///   guard:catch (success=false)        → wrong-mark one-shot + start security alarm loop
+    ///   guard:catch (success=true,isPlayer=false) → angry NPC one-shot
     ///   riot:available                     → ambience switches to "riot" + alarm stays on
-    ///   world:cue (server_wrong_alarm)     → wrong-server one-shot + start security alarm loop
+    ///   world:cue (server_wrong_alarm)     → wrong-server alarm for a short fixed duration
     ///   game:end                           → mission-completed one-shot + alarm/ambience stop
     ///
     /// All references are optional — leave any field empty to skip that cue.
@@ -26,11 +26,11 @@ namespace Jailbreak.Audio
         public OneShotSfx wrongServerOneShot;
 
         [Header("Security Alarm (loop)")]
-        [Tooltip("Looped alarm. Starts on first wrong mark or wrong-server, stops on game-end.")]
+        [Tooltip("Optional looped alarm. If empty, wrongServerOneShot is looped temporarily instead.")]
         public LoopingSfx securityAlarmLoop;
 
-        [Tooltip("Trigger alarm only after at least N guard errors (1 = first error).")]
-        [Range(1, 5)] public int alarmStartsAtErrorCount = 1;
+        [Tooltip("How long the wrong power-supply alarm should be audible.")]
+        [Min(0.1f)] public float wrongPowerSupplyAlarmSeconds = 4f;
 
         [Header("Riot")]
         public CellAmbienceController ambience;
@@ -47,6 +47,7 @@ namespace Jailbreak.Audio
 
         private bool _alarmActive;
         private bool _subscribed;
+        private Coroutine _alarmRoutine;
 
         private void OnEnable() => SubscribeIfReady();
         private void Start()    => SubscribeIfReady();
@@ -61,6 +62,7 @@ namespace Jailbreak.Audio
 
         private void OnDisable()
         {
+            StopAlarm();
             if (!_subscribed) return;
             var net = NetworkManager.Instance;
             if (net != null)
@@ -97,18 +99,8 @@ namespace Jailbreak.Audio
             if (debugLogs)
                 Debug.Log($"[GameAudioBridge] guard:catch success={p.success} errorCount={p.guardErrorCount}", this);
 
-            if (p.success) return;
-
-            // Wrong target (NPC / innocent).
-            if (wrongMarkOneShot != null) wrongMarkOneShot.Play();
-
-            if (!_alarmActive
-                && p.guardErrorCount >= alarmStartsAtErrorCount
-                && securityAlarmLoop != null)
-            {
-                securityAlarmLoop.Play();
-                _alarmActive = true;
-            }
+            if (p.success && !p.isPlayer && wrongMarkOneShot != null)
+                wrongMarkOneShot.Play();
         }
 
         private void OnRiotAvailable(RiotAvailablePayload p)
@@ -129,19 +121,11 @@ namespace Jailbreak.Audio
 
             if (debugLogs) Debug.Log($"[GameAudioBridge] world:cue {p.cue} zone={p.zone}", this);
 
-            // Wrong transformer sabotage → fires the same "you screwed up" SFX
-            // as a wrong mark, plus starts the security alarm loop. The local
-            // server prop's own SFX is handled separately by Route1WorldStateController.
+            // Wrong transformer sabotage: guard hears a short alarm, not the
+            // angry-NPC cue used for false captures.
             if (p.cue == "server_wrong_alarm")
             {
-                var oneShot = wrongServerOneShot != null ? wrongServerOneShot : wrongMarkOneShot;
-                if (oneShot != null) oneShot.Play();
-
-                if (!_alarmActive && securityAlarmLoop != null)
-                {
-                    securityAlarmLoop.Play();
-                    _alarmActive = true;
-                }
+                PlayWrongPowerSupplyAlarm();
             }
         }
 
@@ -149,11 +133,7 @@ namespace Jailbreak.Audio
         {
             if (debugLogs) Debug.Log("[GameAudioBridge] game:end", this);
 
-            if (_alarmActive && securityAlarmLoop != null)
-            {
-                securityAlarmLoop.Stop();
-                _alarmActive = false;
-            }
+            StopAlarm();
             if (ambience != null) ambience.SetRiot(false);
 
             if (playMissionCompleteOnGameEnd && missionCompleteOneShot != null)
@@ -167,9 +147,50 @@ namespace Jailbreak.Audio
             if (missionCompleteOneShot != null) missionCompleteOneShot.Play();
         }
 
+        public void PlayWrongPowerSupplyAlarmCue()
+        {
+            PlayWrongPowerSupplyAlarm();
+        }
+
         public void StopAlarm()
         {
+            if (_alarmRoutine != null)
+            {
+                StopCoroutine(_alarmRoutine);
+                _alarmRoutine = null;
+            }
             if (securityAlarmLoop != null) securityAlarmLoop.Stop();
+            if (wrongServerOneShot != null) wrongServerOneShot.Stop();
+            _alarmActive = false;
+        }
+
+        private void PlayWrongPowerSupplyAlarm()
+        {
+            if (securityAlarmLoop != null)
+            {
+                securityAlarmLoop.PlayForSeconds(wrongPowerSupplyAlarmSeconds);
+                RestartAlarmTimer();
+                return;
+            }
+
+            if (wrongServerOneShot != null)
+            {
+                wrongServerOneShot.PlayLoopForSeconds(wrongPowerSupplyAlarmSeconds);
+                RestartAlarmTimer();
+            }
+        }
+
+        private void RestartAlarmTimer()
+        {
+            _alarmActive = true;
+            if (_alarmRoutine != null) StopCoroutine(_alarmRoutine);
+            _alarmRoutine = StartCoroutine(ClearAlarmAfter(wrongPowerSupplyAlarmSeconds));
+        }
+
+        private System.Collections.IEnumerator ClearAlarmAfter(float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
+            _alarmRoutine = null;
             _alarmActive = false;
         }
     }

@@ -27,6 +27,7 @@ import {
   TutorialGuardMissionId,
   TutorialMissionId,
   TutorialPrisonerMissionId,
+  TutorialReadyPayload,
   TutorialRoomState,
   TutorialStartPayload,
   TutorialStatePayload,
@@ -41,8 +42,7 @@ export const PRISONER_MISSION_IDS: readonly TutorialPrisonerMissionId[] = [
   'p1_review_route',
   'p2_food_flow',
   'p3_sprint',
-  'p4_store_item',
-  'p5_drop_item',
+  'p4_grab_item',
   'p6_risky_action',
   'p7_hide_cart',
 ] as const
@@ -118,6 +118,7 @@ export function buildTutorialState(now: number, durationSeconds: number, seed: n
     endsAt: now + durationSeconds * 1000,
     seed,
     completedByUserId: new Map(),
+    readyUserIds: new Set(),
   }
 }
 
@@ -259,6 +260,61 @@ export class TutorialManager {
 
     this.broadcastStateForPlayer(player)
     return true
+  }
+
+  /**
+   * Records the player as "ready to skip the tutorial". When every connected
+   * player in the room has marked themselves ready, the tutorial is force-ended
+   * (which fires tutorial:end + transitionToActive). Idempotent.
+   *
+   * Returns true on a state change (new ready), false otherwise. The caller
+   * receives a `tutorial:ready` broadcast on every change so the UI can
+   * reflect "X / Y ready".
+   */
+  markReady(userId: string): boolean {
+    if (this.finished || !this.room.state.tutorial) return false
+
+    const player = this.room.state.playersByUserId.get(userId)
+    if (!player) return false
+
+    const set = this.room.state.tutorial.readyUserIds
+    if (set.has(userId)) return false
+    set.add(userId)
+
+    this.broadcastReady()
+
+    if (this.everyoneReady()) {
+      console.log(
+        `[TUTORIAL] Room "${this.room.state.id}" — all ${set.size} players ready, skipping tutorial`
+      )
+      this.forceEnd()
+    }
+    return true
+  }
+
+  /** True if every connected player in the room has marked themselves ready. */
+  private everyoneReady(): boolean {
+    if (!this.room.state.tutorial) return false
+    const total = this.room.state.players.size
+    if (total === 0) return false
+    return this.room.state.tutorial.readyUserIds.size >= total
+  }
+
+  /** Snapshot used by reconnect payloads. */
+  buildReadyPayload(): TutorialReadyPayload {
+    const ids = this.room.state.tutorial
+      ? Array.from(this.room.state.tutorial.readyUserIds)
+      : []
+    return {
+      readyUserIds: ids,
+      readyCount: ids.length,
+      totalCount: this.room.state.players.size,
+    }
+  }
+
+  private broadcastReady(): void {
+    if (this.finished || !this.room.state.tutorial) return
+    this.io.to(this.room.state.id).emit('tutorial:ready', this.buildReadyPayload())
   }
 
   /**

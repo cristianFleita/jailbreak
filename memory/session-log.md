@@ -346,3 +346,60 @@
   - Added focused backend coverage for hand-dropping soap and consuming dropped soap into a room-wide guard stun; updated spawn-area tests to include a soap spawn slot.
   - Verified backend full Vitest suite (`203/203`), backend TypeScript via explicit nvm Node v22 `tsc`, and `git diff --check`.
   - Recorded ADR-034 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Audio bridge and prop interaction SFX cleanup** (2026-04-29):
+  - Read `memory/progress.md` and traced `GameAudioBridge`, `guard:catch`, Route 1 `world:cue`, `ProgressAction`, `player:action` replay, and requested prop prefabs.
+  - Fixed false guard capture audio by handling `guard:catch` payloads with `success=true` and `isPlayer=false`, playing randomized angry prisoner clips instead of starting the alarm.
+  - Changed wrong Route 1 power-supply sabotage to play a 4-second guard alarm via `world:cue server_wrong_alarm`; configured GameScene bridge cues as 2D so they are audible globally.
+  - Added `ProgressInteractableLoopingSfx` and wired `Desk`, `WashingMachine`, `Sink`, and `LDesk` to progress/network/Route 1 action lifecycles instead of prefab Animator bools.
+  - Extended NPC work-table and washer character-side interactions to start/stop the prop loop while NPCs use those stations.
+  - Verified Unity C# with `msbuild Assembly-CSharp.csproj` and `git diff --check`; build passed with existing warnings only.
+  - Recorded ADR-035 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Audio follow-up for Sink NPC, LDesk, and wrong power alarm** (2026-04-29):
+  - Diagnosed Sink NPC silence as the routine path bypassing `SinkInteractable`; added explicit external loop ownership from `NPCBehaviorController`.
+  - Diagnosed LDesk silence as sibling `sfx` authoring under the prefab root; updated Route 1 audio lookup to resolve from action point/root hierarchy.
+  - Connected the existing scene `Alarm` `LoopingSfx` to `GameAudioBridge.securityAlarmLoop`, set it to 2D/global, and added a local wrong-server completion fallback while keeping the guard `world:cue` path.
+  - Verified Unity C# with `msbuild Assembly-CSharp.csproj` and `git diff --check`; build passed with existing warnings only.
+  - Recorded ADR-036 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Power outage flashlight rig stabilization** (2026-04-29):
+  - Read `memory/progress.md` and traced `FlashlightController`, `PowerOutage`, `PowerOutageNetworkBridge`, the three requested character prefabs, and `Character.controller`.
+  - Diagnosed the flashlight drift as a rig authoring issue: flashlight props were parented to animated hand-tip bones while the active flashlight `TwoBoneIKConstraint` only solved target position, allowing `Character.controller` wrist rotation to move the beam.
+  - Reparented the flashlight prefab instance in `Prisoner.prefab`, `Guard.prefab`, and `Prisoner-NPC.prefab` to each active flashlight `ItemOrigin` IK target.
+  - Set the active flashlight arm `TwoBoneIKConstraint` target rotation weight to `1` on the same three prefabs so the rig owns wrist orientation during outage flashlight use.
+  - Kept backend/network protocol unchanged because outage state is already synced through `WorldStatePayload.ventilationPowered` and consumed by `PowerOutageNetworkBridge`.
+  - Recorded ADR-037 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Route item auto-store and flashlight-only F input** (2026-04-29):
+  - Read `memory/progress.md` and traced backend route inventory/event handlers plus Unity `NetworkRoutePickable`, `HeldItemInput`, `PickUpInteractable`, route item prefabs, and container throw path.
+  - Added backend direct first-empty-slot pickup via `pickupToFirstAvailableSlot`; `item.pickup` now stores cutters, wrench, and soap immediately and broadcasts `item:state state=stored`.
+  - Removed hand-drop allowance for tracked route items; soap now follows the same stored-then-drop flow as the tools before becoming an active slip prop.
+  - Updated Unity route pickup so the hand no longer needs to be empty, route items no longer wait for F storage, and local inventory-full checks block pickup early.
+  - Reserved F for flashlight by setting prisoner `HeldItemInput.storeKey` to `None`, removing store-key handling from live input/HUD text, and keeping container as a hand-held throw-only pickable.
+  - Verified backend focused tests (`route-inventory.test.ts`, `throwables.test.ts`) passed `20/20`, backend TypeScript compiled, full backend Vitest suite passed `221/221`, Unity `msbuild Assembly-CSharp.csproj` succeeded with existing warnings, and `git diff --check` passed.
+  - Recorded ADR-038 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Pickup failure toast feedback** (2026-04-29):
+  - Read `memory/progress.md`, used focused-fix workflow, and traced `GameHudController.ShowToast`, `NetworkRoutePickable`, `InteractionManager`, and backend pickup distance errors.
+  - Added full-slot pickup toast feedback in `NetworkRoutePickable` for both local inventory-full checks and backend `Inventory full` errors.
+  - Added distance pickup toast feedback for backend `Distance ... exceeds max ...` errors.
+  - Added an outer pickup hint radius in `InteractionManager` so pressing E near, but outside, pickup range shows `Move closer to pick that up` instead of silently doing nothing.
+  - Verified Unity C# via `msbuild Assembly-CSharp.csproj` and `git diff --check`; build passed with existing warnings only.
+  - Recorded ADR-039 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Prisoner tutorial item flow simplification** (2026-04-29):
+  - Read `memory/progress.md` and traced backend tutorial mission allowlists, Unity tutorial mission rows, tutorial pickup/drop input, and `TutorialPrisonerGUI.uxml`.
+  - Reduced prisoner tutorial missions to `p1_grab_item` and `p2_drop_item` on the backend and in Unity.
+  - Updated tutorial item pickup so E stores directly into the first available inventory slot and no longer teaches hand-held F storage.
+  - Updated prisoner tutorial controls to list `F` as flashlight on/off and `G` as item drop, removing K/L slot-select and F save/store copy.
+  - Verified focused backend `tutorial.test.ts` (`22/22`), backend TypeScript, Unity C# via `msbuild Assembly-CSharp.csproj`, prisoner UXML parsing, and scoped `git diff --check`.
+  - Recorded ADR-040 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Prisoner tutorial interactables restored without drop mission** (2026-04-29):
+  - Read `memory/progress.md` and rechecked backend tutorial mission allowlists, Unity mission definitions, tutorial signal emitters, and drop input.
+  - Restored prisoner missions for plan review, food/sit/sink blend-in, sprinting, item grab, risky progress interactables, and cart hiding.
+  - Removed the stored-item drop mission from backend allowlists and Unity completion handling; `ItemDropped` is now ignored by the mission controller.
+  - Kept the direct E item grab flow and F-as-flashlight controls intact.
+  - Verified focused backend `tutorial.test.ts` (`22/22`), backend TypeScript, prisoner UXML parsing, Unity C# via `msbuild Assembly-CSharp.csproj`, and scoped `git diff --check`.
+  - Recorded ADR-041 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Remaining door and ventilation SFX integration** (2026-04-29):
+  - Read `memory/progress.md` and traced `TriggerMoveOffset`, `JailDoor.prefab`, `VentilationGrille.prefab`, `LoopingSfx`, `OneShotSfx`, `PowerOutage`, and `PowerOutageNetworkBridge`.
+  - Renamed the trigger mover class back to `TriggerMoveOffset` to match the serialized prefab script identity and added an auto-resolved `OneShotSfx` hook from the referenced JailDoor.
+  - Door open audio now plays once when a trigger occupancy cycle moves from closed to open.
+  - Added `PowerOutageLoopingSfx` and attached it to the ventilation grille `sfx` child so the vent loop starts while powered and fades out on the network-driven outage event.
+  - Verified Unity C# via `msbuild Assembly-CSharp.csproj` and `git diff --check`; build passed with existing warnings only.
+  - Recorded ADR-042 in `memory/decisions.md`.

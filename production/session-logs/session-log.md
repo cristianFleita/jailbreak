@@ -1985,3 +1985,127 @@ web/public/unity-build/Build/unity-build.loader.js
 web/public/unity-build/index.html
 ---
 
+## Session End: 20260429_065145
+### Commits
+28da3d5 Merge pull request #20 from cristianFleita/feat-throwable-items
+c07121d chore: soap interactable
+3349ceb chore: throw and stun guard
+d3b3800 Merge pull request #19 from cristianFleita/feat-sound
+d49bc24 chore: npc footsteps
+4380110 chore: intro sound till tutorial
+5f3dace chore: sound wip
+### Uncommitted Changes
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_065642
+### Commits
+28da3d5 Merge pull request #20 from cristianFleita/feat-throwable-items
+c07121d chore: soap interactable
+3349ceb chore: throw and stun guard
+d3b3800 Merge pull request #19 from cristianFleita/feat-sound
+d49bc24 chore: npc footsteps
+4380110 chore: intro sound till tutorial
+5f3dace chore: sound wip
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/Scripts/NPC/NPCBehaviorController.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_111306
+### Commits
+2e08d0a fix: soft transition in routines for npcs
+28da3d5 Merge pull request #20 from cristianFleita/feat-throwable-items
+c07121d chore: soap interactable
+3349ceb chore: throw and stun guard
+### Uncommitted Changes
+backend/src/game/reconnection.ts
+backend/src/sockets/game.ts
+unity/JAILBREAK/Assets/Animations/Exercise/BicycleCrunch.anim
+unity/JAILBREAK/Assets/Animations/Exercise/PushUp.anim
+unity/JAILBREAK/Assets/Animations/Exercise/Situps.anim
+unity/JAILBREAK/Assets/Animations/Punching.anim
+unity/JAILBREAK/Assets/Scripts/Player/EmoteSystem.cs
+unity/JAILBREAK/Assets/Scripts/UI/EmotePanelController.cs
+unity/JAILBREAK/Assets/UI/Screens/GameGUI.uxml
+unity/JAILBREAK/Assets/UI/Screens/TutorialPrisonerGUI.uxml
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_113315
+### Commits
+c7f15d3 chore: add emote panel info + add loop to animations
+f9ec436 fix: instant game end on refresh guard page
+2e08d0a fix: soft transition in routines for npcs
+28da3d5 Merge pull request #20 from cristianFleita/feat-throwable-items
+c07121d chore: soap interactable
+3349ceb chore: throw and stun guard
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Scripts/Audio/IntroMusicController.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_161924
+### Commits
+65f6559 chore: enable/disable flashlight with F
+4f7b71b fix: flashlight position
+38c4e82 fix: ui fixes
+baf6b5b chore: skip tutorial when all players are ready
+1351a66 chore: adjust animations
+5a79e39 fix: sounds
+1d75110 fix: wrong mark, laundry sfx
+a0c7e1f chore: fix input error on webgl build
+c7f15d3 chore: add emote panel info + add loop to animations
+f9ec436 fix: instant game end on refresh guard page
+### Uncommitted Changes
+unity/JAILBREAK/Assets/Prefabs/Characters/Prisoner.prefab
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_200137
+### Commits
+d554e28 chore: add yard texture
+dc33811 chore: adjust tutorial + popup for full inventory
+982b302 chore: adjust grab items
+f01a0e8 chore: prisoner crosshair on hud
+65f6559 chore: enable/disable flashlight with F
+4f7b71b fix: flashlight position
+38c4e82 fix: ui fixes
+baf6b5b chore: skip tutorial when all players are ready
+1351a66 chore: adjust animations
+5a79e39 fix: sounds
+1d75110 fix: wrong mark, laundry sfx
+### Uncommitted Changes
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+
+## Session End: 20260429_200247
+### Commits
+d554e28 chore: add yard texture
+dc33811 chore: adjust tutorial + popup for full inventory
+982b302 chore: adjust grab items
+f01a0e8 chore: prisoner crosshair on hud
+65f6559 chore: enable/disable flashlight with F
+4f7b71b fix: flashlight position
+38c4e82 fix: ui fixes
+baf6b5b chore: skip tutorial when all players are ready
+1351a66 chore: adjust animations
+5a79e39 fix: sounds
+1d75110 fix: wrong mark, laundry sfx
+### Uncommitted Changes
+production/session-logs/session-log.md
+unity/JAILBREAK/Assets/AnimationControllers/Character.controller
+unity/JAILBREAK/Assets/Prefabs/Characters/Guard.prefab
+unity/JAILBREAK/Assets/Scripts/Player/GuardStunFeedback.cs
+web/public/unity-build/Build/unity-build.loader.js
+web/public/unity-build/index.html
+---
+

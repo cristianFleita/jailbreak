@@ -1,9 +1,11 @@
+using Jailbreak.Audio;
 using UnityEngine;
 
-public class LayerTriggerMoveOffset : MonoBehaviour
+public class TriggerMoveOffset : MonoBehaviour
 {
     [Header("References")]
     public GameObject objectToMove;
+    public OneShotSfx openSfx;
 
     [Header("Settings")]
     public LayerMask activationLayer;
@@ -20,6 +22,9 @@ public class LayerTriggerMoveOffset : MonoBehaviour
         {
             initialPosition = objectToMove.transform.position;
             targetPosition = initialPosition;
+
+            if (openSfx == null)
+                openSfx = objectToMove.GetComponentInChildren<OneShotSfx>(true);
         }
     }
 
@@ -41,8 +46,11 @@ public class LayerTriggerMoveOffset : MonoBehaviour
     {
         if (((1 << other.gameObject.layer) & activationLayer) != 0)
         {
+            bool wasClosed = entitiesInside == 0;
             entitiesInside++;
             UpdateTarget();
+            if (wasClosed && openSfx != null)
+                openSfx.Play();
         }
     }
 
@@ -58,6 +66,8 @@ public class LayerTriggerMoveOffset : MonoBehaviour
 
     private void UpdateTarget()
     {
+        if (objectToMove == null) return;
+
         if (entitiesInside > 0)
         {
             targetPosition = initialPosition + new Vector3(0, 0, zOffset);

@@ -74,19 +74,7 @@ MonoBehaviour:
   resetOnStop: 0
   onComplete:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 4845900516252229193}
-        m_TargetAssemblyTypeName: Jailbreak.Audio.OneShotSfx, Assembly-CSharp
-        m_MethodName: Play
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   progress: 0
 --- !u!114 &8855622623134774731
 MonoBehaviour:
@@ -139,6 +127,8 @@ GameObject:
   - component: {fileID: 4069929507522018596}
   - component: {fileID: 8401063910379353697}
   - component: {fileID: 4845900516252229193}
+  - component: {fileID: 612345880000000001}
+  - component: {fileID: 612345880000000002}
   m_Layer: 0
   m_Name: Sink_Sfx
   m_TagString: Untagged
@@ -172,20 +162,20 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_Resource: {fileID: 8300000, guid: efb072b3cc91b45fb9ede7a94c62c119, type: 3}
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
-  Loop: 0
+  Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 500
+  MinDistance: 2
+  MaxDistance: 20
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 1
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -218,7 +208,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -273,12 +263,58 @@ MonoBehaviour:
   clips:
   - {fileID: 8300000, guid: efb072b3cc91b45fb9ede7a94c62c119, type: 3}
   mixerGroup: {fileID: 0}
-  volume: 1
+  volume: 0.2
   pitchVariance: 0.05
   spatialBlend: 1
   minDistance: 2
   maxDistance: 20
   rolloff: 1
+--- !u!114 &612345880000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6399062424197694277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d5600c7cf94b4be29afeeb3b1c7d0dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.LoopingSfx
+  clip: {fileID: 8300000, guid: efb072b3cc91b45fb9ede7a94c62c119, type: 3}
+  mixerGroup: {fileID: 0}
+  volume: 1
+  pitch: 1
+  spatial: 1
+  minDistance: 2
+  maxDistance: 20
+  rolloff: 1
+  playOnEnable: 0
+  fadeInSeconds: 0.12
+  fadeOutSeconds: 0.25
+--- !u!114 &612345880000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6399062424197694277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f3cb4d5a6e84f65b5d310fd0ccaf4a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.ProgressInteractableLoopingSfx
+  loop: {fileID: 612345880000000001}
+  progressAction: {fileID: 7116098962609315387}
+  listenToProgressAction: 1
+  networkInteractable: {fileID: 2721881730280421574}
+  listenToPlayerActionBroadcasts: 1
+  startActions:
+  - startLeaveFood
+  stopActions:
+  - stopLeaveFood
+  - leaveFood
+  debugLogs: 0
 --- !u!1001 &3226902330702663315
 PrefabInstance:
   m_ObjectHideFlags: 0

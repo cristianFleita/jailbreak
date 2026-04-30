@@ -120,8 +120,14 @@ function setupRoomWithPlayers(roomId: string): GameRoom {
 
 describe('Tutorial — pure helpers', () => {
   it('exposes mission lists keyed by role', () => {
-    expect(PRISONER_MISSION_IDS).toContain('p1_review_route')
-    expect(PRISONER_MISSION_IDS).toContain('p7_hide_cart')
+    expect(PRISONER_MISSION_IDS).toEqual([
+      'p1_review_route',
+      'p2_food_flow',
+      'p3_sprint',
+      'p4_grab_item',
+      'p6_risky_action',
+      'p7_hide_cart',
+    ])
     expect(GUARD_MISSION_IDS).toContain('g1_observe')
     expect(GUARD_MISSION_IDS).toContain('g4_error')
   })
@@ -132,10 +138,10 @@ describe('Tutorial — pure helpers', () => {
   })
 
   it('isMissionAllowedForRole rejects cross-role missions', () => {
-    expect(isMissionAllowedForRole('prisoner', 'p1_review_route')).toBe(true)
+    expect(isMissionAllowedForRole('prisoner', 'p4_grab_item')).toBe(true)
     expect(isMissionAllowedForRole('prisoner', 'g1_observe')).toBe(false)
     expect(isMissionAllowedForRole('guard', 'g3_capture')).toBe(true)
-    expect(isMissionAllowedForRole('guard', 'p4_store_item')).toBe(false)
+    expect(isMissionAllowedForRole('guard', 'p4_grab_item')).toBe(false)
   })
 
   it('buildTutorialState computes endsAt from now+duration', () => {
@@ -309,14 +315,14 @@ describe('TutorialManager — missions', () => {
   })
 
   it('records a valid mission and immediately re-broadcasts that user', () => {
-    const ok = manager.markMissionComplete(P1, 'p1_review_route')
+    const ok = manager.markMissionComplete(P1, 'p4_grab_item')
     expect(ok).toBe(true)
-    expect(manager.getCompletedMissions(P1)).toEqual(['p1_review_route'])
+    expect(manager.getCompletedMissions(P1)).toEqual(['p4_grab_item'])
 
     // Only the affected player gets the immediate push, not the whole room.
     const p1Emits = ioStub.emitsFor('sock_p1').filter(e => e.event === 'tutorial:state')
     expect(p1Emits).toHaveLength(1)
-    expect((p1Emits[0].payload as TutorialStatePayload).completedMissionIds).toEqual(['p1_review_route'])
+    expect((p1Emits[0].payload as TutorialStatePayload).completedMissionIds).toEqual(['p4_grab_item'])
 
     const guardEmits = ioStub.emitsFor('sock_host').filter(e => e.event === 'tutorial:state')
     expect(guardEmits).toHaveLength(0)
@@ -337,20 +343,20 @@ describe('TutorialManager — missions', () => {
 
   it('isolates checklists between users', () => {
     manager.markMissionComplete(P1, 'p1_review_route')
-    manager.markMissionComplete(P2, 'p3_sprint')
+    manager.markMissionComplete(P2, 'p7_hide_cart')
 
     expect(manager.getCompletedMissions(P1)).toEqual(['p1_review_route'])
-    expect(manager.getCompletedMissions(P2)).toEqual(['p3_sprint'])
+    expect(manager.getCompletedMissions(P2)).toEqual(['p7_hide_cart'])
     expect(manager.getCompletedMissions(HOST)).toEqual([])
   })
 
   it('rejects missions for users not in the room', () => {
-    expect(manager.markMissionComplete('ghost-user', 'p1_review_route')).toBe(false)
+    expect(manager.markMissionComplete('ghost-user', 'p4_grab_item')).toBe(false)
   })
 
   it('rejects missions after the tutorial has finished', () => {
     manager.forceEnd()
-    expect(manager.markMissionComplete(P1, 'p1_review_route')).toBe(false)
+    expect(manager.markMissionComplete(P1, 'p4_grab_item')).toBe(false)
   })
 })
 

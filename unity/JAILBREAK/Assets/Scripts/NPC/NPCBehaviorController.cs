@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using Jailbreak.Network;
+using Jailbreak.Audio;
 
 namespace Jailbreak.NPC
 {
@@ -112,6 +113,15 @@ namespace Jailbreak.NPC
         private float  _loopingGraceTimer;
         private const float LoopingGrace = 5f;
 
+        // Phase-transition stagger. Backend prefixes the new sequence with a
+        // `linger_before_move` idle step so NPCs don't all converge on the new
+        // zone simultaneously. We honor the stagger as a defer (NPC keeps doing
+        // its previous activity) instead of as a stop+idle beat — applying the
+        // remainder of the sequence only after the timer expires.
+        private NPCAssignmentData _deferredLingerAssignment;
+        private float  _lingerDeferTimer;
+        private const string LingerActionId = "linger_before_move";
+
         // True if the current assignment was determined to be a run action
         private bool _isRunning;
         private int _runWalkTransitionMode; // 0=None, 1=Walk->Run, 2=Run->Walk
@@ -143,6 +153,9 @@ namespace Jailbreak.NPC
         // Bed reserved for the current sleep step. Set before navigation so
         // NPCs assigned to the same cell walk to different beds.
         private SleepInteractable _reservedSleepInteractable;
+
+        // Sink loop currently driven by this NPC's food-drop action.
+        private ProgressInteractableLoopingSfx _activeSinkLoopingSfx;
 
         // ─── Emergent behavior state ──────────────────────────────────────────
         private bool   _isPlayingEmergent;
@@ -198,6 +211,21 @@ namespace Jailbreak.NPC
                 }
             }
 
+            // Phase-transition linger: count down without disturbing the
+            // current action (sit/eat/walk keeps running). When the timer
+            // hits zero, apply the rest of the new sequence — the NPC will
+            // stand up (if needed) and walk straight to the new zone.
+            if (_deferredLingerAssignment != null)
+            {
+                _lingerDeferTimer -= Time.deltaTime;
+                if (_lingerDeferTimer <= 0f)
+                {
+                    var pending = _deferredLingerAssignment;
+                    _deferredLingerAssignment = null;
+                    ApplyAssignment(pending);
+                }
+            }
+
             if (_sequenceSteps != null)
             {
                 UpdateSequence();
@@ -236,6 +264,21 @@ namespace Jailbreak.NPC
             if (registry != null) zoneRegistry = registry;
             _hasEverReceivedAssignment = true;
 
+            // Front-loaded `linger_before_move` is a stagger hint, not an
+            // actual action. Honor it as a defer so the NPC keeps its current
+            // activity (sit/eat/walk) running until the timer expires, then
+            // we apply the remainder. Replaces any previous deferred linger.
+            if (IsLingerOnlyFirstStep(data))
+            {
+                var lingerStep = data.actionSequence[0];
+                _deferredLingerAssignment = StripFirstStep(data);
+                _lingerDeferTimer = lingerStep.duration;
+                return;
+            }
+
+            // A non-linger assignment supersedes any deferred linger.
+            _deferredLingerAssignment = null;
+
             if (_isLooping && _current != null && data.actionSequence == null)
             {
                 _pendingAssignment = data;
@@ -244,6 +287,39 @@ namespace Jailbreak.NPC
             }
 
             ApplyAssignment(data);
+        }
+
+        private bool IsLingerOnlyFirstStep(NPCAssignmentData data)
+        {
+            if (data?.actionSequence == null || data.actionSequence.Length == 0) return false;
+            var first = data.actionSequence[0];
+            return first != null
+                && first.actionId == LingerActionId
+                && string.IsNullOrEmpty(first.zoneId)
+                && first.duration > 0.1f
+                && data.actionSequence.Length > 1; // never strip down to empty
+        }
+
+        private NPCAssignmentData StripFirstStep(NPCAssignmentData data)
+        {
+            var trimmed = new NPCActionStepData[data.actionSequence.Length - 1];
+            for (int i = 0; i < trimmed.Length; i++) trimmed[i] = data.actionSequence[i + 1];
+
+            return new NPCAssignmentData
+            {
+                npcId           = data.npcId,
+                actionId        = data.actionId,
+                animTrigger     = data.animTrigger,
+                zoneId          = data.zoneId,
+                seed            = data.seed,
+                seedChain       = data.seedChain,
+                duration        = Mathf.Max(0f, data.duration - data.actionSequence[0].duration),
+                loop            = data.loop,
+                socialPartnerId = data.socialPartnerId,
+                subZone         = data.subZone,
+                walkSpeedMult   = data.walkSpeedMult,
+                actionSequence  = trimmed,
+            };
         }
 
         public void ApplyMoodHint(string animHint)
@@ -298,6 +374,7 @@ namespace Jailbreak.NPC
                                        && newZone == (_currentStepZoneId ?? _current?.zoneId);
             if (!continuingSameSleep) StopSleepIfActive();
 
+            StopSinkIfActive();
             CleanupCurrent();
 
             if (agent != null)
@@ -699,6 +776,8 @@ namespace Jailbreak.NPC
                                            && _sequenceSteps[peekIndex].zoneId == _currentStepZoneId;
                 if (!nextIsSleepSameZone) StopSleepIfActive();
 
+                StopSinkIfActive();
+
                 // CarryClothesInteraction's grab routine self-terminates when its
                 // own duration elapses (isSearching=false → bundle attached +
                 // isCarrying=true). Nothing to stop here. Release the pile slot
@@ -748,6 +827,7 @@ namespace Jailbreak.NPC
             StopLaundryStoreIfActive();
             ReleaseLaundryGrabClothes();
             StopSleepIfActive();
+            StopSinkIfActive();
         }
 
         private void OnSequenceComplete()
@@ -802,6 +882,7 @@ namespace Jailbreak.NPC
             StopLaundryStoreIfActive();
             ReleaseLaundryGrabClothes();
             StopSleepIfActive();
+            StopSinkIfActive();
 
             _isLooping = false;
             _current   = null;
@@ -1069,6 +1150,11 @@ namespace Jailbreak.NPC
 
             if (IsLeaveFoodAction(animTrigger))
             {
+                var sink = (!string.IsNullOrEmpty(zoneId) && zoneRegistry != null)
+                    ? zoneRegistry.GetDeterministicSink(zoneId, seed)
+                    : null;
+                StartSinkLoop(sink);
+
                 var carry = GetComponent<CarryFoodInteraction>();
                 if (carry != null && carry.IsCarrying)
                     carry.TryDrop();
@@ -1385,6 +1471,27 @@ namespace Jailbreak.NPC
             return anchor.position;
         }
 
+        // ─── Sink Audio Setup ────────────────────────────────────────────────
+
+        private void StartSinkLoop(SinkInteractable sink)
+        {
+            StopSinkIfActive();
+            if (sink == null) return;
+
+            var pp = sink.GetComponent<ProgressPointAction>();
+            var actionPoint = (pp != null && pp.actionPoint != null) ? pp.actionPoint : sink.transform;
+            _activeSinkLoopingSfx = ProgressInteractableLoopingSfx.FindForActionPoint(actionPoint);
+            if (_activeSinkLoopingSfx != null)
+                _activeSinkLoopingSfx.PlayExternal(this);
+        }
+
+        private void StopSinkIfActive()
+        {
+            if (_activeSinkLoopingSfx == null) return;
+            _activeSinkLoopingSfx.StopExternal(this);
+            _activeSinkLoopingSfx = null;
+        }
+
         // ─── Laundry Store Clothes Setup ─────────────────────────────────────
 
         private LaundryStoreClothesInteraction EnsureLaundryStoreClothesInteraction()
@@ -1574,6 +1681,7 @@ namespace Jailbreak.NPC
             ReleaseLaundryWasher();
             ReleaseLaundryStore();
             ReleaseSleepInteractable();
+            StopSinkIfActive();
         }
 
         // ─── Food Carry Setup ──────────────────────────────────────────────────
@@ -1641,6 +1749,10 @@ namespace Jailbreak.NPC
                 "argue"            => "Angry",
                 "nod"              => "Salute",
                 "fist_bump"        => "Salute",
+                "salute"           => "Salute",
+                "dismiss"          => "Dismissing",
+                "surprise"         => "Surprised",
+                "dance"            => "SillyDancing",
                 "stretch"          => "Idle",
                 "yawn"             => "Idle",
                 "sigh"             => "Idle",

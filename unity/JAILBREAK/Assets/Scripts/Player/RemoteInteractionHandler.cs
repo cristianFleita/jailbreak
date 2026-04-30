@@ -24,6 +24,7 @@ namespace Jailbreak.Player
         private CarryFoodInteraction carryFoodInteraction;
         private CarryClothesInteraction carryClothesInteraction;
         private CarryFoldedClothesInteraction carryFoldedClothesInteraction;
+        private FlashlightController flashlightController;
 
         void Awake()
         {
@@ -31,6 +32,7 @@ namespace Jailbreak.Player
             carryFoodInteraction          = GetComponent<CarryFoodInteraction>();
             carryClothesInteraction       = GetComponent<CarryClothesInteraction>();
             carryFoldedClothesInteraction = GetComponent<CarryFoldedClothesInteraction>();
+            flashlightController          = GetComponentInChildren<FlashlightController>();
         }
 
         void OnEnable()
@@ -58,6 +60,18 @@ namespace Jailbreak.Player
         {
             if (data == null || string.IsNullOrEmpty(PlayerId)) return;
             if (data.playerId != PlayerId) return; // Not for this avatar
+
+            // ── Flashlight toggle (remote sync) ────────────────────────────
+            if (data.objectId == "flashlight_system")
+            {
+                if (flashlightController != null)
+                {
+                    bool on = data.action == "flashlight_on";
+                    flashlightController.SetFlashlightOn(on);
+                    Debug.Log($"[RemoteInteract] '{PlayerId}' → flashlight {(on ? "ON" : "OFF")}");
+                }
+                return;
+            }
 
             // ── Emote system (remote emote animations) ──────────────────────
             // EmoteSystem broadcasts with objectId="emote_system" — this is

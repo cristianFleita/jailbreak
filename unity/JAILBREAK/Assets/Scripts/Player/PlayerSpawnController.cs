@@ -159,6 +159,11 @@ namespace Jailbreak.Player
                 Debug.LogError("[SPAWN] PlayerNetworkSync not found on spawned prefab!");
             }
 
+            // Mark the flashlight as local so it reads toggle input and broadcasts state
+            var flashlight = _localPlayerInstance.GetComponentInChildren<FlashlightController>(true);
+            if (flashlight != null)
+                flashlight.isLocalPlayer = true;
+
             Debug.Log($"[SPAWN] Spawned local {data.role.ToUpper()} at {pns?.transform.position ?? spawnPos} (wp={data.spawnWaypointId ?? "none"})");
         }
 

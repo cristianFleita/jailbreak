@@ -163,7 +163,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: d3b941ec3e2f146b1bf237a126dcf1e7, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.2
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -261,7 +261,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.LoopingSfx
   clip: {fileID: 8300000, guid: d3b941ec3e2f146b1bf237a126dcf1e7, type: 3}
   mixerGroup: {fileID: 0}
-  volume: 1
+  volume: 0.2
   pitch: 1
   spatial: 1
   minDistance: 2
@@ -279,13 +279,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 3000475392405754108}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc5216b4d495f4ab696bb8a105a256cc, type: 3}
+  m_Script: {fileID: 11500000, guid: 9f3cb4d5a6e84f65b5d310fd0ccaf4a9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.AnimatorBoolLoopingSfx
-  animator: {fileID: 0}
-  boolName: 
-  loop: {fileID: 0}
-  invert: 0
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.ProgressInteractableLoopingSfx
+  loop: {fileID: 2828384364686907288}
+  progressAction: {fileID: 9221662342014598013}
+  listenToProgressAction: 1
+  networkInteractable: {fileID: 5855512456092480744}
+  listenToPlayerActionBroadcasts: 1
+  startActions:
+  - startLoadWasher
+  stopActions:
+  - stopLoadWasher
+  - loadWasher
+  debugLogs: 0
 --- !u!1001 &8100571327238504558
 PrefabInstance:
   m_ObjectHideFlags: 0

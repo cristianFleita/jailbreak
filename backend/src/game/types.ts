@@ -57,7 +57,7 @@ export interface PlayerState {
   carrying?: string | null // e.g. "food_plate" — visual prop parented to player's hand (reconnect-safe)
 
   // ── Authoritative inventory (Ruta 1 / Phase A contract) ─────────────────
-  // heldItemId: item currently in hand (after pickup with E, before store with F)
+  // heldItemId: legacy route item currently in hand. Normal pickups auto-store.
   // inventorySlots: fixed-length array (2 for prisoners). Slots may contain null.
   heldItemId?: string | null
   inventorySlots?: (InventorySlotSync | null)[]
@@ -571,8 +571,7 @@ export type TutorialPrisonerMissionId =
   | 'p1_review_route'
   | 'p2_food_flow'
   | 'p3_sprint'
-  | 'p4_store_item'
-  | 'p5_drop_item'
+  | 'p4_grab_item'
   | 'p6_risky_action'
   | 'p7_hide_cart'
 
@@ -593,6 +592,8 @@ export interface TutorialRoomState {
   seed: number
   /** Per-user completion sets, keyed by userId. */
   completedByUserId: Map<string, Set<TutorialMissionId>>
+  /** Users that have marked themselves ready to skip the tutorial early. */
+  readyUserIds: Set<string>
 }
 
 /**
@@ -637,6 +638,24 @@ export interface TutorialMissionCompletePayload {
  */
 export interface TutorialEndPayload {
   nextScene: 'GameScene'
+}
+
+/**
+ * Client → Server. Player wants to skip the tutorial. Idempotent — sending it
+ * twice has no extra effect.
+ */
+export interface TutorialReadyRequestPayload {
+  ready: boolean
+}
+
+/**
+ * Server → Client. Broadcast to every player whenever the ready set changes.
+ * Once `readyCount === totalCount` the server force-ends the tutorial.
+ */
+export interface TutorialReadyPayload {
+  readyUserIds: string[]
+  readyCount: number
+  totalCount: number
 }
 
 // ============================================================================

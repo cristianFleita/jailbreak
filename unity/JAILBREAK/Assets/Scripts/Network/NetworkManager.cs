@@ -53,6 +53,7 @@ namespace Jailbreak.Network
         public TutorialStartPayload CachedTutorialStart { get; private set; }
         public TutorialStatePayload CachedTutorialState { get; private set; }
         public TutorialEndPayload CachedTutorialEnd { get; private set; }
+        public TutorialReadyPayload CachedTutorialReady { get; private set; }
 
         // ─── Events: Auth & Room Lobby ───────────────────────────────────────
         public event Action<AuthRegisteredPayload>    OnAuthRegisteredEvent;
@@ -67,6 +68,7 @@ namespace Jailbreak.Network
         public event Action<TutorialStartPayload>     OnTutorialStartEvent;
         public event Action<TutorialStatePayload>     OnTutorialStateEvent;
         public event Action<TutorialEndPayload>       OnTutorialEndEvent;
+        public event Action<TutorialReadyPayload>     OnTutorialReadyEvent;
 
         // ─── Events: Connection & Gameplay ──────────────────────────────────
         public event Action                           OnConnectedEvent;
@@ -143,6 +145,7 @@ namespace Jailbreak.Network
         [DllImport("__Internal")] private static extern void   SocketSendThrowableHit(string json);
         [DllImport("__Internal")] private static extern void   SocketSendRiotActivate();
         [DllImport("__Internal")] private static extern void   SocketSendTutorialMissionComplete(string json);
+        [DllImport("__Internal")] private static extern void   SocketSendTutorialReady();
         [DllImport("__Internal")] private static extern void   SocketSendNPCSyncState(string json);
         [DllImport("__Internal")] private static extern void   SocketSendRegisterSpawnAreas(string json);
         [DllImport("__Internal")] private static extern void   SocketDisconnect();
@@ -426,6 +429,22 @@ namespace Jailbreak.Network
 #endif
         }
 
+        /// <summary>
+        /// Marks the local player as ready to skip the tutorial. Idempotent.
+        /// When every player in the room has sent this, the server force-ends
+        /// the tutorial and transitions into the live match.
+        /// </summary>
+        public void SendTutorialReady()
+        {
+            if (!IsAuthenticated) return;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SocketSendTutorialReady();
+#else
+            try { _socket?.Emit("tutorial:ready"); }
+            catch (Exception ex) { Debug.LogError($"[NET] SendTutorialReady: {ex}"); }
+#endif
+        }
+
         public void SendNPCSyncState(NPCSyncStatePayload payload)
         {
             if (!IsInGame() || !IsHost) return;
@@ -602,6 +621,7 @@ namespace Jailbreak.Network
             {
                 SetState(ConnectionState.InGame);
                 CachedTutorialEnd = null;
+                CachedTutorialReady = null;
                 var data = JsonUtility.FromJson<TutorialStartPayload>(json);
                 if (data != null)
                 {
@@ -640,6 +660,17 @@ namespace Jailbreak.Network
                     completedMissionIds = CachedTutorialState?.completedMissionIds ?? Array.Empty<string>()
                 };
                 OnTutorialEndEvent?.Invoke(data);
+            });
+        }
+
+        public void OnTutorialReady(string json)
+        {
+            _mainThreadQueue.Enqueue(() =>
+            {
+                var data = JsonUtility.FromJson<TutorialReadyPayload>(json);
+                if (data == null) return;
+                CachedTutorialReady = data;
+                OnTutorialReadyEvent?.Invoke(data);
             });
         }
 
@@ -1055,6 +1086,7 @@ namespace Jailbreak.Network
                 {
                     SetState(ConnectionState.InGame);
                     CachedTutorialEnd = null;
+                    CachedTutorialReady = null;
                     if (data != null)
                     {
                         CachedTutorialStart = data;
@@ -1093,6 +1125,17 @@ namespace Jailbreak.Network
                         };
                         OnTutorialEndEvent?.Invoke(data);
                     });
+            });
+
+            SafeOn("tutorial:ready", r =>
+            {
+                var data = DeserializePayload<TutorialReadyPayload>(r);
+                if (data == null) return;
+                _mainThreadQueue.Enqueue(() =>
+                {
+                    CachedTutorialReady = data;
+                    OnTutorialReadyEvent?.Invoke(data);
+                });
             });
 
             SafeOn("player:state", r =>

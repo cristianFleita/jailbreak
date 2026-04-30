@@ -61,7 +61,7 @@ namespace Jailbreak.Network
         public string carrying;        // e.g. "food_plate" — null/empty means "nothing carried"
 
         // ── Authoritative inventory (Ruta 1 / Phase A contract) ──────────
-        // heldItemId: stable item id currently in hand (e.g. "route1_wrench").
+        // heldItemId: legacy route item in hand. Normal route pickups auto-store.
         // inventorySlots: fixed-length (2 for prisoners). Null entries are empty.
         // Both are set by backend; Unity treats them as read-only truth.
         public string heldItemId;
@@ -346,6 +346,14 @@ namespace Jailbreak.Network
     public class TutorialEndPayload
     {
         public string nextScene;
+    }
+
+    [Serializable]
+    public class TutorialReadyPayload
+    {
+        public string[] readyUserIds;
+        public int readyCount;
+        public int totalCount;
     }
 
     // ─── Event Payloads (Client → Server) ────────────────────────────────────

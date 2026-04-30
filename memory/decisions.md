@@ -864,3 +864,169 @@ Guard-only behavior makes the prank useful as an escape tool without creating gr
 - `Soap.prefab` owns `NetworkInteractable`, `NetworkRoutePickable`, and `SoapSlipTrigger`; `NetworkRoutePickable.allowDropFromHand` is enabled.
 - `Guard.prefab` must keep `GuardStunFeedback` and use `Character.controller`; soap stuns use `IsFalling`/fall sequence instead of the generic stun bool.
 - `Character.controller` now includes direct-play `Fall`, `FallenIdle`, and `StandingUp` states, and `Fall.anim` has horizontal hip translation flattened so the character does not snap back after the fall.
+
+## ADR-035: Progress-driven prop SFX replace Animator-bool prop audio
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+World props that make sound during interactions use `ProgressInteractableLoopingSfx`, not `AnimatorBoolLoopingSfx`. The component can start/stop a `LoopingSfx` from local `ProgressAction` events, remote `player:action` broadcasts, Route 1 local visuals, and NPC/script-driven action points.
+
+`GameAudioBridge` now treats false guard captures as `guard:catch success=true, isPlayer=false` and plays an angry NPC one-shot. Wrong Route 1 power-supply sabotage uses `world:cue server_wrong_alarm` and plays a 4-second alarm on the guard client.
+
+### Why
+
+The props do not own the player/NPC Animator, so watching an Animator bool on the prefab was brittle and often impossible to configure. The actual source of truth is the interaction lifecycle: progress start/stop, route start/stop, and network replay.
+
+### Implications
+
+- `Desk`, `WashingMachine`, `Sink`, and `LDesk` prefabs now own `ProgressInteractableLoopingSfx` alongside their existing `LoopingSfx`.
+- `Sink` no longer plays only a completion one-shot; it loops sink audio for the duration of the action.
+- `LDesk` uses `revisar-cajones.mp3`; `Desk` uses `working-table.mp3`; `WashingMachine` uses `washing-machine.mp3`; `Sink` uses `dirty-plates-sink.mp3`.
+- Global bridge cues in `GameScene` are 2D so the guard hears false-capture and alarm feedback regardless of listener position.
+
+## ADR-036: Route/local fallbacks and NPC direct actions also drive prop SFX
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+Route 1 progress interactables resolve their looping prop audio from the action point/root hierarchy, not only from children of the interactable component. NPC direct actions that do not call player-facing interactables must explicitly start/stop the matching prop loop.
+
+Wrong power-supply sabotage now also has a local completion fallback that calls `GameAudioBridge.PlayWrongPowerSupplyAlarmCue()` when the completed server action did not disable ventilation. The authoritative guard-side `world:cue server_wrong_alarm` remains the network source of truth.
+
+### Why
+
+Some authored prefabs place `sfx` as a sibling of the interactable child, so child-only lookup misses valid audio components. NPC food-drop behavior goes directly through `NPCBehaviorController` instead of `SinkInteractable`, so it needs the same external loop ownership pattern already used by work tables and washing machines. The local alarm fallback makes single-client/editor testing audible while preserving the guard notification path.
+
+### Implications
+
+- `LDesk`/server sabotage audio works even when the `sfx` child is a sibling of the `Interactable` child.
+- Sink audio now plays for NPC food-drop actions as well as player interactions.
+- `GameScene` wires the existing `Alarm` `LoopingSfx` into `GameAudioBridge.securityAlarmLoop` and sets it to 2D/global playback.
+
+## ADR-037: Flashlight props are owned by IK targets, not animated hand bones
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+Character flashlight prefab instances are parented to each character's active flashlight IK target (`ItemOrigin`) instead of the animated hand-tip bone. The flashlight arm `TwoBoneIKConstraint` uses target rotation weight `1` so the rig owns both the hand position and wrist orientation while the flashlight is active.
+
+### Why
+
+`Character.controller` locomotion and interaction clips animate the hand skeleton directly. When the flashlight prop is a child of the animated hand tip but the IK constraint only solves position, controller states can rotate the wrist and drag the beam off its outage pose. Parenting the prop to the IK target makes the prop share the same stable source that the rig solves toward.
+
+### Implications
+
+- `Prisoner.prefab`, `Guard.prefab`, and `Prisoner-NPC.prefab` keep using the existing `FlashlightController` and `PowerOutage` event flow.
+- No backend or socket protocol change is required; outage state remains authoritative through `WorldStatePayload.ventilationPowered`.
+- Flashlight beam tuning should now be done by adjusting each prefab's `ItemOrigin` transform / flashlight local offset, not by editing `Character.controller`.
+
+## ADR-038: Route pickups auto-store and F is flashlight-only
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+Route-managed pickup props (`route1_cutters`, `route1_wrench`, and `route1_soap`) are stored directly into the first available prisoner inventory slot on `item.pickup`. The normal pickup path no longer places these items in the player's hand and no longer requires K/L slot selection followed by F.
+
+F is reserved for flashlight toggling. Route items can still be voluntarily dropped from an inventory slot through the existing route item drop flow. Legacy `item.store` / hand state remains in code only for compatibility with older snapshots and stale clients.
+
+The container remains a hand-held pickable and is thrown with the normal throw input when the player chooses; it is not auto-stored when another pickable is targeted.
+
+### Why
+
+The previous hand-to-slot step made route item collection too fiddly and conflicted with flashlight input. Direct first-slot storage keeps the backend authoritative, removes the F conflict, and preserves the existing item lifecycle broadcasts for HUD/reconnect.
+
+### Implications
+
+- Backend `item.pickup` now broadcasts `item:state` with `state: "stored"` for cutters, wrench, and soap.
+- `Soap.prefab` no longer allows hand dropping; soap is dropped from storage before it becomes an active slip trap.
+- Prisoner prefabs serialize `HeldItemInput.storeKey` as `None`; `HeldItemInput` ignores store input in gameplay.
+- `PickUpInteractable` no longer auto-stores or auto-throws the currently held hand item when trying to pick up another local-only prop.
+
+## ADR-039: Pickup failures use HUD toast feedback
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+Failed item pickup attempts show short HUD toasts through `GameHudController.ShowToast`. Route item pickup shows `Inventory slots are full` when local authoritative slots are full or the backend returns `Inventory full`. Distance failures from the backend and local E presses just outside pickup range show `Move closer to pick that up`.
+
+### Why
+
+Pickup failures were previously silent, which made auto-store feel broken when slots were full or when the server rejected stale/out-of-range positions. Reusing the existing HUD toast keeps feedback consistent with Route 1 interaction blockers.
+
+### Implications
+
+- `NetworkRoutePickable` translates pickup-specific `game:error` messages into player-facing toasts.
+- `InteractionManager` checks for nearby pickup candidates in a small outer radius when E is pressed and no current prompt exists.
+- No backend protocol change is needed; backend validation remains authoritative.
+
+## ADR-040: Prisoner tutorial item missions are grab and drop only
+
+**Status**: Superseded by ADR-041
+**Date**: 2026-04-29
+
+### Decision
+
+The prisoner tutorial exposes only two item missions: `p1_grab_item` and `p2_drop_item`. Pressing E on the tutorial item stores it directly into the first available prisoner inventory slot, and pressing G drops an inventory item. F is documented as flashlight toggle only.
+
+### Why
+
+The live route item flow no longer uses hand-held storage or F-to-save behavior. Keeping the tutorial on the old K/L/F flow would teach the wrong controls and conflict with flashlight input.
+
+### Implications
+
+- Backend tutorial mission allowlists and tests accept only the two prisoner item mission IDs.
+- Unity prisoner tutorial rows only show "Grab the item" and "Drop the item".
+- `TutorialPickupInteractable` no longer places the tutorial item in hand before storage.
+- `TutorialPrisonerGUI.uxml` lists F as flashlight on/off and G as item drop.
+
+## ADR-041: Prisoner tutorial restores interactions and removes drop mission
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+The prisoner tutorial mission checklist includes the broader interaction training again: review the plan, blend in with food/sit/sink, sprint, grab the item, finish a risky progress interactable, and hide in a cart. The stored-item drop action remains available as a control, but it is not a mission and the backend no longer accepts a prisoner drop mission ID.
+
+### Why
+
+The tutorial still needs to teach core prisoner interactables, not only the item flow. The old drop-with-G mission overemphasized inventory handling after route items moved to direct E pickup and F became flashlight-only.
+
+### Implications
+
+- Backend prisoner mission IDs are `p1_review_route`, `p2_food_flow`, `p3_sprint`, `p4_grab_item`, `p6_risky_action`, and `p7_hide_cart`.
+- Unity completes restored missions from the existing tutorial signals: TAB review, food/sit/sink state edges, sprint tracking, item pickup, desk/power progress, and hide cart.
+- `ItemDropped` no longer completes any tutorial mission, though G can still be listed as an available control.
+
+## ADR-042: Door and ventilation prop SFX bind to local Unity state
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+Jail door opening audio is triggered by `TriggerMoveOffset` on the closed-to-open transition. The trigger resolves the existing `OneShotSfx` from its configured `objectToMove` door prefab, so scene trigger instances only need to keep their existing JailDoor reference.
+
+Ventilation grille ambience is owned by the `VentilationGrille.prefab` `sfx` child through `PowerOutageLoopingSfx`. The helper starts the existing `LoopingSfx` while power is on and subscribes to the scene `PowerOutage` UnityEvents, which are already driven by `PowerOutageNetworkBridge` from authoritative `WorldStatePayload.ventilationPowered`.
+
+### Why
+
+Both cues are local presentation of existing gameplay state. Reusing prefab-local audio components avoids adding backend events for door movement and avoids per-scene manual wiring for every vent instance.
+
+### Implications
+
+- `TriggerMoveOffset.cs` class name matches the serialized prefab script identity again.
+- Door open SFX plays once per trigger occupancy cycle, not on every collider while the door is already open.
+- Vent loops fade out when the network-driven power outage fires and resume if power is restored.
+- No backend protocol change is required for these SFX.

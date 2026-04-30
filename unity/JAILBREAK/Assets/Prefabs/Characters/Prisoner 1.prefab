@@ -872,7 +872,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeldItemInput
   throwKey: 323
-  storeKey: 102
+  storeKey: 0
   dropKey: 103
   holdPointName: mixamorig:RightHandIndex1
   handConstraint: {fileID: 1669301554819997446}
