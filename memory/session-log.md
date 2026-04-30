@@ -403,3 +403,10 @@
   - Added `PowerOutageLoopingSfx` and attached it to the ventilation grille `sfx` child so the vent loop starts while powered and fades out on the network-driven outage event.
   - Verified Unity C# via `msbuild Assembly-CSharp.csproj` and `git diff --check`; build passed with existing warnings only.
   - Recorded ADR-042 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Backend memory risk check for Render free tier** (2026-04-30):
+  - Read `memory/progress.md` and inspected backend room lifecycle, room state, socket leave/disconnect cleanup, reconnection slots, user identity cleanup, tutorial timers, route inventory, spawn-area respawn timers, and throwable debounce state.
+  - Verified rooms are kept in `activeRooms` only while active/joinable and are removed on host-left, empty lobby, or match end; room destruction clears tick/tutorial/spawn timers and reconnection slots.
+  - Ran a synthetic 500-room heap simulation with 4 players, 20 NPCs, route state, and `GameManager` systems per room using the bundled Node runtime: approximately 11.02 MB heap growth total, about 22.6 KB per room, and about 0.25 MB retained after destroying all rooms.
+  - Ran backend TypeScript with bundled Node: `tsc -p tsconfig.json --noEmit` passed.
+  - Noted the existing Vitest performance file passed as a smoke test with bundled Node, but its async timing assertions appear to finish too quickly to be treated as strong runtime proof.
+  - Recorded ADR-043 in `memory/decisions.md`.

@@ -1030,3 +1030,24 @@ Both cues are local presentation of existing gameplay state. Reusing prefab-loca
 - Door open SFX plays once per trigger occupancy cycle, not on every collider while the door is already open.
 - Vent loops fade out when the network-driven power outage fires and resume if power is restored.
 - No backend protocol change is required for these SFX.
+
+## ADR-043: Backend memory is acceptable for jam-scale Render free deployment
+
+**Status**: Accepted
+**Date**: 2026-04-30
+
+### Decision
+
+Keep the current in-memory room model for the game jam deployment. Do not introduce database-backed room state or aggressive memory refactors before the jam unless room creation abuse, high concurrency, or a real heap leak appears in deployment telemetry.
+
+### Why
+
+The backend stores match state in bounded, short-lived room objects: up to 4 players, about 20 NPCs, route items, spawn areas, tutorial/reconnect state, and fixed-size system maps. A synthetic 500-room simulation with 4 players, 20 NPCs, route state, and `GameManager` systems showed roughly 11.02 MB heap growth total, about 22.6 KB per room, and almost all memory returned after `destroyRoom`.
+
+Render free web services are more likely to be constrained by single-instance runtime limits, idle spin-down, WebSocket continuity, and monthly usage limits than by this backend's room object memory at realistic jam traffic.
+
+### Implications
+
+- Current cleanup paths remain important: destroy rooms on host leave, empty lobby, match end, and clear respawn/reconnect/tutorial timers.
+- Consider adding room caps, room idle TTL, and small debug metrics before public testing if time allows.
+- The existing performance Vitest file should not be treated as strong runtime evidence until its async assertions are corrected.
