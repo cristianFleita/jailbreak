@@ -49,3 +49,31 @@ CLIENT_URL=https://your-vercel-app.vercel.app
 No TURN variables are required on Render for the current MVP because the
 backend only relays signaling; actual audio flows peer-to-peer or through TURN
 from the browser.
+
+## Voice Troubleshooting
+
+`[Voice] Joined voice room` only means the browser joined Socket.io signaling.
+It does not guarantee that WebRTC connected or that the voice Web Audio mixer is
+running.
+
+In each browser, open DevTools and check:
+
+```js
+window.JailbreakVoice?.debug()
+```
+
+Healthy two-player state while both players are alive and near each other:
+
+- `joined: true`
+- `audioContextState: "running"`
+- one entry in `peers`
+- peer `connectionState: "connected"` or `"connecting"` briefly
+- peer `iceConnectionState: "connected"` or `"completed"`
+- `hasRemoteStream: true`
+- `speakerPoseCount >= 1`
+- while holding Space on the speaking client, `pushToTalk: true` and local
+  track `enabled: true`
+
+If `audioContextState` stays `"suspended"`, click inside the game canvas or
+press any gameplay key once in that browser. If ICE stays failed/disconnected,
+configure TURN in Vercel and redeploy the web app.

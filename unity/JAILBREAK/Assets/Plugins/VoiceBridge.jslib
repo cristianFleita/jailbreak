@@ -30,7 +30,10 @@ mergeInto(LibraryManager.library, {
           socket: null,
           socketHandlers: null,
           audioContext: null,
+          audioUnlockHandler: null,
+          gestureListenersBound: false,
           localStream: null,
+          lastTrackEnabled: null,
           listenerPose: null,
           speakerPoses: {},
           peers: {}
@@ -65,6 +68,7 @@ mergeInto(LibraryManager.library, {
           state.socket = window._jbSocket;
           bindSocket();
           ensureAudioContext();
+          bindAudioUnlockGestures();
 
           ensureMicrophone()
             .catch(function(err) {
@@ -87,12 +91,39 @@ mergeInto(LibraryManager.library, {
           return state.audioContext;
         }
 
+        function bindAudioUnlockGestures() {
+          if (state.gestureListenersBound) return;
+
+          state.audioUnlockHandler = function() {
+            resumeAudioContext();
+          };
+
+          window.addEventListener('pointerdown', state.audioUnlockHandler, false);
+          window.addEventListener('keydown', state.audioUnlockHandler, false);
+          window.addEventListener('touchstart', state.audioUnlockHandler, false);
+          state.gestureListenersBound = true;
+        }
+
+        function unbindAudioUnlockGestures() {
+          if (!state.gestureListenersBound || !state.audioUnlockHandler) return;
+
+          window.removeEventListener('pointerdown', state.audioUnlockHandler, false);
+          window.removeEventListener('keydown', state.audioUnlockHandler, false);
+          window.removeEventListener('touchstart', state.audioUnlockHandler, false);
+          state.audioUnlockHandler = null;
+          state.gestureListenersBound = false;
+        }
+
         function resumeAudioContext() {
           var ctx = ensureAudioContext();
           if (ctx && ctx.state === 'suspended') {
-            ctx.resume().catch(function(err) {
-              console.warn('[Voice] AudioContext resume failed:', err);
-            });
+            ctx.resume()
+              .then(function() {
+                console.log('[Voice] AudioContext resumed.');
+              })
+              .catch(function(err) {
+                console.warn('[Voice] AudioContext resume failed:', err);
+              });
           }
         }
 
@@ -122,6 +153,7 @@ mergeInto(LibraryManager.library, {
           state.socketHandlers = {
             peers: function(data) {
               var peers = data && data.peers ? data.peers : [];
+              console.log('[Voice] Peers available:', peers.map(function(peer) { return peer.userId; }));
               for (var i = 0; i < peers.length; i++) {
                 var peer = peers[i];
                 if (!peer || !peer.userId || peer.userId === state.userId) continue;
@@ -174,6 +206,7 @@ mergeInto(LibraryManager.library, {
 
           var iceServers = window.JAILBREAK_VOICE_ICE_SERVERS || defaultIceServers;
           var pc = new RTCPeerConnection({ iceServers: iceServers });
+          console.log('[Voice] Creating peer:', userId, shouldOffer ? 'offerer' : 'answerer');
           var peer = {
             userId: userId,
             pc: pc,
@@ -200,6 +233,7 @@ mergeInto(LibraryManager.library, {
           };
 
           pc.ontrack = function(event) {
+            console.log('[Voice] Remote audio track received from:', userId);
             var stream = event.streams && event.streams[0]
               ? event.streams[0]
               : new MediaStream([event.track]);
@@ -207,9 +241,14 @@ mergeInto(LibraryManager.library, {
           };
 
           pc.onconnectionstatechange = function() {
+            console.log('[Voice] Peer connection state:', userId, pc.connectionState);
             if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
               closePeer(userId);
             }
+          };
+
+          pc.oniceconnectionstatechange = function() {
+            console.log('[Voice] ICE connection state:', userId, pc.iceConnectionState);
           };
 
           if (shouldOffer) {
@@ -272,6 +311,7 @@ mergeInto(LibraryManager.library, {
         function attachRemoteStream(userId, stream) {
           var ctx = ensureAudioContext();
           if (!ctx) return;
+          resumeAudioContext();
 
           var peer = state.peers[userId] || createPeer(userId, false);
           if (peer.remoteStream === stream && peer.source) return;
@@ -319,6 +359,7 @@ mergeInto(LibraryManager.library, {
 
         function setPushToTalk(payload) {
           state.pushToTalk = !!(payload && payload.active);
+          console.log('[Voice] Push-to-talk:', state.pushToTalk ? 'on' : 'off');
           resumeAudioContext();
           setLocalTrackEnabled(state.pushToTalk && !state.muted);
         }
@@ -340,6 +381,10 @@ mergeInto(LibraryManager.library, {
           var tracks = state.localStream.getAudioTracks();
           for (var i = 0; i < tracks.length; i++) {
             tracks[i].enabled = !!enabled;
+          }
+          if (state.lastTrackEnabled !== !!enabled) {
+            state.lastTrackEnabled = !!enabled;
+            console.log('[Voice] Local mic track enabled:', !!enabled, 'tracks:', tracks.length);
           }
         }
 
@@ -444,6 +489,7 @@ mergeInto(LibraryManager.library, {
 
         function dispose() {
           setLocalTrackEnabled(false);
+          unbindAudioUnlockGestures();
 
           if (state.socket && state.socket.connected && state.joined) {
             state.socket.emit('voice:leave', { roomId: state.roomId, userId: state.userId });
@@ -471,6 +517,52 @@ mergeInto(LibraryManager.library, {
           state.pushToTalk = false;
           state.muted = false;
           state.deafened = false;
+          state.lastTrackEnabled = null;
+        }
+
+        function debug() {
+          var peers = {};
+          for (var userId in state.peers) {
+            if (!Object.prototype.hasOwnProperty.call(state.peers, userId)) continue;
+            var peer = state.peers[userId];
+            peers[userId] = {
+              signalingState: peer.pc.signalingState,
+              iceConnectionState: peer.pc.iceConnectionState,
+              iceGatheringState: peer.pc.iceGatheringState,
+              connectionState: peer.pc.connectionState,
+              hasRemoteStream: !!peer.remoteStream,
+              hasOutputNode: !!peer.gain,
+              gain: peer.gain ? peer.gain.gain.value : null
+            };
+          }
+
+          var localTracks = [];
+          if (state.localStream) {
+            var tracks = state.localStream.getAudioTracks();
+            for (var i = 0; i < tracks.length; i++) {
+              localTracks.push({
+                enabled: tracks[i].enabled,
+                muted: tracks[i].muted,
+                readyState: tracks[i].readyState,
+                label: tracks[i].label
+              });
+            }
+          }
+
+          return {
+            roomId: state.roomId,
+            userId: state.userId,
+            joined: state.joined,
+            muted: state.muted,
+            deafened: state.deafened,
+            pushToTalk: state.pushToTalk,
+            audioContextState: state.audioContext ? state.audioContext.state : 'none',
+            hasListenerPose: !!state.listenerPose,
+            speakerPoseCount: Object.keys(state.speakerPoses).length,
+            localTracks: localTracks,
+            peers: peers,
+            iceServers: window.JAILBREAK_VOICE_ICE_SERVERS || defaultIceServers
+          };
         }
 
         return {
@@ -479,7 +571,8 @@ mergeInto(LibraryManager.library, {
           setLocalMuted: setLocalMuted,
           setListenerPose: setListenerPose,
           setSpeakerPose: setSpeakerPose,
-          dispose: dispose
+          dispose: dispose,
+          debug: debug
         };
       })();
     }

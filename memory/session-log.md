@@ -417,3 +417,11 @@
   - Added support for `VITE_VOICE_ICE_SERVERS_JSON` as an advanced full ICE server override.
   - Documented Vercel env vars and Render `CLIENT_URL` in `web/README.md`; expanded `web/.env.example`.
   - Verified `/web` production build and `git diff --check`.
+- **Unity Specialist + Network Programmer — Voice deploy no-audio follow-up** (2026-04-30):
+  - Read `memory/progress.md` and re-traced `VoiceChatManager`, `VoiceBridge.jslib`, backend voice signaling, WebGL socket bridge, player spawn/state, and the voice design doc after deployed clients logged `[Voice] Joined voice room` but did not hear remote audio.
+  - Diagnosed likely receiver-side Web Audio suspension: the bridge created a separate voice `AudioContext`, but only attempted resume during local push-to-talk, so a listening client could remain silent while Unity ambience still worked.
+  - Updated `VoiceBridge.jslib` to resume the voice `AudioContext` on pointer, keyboard, and touch gestures, and added peer/ICE/track/PTT console logs.
+  - Added `window.JailbreakVoice.debug()` so deployed clients can report `audioContextState`, peer `connectionState`/`iceConnectionState`, remote stream presence, speaker poses, local mic track state, and configured ICE servers.
+  - Documented the deploy troubleshooting checklist in `web/README.md`.
+  - Verified `.jslib` syntax with Node and `git diff --check`; Unity compile/build was not run per user request.
+  - Recorded ADR-044 in `memory/decisions.md`.

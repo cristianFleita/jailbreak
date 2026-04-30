@@ -1051,3 +1051,22 @@ The GDD explicitly forbids raw audio over Socket.io and the current MVP room siz
 - `VoiceBridge.jslib` requests microphone permission, creates peer connections, spatializes remote streams over 0-10m, and supports optional TURN configuration via `window.JAILBREAK_VOICE_ICE_SERVERS`.
 - The React/Vite WebGL wrapper reads `VITE_BACKEND_URL` and voice ICE env vars from Vercel, then exposes them to Unity as `window.BACKEND_URL` and `window.JAILBREAK_VOICE_ICE_SERVERS` before the Unity loader runs.
 - Production should add a TURN provider before public testing; STUN-only WebRTC works for many users but not all NAT/firewall combinations.
+
+## ADR-044: Voice Web Audio unlocks from general browser gestures
+
+**Status**: Implemented
+**Date**: 2026-04-30
+
+### Decision
+
+`VoiceBridge.jslib` binds pointer, keyboard, and touch gestures to resume the browser Web Audio context used for WebRTC voice output. The bridge also exposes `window.JailbreakVoice.debug()` with room, peer, ICE, push-to-talk, local track, speaker pose, and audio-context state.
+
+### Why
+
+Deployed tests showed `[Voice] Joined voice room` while no remote voice was heard. Joining only proves Socket.io signaling membership; the receiver's separate Web Audio context can remain suspended even when Unity ambient audio is already playing. Unlocking voice output on normal gameplay gestures makes receiving audio work without requiring the listener to press push-to-talk.
+
+### Implications
+
+- Voice receive audio can start after any canvas click, movement key, Space, or touch gesture in the receiving browser.
+- Deploy troubleshooting can use `window.JailbreakVoice?.debug()` to distinguish Web Audio suspension, missing peer connection, failed ICE/TURN, no remote stream, no speaker pose, or push-to-talk track issues.
+- The Unity WebGL build must be regenerated for this bridge change to reach Vercel's `web/public/unity-build`.
