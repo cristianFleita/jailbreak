@@ -171,7 +171,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: fe542d98f402a450f80f8a0070f0ae60, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.25
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -269,7 +269,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.LoopingSfx
   clip: {fileID: 8300000, guid: fe542d98f402a450f80f8a0070f0ae60, type: 3}
   mixerGroup: {fileID: 0}
-  volume: 1
+  volume: 0.25
   pitch: 1
   spatial: 1
   minDistance: 2

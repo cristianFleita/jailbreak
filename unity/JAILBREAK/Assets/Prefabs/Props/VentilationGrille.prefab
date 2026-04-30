@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4895996190823693020}
   - component: {fileID: 7848153285353441160}
   - component: {fileID: 4610329546980692914}
+  - component: {fileID: 6207815295817780530}
   m_Layer: 0
   m_Name: sfx
   m_TagString: Untagged
@@ -150,9 +151,24 @@ MonoBehaviour:
   minDistance: 2
   maxDistance: 20
   rolloff: 1
-  playOnEnable: 1
+  playOnEnable: 0
   fadeInSeconds: 0.25
   fadeOutSeconds: 0.4
+--- !u!114 &6207815295817780530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4014551337163953090}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6f59006e2c84d68b066f07f71d2bc4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.PowerOutageLoopingSfx
+  loop: {fileID: 4610329546980692914}
+  powerOutage: {fileID: 0}
+  playWhilePowered: 1
 --- !u!1 &8965832056501134969
 GameObject:
   m_ObjectHideFlags: 0

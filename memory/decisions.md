@@ -1008,3 +1008,25 @@ The tutorial still needs to teach core prisoner interactables, not only the item
 - Backend prisoner mission IDs are `p1_review_route`, `p2_food_flow`, `p3_sprint`, `p4_grab_item`, `p6_risky_action`, and `p7_hide_cart`.
 - Unity completes restored missions from the existing tutorial signals: TAB review, food/sit/sink state edges, sprint tracking, item pickup, desk/power progress, and hide cart.
 - `ItemDropped` no longer completes any tutorial mission, though G can still be listed as an available control.
+
+## ADR-042: Door and ventilation prop SFX bind to local Unity state
+
+**Status**: Implemented
+**Date**: 2026-04-29
+
+### Decision
+
+Jail door opening audio is triggered by `TriggerMoveOffset` on the closed-to-open transition. The trigger resolves the existing `OneShotSfx` from its configured `objectToMove` door prefab, so scene trigger instances only need to keep their existing JailDoor reference.
+
+Ventilation grille ambience is owned by the `VentilationGrille.prefab` `sfx` child through `PowerOutageLoopingSfx`. The helper starts the existing `LoopingSfx` while power is on and subscribes to the scene `PowerOutage` UnityEvents, which are already driven by `PowerOutageNetworkBridge` from authoritative `WorldStatePayload.ventilationPowered`.
+
+### Why
+
+Both cues are local presentation of existing gameplay state. Reusing prefab-local audio components avoids adding backend events for door movement and avoids per-scene manual wiring for every vent instance.
+
+### Implications
+
+- `TriggerMoveOffset.cs` class name matches the serialized prefab script identity again.
+- Door open SFX plays once per trigger occupancy cycle, not on every collider while the door is already open.
+- Vent loops fade out when the network-driven power outage fires and resume if power is restored.
+- No backend protocol change is required for these SFX.

@@ -396,3 +396,10 @@
   - Kept the direct E item grab flow and F-as-flashlight controls intact.
   - Verified focused backend `tutorial.test.ts` (`22/22`), backend TypeScript, prisoner UXML parsing, Unity C# via `msbuild Assembly-CSharp.csproj`, and scoped `git diff --check`.
   - Recorded ADR-041 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Remaining door and ventilation SFX integration** (2026-04-29):
+  - Read `memory/progress.md` and traced `TriggerMoveOffset`, `JailDoor.prefab`, `VentilationGrille.prefab`, `LoopingSfx`, `OneShotSfx`, `PowerOutage`, and `PowerOutageNetworkBridge`.
+  - Renamed the trigger mover class back to `TriggerMoveOffset` to match the serialized prefab script identity and added an auto-resolved `OneShotSfx` hook from the referenced JailDoor.
+  - Door open audio now plays once when a trigger occupancy cycle moves from closed to open.
+  - Added `PowerOutageLoopingSfx` and attached it to the ventilation grille `sfx` child so the vent loop starts while powered and fades out on the network-driven outage event.
+  - Verified Unity C# via `msbuild Assembly-CSharp.csproj` and `git diff --check`; build passed with existing warnings only.
+  - Recorded ADR-042 in `memory/decisions.md`.
