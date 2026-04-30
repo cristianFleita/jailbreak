@@ -97,6 +97,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db1e140ef8c684d9b9485ea62b9c3af4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7730422404392215102}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db1e140ef8c684d9b9485ea62b9c3af4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3058322424992219870}
   m_SourcePrefab: {fileID: 100100000, guid: db1e140ef8c684d9b9485ea62b9c3af4, type: 3}
 --- !u!1 &409235672718471057 stripped
 GameObject:
@@ -213,6 +216,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ThrowHitHandler
   stunDuration: 3
   animationVar: IsStunned
+  itemKind: 
+  broadcastThrow: 0
+  reportGuardHit: 0
+  fallbackThrowForce: 12
 --- !u!114 &7730422404392215101
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -245,4 +252,37 @@ MonoBehaviour:
   interactKey: 101
   allowedInStates: []
   holdPointName: mixamorig:RightHandIndex1
+  allowDropFromHand: 0
   debugLogs: 0
+--- !u!114 &3058322424992219870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 409235672718471057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d99b6595ed1e445778aea65e4e6bb5f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RimGlowController
+  targetRenderer: {fileID: 2210451429680926276}
+  rimGlowMaterial: {fileID: 2100000, guid: c45d00da823e84639b8fef48df19dba7, type: 2}
+  transitionDuration: 0.5
+  holdOnDuration: 0.5
+  holdOffDuration: 0.2
+  autoStart: 1
+  rimColor: {r: 0, g: 0.6, b: 1, a: 1}
+  rimPower: 3
+  rimIntensity: 2
+  rimOffset: 0
+  flickerEnabled: 0
+  flickerSpeed: 6
+  flickerMin: 0.2
+  flickerMax: 1
+  flickerSharpness: 4
+--- !u!23 &2210451429680926276 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: db1e140ef8c684d9b9485ea62b9c3af4, type: 3}
+  m_PrefabInstance: {fileID: 679072112085848768}
+  m_PrefabAsset: {fileID: 0}

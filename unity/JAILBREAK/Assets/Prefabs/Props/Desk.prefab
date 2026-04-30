@@ -185,7 +185,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: c694808742a654bde87fbdc292e0a5a3, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 0.25
+  m_Volume: 0.06
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -194,7 +194,7 @@ AudioSource:
   Priority: 128
   DopplerLevel: 1
   MinDistance: 2
-  MaxDistance: 20
+  MaxDistance: 10
   Pan2D: 0
   rolloffMode: 1
   BypassEffects: 0
@@ -283,11 +283,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Jailbreak.Audio.LoopingSfx
   clip: {fileID: 8300000, guid: c694808742a654bde87fbdc292e0a5a3, type: 3}
   mixerGroup: {fileID: 0}
-  volume: 0.25
+  volume: 0.06
   pitch: 1
   spatial: 1
   minDistance: 2
-  maxDistance: 20
+  maxDistance: 10
   rolloff: 1
   playOnEnable: 0
   fadeInSeconds: 0.25
@@ -361,6 +361,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 21d6729781f52459cae253487e22e85a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7515936075147014111}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 21d6729781f52459cae253487e22e85a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1269735980772189872}
   m_SourcePrefab: {fileID: 100100000, guid: 21d6729781f52459cae253487e22e85a, type: 3}
 --- !u!4 &3525679382795123373 stripped
 Transform:
@@ -393,3 +396,20 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.02007068, y: 0.010377334, z: 0.014563527}
   m_Center: {x: -0.0000027966498, y: -0.00014532864, z: 0.0031773732}
+--- !u!114 &1269735980772189872
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4298239531084914711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35e95dc5ff2b64380880dd7ac5922847, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifierVolume
+  m_SerializedVersion: 0
+  m_Size: {x: 0.024, y: 0.01, z: 0.010487201}
+  m_Center: {x: 0, y: 0, z: -0.00024359953}
+  m_Area: 1
+  m_AffectedAgents: ffffffff

@@ -55,7 +55,7 @@ AudioSource:
   Priority: 128
   DopplerLevel: 1
   MinDistance: 2
-  MaxDistance: 20
+  MaxDistance: 10
   Pan2D: 0
   rolloffMode: 1
   BypassEffects: 0
@@ -145,11 +145,11 @@ MonoBehaviour:
   clips:
   - {fileID: 8300000, guid: 750d8365aae854a0c88977ad885d2ca3, type: 3}
   mixerGroup: {fileID: 0}
-  volume: 0.3
+  volume: 0.1
   pitchVariance: 0.05
   spatialBlend: 1
   minDistance: 2
-  maxDistance: 20
+  maxDistance: 10
   rolloff: 1
 --- !u!1 &6542096588694584588
 GameObject:
