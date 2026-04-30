@@ -415,6 +415,9 @@ mergeInto(LibraryManager.library, {
   },
 
   SocketDisconnect: function() {
+    if (window.JailbreakVoice) {
+      window.JailbreakVoice.dispose();
+    }
     if (window._jbSocket) {
       window._jbSocket.disconnect();
       window._jbSocket = null;

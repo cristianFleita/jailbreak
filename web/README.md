@@ -1,73 +1,51 @@
-# React + TypeScript + Vite
+# JAILBREAK Web Wrapper
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite wrapper for the Unity WebGL build. Vercel deploys this app and
+Render deploys the Socket.io backend.
 
-Currently, two official plugins are available:
+## Environment
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Set these in Vercel Project Settings → Environment Variables:
 
-## React Compiler
+```bash
+VITE_BACKEND_URL=https://your-render-service.onrender.com
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+VITE_VOICE_STUN_URLS=stun:stun.l.google.com:19302,stun:stun.cloudflare.com:3478
+VITE_VOICE_TURN_URLS=turns:your-turn-host.example.com:5349
+VITE_VOICE_TURN_USERNAME=your-turn-user
+VITE_VOICE_TURN_CREDENTIAL=your-turn-password
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+`VITE_BACKEND_URL` is exposed to Unity as `window.BACKEND_URL`.
+Voice ICE servers are exposed as `window.JAILBREAK_VOICE_ICE_SERVERS` before
+the Unity loader runs.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+For local development, copy `.env.example` to `.env.local` and keep:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+VITE_BACKEND_URL=http://localhost:3001
 ```
+
+TURN is strongly recommended for public playtests. STUN-only WebRTC works for
+many connections, but some NAT/firewall combinations need a relay.
+
+Alternative single-variable override:
+
+```bash
+VITE_VOICE_ICE_SERVERS_JSON=[{"urls":"stun:stun.l.google.com:19302"},{"urls":"turns:your-turn-host.example.com:5349","username":"your-turn-user","credential":"your-turn-password"}]
+```
+
+If `VITE_VOICE_ICE_SERVERS_JSON` is set and valid, it replaces the STUN/TURN
+variables above.
+
+## Render Backend
+
+Set this in Render so Socket.io accepts the Vercel origin:
+
+```bash
+CLIENT_URL=https://your-vercel-app.vercel.app
+```
+
+No TURN variables are required on Render for the current MVP because the
+backend only relays signaling; actual audio flows peer-to-peer or through TURN
+from the browser.

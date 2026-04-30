@@ -1030,3 +1030,24 @@ Both cues are local presentation of existing gameplay state. Reusing prefab-loca
 - Door open SFX plays once per trigger occupancy cycle, not on every collider while the door is already open.
 - Vent loops fade out when the network-driven power outage fires and resume if power is restored.
 - No backend protocol change is required for these SFX.
+
+## ADR-043: Proximity voice uses WebRTC mesh with Socket.io signaling
+
+**Status**: Implemented
+**Date**: 2026-04-30
+
+### Decision
+
+Live match voice uses browser WebRTC mesh for media and Socket.io only for signaling. Unity WebGL owns push-to-talk, alive/captured gating, room/user identity, and player poses; the WebGL JavaScript bridge owns microphone capture, RTCPeerConnection setup, and Web Audio spatialization.
+
+### Why
+
+The GDD explicitly forbids raw audio over Socket.io and the current MVP room size is 2-4 players, which keeps mesh viable. Unity WebGL microphone access is more reliable through browser APIs than through C# runtime APIs, and Web Audio gives us proximity attenuation without adding a voice server yet.
+
+### Implications
+
+- Backend adds `voice:join`, `voice:signal`, `voice:state`, and `voice:leave` handlers, plus room cleanup on leave/kick/end.
+- `VoiceChatManager` is auto-created in Unity, initializes only in `GameScene`, uses Space as push-to-talk, sends listener/speaker poses at 10 Hz, and blocks captured/spectator transmission.
+- `VoiceBridge.jslib` requests microphone permission, creates peer connections, spatializes remote streams over 0-10m, and supports optional TURN configuration via `window.JAILBREAK_VOICE_ICE_SERVERS`.
+- The React/Vite WebGL wrapper reads `VITE_BACKEND_URL` and voice ICE env vars from Vercel, then exposes them to Unity as `window.BACKEND_URL` and `window.JAILBREAK_VOICE_ICE_SERVERS` before the Unity loader runs.
+- Production should add a TURN provider before public testing; STUN-only WebRTC works for many users but not all NAT/firewall combinations.

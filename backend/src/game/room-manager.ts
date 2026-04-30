@@ -21,6 +21,7 @@ import { initializeRouteState } from './routes/route-registry.js'
 import { broadcastAllRouteItemStates } from './systems/route-inventory.js'
 import { clearSpawnAreaRegistration } from './systems/spawn-areas.js'
 import { TutorialManager, cleanupTutorialBeforeActive } from './systems/tutorial.js'
+import { cleanupVoiceRoom } from './voice-signaling.js'
 
 /**
  * Default game configuration (tuning knobs from design doc).
@@ -254,6 +255,7 @@ export function endMatchAndCleanup(
   endGame(state, winner, reason)
   io.to(state.id).emit('game:end', { winner, reason })
   stopGameLoop(room)
+  cleanupVoiceRoom(io, state.id, 'game-ended')
 
   for (const [sid, p] of state.players) {
     setUserStatus(p.userId, 'idle')

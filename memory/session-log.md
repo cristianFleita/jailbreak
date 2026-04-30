@@ -403,3 +403,17 @@
   - Added `PowerOutageLoopingSfx` and attached it to the ventilation grille `sfx` child so the vent loop starts while powered and fades out on the network-driven outage event.
   - Verified Unity C# via `msbuild Assembly-CSharp.csproj` and `git diff --check`; build passed with existing warnings only.
   - Recorded ADR-042 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Diegetic proximity voice MVP** (2026-04-30):
+  - Read `memory/progress.md` and `design/gdd/voz-diegetica-proximidad.md`; used the focused-fix workflow to trace backend Socket.io, Unity `NetworkManager`, WebGL `.jslib` bridges, player spawn/state, and captured spectator flow.
+  - Added backend WebRTC signaling in `voice-signaling.ts` and wired `voice:join`, `voice:signal`, `voice:state`, and `voice:leave` in `sockets/game.ts`; room leave/kick/end now cleans voice peers.
+  - Added `VoiceChatManager` as an auto-created Unity WebGL runtime service. It initializes in `GameScene`, uses Space as push-to-talk, sends listener/speaker poses at 10 Hz, applies optional raycast occlusion metadata, and prevents captured/spectating players from transmitting.
+  - Added `VoiceBridge.jslib` for browser mic permission, WebRTC mesh, ICE signaling, Web Audio panning/attenuation, and configurable ICE servers through `window.JAILBREAK_VOICE_ICE_SERVERS`.
+  - Added focused backend tests for join, signal relay, mute metadata, leave, and room cleanup.
+  - Verified backend TypeScript build, focused voice tests (`5/5`), full backend Vitest suite (`226/226`), `git diff --check`, and `.jslib` syntax with Node. Unity compile was not run after the user asked not to compile the project.
+  - Recorded ADR-043 in `memory/decisions.md`.
+- **Unity Specialist + Network Programmer — Vercel wrapper voice env setup** (2026-04-30):
+  - Read `memory/progress.md` and traced `/web` React/Vite Unity wrapper, `.env.example`, README, and runtime globals.
+  - Updated `UnityEmbed.tsx` to set `window.BACKEND_URL` from `VITE_BACKEND_URL` and build `window.JAILBREAK_VOICE_ICE_SERVERS` from STUN/TURN Vercel env vars before loading Unity.
+  - Added support for `VITE_VOICE_ICE_SERVERS_JSON` as an advanced full ICE server override.
+  - Documented Vercel env vars and Render `CLIENT_URL` in `web/README.md`; expanded `web/.env.example`.
+  - Verified `/web` production build and `git diff --check`.

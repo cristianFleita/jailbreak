@@ -11,6 +11,7 @@ declare global {
     unityInstance: any;
     onUnityReady?: () => void;
     BACKEND_URL?: string;
+    JAILBREAK_VOICE_ICE_SERVERS?: RTCIceServer[];
     createUnityInstance: (
       canvas: HTMLCanvasElement,
       config: object,
@@ -35,6 +36,72 @@ function waitForCreateUnityInstance(timeoutMs = 15000): Promise<void> {
     };
     check();
   });
+}
+
+const DEFAULT_VOICE_STUN_URLS = [
+  "stun:stun.l.google.com:19302",
+  "stun:stun.cloudflare.com:3478",
+];
+
+function splitEnvList(value: string | undefined): string[] {
+  return (value ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function isIceServer(value: unknown): value is RTCIceServer {
+  if (!value || typeof value !== "object") return false;
+  const urls = (value as RTCIceServer).urls;
+  return typeof urls === "string" || Array.isArray(urls);
+}
+
+function parseIceServersJson(value: string | undefined): RTCIceServer[] | null {
+  if (!value) return null;
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (Array.isArray(parsed) && parsed.every(isIceServer)) {
+      return parsed;
+    }
+    console.warn("[UnityEmbed] VITE_VOICE_ICE_SERVERS_JSON must be an array of RTCIceServer objects.");
+  } catch (error) {
+    console.warn("[UnityEmbed] Failed to parse VITE_VOICE_ICE_SERVERS_JSON:", error);
+  }
+
+  return null;
+}
+
+function buildVoiceIceServers(): RTCIceServer[] {
+  const explicitServers = parseIceServersJson(import.meta.env.VITE_VOICE_ICE_SERVERS_JSON);
+  if (explicitServers?.length) return explicitServers;
+
+  const stunUrls = splitEnvList(import.meta.env.VITE_VOICE_STUN_URLS);
+  const turnUrls = splitEnvList(import.meta.env.VITE_VOICE_TURN_URLS);
+  const turnUsername = import.meta.env.VITE_VOICE_TURN_USERNAME;
+  const turnCredential = import.meta.env.VITE_VOICE_TURN_CREDENTIAL;
+
+  const iceServers: RTCIceServer[] = (stunUrls.length ? stunUrls : DEFAULT_VOICE_STUN_URLS)
+    .map((url) => ({ urls: url }));
+
+  if (turnUrls.length > 0) {
+    if (turnUsername && turnCredential) {
+      iceServers.push({
+        urls: turnUrls.length === 1 ? turnUrls[0] : turnUrls,
+        username: turnUsername,
+        credential: turnCredential,
+      });
+    } else {
+      console.warn("[UnityEmbed] TURN URLs configured without username/credential; ignoring TURN server.");
+    }
+  }
+
+  return iceServers;
+}
+
+function configureUnityRuntimeGlobals(): void {
+  window.BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:3001";
+  window.JAILBREAK_VOICE_ICE_SERVERS = buildVoiceIceServers();
 }
 
 interface UnityEmbedProps {
@@ -76,7 +143,7 @@ export default function UnityEmbed({
     async function loadUnity() {
       if (!canvasRef.current) return;
 
-      window.BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:3001";
+      configureUnityRuntimeGlobals();
 
       if (!document.querySelector(`script[src="${LOADER_FILE}"]`)) {
         await new Promise<void>((resolve, reject) => {

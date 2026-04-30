@@ -60,6 +60,16 @@ import {
   setUserStatus,
   cleanupStaleUsers,
 } from '../game/user-identity.js'
+import {
+  cleanupVoiceRoom,
+  joinVoiceRoom,
+  leaveVoiceRoom,
+  relayVoiceSignal,
+  updateVoiceState,
+  type VoiceJoinPayload,
+  type VoiceSignalPayload,
+  type VoiceStatePayload,
+} from '../game/voice-signaling.js'
 
 const MIN_PLAYERS_TO_START = 2
 const STALE_USER_CLEANUP_INTERVAL = 600000 // 10 minutes
@@ -443,6 +453,7 @@ export function setupGameSockets(io: Server) {
           // Remove from socket.io room and notify the kicked player
           const targetSocket = io.sockets.sockets.get(targetSocketId)
           if (targetSocket) {
+            leaveVoiceRoom(io, targetSocket, 'kicked')
             targetSocket.leave(currentRoomId)
             // Null out the room on the target socket's data bag so its own
             // closure can sync from it on the next room:join attempt.
@@ -821,6 +832,61 @@ export function setupGameSockets(io: Server) {
     })
 
     // ==================================================================
+    // VOICE: WebRTC signaling only. Audio media flows peer-to-peer.
+    // ==================================================================
+    socket.on('voice:join', (payload: VoiceJoinPayload) => {
+      requireAuth(socket, () => {
+        try {
+          const user = getUserBySocket(socket.id)
+          if (!user) return
+
+          if (!currentRoomId || payload?.roomId !== currentRoomId) {
+            socket.emit('game:error', { code: 'VOICE_ROOM_MISMATCH', message: 'Voice room must match current game room' })
+            return
+          }
+
+          const room = getRoom(currentRoomId)
+          if (!room || (room.state.status !== 'active' && room.state.status !== 'tutorial')) {
+            socket.emit('game:error', { code: 'VOICE_NOT_AVAILABLE', message: 'Voice is only available during a match' })
+            return
+          }
+
+          joinVoiceRoom(io, socket, currentRoomId, user.userId)
+          console.log(`[VOICE] ${user.userId} joined voice room "${currentRoomId}"`)
+        } catch (err) {
+          console.error(`[ERROR] voice:join: ${err}`)
+          socket.emit('game:error', { code: 'VOICE_JOIN_FAILED', message: String(err) })
+        }
+      })
+    })
+
+    socket.on('voice:signal', (payload: VoiceSignalPayload) => {
+      requireAuth(socket, () => {
+        try {
+          relayVoiceSignal(io, socket, payload)
+        } catch (err) {
+          console.error(`[ERROR] voice:signal: ${err}`)
+        }
+      })
+    })
+
+    socket.on('voice:state', (payload: VoiceStatePayload) => {
+      requireAuth(socket, () => {
+        try {
+          updateVoiceState(io, socket, payload ?? {})
+        } catch (err) {
+          console.error(`[ERROR] voice:state: ${err}`)
+        }
+      })
+    })
+
+    socket.on('voice:leave', () => {
+      requireAuth(socket, () => {
+        leaveVoiceRoom(io, socket, 'left')
+      })
+    })
+
+    // ==================================================================
     // GAMEPLAY: npc:sync_state (from Host to sync NPC positions)
     // ==================================================================
     socket.on('npc:sync_state', (payloadRaw: string | NPCSyncStatePayload) => {
@@ -879,6 +945,8 @@ function handleLeaveRoom(
 
     const player = room.state.players.get(socket.id)
     if (!player) return
+
+    leaveVoiceRoom(io, socket, reason)
 
     const userId = player.userId
     const isHost = userId === room.state.hostUserId
@@ -965,6 +1033,7 @@ function handleLeaveRoom(
       }
 
       // Force all sockets out of the room
+      cleanupVoiceRoom(io, roomId, 'room-destroyed')
       io.in(roomId).socketsLeave(roomId)
 
       stopGameLoop(room)
@@ -988,6 +1057,7 @@ function handleLeaveRoom(
       stopGameLoop(room)
       clearRoomSlots(roomId)
       clearSpawnAreaRegistration(roomId)
+      cleanupVoiceRoom(io, roomId, 'room-empty')
       destroyRoom(roomId)
     }
 
